@@ -1,0 +1,115 @@
+[
+  {
+    "lesson_id": "YOUR_LESSON_ID_HERE",
+    "title": "Đặt chỗ cắm trại",
+    "description": "Luyện tập đặt chỗ cắm trại qua điện thoại",
+    "scenario": "Bạn muốn đặt chỗ cắm trại cho cuối tuần. Hãy gọi điện đến khu cắm trại để đặt chỗ.",
+    "character_a": "Khách hàng",
+    "character_b": "Nhân viên khu cắm trại",
+    "character_a_script": [
+      "Xin chào",
+      "Tôi muốn đặt chỗ cắm trại cho 2 người vào cuối tuần này",
+      "Có chỗ trống không?",
+      "Giá bao nhiêu một đêm?",
+      "Có thể đặt từ thứ Sáu đến Chủ nhật không?",
+      "Cảm ơn bạn rất nhiều"
+    ],
+    "character_b_script": [
+      "Xin chào, chào mừng đến khu cắm trại ABC",
+      "Vâng, để tôi kiểm tra xem còn chỗ trống không",
+      "Có chỗ trống cho cuối tuần này",
+      "Giá là 3,000 yên một đêm cho 2 người",
+      "Vâng, có thể đặt từ thứ Sáu đến Chủ nhật",
+      "Không có gì, hẹn gặp lại bạn"
+    ],
+    "vocabulary_hints": [
+      "キャンプ場 (kyanpujou) - Khu cắm trại",
+      "予約 (yoyaku) - Đặt chỗ",
+      "料金 (ryoukin) - Giá tiền",
+      "一泊 (ippaku) - Một đêm",
+      "空き (aki) - Chỗ trống"
+    ],
+    "grammar_points": [
+      "〜たいです - Muốn làm gì",
+      "〜ませんか - Câu hỏi lịch sự",
+      "〜から〜まで - Từ... đến..."
+    ],
+    "difficulty": "medium",
+    "image_url": ""
+  },
+  {
+    "lesson_id": "YOUR_LESSON_ID_HERE",
+    "title": "Chuẩn bị đồ cắm trại",
+    "description": "Hỏi về những gì cần mang theo khi đi cắm trại",
+    "scenario": "Bạn lần đầu đi cắm trại và không biết cần mang gì. Hãy hỏi bạn bè về những vật dụng cần thiết.",
+    "character_a": "Bạn",
+    "character_b": "Bạn bè",
+    "character_a_script": [
+      "Xin chào",
+      "Lần đầu tôi đi cắm trại, nên tôi không biết cần mang gì",
+      "Cần mang những gì?",
+      "Lều trại có cần không?",
+      "Còn gì nữa không?",
+      "Cảm ơn bạn đã giúp đỡ"
+    ],
+    "character_b_script": [
+      "Xin chào",
+      "Không sao, tôi sẽ giúp bạn",
+      "Cần mang lều trại, túi ngủ, đèn pin, và thức ăn",
+      "Có, lều trại rất quan trọng",
+      "Nên mang thêm bật lửa, dao, và nước uống",
+      "Không có gì, chúc bạn đi cắm trại vui vẻ"
+    ],
+    "vocabulary_hints": [
+      "テント (tento) - Lều trại",
+      "寝袋 (nebukuro) - Túi ngủ",
+      "懐中電灯 (kaichuudentou) - Đèn pin",
+      "必需品 (hitsujuhin) - Vật dụng cần thiết",
+      "準備 (junbi) - Chuẩn bị"
+    ],
+    "grammar_points": [
+      "〜が必要です - Cần...",
+      "〜てください - Hãy...",
+      "〜も - Cũng"
+    ],
+    "difficulty": "easy",
+    "image_url": ""
+  },
+  {
+    "lesson_id": "YOUR_LESSON_ID_HERE",
+    "title": "Ở khu cắm trại",
+    "description": "Giao tiếp tại khu cắm trại khi check-in",
+    "scenario": "Bạn đến khu cắm trại và cần check-in. Hãy nói chuyện với nhân viên.",
+    "character_a": "Khách hàng",
+    "character_b": "Nhân viên",
+    "character_a_script": [
+      "Xin chào, tôi đã đặt chỗ",
+      "Tên tôi là Tanaka",
+      "Có thể cho tôi biết chỗ cắm trại ở đâu không?",
+      "Có nhà vệ sinh ở đâu?",
+      "Cảm ơn bạn"
+    ],
+    "character_b_script": [
+      "Xin chào, chào mừng đến khu cắm trại",
+      "Vâng, để tôi kiểm tra",
+      "Chỗ cắm trại của bạn ở khu vực A, số 5",
+      "Nhà vệ sinh ở phía bên trái, gần khu vực A",
+      "Không có gì, nếu có gì cần hỗ trợ cứ gọi tôi"
+    ],
+    "vocabulary_hints": [
+      "チェックイン (chekkuin) - Check-in",
+      "受付 (uketsuke) - Quầy tiếp tân",
+      "トイレ (toire) - Nhà vệ sinh",
+      "場所 (basho) - Địa điểm",
+      "案内 (annai) - Hướng dẫn"
+    ],
+    "grammar_points": [
+      "〜てください - Hãy...",
+      "〜はどこですか - ...ở đâu?",
+      "〜を教えてください - Hãy cho tôi biết..."
+    ],
+    "difficulty": "medium",
+    "image_url": ""
+  }
+]
+
