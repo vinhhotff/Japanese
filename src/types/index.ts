@@ -120,9 +120,12 @@ export interface RoleplayScenario {
   characterB: string;
   characterAScript: string[];
   characterBScript: string[];
+  characterACorrectAnswers?: string[][]; // Multiple correct answers for each line
+  characterBCorrectAnswers?: string[][]; // Multiple correct answers for each line
   vocabularyHints?: string[];
   grammarPoints?: string[];
   difficulty: 'easy' | 'medium' | 'hard';
   imageUrl?: string;
+  enableScoring?: boolean; // Admin can enable/disable scoring
 }
 

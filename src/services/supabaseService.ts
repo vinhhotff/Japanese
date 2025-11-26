@@ -708,4 +708,3 @@ export const deleteRoleplayScenario = async (id: string) => {
   
   if (error) throw error;
 };
-

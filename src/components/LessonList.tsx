@@ -22,23 +22,37 @@ const LessonList = () => {
         .filter((l: any) => (l.level || '').toUpperCase() === (level || '').toUpperCase())
         .sort((a: any, b: any) => (a.lesson_number || 0) - (b.lesson_number || 0));
 
+      // Load vocabulary, kanji, grammar counts for each lesson
+      const { getVocabulary, getKanji, getGrammar } = await import('../services/supabaseService');
+      const [allVocab, allKanji, allGrammar] = await Promise.all([
+        getVocabulary(),
+        getKanji(),
+        getGrammar()
+      ]);
+
       setCourse({
         level,
         title: `${level} - Tất cả bài học`,
         description: `Có ${lessonsOfLevel.length} bài học trong ${level}.`,
-        lessons: lessonsOfLevel.map((l: any) => ({
-          id: l.id,
-          title: l.title,
-          level: l.level || level,
-          lessonNumber: l.lesson_number,
-          description: l.description || '',
-          vocabulary: [],
-          kanji: [],
-          grammar: [],
-          listening: [],
-          speaking: [],
-          difficultVocabulary: [],
-        })),
+        lessons: lessonsOfLevel.map((l: any) => {
+          const vocabCount = allVocab.filter((v: any) => v.lesson_id === l.id).length;
+          const kanjiCount = allKanji.filter((k: any) => k.lesson_id === l.id).length;
+          const grammarCount = allGrammar.filter((g: any) => g.lesson_id === l.id).length;
+
+          return {
+            id: l.id,
+            title: l.title,
+            level: l.level || level,
+            lessonNumber: l.lesson_number,
+            description: l.description || '',
+            vocabulary: Array(vocabCount).fill(null), // Create array with correct length
+            kanji: Array(kanjiCount).fill(null),
+            grammar: Array(grammarCount).fill(null),
+            listening: [],
+            speaking: [],
+            difficultVocabulary: [],
+          };
+        }),
       });
     } catch (err: any) {
       console.error('Error loading course:', err);

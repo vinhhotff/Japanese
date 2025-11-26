@@ -321,6 +321,12 @@ const AdminPanel = () => {
         </div>
         <div className="admin-user-info">
           <span>Xin chào, {user?.email}</span>
+          <a href="/" className="btn btn-secondary" style={{ marginRight: '0.5rem' }}>
+            <svg style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Trang chủ
+          </a>
           <button className="btn btn-outline" onClick={signOut}>
             <svg style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -425,9 +431,6 @@ const AdminPanel = () => {
           >
             ➕ Thêm mới
           </button>
-          <a href="/" className="btn btn-outline">
-            ← Về trang chủ
-          </a>
         </div>
 
         {loading ? (
@@ -893,11 +896,14 @@ Ví dụ:
           character_a: '', 
           character_b: '', 
           character_a_script: [], 
-          character_b_script: [], 
+          character_b_script: [],
+          character_a_correct_answers: [],
+          character_b_correct_answers: [],
           vocabulary_hints: [], 
           grammar_points: [], 
           difficulty: 'easy',
-          image_url: ''
+          image_url: '',
+          enable_scoring: false
         };
       default:
         return {};
@@ -1042,7 +1048,7 @@ Ví dụ:
       processedData.words = formData.words.split(',').map((s: string) => s.trim()).filter(Boolean);
     }
     if (type === 'games' && typeof formData.correct_order === 'string') {
-      processedData.correct_order = formData.correct_order.split(',').map((s: string) => parseInt(s.trim())).filter(n => !isNaN(n));
+      processedData.correct_order = formData.correct_order.split(',').map((s: string) => parseInt(s.trim())).filter((n: number) => !isNaN(n));
     }
     if (type === 'roleplay' && typeof formData.character_a_script === 'string') {
       processedData.character_a_script = formData.character_a_script.split('\n').map((s: string) => s.trim()).filter(Boolean);
@@ -1130,7 +1136,7 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn khóa học</option>
-                  {courses.map(c => (
+                  {courses.map((c: any) => (
                     <option key={c.id} value={c.id}>{c.title}</option>
                   ))}
                 </select>
@@ -1218,7 +1224,7 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -1308,7 +1314,7 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -1393,7 +1399,7 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -1513,7 +1519,7 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -1576,7 +1582,7 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -1657,7 +1663,7 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -1750,7 +1756,7 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -1794,7 +1800,7 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -1867,7 +1873,7 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -1980,7 +1986,7 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -2246,7 +2252,7 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -2346,7 +2352,7 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -2434,7 +2440,7 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
@@ -2498,7 +2504,7 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map(l => (
+                  {lessons.map((l: any) => (
                     <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>

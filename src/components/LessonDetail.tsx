@@ -58,10 +58,13 @@ const LessonDetail = () => {
             characterB: s.character_b,
             characterAScript: s.character_a_script || [],
             characterBScript: s.character_b_script || [],
+            characterACorrectAnswers: s.character_a_correct_answers || [],
+            characterBCorrectAnswers: s.character_b_correct_answers || [],
             vocabularyHints: s.vocabulary_hints || [],
             grammarPoints: s.grammar_points || [],
             difficulty: s.difficulty || 'medium',
             imageUrl: s.image_url,
+            enableScoring: s.enable_scoring || false,
           })));
         }
       }

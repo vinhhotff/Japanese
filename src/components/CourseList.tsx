@@ -20,6 +20,14 @@ const CourseList = () => {
         getLessons(),
       ]);
 
+      // Load vocabulary, kanji, grammar counts
+      const { getVocabulary, getKanji, getGrammar } = await import('../services/supabaseService');
+      const [allVocab, allKanji, allGrammar] = await Promise.all([
+        getVocabulary(),
+        getKanji(),
+        getGrammar()
+      ]);
+
       // Group courses by level
       const coursesByLevel: Record<string, any[]> = {};
       const levelOrder = ['N5', 'N4', 'N3', 'N2', 'N1'];
@@ -54,19 +62,25 @@ const CourseList = () => {
             description: coursesByLevel[level].length === 1
               ? firstCourse.description || ''
               : `Bao gồm: ${courseTitles}`,
-            lessons: allLessons.map((l: any) => ({
-              id: l.id,
-              title: l.title,
-              level: l.level || level,
-              lessonNumber: l.lesson_number,
-              description: l.description || '',
-              vocabulary: [],
-              kanji: [],
-              grammar: [],
-              listening: [],
-              speaking: [],
-              difficultVocabulary: [],
-            })),
+            lessons: allLessons.map((l: any) => {
+              const vocabCount = allVocab.filter((v: any) => v.lesson_id === l.id).length;
+              const kanjiCount = allKanji.filter((k: any) => k.lesson_id === l.id).length;
+              const grammarCount = allGrammar.filter((g: any) => g.lesson_id === l.id).length;
+
+              return {
+                id: l.id,
+                title: l.title,
+                level: l.level || level,
+                lessonNumber: l.lesson_number,
+                description: l.description || '',
+                vocabulary: Array(vocabCount).fill(null),
+                kanji: Array(kanjiCount).fill(null),
+                grammar: Array(grammarCount).fill(null),
+                listening: [],
+                speaking: [],
+                difficultVocabulary: [],
+              };
+            }),
             courseCount: coursesByLevel[level].length,
             totalLessons: totalLessons,
           };

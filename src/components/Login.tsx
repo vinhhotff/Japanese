@@ -8,7 +8,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { signIn, isAdmin } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -17,10 +17,10 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await signIn(email, password);
+      const result = await signIn(email, password);
       
-      if (error) {
-        setError(error.message || 'Đăng nhập thất bại');
+      if (result.error) {
+        setError(result.error.message || 'Đăng nhập thất bại');
         setLoading(false);
         return;
       }
@@ -29,7 +29,7 @@ const Login = () => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Check admin status from the signed in user
-      const user = data?.user;
+      const user = result.data?.user;
       if (!user) {
         setError('Không thể lấy thông tin user');
         setLoading(false);

@@ -248,14 +248,26 @@ const KanjiWritingPractice = () => {
         {practiceMode === 'reading' && (
           <div className="kanji-practice-content">
             <div className="practice-question">
-              <h2>
+              <div style={{ marginBottom: '1rem' }}>
                 {currentKanji.onyomi && currentKanji.onyomi.length > 0 && (
-                  <span>Onyomi: {currentKanji.onyomi.join(', ')}</span>
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <strong>Onyomi (音読み):</strong> {currentKanji.onyomi.join(', ')}
+                  </div>
                 )}
                 {currentKanji.kunyomi && currentKanji.kunyomi.length > 0 && (
-                  <span>Kunyomi: {currentKanji.kunyomi.join(', ')}</span>
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <strong>Kunyomi (訓読み):</strong> {currentKanji.kunyomi.join(', ')}
+                  </div>
                 )}
-              </h2>
+                {(!currentKanji.onyomi || currentKanji.onyomi.length === 0) && 
+                 (!currentKanji.kunyomi || currentKanji.kunyomi.length === 0) && (
+                  <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                    <strong>Nghĩa:</strong> {currentKanji.meaning}
+                    <br />
+                    <span style={{ fontSize: '0.875rem' }}>(Chưa có thông tin đọc âm)</span>
+                  </div>
+                )}
+              </div>
               <p>Hãy viết kanji này</p>
             </div>
             <div className="kanji-answer-display">

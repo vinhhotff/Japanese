@@ -100,16 +100,16 @@ const Shadowing = ({ listening }: ShadowingProps) => {
           </div>
         </div>
 
-        {currentExercise?.image_url && (
+        {currentExercise?.imageUrl && (
           <div className="shadowing-image">
-            <img src={currentExercise.image_url} alt={currentExercise.title} />
+            <img src={currentExercise.imageUrl} alt={currentExercise.title} />
           </div>
         )}
 
-        {currentExercise?.audio_url && (
+        {currentExercise?.audioUrl && (
           <div className="shadowing-audio">
             <audio ref={audioRef} controls className="audio-player">
-              <source src={currentExercise.audio_url} type="audio/mpeg" />
+              <source src={currentExercise.audioUrl} type="audio/mpeg" />
             </audio>
           </div>
         )}
