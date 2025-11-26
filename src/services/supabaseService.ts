@@ -335,19 +335,54 @@ export const createGrammar = async (grammar: {
 };
 
 export const updateGrammar = async (id: string, updates: Partial<{
+  lesson_id: string;
   pattern: string;
   meaning: string;
   explanation: string;
+  // examples được truyền từ frontend nhưng lưu ở bảng grammar_examples
 }>) => {
-  const { data, error } = await supabase
+  const { examples, ...grammarUpdates } = updates as any;
+
+  // 1. Cập nhật bản ghi grammar chính
+  const { data: grammar, error } = await supabase
     .from('grammar')
-    .update(updates)
+    .update(grammarUpdates)
     .eq('id', id)
     .select()
     .single();
   
   if (error) throw error;
-  return data;
+
+  // 2. Nếu có mảng examples mới, ta cập nhật bảng grammar_examples
+  if (Array.isArray(examples)) {
+    // Xóa toàn bộ ví dụ cũ của grammar này
+    const { error: deleteError } = await supabase
+      .from('grammar_examples')
+      .delete()
+      .eq('grammar_id', id);
+
+    if (deleteError) throw deleteError;
+
+    // Lọc các ví dụ hợp lệ (có câu tiếng Nhật và bản dịch)
+    const validExamples = examples
+      .filter((ex: any) => ex && (ex.japanese || '').trim() && (ex.translation || '').trim())
+      .map((ex: any) => ({
+        grammar_id: id,
+        japanese: ex.japanese,
+        romaji: ex.romaji || null,
+        translation: ex.translation,
+      }));
+
+    if (validExamples.length > 0) {
+      const { error: insertError } = await supabase
+        .from('grammar_examples')
+        .insert(validExamples);
+
+      if (insertError) throw insertError;
+    }
+  }
+
+  return grammar;
 };
 
 export const deleteGrammar = async (id: string) => {
@@ -414,6 +449,67 @@ export const createListeningExercise = async (exercise: {
   return exerciseResult;
 };
 
+export const updateListeningExercise = async (
+  id: string,
+  updates: Partial<{
+    lesson_id: string;
+    title: string;
+    audio_url?: string;
+    image_url?: string;
+    transcript: string;
+    questions?: Array<{ question: string; options: string[]; correct_answer: number }>;
+  }>
+) => {
+  const { questions, ...exerciseUpdates } = updates as any;
+
+  const { data: exercise, error } = await supabase
+    .from('listening_exercises')
+    .update(exerciseUpdates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  if (Array.isArray(questions)) {
+    // Xóa toàn bộ câu hỏi cũ
+    const { error: deleteError } = await supabase
+      .from('listening_questions')
+      .delete()
+      .eq('listening_exercise_id', id);
+
+    if (deleteError) throw deleteError;
+
+    const validQuestions = questions
+      .filter((q) => q && (q.question || '').trim())
+      .map((q) => ({
+        listening_exercise_id: id,
+        question: q.question,
+        options: q.options || [],
+        correct_answer: q.correct_answer ?? 0,
+      }));
+
+    if (validQuestions.length > 0) {
+      const { error: insertError } = await supabase
+        .from('listening_questions')
+        .insert(validQuestions);
+
+      if (insertError) throw insertError;
+    }
+  }
+
+  return exercise;
+};
+
+export const deleteListeningExercise = async (id: string) => {
+  const { error } = await supabase
+    .from('listening_exercises')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+};
+
 // Speaking Exercises
 export const getSpeakingExercises = async (lessonId?: string) => {
   let query = supabase
@@ -444,6 +540,35 @@ export const createSpeakingExercise = async (exercise: {
   
   if (error) throw error;
   return data;
+};
+
+export const updateSpeakingExercise = async (
+  id: string,
+  updates: Partial<{
+    lesson_id: string;
+    title: string;
+    prompt: string;
+    example_response?: string;
+  }>
+) => {
+  const { data, error } = await supabase
+    .from('speaking_exercises')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const deleteSpeakingExercise = async (id: string) => {
+  const { error } = await supabase
+    .from('speaking_exercises')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 };
 
 // Sentence Games
@@ -478,6 +603,37 @@ export const createSentenceGame = async (game: {
   
   if (error) throw error;
   return data;
+};
+
+export const updateSentenceGame = async (
+  id: string,
+  updates: Partial<{
+    lesson_id: string;
+    sentence: string;
+    translation: string;
+    words: string[];
+    correct_order: number[];
+    hint?: string;
+  }>
+) => {
+  const { data, error } = await supabase
+    .from('sentence_games')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const deleteSentenceGame = async (id: string) => {
+  const { error } = await supabase
+    .from('sentence_games')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 };
 
 // Roleplay Scenarios

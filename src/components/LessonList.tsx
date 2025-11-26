@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getCourses, getLessons } from '../services/supabaseService';
-import { transformCourseFromDB, transformLessonFromDB } from '../utils/dataTransform';
+import { getLessons } from '../services/supabaseService';
 import '../App.css';
 
 const LessonList = () => {
@@ -16,72 +15,31 @@ const LessonList = () => {
   const loadCourse = async () => {
     try {
       setLoading(true);
-      const [coursesData, lessonsData] = await Promise.all([
-        getCourses(),
-        getLessons(),
-      ]);
+      const lessonsData = await getLessons();
 
-      // Get all courses with this level
-      const coursesOfLevel = coursesData.filter((c) => c.level === level);
-      
-      if (coursesOfLevel.length > 0) {
-        // Get all lessons from all courses of this level
-        const allLessons = lessonsData.filter(l => {
-          const courseId = l.course_id || l.course?.id;
-          return coursesOfLevel.some(c => c.id === courseId);
-        });
+      // Lọc tất cả bài học theo level (N5, N4, ...)
+      const lessonsOfLevel = lessonsData
+        .filter((l: any) => (l.level || '').toUpperCase() === (level || '').toUpperCase())
+        .sort((a: any, b: any) => (a.lesson_number || 0) - (b.lesson_number || 0));
 
-        // Group lessons by course for display
-        const lessonsByCourse = coursesOfLevel.map(course => {
-          const courseLessons = allLessons.filter(l => {
-            const courseId = l.course_id || l.course?.id;
-            return courseId === course.id;
-          });
-
-          return {
-            courseTitle: course.title,
-            courseDescription: course.description,
-            lessons: courseLessons.map((l: any) => ({
-              id: l.id,
-              title: l.title,
-              level: l.level || level,
-              lessonNumber: l.lesson_number,
-              description: l.description || '',
-              vocabulary: [],
-              kanji: [],
-              grammar: [],
-              listening: [],
-              speaking: [],
-              difficultVocabulary: [],
-            })),
-          };
-        });
-
-        // Combine into one course object for display
-        setCourse({
-          level,
-          title: coursesOfLevel.length === 1 
-            ? coursesOfLevel[0].title 
-            : `${level} - Tất cả khóa học`,
-          description: coursesOfLevel.length === 1
-            ? coursesOfLevel[0].description || ''
-            : `${coursesOfLevel.length} khóa học: ${coursesOfLevel.map(c => c.title).join(', ')}`,
-          lessons: allLessons.map((l: any) => ({
-            id: l.id,
-            title: l.title,
-            level: l.level || level,
-            lessonNumber: l.lesson_number,
-            description: l.description || '',
-            vocabulary: [],
-            kanji: [],
-            grammar: [],
-            listening: [],
-            speaking: [],
-            difficultVocabulary: [],
-          })),
-          courses: lessonsByCourse, // Store grouped by course for reference
-        });
-      }
+      setCourse({
+        level,
+        title: `${level} - Tất cả bài học`,
+        description: `Có ${lessonsOfLevel.length} bài học trong ${level}.`,
+        lessons: lessonsOfLevel.map((l: any) => ({
+          id: l.id,
+          title: l.title,
+          level: l.level || level,
+          lessonNumber: l.lesson_number,
+          description: l.description || '',
+          vocabulary: [],
+          kanji: [],
+          grammar: [],
+          listening: [],
+          speaking: [],
+          difficultVocabulary: [],
+        })),
+      });
     } catch (err: any) {
       console.error('Error loading course:', err);
     } finally {

@@ -1,39 +1,30 @@
-{
-  "lesson_id": "YOUR_LESSON_ID_HERE",
-  "title": "Đặt chỗ cắm trại",
-  "description": "Luyện tập đặt chỗ cắm trại qua điện thoại",
-  "scenario": "Bạn muốn đặt chỗ cắm trại cho cuối tuần. Hãy gọi điện đến khu cắm trại để đặt chỗ.",
-  "character_a": "Khách hàng",
-  "character_b": "Nhân viên khu cắm trại",
-  "character_a_script": [
-    "Xin chào",
-    "Tôi muốn đặt chỗ cắm trại cho 2 người vào cuối tuần này",
-    "Có chỗ trống không?",
-    "Giá bao nhiêu một đêm?",
-    "Có thể đặt từ thứ Sáu đến Chủ nhật không?",
-    "Cảm ơn bạn rất nhiều"
-  ],
-  "character_b_script": [
-    "Xin chào, chào mừng đến khu cắm trại ABC",
-    "Vâng, để tôi kiểm tra xem còn chỗ trống không",
-    "Có chỗ trống cho cuối tuần này",
-    "Giá là 3,000 yên một đêm cho 2 người",
-    "Vâng, có thể đặt từ thứ Sáu đến Chủ nhật",
-    "Không có gì, hẹn gặp lại bạn"
-  ],
-  "vocabulary_hints": [
-    "キャンプ場 (kyanpujou) - Khu cắm trại",
-    "予約 (yoyaku) - Đặt chỗ",
-    "料金 (ryoukin) - Giá tiền",
-    "一泊 (ippaku) - Một đêm",
-    "空き (aki) - Chỗ trống"
-  ],
-  "grammar_points": [
-    "〜たいです - Muốn làm gì",
-    "〜ませんか - Câu hỏi lịch sự",
-    "〜から〜まで - Từ... đến..."
-  ],
-  "difficulty": "medium",
-  "image_url": ""
-}
-
+[
+  {
+    "lesson_id": "UUID_BAI_HOC",
+    "title": "Kịch bản 1",
+    "description": "...",
+    "scenario": "...",
+    "character_a": "A",
+    "character_b": "B",
+    "character_a_script": [ "...", "..." ],
+    "character_b_script": [ "...", "..." ],
+    "vocabulary_hints": [ "...", "..." ],
+    "grammar_points": [ "...", "..." ],
+    "difficulty": "easy",
+    "image_url": ""
+  },
+  {
+    "lesson_id": "UUID_BAI_HOC",
+    "title": "Kịch bản 2",
+    "description": "...",
+    "scenario": "...",
+    "character_a": "A",
+    "character_b": "店員",
+    "character_a_script": [ "...", "..." ],
+    "character_b_script": [ "...", "..." ],
+    "vocabulary_hints": [ "...", "..." ],
+    "grammar_points": [ "...", "..." ],
+    "difficulty": "easy",
+    "image_url": ""
+  }
+]

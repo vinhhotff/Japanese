@@ -50,7 +50,7 @@ const CourseList = () => {
             level,
             title: coursesByLevel[level].length === 1 
               ? firstCourse.title 
-              : `${level} - ${coursesByLevel[level].length} khóa học`,
+              : `${level} - ${totalLessons} bài học`,
             description: coursesByLevel[level].length === 1
               ? firstCourse.description || ''
               : `Bao gồm: ${courseTitles}`,

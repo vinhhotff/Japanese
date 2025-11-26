@@ -6,9 +6,9 @@ import {
   getVocabulary, createVocabulary, updateVocabulary, deleteVocabulary,
   getKanji, createKanji, updateKanji, deleteKanji,
   getGrammar, createGrammar, updateGrammar, deleteGrammar,
-  getListeningExercises, createListeningExercise,
-  getSpeakingExercises, createSpeakingExercise,
-  getSentenceGames, createSentenceGame,
+  getListeningExercises, createListeningExercise, updateListeningExercise, deleteListeningExercise,
+  getSpeakingExercises, createSpeakingExercise, updateSpeakingExercise, deleteSpeakingExercise,
+  getSentenceGames, createSentenceGame, updateSentenceGame, deleteSentenceGame,
   getRoleplayScenarios, createRoleplayScenario, updateRoleplayScenario, deleteRoleplayScenario
 } from '../services/supabaseService';
 import { parseVocabularyBatch } from '../utils/vocabParser';
@@ -249,7 +249,15 @@ const AdminPanel = () => {
         case 'roleplay':
           await updateRoleplayScenario(id, formData);
           break;
-        // Add update for other types if needed
+        case 'listening':
+          await updateListeningExercise(id, formData);
+          break;
+        case 'speaking':
+          await updateSpeakingExercise(id, formData);
+          break;
+        case 'games':
+          await updateSentenceGame(id, formData);
+          break;
       }
       setShowForm(false);
       setEditingItem(null);
@@ -281,6 +289,15 @@ const AdminPanel = () => {
           break;
         case 'roleplay':
           await deleteRoleplayScenario(id);
+          break;
+        case 'listening':
+          await deleteListeningExercise(id);
+          break;
+        case 'speaking':
+          await deleteSpeakingExercise(id);
+          break;
+        case 'games':
+          await deleteSentenceGame(id);
           break;
       }
       await loadData();
@@ -541,6 +558,8 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
   const [batchError, setBatchError] = useState<string | null>(null);
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [aiJsonText, setAiJsonText] = useState(''); // ô dán JSON từ AI
+  const [aiJsonStatus, setAiJsonStatus] = useState<string | null>(null); // trạng thái parse JSON
 
   // Check if this type supports batch import
   const supportsBatchImport = type === 'vocabulary' || type === 'kanji' || type === 'grammar' || type === 'games';
@@ -556,15 +575,296 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
       setBatchText('');
       setBatchPreview([]);
       setBatchError(null);
+      setAiJsonText('');
+      setAiJsonStatus(null);
     } else if (supportsBatchImport) {
       // New item with batch support - default to single
       setImportMode('single');
       setBatchText('');
       setBatchPreview([]);
       setBatchError(null);
+      setAiJsonText('');
+      setAiJsonStatus(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id, type]); // Only depend on item.id, not the whole item object
+
+  // Parse JSON từ AI và đổ vào form tương ứng
+  const handleParseAiJson = () => {
+    if (!aiJsonText.trim()) {
+      alert('Vui lòng dán JSON trước.');
+      return;
+    }
+    let json: any;
+    try {
+      json = JSON.parse(aiJsonText);
+    } catch (e) {
+      alert('JSON không hợp lệ. Hãy kiểm tra lại (không được có text ngoài JSON).');
+      return;
+    }
+
+    try {
+      setAiJsonStatus(null);
+      switch (type as TabType) {
+        case 'listening': {
+          const questions =
+            Array.isArray(json.questions) && json.questions.length
+              ? json.questions.map((q: any) => ({
+                  question: q.question || '',
+                  options: Array.isArray(q.options) ? q.options.slice(0, 4) : [],
+                  correct_answer:
+                    typeof q.correct_answer === 'number' && q.correct_answer >= 0 && q.correct_answer <= 3
+                      ? q.correct_answer
+                      : 0,
+                }))
+              : [];
+          setFormData({
+            ...formData,
+            title: json.title || formData.title,
+            transcript: json.transcript || formData.transcript,
+            questions,
+          });
+          setAiJsonStatus('Đã parse JSON bài nghe vào form.');
+          break;
+        }
+        case 'speaking': {
+          setFormData({
+            ...formData,
+            title: json.title || formData.title,
+            prompt: json.prompt || formData.prompt,
+            example_response: json.example_response || formData.example_response,
+          });
+          setAiJsonStatus('Đã parse JSON bài nói vào form.');
+          break;
+        }
+        case 'roleplay': {
+          setFormData({
+            ...formData,
+            title: json.title || formData.title,
+            description: json.description || formData.description,
+            scenario: json.scenario || formData.scenario,
+            character_a: json.character_a || formData.character_a,
+            character_b: json.character_b || formData.character_b,
+            character_a_script: Array.isArray(json.character_a_script)
+              ? json.character_a_script
+              : formData.character_a_script || [],
+            character_b_script: Array.isArray(json.character_b_script)
+              ? json.character_b_script
+              : formData.character_b_script || [],
+            vocabulary_hints: Array.isArray(json.vocabulary_hints)
+              ? json.vocabulary_hints
+              : formData.vocabulary_hints || [],
+            grammar_points: Array.isArray(json.grammar_points)
+              ? json.grammar_points
+              : formData.grammar_points || [],
+            difficulty: json.difficulty || formData.difficulty || 'easy',
+            image_url: json.image_url || formData.image_url,
+          });
+          setAiJsonStatus('Đã parse JSON roleplay vào form.');
+          break;
+        }
+        case 'games': {
+          // JSON 1 câu game sắp xếp câu
+          setFormData({
+            ...formData,
+            sentence: json.sentence || formData.sentence,
+            translation: json.translation || formData.translation,
+            words: Array.isArray(json.words) ? json.words : formData.words || [],
+            correct_order: Array.isArray(json.correct_order) ? json.correct_order : formData.correct_order || [],
+            hint: json.hint || formData.hint,
+          });
+          setAiJsonStatus('Đã parse JSON game sắp xếp câu vào form.');
+          break;
+        }
+        default: {
+          alert('Loại này hiện chỉ hỗ trợ import dạng text/batch, chưa hỗ trợ JSON tự parse.');
+          break;
+        }
+      }
+    } catch (e) {
+      console.error('Parse AI JSON error', e);
+      alert('Có lỗi khi áp dụng JSON vào form. Hãy kiểm tra lại cấu trúc.');
+    }
+  };
+
+  // Hướng dẫn prompt JSON cho AI theo từng chức năng (chỉ hiển thị khi tạo mới)
+  const renderAIPromptHint = () => {
+    if (item) return null;
+
+    switch (type as TabType) {
+      case 'vocabulary':
+        return (
+          <div className="form-group">
+            <label>Hướng dẫn JSON/format cho AI (Từ vựng)</label>
+            <div className="format-hint" style={{ lineHeight: 1.6 }}>
+              Gợi ý có thể gửi cho AI:
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo một danh sách từ vựng tiếng Nhật trình độ N5.
+- Trả về dạng text, mỗi dòng một từ.
+- Không giải thích thêm.
+- Format mỗi dòng:
+  kanji=hiragana=nghĩa_tiếng_Việt
+  hoặc nếu không có kanji: hiragana=nghĩa_tiếng_Việt
+
+Ví dụ:
+学生=がくせい=sinh viên
+先生=せんせい=giáo viên
+ありがとう=ありがとう=cảm ơn`}</pre>
+              Sau đó copy toàn bộ và dán vào ô import hàng loạt từ vựng.
+            </div>
+          </div>
+        );
+      case 'kanji':
+        return (
+          <div className="form-group">
+            <label>Hướng dẫn JSON/format cho AI (Kanji)</label>
+            <div className="format-hint" style={{ lineHeight: 1.6 }}>
+              Gợi ý:
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy liệt kê một số kanji trình độ N5 liên quan tới chủ đề tôi đưa.
+- Trả về dạng text, mỗi dòng một kanji.
+- Không giải thích thêm.
+- Format mỗi dòng:
+  kanji=nghĩa
+  hoặc:
+  kanji=nghĩa=onyomi1|onyomi2=kunyomi1|kunyomi2=số_nét
+
+Ví dụ:
+学=Học
+校=Trường học
+先=Trước, đầu tiên=セン|=さき=6`}</pre>
+              Copy kết quả và dán vào ô import hàng loạt Kanji.
+            </div>
+          </div>
+        );
+      case 'grammar':
+        return (
+          <div className="form-group">
+            <label>Hướng dẫn JSON/format cho AI (Ngữ pháp)</label>
+            <div className="format-hint" style={{ lineHeight: 1.6 }}>
+              Gợi ý:
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy liệt kê các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
+- Trả về dạng text, mỗi dòng một mẫu.
+- Không giải thích thêm.
+- Format mỗi dòng:
+  pattern=nghĩa_tiếng_Việt
+  hoặc:
+  pattern=nghĩa_tiếng_Việt=giải_thích_ngắn
+
+Ví dụ:
+〜たいです=Muốn làm gì đó=Diễn tả mong muốn của người nói
+〜てください=Hãy làm gì đó=Dùng khi nhờ vả lịch sự`}</pre>
+              Dán vào import hàng loạt Ngữ pháp.
+            </div>
+          </div>
+        );
+      case 'listening':
+        return (
+          <div className="form-group">
+            <label>Hướng dẫn JSON cho AI (Bài nghe + câu hỏi)</label>
+            <div className="format-hint" style={{ lineHeight: 1.6 }}>
+              Gợi ý:
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo một bài nghe tiếng Nhật trình độ N5.
+- Trả về JSON, không giải thích thêm.
+- Không cần audio_url (tôi sẽ upload sau), chỉ cần transcript và câu hỏi.
+- Cấu trúc JSON:
+{
+  "title": "Tiêu đề bài nghe",
+  "transcript": "Transcript tiếng Nhật (có thể xuống dòng)",
+  "questions": [
+    {
+      "question": "Câu hỏi tiếng Việt hoặc Nhật",
+      "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+      "correct_answer": 0
+    }
+  ]
+}`}</pre>
+              Bạn có thể copy `title`, `transcript` và từng câu hỏi (A/B/C/D + đáp án đúng) vào form Nghe.
+            </div>
+          </div>
+        );
+      case 'speaking':
+        return (
+          <div className="form-group">
+            <label>Hướng dẫn JSON cho AI (Bài nói)</label>
+            <div className="format-hint" style={{ lineHeight: 1.6 }}>
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo 1 bài tập luyện nói tiếng Nhật trình độ N5.
+- Trả về JSON, không giải thích thêm.
+- Giữ nguyên tên các key:
+{
+  "title": "Tiêu đề bài nói",
+  "prompt": "Đề bài: mô tả tình huống bằng tiếng Việt hoặc Nhật",
+  "example_response": "Câu trả lời mẫu bằng tiếng Nhật"
+}`}</pre>
+              Sau khi AI trả JSON, copy `title`, `prompt`, `example_response` vào form Nói.
+            </div>
+          </div>
+        );
+      case 'games':
+        return (
+          <div className="form-group">
+            <label>Hướng dẫn JSON/format cho AI (Game sắp xếp câu)</label>
+            <div className="format-hint" style={{ lineHeight: 1.6 }}>
+              Gợi ý 1 (dạng text để import hàng loạt):
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo các câu ví dụ tiếng Nhật trình độ N5, đã được tách sẵn từng từ bằng khoảng trắng.
+- Trả về dạng text, mỗi dòng:
+  câu_tiếng_Nhật_đã_tách=nghĩa_tiếng_Việt
+Ví dụ:
+私 は 学生 です=Tôi là học sinh
+これは 本 です=Đây là quyển sách`}</pre>
+              Gợi ý 2 (JSON chi tiết cho từng câu):
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`{
+  "sentence": "私 は 学生 です",
+  "translation": "Tôi là học sinh",
+  "words": ["私", "は", "学生", "です"],
+  "correct_order": [0, 1, 2, 3],
+  "hint": "Tôi là học sinh"
+}`}</pre>
+              Bạn có thể dùng JSON để tham khảo, hoặc dùng dạng text để import hàng loạt.
+            </div>
+          </div>
+        );
+      case 'roleplay':
+        return (
+          <div className="form-group">
+            <label>Hướng dẫn JSON cho AI (Roleplay)</label>
+            <div className="format-hint" style={{ lineHeight: 1.6 }}>
+              Gợi ý gửi cho AI:
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo 1 kịch bản hội thoại roleplay tiếng Nhật trình độ N5.
+- Trả về đúng JSON, không giải thích thêm.
+- Không dùng markdown, chỉ JSON thuần.
+- Giữ nguyên tên các key:
+{
+  "title": "Tiêu đề kịch bản",
+  "description": "Mô tả ngắn (tiếng Việt hoặc Nhật)",
+  "scenario": "Mô tả tình huống roleplay",
+  "character_a": "Tên nhân vật A",
+  "character_b": "Tên nhân vật B",
+  "character_a_script": [
+    "Câu 1 của nhân vật A bằng tiếng Nhật",
+    "Câu 2 của nhân vật A bằng tiếng Nhật"
+  ],
+  "character_b_script": [
+    "Câu 1 của nhân vật B bằng tiếng Nhật",
+    "Câu 2 của nhân vật B bằng tiếng Nhật"
+  ],
+  "vocabulary_hints": [
+    "từ vựng 1 - nghĩa tiếng Việt",
+    "từ vựng 2 - nghĩa tiếng Việt"
+  ],
+  "grammar_points": [
+    "mẫu ngữ pháp 1",
+    "mẫu ngữ pháp 2"
+  ],
+  "difficulty": "easy",
+  "image_url": ""
+}`}</pre>
+              Sau khi AI trả JSON, copy nội dung các field vào form Roleplay tương ứng.
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   function getDefaultFormData(type: TabType) {
     switch (type) {
@@ -783,6 +1083,7 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h2>{item ? 'Sửa' : 'Thêm mới'} {getTypeLabel(type)}</h2>
         <form onSubmit={handleSubmit}>
+          {renderAIPromptHint()}
           {type === 'courses' && (
             <>
               <div className="form-group">
@@ -1809,6 +2110,30 @@ Hoặc với đọc âm:
                   rows={5}
                 />
               </div>
+              {!item && (
+                <div className="form-group">
+                  <label>Dán JSON từ AI (Bài nghe)</label>
+                  <textarea
+                    value={aiJsonText}
+                    onChange={(e) => setAiJsonText(e.target.value)}
+                    rows={4}
+                    placeholder='Dán JSON {"title": "...", "transcript": "...", "questions": [...]}'
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ marginTop: '0.5rem' }}
+                    onClick={handleParseAiJson}
+                  >
+                    🔁 Parse JSON vào form
+                  </button>
+                  {aiJsonStatus && (
+                    <div style={{ marginTop: '0.5rem', color: 'var(--success-color)', fontSize: '0.875rem' }}>
+                      {aiJsonStatus}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="form-group">
                 <label>Câu hỏi (tùy chọn)</label>
                 <div style={{ marginTop: '0.5rem' }}>
@@ -1828,6 +2153,11 @@ Hoặc với đọc âm:
                           Xóa
                         </button>
                       </div>
+                      {(() => {
+                        const options = Array.isArray(q.options) ? [...q.options] : [];
+                        while (options.length < 4) options.push('');
+                        return (
+                          <>
                       <div className="form-group" style={{ marginBottom: '0.5rem' }}>
                         <label>Câu hỏi</label>
                         <input
@@ -1841,25 +2171,33 @@ Hoặc với đọc âm:
                         />
                       </div>
                       <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-                        <label>Đáp án (cách nhau bằng dấu phẩy)</label>
-                        <input
-                          type="text"
-                          value={Array.isArray(q.options) ? q.options.join(', ') : q.options || ''}
-                          onChange={(e) => {
-                            const newQuestions = [...(formData.questions || [])];
-                            newQuestions[idx] = { 
-                              ...newQuestions[idx], 
-                              options: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                            };
-                            setFormData({ ...formData, questions: newQuestions });
-                          }}
-                        />
+                        <label>Đáp án A / B / C / D</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
+                          {['A', 'B', 'C', 'D'].map((label, optIdx) => (
+                            <div key={optIdx} className="form-group" style={{ marginBottom: 0 }}>
+                              <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Đáp án {label}</label>
+                              <input
+                                type="text"
+                                value={options[optIdx] || ''}
+                                onChange={(e) => {
+                                  const newQuestions = [...(formData.questions || [])];
+                                  const qOptions = Array.isArray(newQuestions[idx].options) ? [...newQuestions[idx].options] : [];
+                                  while (qOptions.length < 4) qOptions.push('');
+                                  qOptions[optIdx] = e.target.value;
+                                  newQuestions[idx] = {
+                                    ...newQuestions[idx],
+                                    options: qOptions,
+                                  };
+                                  setFormData({ ...formData, questions: newQuestions });
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       <div className="form-group">
-                        <label>Đáp án đúng (số thứ tự, bắt đầu từ 0)</label>
-                        <input
-                          type="number"
-                          min="0"
+                        <label>Đáp án đúng (A / B / C / D)</label>
+                        <select
                           value={q.correct_answer !== undefined ? q.correct_answer : 0}
                           onChange={(e) => {
                             const newQuestions = [...(formData.questions || [])];
@@ -1869,8 +2207,16 @@ Hoặc với đọc âm:
                             };
                             setFormData({ ...formData, questions: newQuestions });
                           }}
-                        />
+                        >
+                          <option value={0}>A</option>
+                          <option value={1}>B</option>
+                          <option value={2}>C</option>
+                          <option value={3}>D</option>
+                        </select>
                       </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   ))}
                   <button
@@ -1931,6 +2277,30 @@ Hoặc với đọc âm:
                   rows={3}
                 />
               </div>
+              {!item && (
+                <div className="form-group">
+                  <label>Dán JSON từ AI (Bài nói)</label>
+                  <textarea
+                    value={aiJsonText}
+                    onChange={(e) => setAiJsonText(e.target.value)}
+                    rows={4}
+                    placeholder='Dán JSON {"title": "...", "prompt": "...", "example_response": "..."}'
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ marginTop: '0.5rem' }}
+                    onClick={handleParseAiJson}
+                  >
+                    🔁 Parse JSON vào form
+                  </button>
+                  {aiJsonStatus && (
+                    <div style={{ marginTop: '0.5rem', color: 'var(--success-color)', fontSize: '0.875rem' }}>
+                      {aiJsonStatus}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
@@ -2027,6 +2397,30 @@ Hoặc với đọc âm:
                   onChange={(e) => setFormData({ ...formData, hint: e.target.value })}
                 />
               </div>
+              {!item && (
+                <div className="form-group">
+                  <label>Dán JSON từ AI (1 câu game)</label>
+                  <textarea
+                    value={aiJsonText}
+                    onChange={(e) => setAiJsonText(e.target.value)}
+                    rows={4}
+                    placeholder='Dán JSON {"sentence": "...", "translation": "...", "words": [...], "correct_order": [...]}'
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ marginTop: '0.5rem' }}
+                    onClick={handleParseAiJson}
+                  >
+                    🔁 Parse JSON vào form
+                  </button>
+                  {aiJsonStatus && (
+                    <div style={{ marginTop: '0.5rem', color: 'var(--success-color)', fontSize: '0.875rem' }}>
+                      {aiJsonStatus}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
@@ -2222,6 +2616,31 @@ Hoặc với đọc âm:
                   <div className="format-hint">
                     Chọn một template để tự động điền sẵn hội thoại. Bạn có thể chỉnh lại nội dung cho phù hợp.
                   </div>
+                </div>
+              )}
+
+              {!item && (
+                <div className="form-group">
+                  <label>Dán JSON từ AI (Roleplay)</label>
+                  <textarea
+                    value={aiJsonText}
+                    onChange={(e) => setAiJsonText(e.target.value)}
+                    rows={5}
+                    placeholder='Dán JSON roleplay với các key: title, description, scenario, character_a/b, character_a_script, character_b_script, vocabulary_hints, grammar_points, difficulty, image_url'
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ marginTop: '0.5rem' }}
+                    onClick={handleParseAiJson}
+                  >
+                    🔁 Parse JSON vào form
+                  </button>
+                  {aiJsonStatus && (
+                    <div style={{ marginTop: '0.5rem', color: 'var(--success-color)', fontSize: '0.875rem' }}>
+                      {aiJsonStatus}
+                    </div>
+                  )}
                 </div>
               )}
 
