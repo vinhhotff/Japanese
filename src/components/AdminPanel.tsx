@@ -1597,6 +1597,75 @@ Hoặc với đọc âm:
                   rows={3}
                 />
               </div>
+              <div className="form-group">
+                <label>Ví dụ</label>
+                <div style={{ marginTop: '0.5rem' }}>
+                  {(formData.examples || []).map((ex: any, idx: number) => (
+                    <div key={idx} style={{ marginBottom: '1rem', padding: '1rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <strong>Ví dụ {idx + 1}</strong>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          onClick={() => {
+                            const newExamples = [...(formData.examples || [])];
+                            newExamples.splice(idx, 1);
+                            setFormData({ ...formData, examples: newExamples });
+                          }}
+                        >
+                          🗑️ Xóa
+                        </button>
+                      </div>
+                      <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                        <label>Câu tiếng Nhật</label>
+                        <input
+                          type="text"
+                          value={ex.japanese || ''}
+                          onChange={(e) => {
+                            const newExamples = [...(formData.examples || [])];
+                            newExamples[idx] = { ...newExamples[idx], japanese: e.target.value };
+                            setFormData({ ...formData, examples: newExamples });
+                          }}
+                          placeholder="今日は暑いです"
+                        />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                        <label>Romaji (tùy chọn)</label>
+                        <input
+                          type="text"
+                          value={ex.romaji || ''}
+                          onChange={(e) => {
+                            const newExamples = [...(formData.examples || [])];
+                            newExamples[idx] = { ...newExamples[idx], romaji: e.target.value };
+                            setFormData({ ...formData, examples: newExamples });
+                          }}
+                          placeholder="Kyou wa atsui desu"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Dịch tiếng Việt</label>
+                        <input
+                          type="text"
+                          value={ex.translation || ''}
+                          onChange={(e) => {
+                            const newExamples = [...(formData.examples || [])];
+                            newExamples[idx] = { ...newExamples[idx], translation: e.target.value };
+                            setFormData({ ...formData, examples: newExamples });
+                          }}
+                          placeholder="Hôm nay nóng"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => addExample('grammar')}
+                  >
+                    ➕ Thêm ví dụ
+                  </button>
+                </div>
+              </div>
             </>
           )}
 

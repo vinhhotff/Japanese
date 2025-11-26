@@ -5326,3 +5326,571 @@
     font-size: 1rem;
   }
 }
+
+/* ===== DAILY CHALLENGE STYLES ===== */
+.daily-challenge-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  animation: fadeIn 0.5s ease;
+  color: white;
+}
+
+.daily-challenge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 2rem;
+}
+
+.daily-challenge-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: white;
+  display: flex;
+  align-items: center;
+}
+
+.daily-challenge-header p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+.challenge-stats {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  min-width: 100px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.challenge-progress-bar {
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.challenge-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.challenges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.challenge-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.challenge-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(59, 130, 246, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.challenge-card:hover::before {
+  opacity: 1;
+}
+
+.challenge-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.challenge-card.completed {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #10b981;
+}
+
+.challenge-card.completed::before {
+  background: linear-gradient(135deg, transparent 0%, rgba(16, 185, 129, 0.1) 100%);
+}
+
+.challenge-icon {
+  font-size: 2.5rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 12px;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.challenge-card:hover .challenge-icon {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.challenge-info {
+  flex: 1;
+}
+
+.challenge-info h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.challenge-info p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.challenge-score {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.challenge-check {
+  font-size: 1.5rem;
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.challenge-arrow {
+  font-size: 1.5rem;
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.challenge-card:hover .challenge-arrow {
+  transform: translateX(4px);
+  color: #3b82f6;
+}
+
+/* Challenge Modal */
+.challenge-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.challenge-modal-content {
+  background: white;
+  border-radius: 20px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: scaleIn 0.3s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.challenge-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+  color: #6b7280;
+}
+
+.challenge-modal-close:hover {
+  background: #ef4444;
+  color: white;
+  transform: rotate(90deg);
+}
+
+/* Responsive Daily Challenge */
+@media (max-width: 768px) {
+  .daily-challenge-card {
+    padding: 1.5rem;
+  }
+
+  .daily-challenge-header {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .daily-challenge-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .challenge-stats {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .stat-item {
+    min-width: auto;
+    flex: 1;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
+  .challenges-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .challenge-modal {
+    padding: 1rem;
+  }
+
+  .challenge-modal-content {
+    max-height: 85vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-item {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.625rem;
+  }
+
+  .challenge-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+  }
+
+  .challenge-info h3 {
+    font-size: 1rem;
+  }
+
+  .challenge-info p {
+    font-size: 0.8125rem;
+  }
+}
+
+/* ===== SAVED WORDS STYLES ===== */
+.saved-words-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  animation: fadeIn 0.5s ease;
+}
+
+.saved-word-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 2px solid #f3f4f6;
+  transition: all 0.3s ease;
+  animation: scaleIn 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.saved-word-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);
+  transition: width 0.3s ease;
+}
+
+.saved-word-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  border-color: #e0e7ff;
+}
+
+.saved-word-card:hover::before {
+  width: 6px;
+}
+
+.saved-word-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.saved-word-japanese {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.saved-word-kanji {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.saved-word-hiragana {
+  font-size: 1.125rem;
+  color: #6b7280;
+  font-family: serif;
+}
+
+.btn-remove-word {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fee2e2;
+  border: none;
+  color: #ef4444;
+  font-size: 1.125rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-remove-word:hover {
+  background: #ef4444;
+  color: white;
+  transform: rotate(90deg) scale(1.1);
+}
+
+.saved-word-meanings {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  border-left: 3px solid #3b82f6;
+}
+
+.saved-word-meaning {
+  color: #374151;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.saved-word-meaning::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.saved-word-meaning:last-child {
+  margin-bottom: 0;
+}
+
+.saved-word-more {
+  color: #6b7280;
+  font-size: 0.8125rem;
+  font-style: italic;
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+}
+
+.saved-word-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.btn-speak-small {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-speak-small::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-speak-small:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-speak-small:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-speak-small:active {
+  transform: translateY(0);
+}
+
+.btn-speak-small:disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-speak-small:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(156, 163, 175, 0.25);
+}
+
+.saved-word-date {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* Responsive Saved Words */
+@media (max-width: 768px) {
+  .saved-words-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .saved-word-card {
+    padding: 1.25rem;
+  }
+
+  .saved-word-kanji {
+    font-size: 1.75rem;
+  }
+
+  .saved-word-hiragana {
+    font-size: 1rem;
+  }
+
+  .saved-word-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-speak-small {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .saved-word-date {
+    text-align: center;
+  }
+}
