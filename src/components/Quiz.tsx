@@ -180,7 +180,7 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
               ? 'Xuất sắc! Bạn đã nắm vững kiến thức! 🎉' 
               : percentage >= 60 
               ? 'Tốt! Hãy tiếp tục cố gắng! 👍' 
-              : 'Hãy ôn lại và thử lại nhé! 📚'}
+              : 'Hãy ôn lại và thử lại nhé! 📖'}
           </div>
           <button className="btn btn-primary" onClick={resetQuiz}>
             <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

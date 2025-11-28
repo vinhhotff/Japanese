@@ -8475,3 +8475,82 @@
     display: none;
   }
 }
+/* ===== CHAT TOOLTIP ===== */
+.chat-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  z-index: 1000;
+  max-width: 300px;
+  text-align: center;
+  animation: tooltipFadeIn 0.2s ease;
+}
+
+.chat-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--card-bg);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ===== CHAT MESSAGE HOVER EFFECTS ===== */
+.chat-message-bubble {
+  transition: all 0.2s ease;
+}
+
+.chat-message-bubble:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.chat-message-bubble.has-translation {
+  position: relative;
+}
+
+.chat-message-bubble.has-translation::before {
+  content: '💬';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.chat-message-bubble.has-translation:hover::before {
+  opacity: 1;
+}

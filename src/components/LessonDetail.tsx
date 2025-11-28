@@ -132,7 +132,7 @@ const LessonDetail = () => {
             <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'white' }}>{lesson.title}</h1>
             <p style={{ fontSize: '1.125rem', opacity: 0.9, marginBottom: '1rem' }}>{lesson.description}</p>
             <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem' }}>
-              <span>📚 {lesson.vocabulary.length} từ vựng</span>
+              <span>📖 {lesson.vocabulary.length} từ vựng</span>
               <span>㊗️ {lesson.kanji.length} kanji</span>
               <span>📝 {lesson.grammar.length} ngữ pháp</span>
             </div>
@@ -300,7 +300,7 @@ const LessonDetail = () => {
               onClick={() => setLearnTab('vocab')}
               className={learnTab === 'vocab' ? 'btn btn-primary' : 'btn btn-outline'}
             >
-              📚 Từ vựng ({lesson.vocabulary.length})
+              📖 Từ vựng ({lesson.vocabulary.length})
               {completedSteps.has('learn-vocab') && ' ✓'}
             </button>
             <button

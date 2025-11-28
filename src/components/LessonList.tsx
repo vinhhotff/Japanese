@@ -93,7 +93,7 @@ const LessonList = () => {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.75rem' }}>
-          📚 {course.title}
+          📖 {course.title}
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
           {course.description}

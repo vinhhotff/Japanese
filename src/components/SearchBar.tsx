@@ -85,7 +85,7 @@ const SearchBar = ({ vocabulary, kanji, grammar, onResultClick }: SearchBarProps
         <div className="search-results">
           {results.vocab.length > 0 && (
             <div className="search-section">
-              <div className="search-section-title">📚 Từ vựng ({results.vocab.length})</div>
+              <div className="search-section-title">📖 Từ vựng ({results.vocab.length})</div>
               {results.vocab.map((v) => (
                 <div
                   key={v.id}

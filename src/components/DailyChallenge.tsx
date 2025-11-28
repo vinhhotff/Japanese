@@ -40,7 +40,7 @@ const DailyChallenge = () => {
     {
       id: 'vocabulary' as const,
       name: 'Từ vựng',
-      icon: '📚',
+      icon: '📖',
       color: '#3b82f6',
       description: 'Học 10 từ vựng mới'
     },

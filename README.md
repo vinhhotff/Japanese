@@ -1,7 +1,7 @@
 # 🇯🇵 Ứng dụng Học Tiếng Nhật
 
 Ứng dụng web hỗ trợ học tiếng Nhật toàn diện với các tính năng:
-- 📚 Từ vựng
+- 📖 Từ vựng
 - 🈳 Kanji
 - 📖 Ngữ pháp
 - 🎧 Nghe

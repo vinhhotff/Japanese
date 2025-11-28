@@ -98,7 +98,7 @@ const DashboardNew = () => {
           </p>
           <div className="hero-stats">
             <div className="stat-item">
-              <div className="stat-icon">📚</div>
+              <div className="stat-icon">📖</div>
               <div className="stat-content">
                 <div className="stat-value">1000+</div>
                 <div className="stat-label">{t('dashboard.features.vocabulary')}</div>

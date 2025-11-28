@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Vocabulary } from '../types';
-import { speakText, isSpeechSynthesisSupported } from '../utils/speech';
+import { speakTextSafely, isSpeechSynthesisSupported } from '../utils/speech';
 import '../App.css';
 
 interface VocabularySectionProps {
@@ -22,7 +22,7 @@ const VocabularySection = ({ vocabulary }: VocabularySectionProps) => {
 
     setSpeakingId(vocab.id);
     try {
-      await speakText(vocab.kanji || vocab.word);
+      await speakTextSafely(vocab.kanji || vocab.word);
     } catch (error) {
       console.error('Error speaking:', error);
       alert('Có lỗi xảy ra khi phát âm');

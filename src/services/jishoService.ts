@@ -95,7 +95,7 @@ export const searchWord = async (keyword: string): Promise<JishoWord[]> => {
       : `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(keyword)}`;
     
     // Try direct fetch first
-    let response: Response;
+    let response: Response | undefined;
     try {
       response = await fetch(apiUrl, {
         method: 'GET',
@@ -160,11 +160,11 @@ export const searchWord = async (keyword: string): Promise<JishoWord[]> => {
       throw new Error('Request cancelled');
     }
     
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response || !response.ok) {
+      throw new Error(`HTTP error! status: ${response?.status || 'unknown'}`);
     }
     
-    const data: JishoResponse = await response.json();
+    const data: JishoResponse = await response!.json();
     
     if (data.meta.status !== 200) {
       throw new Error(`Jisho API returned status ${data.meta.status}`);

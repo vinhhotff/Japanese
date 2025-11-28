@@ -229,7 +229,7 @@ const LessonListNew = () => {
                         fontSize: '0.9375rem',
                         color: 'var(--text-secondary)'
                       }}>
-                        <span>📚 Từ vựng: {lesson.vocabCount}</span>
+                        <span>📖 Từ vựng: {lesson.vocabCount}</span>
                         <span>🈯 Kanji: {lesson.kanjiCount}</span>
                         <span>📖 Ngữ pháp: {lesson.grammarCount}</span>
                       </div>
@@ -285,7 +285,7 @@ const LessonListNew = () => {
 
         {lessons.length === 0 && (
           <div className="empty-state">
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📖</div>
             <p>Chưa có bài học nào cho cấp độ này</p>
           </div>
         )}

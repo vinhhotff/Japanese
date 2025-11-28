@@ -307,7 +307,7 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
             className={`speaking-tab ${activeTab === 'vocabulary' ? 'active' : ''}`}
             onClick={() => setActiveTab('vocabulary')}
           >
-            📚 Luyện từ vựng
+            📖 Luyện từ vựng
             <span className="tab-badge">{vocabulary.length}</span>
           </button>
         )}

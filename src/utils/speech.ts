@@ -166,13 +166,34 @@ export const speakText = (
         console.log('Selected voice:', bestVoice.name, bestVoice.lang);
       } else {
         console.warn('No suitable voice found for language:', finalConfig.lang);
+        
+        // Fallback: Thử sử dụng giọng mặc định của hệ thống
+        const allVoices = getAvailableVoices();
+        if (allVoices.length > 0) {
+          // Sử dụng giọng đầu tiên có sẵn
+          utterance.voice = allVoices[0];
+          console.log('Using fallback voice:', allVoices[0].name, allVoices[0].lang);
+        } else {
+          // Không có giọng nào, sử dụng giọng mặc định của trình duyệt
+          console.log('Using browser default voice');
+        }
       }
     }
 
     return new Promise<void>((resolve, reject) => {
       utterance.onend = () => resolve();
-      utterance.onerror = (error) => reject(error);
-      window.speechSynthesis.speak(utterance);
+      utterance.onerror = (error) => {
+        console.error('Speech synthesis error:', error);
+        // Không reject để tránh crash app, chỉ log lỗi
+        resolve(); // Resolve thay vì reject
+      };
+      
+      try {
+        window.speechSynthesis.speak(utterance);
+      } catch (error) {
+        console.error('Failed to speak:', error);
+        resolve(); // Resolve thay vì reject
+      }
     });
   } else {
     return Promise.reject(new Error('Speech synthesis not supported'));
@@ -204,6 +225,39 @@ export const stopSpeaking = () => {
 
 export const isSpeechSynthesisSupported = () => {
   return 'speechSynthesis' in window;
+};
+
+// Debug function để kiểm tra voices có sẵn
+export const logAvailableVoices = () => {
+  if ('speechSynthesis' in window) {
+    const voices = window.speechSynthesis.getVoices();
+    console.log('=== Available Voices ===');
+    voices.forEach((voice, index) => {
+      console.log(`${index + 1}. ${voice.name} (${voice.lang}) - ${voice.localService ? 'Local' : 'Remote'}`);
+    });
+    
+    const japaneseVoices = voices.filter(v => v.lang.startsWith('ja'));
+    console.log('=== Japanese Voices ===');
+    if (japaneseVoices.length > 0) {
+      japaneseVoices.forEach((voice, index) => {
+        console.log(`${index + 1}. ${voice.name} (${voice.lang})`);
+      });
+    } else {
+      console.log('No Japanese voices found');
+    }
+  } else {
+    console.log('Speech synthesis not supported');
+  }
+};
+
+// Function để thử phát âm với fallback
+export const speakTextSafely = async (text: string, config: Partial<SpeechConfig> = {}) => {
+  try {
+    await speakText(text, config);
+  } catch (error) {
+    console.warn('Speech failed, continuing silently:', error);
+    // Không throw error để tránh crash app
+  }
 };
 
 // Speech Recognition utilities

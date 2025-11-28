@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAIResponse } from '../services/aiService';
-import { translateToVietnamese } from '../services/translateService';
 import '../App.css';
 
 interface Message {
@@ -58,8 +57,6 @@ const AIRoleplay = () => {
   const [showTranslation, setShowTranslation] = useState(false);
   const [showContinueDialog, setShowContinueDialog] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
-  const [hoveredOptionIndex, setHoveredOptionIndex] = useState<number | null>(null);
-  const [suggestedOptions, setSuggestedOptions] = useState<string[]>([]);
   const [savedConversation, setSavedConversation] = useState<{
     scenario: ScenarioOption;
     messages: Message[];
@@ -168,42 +165,8 @@ const AIRoleplay = () => {
     setLoading(true);
 
     try {
-      const systemPrompt = `${selectedScenario.context}
-
-⚠️ QUY TẮC TUYỆT ĐỐI - KHÔNG ĐƯỢC VI PHẠM:
-- KHÔNG được suy nghĩ, KHÔNG được dùng <think>, KHÔNG được giải thích
-- BẮT ĐẦU NGAY bằng tiếng Nhật
-- MỖI câu tiếng Nhật PHẢI có dịch tiếng Việt trong ngoặc đơn () ngay sau
-
-📝 FORMAT DUY NHẤT ĐƯỢC CHẤP NHẬN:
-[Câu tiếng Nhật]
-(Dịch tiếng Việt)
-
-Gợi ý:
-1. [Câu 1] (Dịch 1)
-2. [Câu 2] (Dịch 2)  
-3. [Câu 3] (Dịch 3)
-
-✅ VÍ DỤ ĐÚNG:
-いらっしゃいませ！何名様ですか？
-(Xin chào! Mấy người ạ?)
-
-Gợi ý:
-1. 二人です (Hai người)
-2. 予約していません (Tôi chưa đặt bàn)
-3. 窓際の席をお願いします (Cho tôi chỗ ngồi gần cửa sổ)
-
-❌ VÍ DỤ SAI (TUYỆT ĐỐI KHÔNG LÀM):
-<think>Let me think...</think>
-いらっしゃいませ
-Gợi ý:
-1. はい
-2. お願いします
-
-Bắt đầu trả lời NGAY:`;
-      
       const conversationMessages = [
-        { role: 'system' as const, content: systemPrompt },
+        { role: 'system' as const, content: selectedScenario.context },
         ...messages.map(m => ({
           role: m.role as 'user' | 'assistant',
           content: m.content.split('\n')[0]
@@ -217,120 +180,17 @@ Bắt đầu trả lời NGAY:`;
       if (response.error) {
         aiContent = 'すみません、もう一度お願いします。\n(Xin lỗi, xin hãy nói lại.)';
       } else {
-        // MAXIMUM AGGRESSIVE CLEANING: Remove ALL non-Japanese content
         aiContent = response.content;
-        
-        // Step 1: Remove ALL <think> tags (multiple aggressive passes)
-        for (let i = 0; i < 5; i++) {
-          aiContent = aiContent
-            .replace(/<think>[\s\S]*?<\/think>/gi, '')
-            .replace(/<think[\s\S]*?<\/think>/gi, '')
-            .replace(/<think[\s\S]*?>/gi, '')
-            .replace(/<\/think>/gi, '');
-        }
-        
-        // Step 2: Remove EVERYTHING before first Japanese character or marker
-        aiContent = aiContent.replace(/^[\s\S]*?(?=([ぁ-んァ-ヶー一-龯]|Gợi ý:|OPTIONS:))/i, '');
-        
-        // Step 3: Remove English thinking patterns line by line
-        aiContent = aiContent
-          .split('\n')
-          .filter(line => {
-            // Keep lines with Japanese characters or markers
-            if (/[ぁ-んァ-ヶー一-龯]/.test(line)) return true;
-            if (/^(Gợi ý:|OPTIONS:|\d\.)/i.test(line)) return true;
-            if (/^\(.*\)$/.test(line.trim())) return true; // Keep translation lines
-            // Remove English thinking lines
-            if (/^(Okay|Alright|Let me|Let's|So|Well|Now|First|Hmm|The user|I need|I should|This|That|Next|Check)/i.test(line)) return false;
-            return line.trim().length > 0;
-          })
-          .join('\n')
-          .replace(/\n{3,}/g, '\n\n')
-          .trim();
-        
-        // If AI didn't provide translation, add placeholder
-        if (aiContent && !aiContent.match(/[\(（][^)）]+[\)）]/)) {
-          aiContent = `${aiContent}\n(Vui lòng hover để xem nghĩa)`;
-        }
-        
-        // If content is empty after cleaning, use fallback
-        if (!aiContent) {
-          aiContent = 'すみません、もう一度お願いします。\n(Xin lỗi, xin hãy nói lại.)';
-        }
       }
 
-      // Parse suggestions if present
-      let mainContent = aiContent;
-      let options: string[] = [];
-      
-      if (aiContent.includes('Gợi ý:') || aiContent.includes('OPTIONS:')) {
-        const parts = aiContent.split(/Gợi ý:|OPTIONS:/i);
-        mainContent = parts[0].trim();
-        
-        if (parts[1]) {
-          const rawOptions = parts[1]
-            .split('\n')
-            .filter(line => line.match(/^\d\./))
-            .map(line => line.replace(/^\d\.\s*/, '').trim())
-            .slice(0, 3);
-          
-          // Tự động dịch các options không có dịch
-          const translationPromises = rawOptions.map(async (option) => {
-            // Nếu đã có dịch trong ngoặc đơn, giữ nguyên
-            if (option.match(/[\(（][^)）]+[\)）]/)) {
-              return option;
-            }
-            
-            // Nếu chưa có dịch, tự động dịch
-            const translation = await translateToVietnamese(option);
-            return `${option} (${translation})`;
-          });
-          
-          options = await Promise.all(translationPromises);
-        }
-      }
-      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: mainContent,
+        content: aiContent,
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, aiResponse]);
-      
-      // If no options provided, add default ones based on scenario
-      if (options.length === 0) {
-        const defaultOptions: Record<string, string[]> = {
-          restaurant: [
-            'はい、お願いします (Vâng, làm ơn)',
-            'これをください (Cho tôi cái này)',
-            'おすすめは何ですか？ (Món nào ngon nhất?)'
-          ],
-          shopping: [
-            'これを試してもいいですか？ (Tôi có thể thử cái này không?)',
-            'いくらですか？ (Bao nhiêu tiền?)',
-            'もっと安いのはありますか？ (Có cái nào rẻ hơn không?)'
-          ],
-          station: [
-            '東京まで一枚お願いします (Cho tôi một vé đến Tokyo)',
-            '何時に出発しますか？ (Mấy giờ khởi hành?)',
-            'どのホームですか？ (Ở sân ga nào?)'
-          ],
-          hotel: [
-            'チェックインお願いします (Cho tôi check-in)',
-            '朝食は何時からですか？ (Bữa sáng từ mấy giờ?)',
-            'WiFiのパスワードは？ (Mật khẩu WiFi là gì?)'
-          ]
-        };
-        options = defaultOptions[selectedScenario.id] || [
-          'はい (Vâng)',
-          'わかりました (Tôi hiểu rồi)',
-          'ありがとうございます (Cảm ơn)'
-        ];
-      }
-      
-      setSuggestedOptions(options);
     } catch (error) {
       console.error('Error sending message:', error);
       const aiResponse: Message = {
@@ -470,7 +330,7 @@ Bắt đầu trả lời NGAY:`;
   }
 
   return (
-    <div className="container" style={{ maxWidth: '1200px' }}>
+    <div className="container" style={{ maxWidth: '900px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <button className="btn btn-outline" onClick={resetConversation}>
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -489,36 +349,18 @@ Bắt đầu trả lời NGAY:`;
         <button 
           className="btn btn-outline"
           onClick={() => setShowTranslation(!showTranslation)}
-          style={{
-            transition: 'all 0.3s ease',
-            transform: showTranslation ? 'scale(1.05)' : 'scale(1)'
-          }}
         >
-          <svg style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            {showTranslation ? (
-              <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-            ) : (
-              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            )}
-          </svg>
-          {showTranslation ? 'Ẩn dịch' : 'Hiện dịch'}
+          {showTranslation ? '🙈 Ẩn dịch' : '👁️ Hiện dịch'}
         </button>
       </div>
 
       <div className="card" style={{ height: '500px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', marginBottom: '1rem' }}>
           {messages.map(message => {
-            // Parse Japanese and Vietnamese text
-            let japaneseText = message.content;
-            let vietnameseText = '';
-            
-            // Check for both regular () and full-width （） parentheses
-            // Format: "Japanese (Vietnamese)" or "Japanese（Vietnamese）" or "Japanese\n(Vietnamese)"
-            const match = message.content.match(/^(.*?)\s*[\n\(（]+([^)）]+)[\)）]?$/s);
-            if (match) {
-              japaneseText = match[1].trim();
-              vietnameseText = match[2].trim();
-            }
+            const japaneseText = message.content.split('\n')[0];
+            const vietnameseText = message.content.includes('\n(') 
+              ? message.content.split('\n')[1]?.replace(/^\(|\)$/g, '') 
+              : '';
 
             return (
               <div
@@ -548,22 +390,8 @@ Bắt đầu trả lời NGAY:`;
                   title={message.role === 'assistant' && vietnameseText ? vietnameseText : undefined}
                 >
                   <div style={{ whiteSpace: 'pre-line', lineHeight: '1.6' }}>
-                    {japaneseText}
+                    {showTranslation ? message.content : japaneseText}
                   </div>
-                  {/* Show translation below when toggle is ON - ONLY for AI messages */}
-                  {showTranslation && message.role === 'assistant' && vietnameseText && (
-                    <div style={{
-                      marginTop: '0.5rem',
-                      paddingTop: '0.5rem',
-                      borderTop: '1px solid var(--border-light)',
-                      fontSize: '0.875rem',
-                      fontStyle: 'italic',
-                      color: 'var(--text-secondary)',
-                      opacity: 0.9
-                    }}>
-                      {vietnameseText}
-                    </div>
-                  )}
                   <div style={{ 
                     fontSize: '0.75rem', 
                     marginTop: '0.5rem',
@@ -640,133 +468,6 @@ Bắt đầu trả lời NGAY:`;
         </div>
 
         <div style={{ borderTop: '1px solid var(--border-color)', padding: '1rem' }}>
-          {/* Suggested Options */}
-          {suggestedOptions.length > 0 && !loading && (
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{ 
-                fontSize: '0.875rem', 
-                fontWeight: 600, 
-                marginBottom: '0.5rem',
-                color: 'var(--text-secondary)',
-                textAlign: 'center'
-              }}>
-                Chọn câu trả lời:
-              </div>
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {suggestedOptions.map((option, index) => {
-                  // Check for both regular () and full-width （） parentheses
-                  const hasTranslation = option.includes('(') || option.includes('（');
-                  const match = option.match(/^(.*?)[\(（]([^)）]+)[\)）]?$/);
-                  const japaneseText = match ? match[1].trim() : option.trim();
-                  const translation = match ? match[2].trim() : '';
-                  
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setInput(japaneseText);
-                        setSuggestedOptions([]);
-                      }}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        background: 'var(--card-bg-hover)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.2s ease',
-                        position: 'relative',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--primary-light)';
-                        e.currentTarget.style.borderColor = 'var(--primary-color)';
-                        e.currentTarget.style.transform = 'translateX(4px)';
-                        if (hasTranslation && !showTranslation) {
-                          setHoveredOptionIndex(index);
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'var(--card-bg-hover)';
-                        e.currentTarget.style.borderColor = 'var(--border-color)';
-                        e.currentTarget.style.transform = 'translateX(0)';
-                        setHoveredOptionIndex(null);
-                      }}
-                    >
-                      <span style={{ 
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '50%',
-                        background: 'var(--primary-color)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        flexShrink: 0
-                      }}>
-                        {index + 1}
-                      </span>
-                      <span style={{ flex: 1, fontWeight: 500 }}>
-                        {showTranslation ? option : japaneseText}
-                      </span>
-                      
-                      {/* Hover Tooltip for Options */}
-                      {hasTranslation && !showTranslation && hoveredOptionIndex === index && translation && (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            bottom: '100%',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            marginBottom: '0.5rem',
-                            padding: '0.5rem 0.75rem',
-                            background: 'var(--card-bg)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '8px',
-                            boxShadow: 'var(--shadow-lg)',
-                            color: 'var(--text-primary)',
-                            fontSize: '0.875rem',
-                            whiteSpace: 'nowrap',
-                            zIndex: 1000,
-                            maxWidth: '300px',
-                            textAlign: 'center',
-                            pointerEvents: 'none',
-                            animation: 'fadeIn 0.2s ease-out'
-                          }}
-                        >
-                          <div style={{ 
-                            fontStyle: 'italic',
-                            color: 'var(--text-secondary)'
-                          }}>
-                            {translation}
-                          </div>
-                          {/* Arrow */}
-                          <div
-                            style={{
-                              position: 'absolute',
-                              top: '100%',
-                              left: '50%',
-                              transform: 'translateX(-50%)',
-                              width: 0,
-                              height: 0,
-                              borderLeft: '6px solid transparent',
-                              borderRight: '6px solid transparent',
-                              borderTop: '6px solid var(--card-bg)'
-                            }}
-                          />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <input
               type="text"
@@ -782,20 +483,14 @@ Bắt đầu trả lời NGAY:`;
                 fontSize: '1rem',
                 fontFamily: 'inherit',
                 background: 'var(--card-bg)',
-                color: 'var(--text-primary)',
-                transition: 'border-color 0.2s ease'
+                color: 'var(--text-primary)'
               }}
               disabled={loading}
-              onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary-color)'}
-              onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
             />
             <button 
               className="btn btn-primary"
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              style={{
-                transition: 'all 0.2s ease'
-              }}
             >
               <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

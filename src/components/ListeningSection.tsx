@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ListeningExercise } from '../types';
-import { speakText, stopSpeaking, isSpeechSynthesisSupported } from '../utils/speech';
+import { speakTextSafely, stopSpeaking, isSpeechSynthesisSupported } from '../utils/speech';
 import AudioPlayer from './AudioPlayer';
 import '../App.css';
 
@@ -36,7 +36,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
     setSpeakingId(id);
     
     try {
-      await speakText(text);
+      await speakTextSafely(text);
     } catch (error) {
       console.error('Error speaking:', error);
       alert('Có lỗi xảy ra khi phát âm');

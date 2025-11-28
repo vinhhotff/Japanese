@@ -582,14 +582,16 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
   // Parse JSON từ AI và đổ vào form tương ứng
   const handleParseAiJson = () => {
     if (!aiJsonText.trim()) {
-      showToast('Vui lòng dán JSON trước.', 'warning');
+      // showToast('Vui lòng dán JSON trước.', 'warning');
+      console.warn('Vui lòng dán JSON trước.');
       return;
     }
     let json: any;
     try {
       json = JSON.parse(aiJsonText);
     } catch (e) {
-      showToast('JSON không hợp lệ. Hãy kiểm tra lại (không được có text ngoài JSON).', 'error');
+      // showToast('JSON không hợp lệ. Hãy kiểm tra lại (không được có text ngoài JSON).', 'error');
+      console.error('JSON không hợp lệ.');
       return;
     }
 

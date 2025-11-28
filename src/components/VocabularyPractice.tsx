@@ -333,7 +333,7 @@ const VocabularyPractice = () => {
 
           {incorrectWords.length > 0 && (
             <div className="incorrect-words-section">
-              <h3>📚 Danh sách từ chưa thuộc</h3>
+              <h3>📖 Danh sách từ chưa thuộc</h3>
               <div className="incorrect-words-list">
                 {incorrectWords.map((word, index) => (
                   <div key={index} className="incorrect-word-item">

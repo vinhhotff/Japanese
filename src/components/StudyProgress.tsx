@@ -317,7 +317,7 @@ const StudyProgress = () => {
         </>
       ) : (
         <div className="empty-state">
-          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📚</div>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📖</div>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Chưa có tiến độ học tập</h2>
           <p style={{ marginBottom: '2rem' }}>Bắt đầu học một bài học để theo dõi tiến độ của bạn!</p>
           <Link to="/" className="btn btn-primary">

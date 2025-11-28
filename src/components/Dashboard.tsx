@@ -330,7 +330,7 @@ const Dashboard = () => {
       <div style={{ marginBottom: '3rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <h2 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.75rem' }}>
-            📚 Khóa học tiếng Nhật
+            📖 Khóa học tiếng Nhật
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
             Chọn cấp độ phù hợp và bắt đầu hành trình học tiếng Nhật của bạn

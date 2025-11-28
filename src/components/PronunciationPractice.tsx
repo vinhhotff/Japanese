@@ -69,7 +69,7 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
       feedbackText = 'Khá tốt! Hãy thử lại để cải thiện thêm. 💪';
     } else {
       calculatedScore = 25;
-      feedbackText = 'Cần luyện tập thêm. Hãy nghe và thử lại! 📚';
+      feedbackText = 'Cần luyện tập thêm. Hãy nghe và thử lại! 📖';
     }
 
     setScore(calculatedScore);

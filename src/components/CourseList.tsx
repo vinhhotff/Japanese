@@ -114,7 +114,7 @@ const CourseList = () => {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.75rem' }}>
-          📚 Khóa học tiếng Nhật
+          📖 Khóa học tiếng Nhật
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
           Chọn cấp độ phù hợp và bắt đầu hành trình học tiếng Nhật của bạn
