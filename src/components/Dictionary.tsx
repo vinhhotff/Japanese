@@ -150,7 +150,7 @@ const Dictionary = () => {
   return (
     <div className="container">
       <Link to="/" className="back-button">
-        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Về trang chủ
@@ -168,7 +168,7 @@ const Dictionary = () => {
 
       {/* Search Box */}
       <div style={{ 
-        background: 'white',
+        background: 'var(--card-bg)',
         borderRadius: '20px',
         padding: '2rem',
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
@@ -182,8 +182,8 @@ const Dictionary = () => {
             style={{
               flex: 1,
               padding: '1rem 1.5rem',
-              border: searchType === 'word' ? '3px solid #3b82f6' : '2px solid #e5e7eb',
-              background: searchType === 'word' ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : 'white',
+              border: searchType === 'word' ? '3px solid var(--primary-color)' : '2px solid var(--border-color)',
+              background: searchType === 'word' ? 'var(--primary-light)' : 'var(--card-bg-hover)',
               borderRadius: '12px',
               fontWeight: '700',
               cursor: 'pointer',
@@ -193,10 +193,10 @@ const Dictionary = () => {
               justifyContent: 'center',
               gap: '0.75rem',
               fontSize: '1rem',
-              color: searchType === 'word' ? '#1e40af' : '#6b7280'
+              color: searchType === 'word' ? 'var(--primary-color)' : 'var(--text-secondary)'
             }}
           >
-            <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
             Từ vựng
@@ -206,8 +206,8 @@ const Dictionary = () => {
             style={{
               flex: 1,
               padding: '1rem 1.5rem',
-              border: searchType === 'kanji' ? '3px solid #8b5cf6' : '2px solid #e5e7eb',
-              background: searchType === 'kanji' ? 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)' : 'white',
+              border: searchType === 'kanji' ? '3px solid var(--secondary-color)' : '2px solid var(--border-color)',
+              background: searchType === 'kanji' ? 'var(--secondary-light)' : 'var(--card-bg-hover)',
               borderRadius: '12px',
               fontWeight: '700',
               cursor: 'pointer',
@@ -217,10 +217,10 @@ const Dictionary = () => {
               justifyContent: 'center',
               gap: '0.75rem',
               fontSize: '1rem',
-              color: searchType === 'kanji' ? '#6b21a8' : '#6b7280'
+              color: searchType === 'kanji' ? 'var(--secondary-color)' : 'var(--text-secondary)'
             }}
           >
-            <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
             Kanji
@@ -239,7 +239,7 @@ const Dictionary = () => {
               height: '24px',
               color: '#9ca3af',
               pointerEvents: 'none'
-            }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -253,18 +253,20 @@ const Dictionary = () => {
               style={{
                 width: '100%',
                 padding: '1.25rem 1.25rem 1.25rem 3.5rem',
-                border: '2px solid #e5e7eb',
+                border: '2px solid var(--border-color)',
                 borderRadius: '12px',
                 fontSize: '1.125rem',
                 transition: 'all 0.2s',
-                fontFamily: 'inherit'
+                fontFamily: 'inherit',
+                background: 'var(--input-bg)',
+                color: 'var(--text-primary)'
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#3b82f6';
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                e.currentTarget.style.borderColor = 'var(--primary-color)';
+                e.currentTarget.style.boxShadow = '0 0 0 3px var(--primary-shadow)';
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.borderColor = 'var(--border-color)';
                 e.currentTarget.style.boxShadow = 'none';
               }}
             />
@@ -277,8 +279,8 @@ const Dictionary = () => {
               borderRadius: '12px',
               border: 'none',
               background: loading || !searchTerm.trim() 
-                ? '#9ca3af' 
-                : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                ? 'var(--text-secondary)' 
+                : 'var(--primary-gradient)',
               color: 'white',
               fontSize: '1.125rem',
               fontWeight: '700',
@@ -292,7 +294,7 @@ const Dictionary = () => {
             onMouseEnter={(e) => {
               if (!loading && searchTerm.trim()) {
                 e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.4)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
               }
             }}
             onMouseLeave={(e) => {
@@ -302,14 +304,14 @@ const Dictionary = () => {
           >
             {loading ? (
               <>
-                <svg className="spinner-icon" style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="spinner-icon" style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
                 Đang tìm...
               </>
             ) : (
               <>
-                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 Tìm kiếm
@@ -322,8 +324,8 @@ const Dictionary = () => {
       {/* Error Message */}
       {error && (
         <div style={{
-          background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
-          border: '2px solid #ef4444',
+          background: 'var(--danger-light)',
+          border: '2px solid var(--danger-color)',
           borderRadius: '16px',
           padding: '1.5rem',
           marginBottom: '2rem',
@@ -355,8 +357,8 @@ const Dictionary = () => {
             </h2>
             <div style={{
               padding: '0.5rem 1rem',
-              background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-              color: '#1e40af',
+              background: 'var(--primary-light)',
+              color: 'var(--primary-color)',
               borderRadius: '20px',
               fontSize: '0.875rem',
               fontWeight: '700'
@@ -385,9 +387,9 @@ const Dictionary = () => {
         <div style={{
           textAlign: 'center',
           padding: '4rem 2rem',
-          background: 'white',
+          background: 'var(--card-bg)',
           borderRadius: '20px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+          boxShadow: 'var(--shadow-md)'
         }}>
           <div style={{ fontSize: '4rem', marginBottom: '1rem', animation: 'spin 1s linear infinite' }}>
             🔍
@@ -403,9 +405,9 @@ const Dictionary = () => {
         <div style={{
           textAlign: 'center',
           padding: '4rem 2rem',
-          background: 'white',
+          background: 'var(--card-bg)',
           borderRadius: '20px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+          boxShadow: 'var(--shadow-md)'
         }}>
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🤔</div>
           <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
@@ -425,9 +427,9 @@ const Dictionary = () => {
         <div style={{
           textAlign: 'center',
           padding: '4rem 2rem',
-          background: 'white',
+          background: 'var(--card-bg)',
           borderRadius: '20px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+          boxShadow: 'var(--shadow-md)'
         }}>
           <svg style={{ 
             width: '100px', 
@@ -447,12 +449,13 @@ const Dictionary = () => {
           <div style={{ 
             display: 'inline-block',
             padding: '1rem 1.5rem',
-            background: '#f9fafb',
+            background: 'var(--card-bg-hover)',
             borderRadius: '12px',
             fontSize: '0.9375rem',
-            color: 'var(--text-secondary)'
+            color: 'var(--text-secondary)',
+            border: '1px solid var(--border-color)'
           }}>
-            <strong>Ví dụ:</strong> こんにちは, 学生, 私, 食べる
+            <strong style={{ color: 'var(--text-primary)' }}>Ví dụ:</strong> こんにちは, 学生, 私, 食べる
           </div>
         </div>
       )}

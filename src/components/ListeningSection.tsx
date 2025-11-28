@@ -52,7 +52,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
       <div className="section-container listening-section">
         <div className="section-header listening-header">
           <div className="section-icon listening-icon">
-            <svg style={{ width: '40px', height: '40px', color: '#f59e0b' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '40px', height: '40px', color: 'var(--warning-color)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
             </svg>
           </div>
@@ -71,7 +71,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
                       width: '48px', 
                       height: '48px', 
                       borderRadius: '12px', 
-                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      background: 'var(--warning-gradient)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -84,16 +84,16 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
                     </div>
                     <div style={{ flex: 1 }}>
                       <h3 className="exercise-title" style={{ marginBottom: '0.5rem' }}>{exercise.title}</h3>
-                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                         <span>
-                          <svg style={{ width: '16px', height: '16px', display: 'inline', marginRight: '0.25rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <svg style={{ width: '16px', height: '16px', display: 'inline', marginRight: '0.25rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                             <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           {exercise.questions.length} câu hỏi
                         </span>
                         {exercise.audioUrl && (
                           <span>
-                            <svg style={{ width: '16px', height: '16px', display: 'inline', marginRight: '0.25rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg style={{ width: '16px', height: '16px', display: 'inline', marginRight: '0.25rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                               <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                             </svg>
                             Có audio
@@ -101,7 +101,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
                         )}
                       </div>
                     </div>
-                    <svg style={{ width: '24px', height: '24px', color: '#f59e0b' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg style={{ width: '24px', height: '24px', color: 'var(--warning-color)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -141,13 +141,13 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
           }}
           style={{ marginRight: '1rem' }}
         >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15 19l-7-7 7-7" />
           </svg>
           Quay lại
         </button>
         <div className="section-icon listening-icon">
-          <svg style={{ width: '40px', height: '40px', color: '#f59e0b' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '40px', height: '40px', color: '#f59e0b' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
         </div>
@@ -176,7 +176,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
                   className="btn btn-outline btn-sm"
                   onClick={() => setShowTranscript(!showTranscript)}
                 >
-                  <svg style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     {showTranscript ? (
                       <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                     ) : (
@@ -193,14 +193,14 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
                 >
                   {isSpeaking && speakingId === selectedExercise.id ? (
                     <>
-                      <svg className="speak-icon" style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg className="speak-icon" style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <path d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       Dừng
                     </>
                   ) : (
                     <>
-                      <svg className="speak-icon" style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg className="speak-icon" style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                       </svg>
                       Phát âm
@@ -221,7 +221,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
                 className="btn btn-outline"
                 onClick={() => setShowAnswers(!showAnswers)}
               >
-                <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   {showAnswers ? (
                     <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                   ) : (
@@ -278,7 +278,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
                   }}
                   disabled={currentQuestionIndex === 0}
                 >
-                  <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M15 19l-7-7 7-7" />
                   </svg>
                   Câu trước
@@ -292,7 +292,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
                   disabled={currentQuestionIndex === selectedExercise.questions.length - 1}
                 >
                   Câu tiếp theo
-                  <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M9 5l7 7-7 7" />
                   </svg>
                 </button>

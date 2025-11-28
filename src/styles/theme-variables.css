@@ -18,12 +18,27 @@
   
   /* Secondary Colors */
   --secondary-color: #8b5cf6;
+  --secondary-light: #f3e8ff;
   --success-color: #10b981;
+  --success-light: #d1fae5;
   --warning-color: #f59e0b;
+  --warning-light: #fef3c7;
+  --danger-color: #ef4444;
+  --danger-light: #fee2e2;
   --error-color: #ef4444;
+  
+  /* Additional Colors */
+  --input-bg: #ffffff;
+  --progress-bg: #e5e7eb;
+  --primary-shadow: rgba(59, 130, 246, 0.1);
+  --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --secondary-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   
   /* Shadows */
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
   
   /* Font Weights */
@@ -50,12 +65,27 @@
   --primary-light: #93c5fd;
   
   --secondary-color: #a78bfa;
+  --secondary-light: #4c1d95;
   --success-color: #34d399;
+  --success-light: #064e3b;
   --warning-color: #fbbf24;
+  --warning-light: #78350f;
+  --danger-color: #f87171;
+  --danger-light: #7f1d1d;
   --error-color: #f87171;
+  
+  /* Additional Colors for Dark Mode */
+  --input-bg: #1f2937;
+  --progress-bg: #374151;
+  --primary-shadow: rgba(96, 165, 250, 0.2);
+  --primary-gradient: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  --secondary-gradient: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  --success-gradient: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  --danger-gradient: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
   
   /* Darker shadows */
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 

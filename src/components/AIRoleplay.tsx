@@ -297,57 +297,24 @@ OPTIONS:
 
   if (!selectedScenario) {
     return (
-      <div style={{ background: 'var(--color-bg-primary)', minHeight: '100vh' }}>
-        <div className="container-custom">
-          <Link 
-            to="/" 
-            style={{ 
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 'var(--space-sm)',
-              color: 'var(--color-text-secondary)',
-              textDecoration: 'none',
-              fontSize: '0.9375rem',
-              marginTop: 'var(--space-2xl)',
-              marginBottom: 'var(--space-xl)',
-              transition: 'color var(--transition-base)'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-secondary)'}
-          >
-            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
+        <div className="container">
+          <Link to="/" className="back-button">
+            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Về trang chủ
           </Link>
 
-          <header style={{ 
-            paddingBottom: 'var(--space-2xl)',
-            borderBottom: '1px solid var(--color-border)',
-            marginBottom: 'var(--space-3xl)'
-          }}>
-            <h1 style={{ 
-              fontSize: '2rem', 
-              fontWeight: 700,
-              color: 'var(--color-text-primary)',
-              marginBottom: '0.5rem'
-            }}>
-              🎭 Luyện hội thoại với AI
-            </h1>
-            <p style={{ 
-              color: 'var(--color-text-secondary)', 
-              fontSize: '1.125rem',
-              lineHeight: 1.6
-            }}>
-              Chọn tình huống và thực hành hội thoại. AI sẽ đánh giá và gợi ý cách nói đúng.
-            </p>
-          </header>
+          <div className="header" style={{ marginBottom: '2rem' }}>
+            <h1>🎭 Luyện hội thoại với AI</h1>
+            <p>Chọn tình huống và thực hành hội thoại. AI sẽ đánh giá và gợi ý cách nói đúng.</p>
+          </div>
 
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-            gap: 'var(--space-lg)',
-            paddingBottom: 'var(--space-3xl)'
+            gap: '1.5rem',
+            paddingBottom: '3rem'
           }}>
             {scenarios.map((scenario) => {
               const difficultyColors = {
@@ -361,32 +328,32 @@ OPTIONS:
                 <button
                   key={scenario.id}
                   onClick={() => startScenario(scenario)}
-                  className="card-custom"
+                  className="card"
                   style={{
-                    padding: 'var(--space-xl)',
+                    padding: '2rem',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    border: '1px solid var(--color-border)',
+                    border: '1px solid var(--border-color)',
                     borderTop: `3px solid ${colors.border}`,
-                    background: `linear-gradient(to bottom, ${colors.bg}, #ffffff)`
+                    background: `linear-gradient(to bottom, ${colors.bg}, var(--card-bg))`
                   }}
                 >
-                  <div style={{ fontSize: '2.5rem', marginBottom: 'var(--space-md)' }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
                     {scenario.title.split(' ')[0]}
                   </div>
                   <h3 style={{ 
                     fontSize: '1.125rem', 
                     fontWeight: 600, 
                     color: colors.text,
-                    marginBottom: 'var(--space-sm)'
+                    marginBottom: '0.5rem'
                   }}>
                     {scenario.title.split(' ').slice(1).join(' ')}
                   </h3>
                   <p style={{ 
                     fontSize: '0.9375rem', 
-                    color: 'var(--color-text-secondary)',
-                    marginBottom: 'var(--space-md)',
-                    lineHeight: 1.5
+                    color: 'var(--text-secondary)',
+                    marginBottom: '0.75rem',
+                    lineHeight: 1.65
                   }}>
                     {scenario.description}
                   </p>
@@ -395,7 +362,7 @@ OPTIONS:
                     padding: '0.25rem 0.75rem',
                     background: colors.bg,
                     border: `1px solid ${colors.border}`,
-                    borderRadius: 'var(--radius-sm)',
+                    borderRadius: '8px',
                     fontSize: '0.75rem',
                     fontWeight: 600,
                     color: colors.text
@@ -407,48 +374,38 @@ OPTIONS:
             })}
           </div>
         </div>
-      </div>
     );
   }
 
   return (
-    <div style={{ background: 'var(--color-bg-primary)', minHeight: '100vh' }}>
-      <div className="container-custom">
+      <div className="container">
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          marginTop: 'var(--space-2xl)',
-          marginBottom: 'var(--space-xl)'
+          marginTop: '2rem',
+          marginBottom: '1.5rem'
         }}>
           <button
             onClick={resetConversation}
+            className="back-button"
             style={{ 
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 'var(--space-sm)',
-              color: 'var(--color-text-secondary)',
-              textDecoration: 'none',
-              fontSize: '0.9375rem',
               background: 'none',
               border: 'none',
-              cursor: 'pointer',
-              transition: 'color var(--transition-base)'
+              cursor: 'pointer'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-secondary)'}
           >
-            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
+            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Chọn tình huống khác
           </button>
           
           <div style={{
             padding: '0.5rem 1rem',
-            background: 'var(--color-bg-secondary)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-md)',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '12px',
             fontSize: '0.875rem',
             fontWeight: 600
           }}>
@@ -457,9 +414,9 @@ OPTIONS:
         </div>
 
         {/* Chat Container */}
-        <div className="card-custom" style={{ 
-          padding: 'var(--space-xl)',
-          marginBottom: 'var(--space-xl)',
+        <div className="card" style={{ 
+          padding: '2rem',
+          marginBottom: '2rem',
           minHeight: '500px',
           maxHeight: '600px',
           overflowY: 'auto'
@@ -468,10 +425,10 @@ OPTIONS:
             <div
               key={index}
               style={{
-                marginBottom: 'var(--space-lg)',
+                marginBottom: '1.5rem',
                 display: 'flex',
                 flexDirection: message.role === 'user' ? 'row-reverse' : 'row',
-                gap: 'var(--space-md)'
+                gap: '1rem'
               }}
             >
               {message.role !== 'system' && (
@@ -493,36 +450,38 @@ OPTIONS:
               
               <div style={{ flex: 1, maxWidth: message.role === 'system' ? '100%' : '70%' }}>
                 <div style={{
-                  padding: 'var(--space-lg)',
+                  padding: '1rem',
                   background: message.role === 'system' 
-                    ? 'var(--color-bg-secondary)'
+                    ? 'var(--bg-secondary)'
                     : message.role === 'user'
                       ? message.isCorrect === false ? '#fce4ec' : '#e3f2fd'
                       : '#f7fdf8',
                   border: `1px solid ${
                     message.role === 'system' 
-                      ? 'var(--color-border)'
+                      ? 'var(--border-color)'
                       : message.role === 'user'
                         ? message.isCorrect === false ? '#e91e63' : '#2196f3'
                         : '#4caf50'
                   }`,
-                  borderRadius: 'var(--radius-md)',
+                  borderRadius: '12px',
                   fontSize: '1rem',
-                  lineHeight: 1.6
+                  lineHeight: 1.65,
+                  color: 'var(--text-primary)'
                 }}>
                   {message.content}
                 </div>
                 
                 {message.explanation && (
                   <div style={{
-                    marginTop: 'var(--space-sm)',
-                    padding: 'var(--space-md)',
+                    marginTop: '0.5rem',
+                    padding: '0.75rem',
                     background: message.isCorrect ? '#e8f5e9' : '#fff3e0',
                     border: `1px solid ${message.isCorrect ? '#4caf50' : '#ff9800'}`,
-                    borderRadius: 'var(--radius-md)',
+                    borderRadius: '12px',
                     fontSize: '0.875rem',
-                    lineHeight: 1.5,
-                    whiteSpace: 'pre-line'
+                    lineHeight: 1.65,
+                    whiteSpace: 'pre-line',
+                    color: 'var(--text-primary)'
                   }}>
                     <strong>{message.isCorrect ? '✓ ' : '⚠️ '}</strong>
                     {message.explanation}
@@ -533,8 +492,8 @@ OPTIONS:
           ))}
           
           {loading && (
-            <div style={{ textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--color-text-muted)' }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: 'var(--space-sm)' }}>⏳</div>
+            <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-tertiary)' }}>
+              <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⏳</div>
               AI đang suy nghĩ...
             </div>
           )}
@@ -546,24 +505,24 @@ OPTIONS:
             <div style={{ 
               fontSize: '0.9375rem', 
               fontWeight: 600, 
-              marginBottom: 'var(--space-md)',
-              color: 'var(--color-text-primary)'
+              marginBottom: '0.75rem',
+              color: 'var(--text-primary)'
             }}>
               Chọn câu trả lời hoặc tự nhập:
             </div>
             
-            <div style={{ display: 'grid', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
+            <div style={{ display: 'grid', gap: '0.75rem', marginBottom: '1.5rem' }}>
               {suggestedOptions.map((option, index) => (
                 <button
                   key={index}
                   onClick={() => handleUserChoice(option)}
-                  className="card-custom"
+                  className="card"
                   style={{
-                    padding: 'var(--space-lg)',
+                    padding: '1rem',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    border: '1px solid var(--color-border)',
-                    background: 'white',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--card-bg)',
                     fontSize: '1rem'
                   }}
                 >
@@ -575,28 +534,31 @@ OPTIONS:
               ))}
             </div>
 
-            <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
+            <div style={{ display: 'flex', gap: '1rem' }}>
               <input
                 type="text"
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleCustomInput()}
                 placeholder="Hoặc nhập câu trả lời của bạn..."
+                className="form-group"
                 style={{
                   flex: 1,
-                  padding: 'var(--space-lg)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--radius-md)',
+                  padding: '1rem',
+                  border: '2px solid var(--border-color)',
+                  borderRadius: '12px',
                   fontSize: '1rem',
-                  fontFamily: 'inherit'
+                  fontFamily: 'inherit',
+                  background: 'var(--card-bg)',
+                  color: 'var(--text-primary)'
                 }}
               />
               <button
                 onClick={handleCustomInput}
-                className="btn-primary-custom"
+                className="btn btn-primary"
                 disabled={!userInput.trim()}
                 style={{
-                  padding: 'var(--space-lg) var(--space-xl)',
+                  padding: '1rem 2rem',
                   fontSize: '1rem'
                 }}
               >
@@ -606,7 +568,6 @@ OPTIONS:
           </div>
         )}
       </div>
-    </div>
   );
 };
 

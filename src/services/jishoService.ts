@@ -88,7 +88,11 @@ export const searchWord = async (keyword: string): Promise<JishoWord[]> => {
   const signal = currentController.signal;
   
   try {
-    const apiUrl = `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(keyword)}`;
+    // Use local proxy in development, direct API in production
+    const isDev = import.meta.env.DEV;
+    const apiUrl = isDev 
+      ? `/api/jisho/words?keyword=${encodeURIComponent(keyword)}`
+      : `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(keyword)}`;
     
     // Try direct fetch first
     let response: Response;
@@ -98,7 +102,7 @@ export const searchWord = async (keyword: string): Promise<JishoWord[]> => {
         headers: {
           'Accept': 'application/json',
         },
-        mode: 'cors',
+        mode: isDev ? 'same-origin' : 'cors',
         signal, // Add abort signal
       });
     } catch (fetchError: any) {
@@ -107,15 +111,49 @@ export const searchWord = async (keyword: string): Promise<JishoWord[]> => {
         throw new Error('Request cancelled');
       }
       
-      // If CORS error, try with a public proxy
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
-      response = await fetch(proxyUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-        signal,
-      });
+      // If CORS error, try multiple proxies
+      const proxies = [
+        `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`,
+        `https://thingproxy.freeboard.io/fetch/${apiUrl}`,
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(apiUrl)}`
+      ];
+      
+      let lastError: Error | null = null;
+      let proxySuccess = false;
+      
+      for (const proxyUrl of proxies) {
+        try {
+          const proxyResponse = await fetch(proxyUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+            signal,
+          });
+          
+          if (proxyResponse.ok) {
+            // For allorigins, we need to extract the contents
+            if (proxyUrl.includes('allorigins')) {
+              const data = await proxyResponse.json();
+              response = new Response(data.contents, {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            } else {
+              response = proxyResponse;
+            }
+            proxySuccess = true;
+            break; // Success, exit loop
+          }
+        } catch (proxyError: any) {
+          lastError = proxyError;
+          continue; // Try next proxy
+        }
+      }
+      
+      if (!proxySuccess) {
+        throw lastError || new Error('Không thể kết nối đến Jisho API. Vui lòng thử lại sau.');
+      }
     }
     
     if (signal.aborted) {
@@ -157,11 +195,15 @@ export const searchWord = async (keyword: string): Promise<JishoWord[]> => {
 // Search for kanji
 export const searchKanji = async (keyword: string): Promise<any> => {
   try {
+    // Use local proxy in development
+    const isDev = import.meta.env.DEV;
+    const apiUrl = isDev 
+      ? `/api/jisho/words?keyword=${encodeURIComponent(keyword)}`
+      : `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(keyword)}`;
+    
     // Jisho doesn't have a dedicated kanji API endpoint
     // We'll search for words and filter for kanji results
-    const response = await fetch(
-      `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(keyword)}`
-    );
+    const response = await fetch(apiUrl);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -188,11 +230,15 @@ export const searchKanji = async (keyword: string): Promise<any> => {
 // Get kanji information from a character
 export const getKanjiInfo = async (character: string): Promise<any> => {
   try {
+    // Use local proxy in development
+    const isDev = import.meta.env.DEV;
+    const apiUrl = isDev 
+      ? `/api/jisho/words?keyword=${encodeURIComponent(character)}`
+      : `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(character)}`;
+    
     // Try to get kanji details from Jisho
     // Note: Jisho API doesn't have direct kanji lookup, so we search for words containing it
-    const response = await fetch(
-      `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(character)}`
-    );
+    const response = await fetch(apiUrl);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

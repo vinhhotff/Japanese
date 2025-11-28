@@ -105,7 +105,7 @@ const CourseList = () => {
   return (
     <div className="container">
       <Link to="/" className="back-button">
-        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Về trang chủ
@@ -135,8 +135,8 @@ const CourseList = () => {
                 cursor: 'pointer',
                 borderRadius: '20px',
                 overflow: 'hidden',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                background: 'white',
+                boxShadow: 'var(--shadow-md)',
+                background: 'var(--card-bg)',
                 border: '3px solid transparent',
                 position: 'relative'
               }}
@@ -224,7 +224,7 @@ const CourseList = () => {
                     transition: 'all 0.2s'
                   }}>
                     Bắt đầu học
-                    <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </button>

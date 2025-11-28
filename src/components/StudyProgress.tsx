@@ -86,7 +86,7 @@ const StudyProgress = () => {
   return (
     <div className="container">
       <Link to="/" className="back-button">
-        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Về trang chủ
@@ -106,38 +106,38 @@ const StudyProgress = () => {
         <>
           {/* Stats Overview */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-            <div className="card" style={{ textAlign: 'center', background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '2px solid #3b82f6' }}>
-              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: '#3b82f6', marginBottom: '0.5rem' }}>
+            <div className="card" style={{ textAlign: 'center', background: 'var(--primary-light)', border: '2px solid var(--primary-color)' }}>
+              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: 'var(--primary-color)', marginBottom: '0.5rem' }}>
                 {stats.totalLessonsStarted}
               </div>
-              <div style={{ color: '#1e40af', fontWeight: '600', fontSize: '1.125rem' }}>
+              <div style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '1.125rem' }}>
                 Bài đã bắt đầu
               </div>
             </div>
 
-            <div className="card" style={{ textAlign: 'center', background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: '2px solid #10b981' }}>
-              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: '#10b981', marginBottom: '0.5rem' }}>
+            <div className="card" style={{ textAlign: 'center', background: 'var(--success-light)', border: '2px solid var(--success-color)' }}>
+              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: 'var(--success-color)', marginBottom: '0.5rem' }}>
                 {stats.totalLessonsCompleted}
               </div>
-              <div style={{ color: '#065f46', fontWeight: '600', fontSize: '1.125rem' }}>
+              <div style={{ color: 'var(--success-color)', fontWeight: '600', fontSize: '1.125rem' }}>
                 Bài đã hoàn thành
               </div>
             </div>
 
-            <div className="card" style={{ textAlign: 'center', background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '2px solid #f59e0b' }}>
-              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: '#f59e0b', marginBottom: '0.5rem' }}>
+            <div className="card" style={{ textAlign: 'center', background: 'var(--warning-light)', border: '2px solid var(--warning-color)' }}>
+              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: 'var(--warning-color)', marginBottom: '0.5rem' }}>
                 {stats.overallProgress}%
               </div>
-              <div style={{ color: '#92400e', fontWeight: '600', fontSize: '1.125rem' }}>
+              <div style={{ color: 'var(--warning-color)', fontWeight: '600', fontSize: '1.125rem' }}>
                 Tiến độ tổng
               </div>
             </div>
 
-            <div className="card" style={{ textAlign: 'center', background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '2px solid #ef4444' }}>
-              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: '#ef4444', marginBottom: '0.5rem' }}>
+            <div className="card" style={{ textAlign: 'center', background: 'var(--danger-light)', border: '2px solid var(--danger-color)' }}>
+              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: 'var(--danger-color)', marginBottom: '0.5rem' }}>
                 {stats.totalStepsCompleted}
               </div>
-              <div style={{ color: '#991b1b', fontWeight: '600', fontSize: '1.125rem' }}>
+              <div style={{ color: 'var(--danger-color)', fontWeight: '600', fontSize: '1.125rem' }}>
                 Hoạt động hoàn thành
               </div>
             </div>
@@ -180,8 +180,8 @@ const StudyProgress = () => {
 
               return (
                 <div key={lesson.lessonId} className="card" style={{ 
-                  background: completed ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : 'white',
-                  border: completed ? '2px solid #10b981' : '1px solid #e5e7eb',
+                  background: completed ? 'var(--success-light)' : 'var(--card-bg)',
+                  border: completed ? '2px solid var(--success-color)' : '1px solid var(--border-color)',
                   position: 'relative'
                 }}>
                   {completed && (
@@ -192,7 +192,7 @@ const StudyProgress = () => {
                       width: '48px',
                       height: '48px',
                       borderRadius: '50%',
-                      background: '#10b981',
+                      background: 'var(--success-color)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -209,8 +209,8 @@ const StudyProgress = () => {
                       <div style={{ 
                         display: 'inline-block',
                         padding: '0.375rem 0.875rem',
-                        background: '#eff6ff',
-                        color: '#3b82f6',
+                        background: 'var(--primary-light)',
+                        color: 'var(--primary-color)',
                         borderRadius: '20px',
                         fontSize: '0.875rem',
                         fontWeight: '600',
@@ -267,13 +267,13 @@ const StudyProgress = () => {
                           <span style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-primary)' }}>
                             Tiến độ: {lesson.completedSteps.length}/{lesson.totalSteps} hoạt động
                           </span>
-                          <span style={{ fontSize: '1.25rem', fontWeight: '700', color: completed ? '#10b981' : '#3b82f6' }}>
+                          <span style={{ fontSize: '1.25rem', fontWeight: '700', color: completed ? 'var(--success-color)' : 'var(--primary-color)' }}>
                             {progress}%
                           </span>
                         </div>
                         <div style={{ 
                           height: '10px', 
-                          background: '#e5e7eb', 
+                          background: 'var(--progress-bg)', 
                           borderRadius: '999px',
                           overflow: 'hidden'
                         }}>
@@ -281,8 +281,8 @@ const StudyProgress = () => {
                             height: '100%',
                             width: `${progress}%`,
                             background: completed 
-                              ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
-                              : 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
+                              ? 'var(--success-gradient)'
+                              : 'var(--primary-gradient)',
                             transition: 'width 0.5s ease'
                           }} />
                         </div>

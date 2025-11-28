@@ -91,7 +91,7 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
     return (
       <div className="game-container">
         <div className="game-result">
-          <svg className="result-icon" style={{ width: '100px', height: '100px', color: '#10b981', margin: '0 auto 1.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="result-icon" style={{ width: '100px', height: '100px', color: '#10b981', margin: '0 auto 1.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h2>Hoàn thành xuất sắc!</h2>
@@ -108,7 +108,7 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
              'Cần luyện tập thêm. Đừng bỏ cuộc! 💪'}
           </p>
           <button className="btn btn-primary" onClick={resetGame}>
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             🔄 Chơi lại
@@ -151,7 +151,7 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
 
       <div className="selected-words-container">
         <div className="selected-label">
-          <svg style={{ width: '24px', height: '24px', color: '#ec4899' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '24px', height: '24px', color: '#ec4899' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
           Câu của bạn:
@@ -159,7 +159,7 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
         <div className="selected-words">
           {selectedWords.length === 0 ? (
             <div className="empty-slot">
-              <svg style={{ width: '32px', height: '32px', margin: '0 auto 0.5rem', color: '#9ca3af' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg style={{ width: '32px', height: '32px', margin: '0 auto 0.5rem', color: '#9ca3af' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
               </svg>
               Nhấn vào các từ bên dưới để tạo câu
@@ -181,7 +181,7 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
 
       <div className="available-words-container">
         <div className="available-label">
-          <svg style={{ width: '24px', height: '24px', color: '#ec4899' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '24px', height: '24px', color: '#ec4899' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
           Nhấn vào từ để thêm:
@@ -204,14 +204,14 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
         <div className={`game-feedback ${isCorrect ? 'correct' : 'incorrect'}`}>
           {isCorrect ? (
             <>
-              <svg className="feedback-icon" style={{ width: '32px', height: '32px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="feedback-icon" style={{ width: '32px', height: '32px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="feedback-text">Chính xác! Câu đúng là: <strong>{currentSentence.sentence}</strong></span>
             </>
           ) : (
             <>
-              <svg className="feedback-icon" style={{ width: '32px', height: '32px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="feedback-icon" style={{ width: '32px', height: '32px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="feedback-text">Chưa đúng! Câu đúng là: <strong>{currentSentence.sentence}</strong></span>
@@ -226,7 +226,7 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
             className="btn btn-outline" 
             onClick={() => setShowHint(true)}
           >
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
             Xem gợi ý
@@ -238,7 +238,7 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
             onClick={checkAnswer}
             disabled={selectedWords.length !== currentSentence.words.length}
           >
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Kiểm tra câu trả lời
@@ -248,13 +248,13 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
             {currentIndex < sentences.length - 1 ? (
               <>
                 Câu tiếp theo
-                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M9 5l7 7-7 7" />
                 </svg>
               </>
             ) : (
               <>
-                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M5 13l4 4L19 7" />
                 </svg>
                 Hoàn thành

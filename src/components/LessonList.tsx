@@ -84,7 +84,7 @@ const LessonList = () => {
   return (
     <div className="container">
       <Link to="/" className="back-button">
-        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Về trang chủ
@@ -118,8 +118,8 @@ const LessonList = () => {
                 cursor: 'pointer',
                 borderRadius: '20px',
                 overflow: 'hidden',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                background: 'white',
+                boxShadow: 'var(--shadow-md)',
+                background: 'var(--card-bg)',
                 border: '3px solid transparent',
                 position: 'relative'
               }}
@@ -142,14 +142,14 @@ const LessonList = () => {
                     width: '48px',
                     height: '48px',
                     borderRadius: '50%',
-                    background: '#10b981',
+                    background: 'var(--success-color)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: 'white',
                     fontSize: '1.5rem',
                     zIndex: 10,
-                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)'
+                    boxShadow: 'var(--shadow-lg)'
                   }}>
                     ✓
                   </div>
@@ -158,8 +158,8 @@ const LessonList = () => {
                 {/* Gradient Header with Lesson Number */}
                 <div style={{
                   background: completed 
-                    ? 'linear-gradient(135deg, #10b981, #059669)' 
-                    : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    ? 'var(--success-gradient)' 
+                    : 'var(--primary-gradient)',
                   padding: '2rem',
                   color: 'white',
                   textAlign: 'center',
@@ -241,14 +241,14 @@ const LessonList = () => {
                     <div style={{ marginBottom: '1.5rem' }}>
                       <div style={{ 
                         height: '8px', 
-                        background: '#e5e7eb', 
+                        background: 'var(--progress-bg)', 
                         borderRadius: '999px',
                         overflow: 'hidden'
                       }}>
                         <div style={{ 
                           height: '100%',
                           width: `${progress}%`,
-                          background: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
+                          background: 'var(--primary-gradient)',
                           transition: 'width 0.5s ease'
                         }} />
                       </div>
@@ -278,21 +278,21 @@ const LessonList = () => {
                     {completed ? (
                       <>
                         Ôn tập lại
-                        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                           <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                       </>
                     ) : progress > 0 ? (
                       <>
                         Tiếp tục học
-                        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                           <path d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                       </>
                     ) : (
                       <>
                         Bắt đầu học
-                        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                           <path d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                       </>

@@ -105,7 +105,7 @@ const ShadowingExercise = ({ sentences }: ShadowingExerciseProps) => {
       </div>
 
       <div className="shadowing-instructions">
-        <svg style={{ width: '24px', height: '24px', color: '#3b82f6' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg style={{ width: '24px', height: '24px', color: '#3b82f6' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div>
@@ -131,7 +131,7 @@ const ShadowingExercise = ({ sentences }: ShadowingExerciseProps) => {
           <div className="playback-controls">
             {!isPlaying ? (
               <button className="btn btn-play-large" onClick={playAudio}>
-                <svg style={{ width: '32px', height: '32px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '32px', height: '32px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                   <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -139,7 +139,7 @@ const ShadowingExercise = ({ sentences }: ShadowingExerciseProps) => {
               </button>
             ) : (
               <button className="btn btn-pause-large" onClick={pauseAudio}>
-                <svg style={{ width: '32px', height: '32px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '32px', height: '32px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Tạm dừng
@@ -188,7 +188,7 @@ const ShadowingExercise = ({ sentences }: ShadowingExerciseProps) => {
             onClick={markAsCompleted}
             disabled={completedSentences.has(current.id)}
           >
-            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M5 13l4 4L19 7" />
             </svg>
             {completedSentences.has(current.id) ? 'Đã hoàn thành' : 'Đánh dấu hoàn thành'}
@@ -202,7 +202,7 @@ const ShadowingExercise = ({ sentences }: ShadowingExerciseProps) => {
           onClick={previousSentence}
           disabled={currentIndex === 0}
         >
-          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15 19l-7-7 7-7" />
           </svg>
           Câu trước
@@ -218,7 +218,7 @@ const ShadowingExercise = ({ sentences }: ShadowingExerciseProps) => {
           disabled={currentIndex === sentences.length - 1}
         >
           Câu sau
-          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -226,7 +226,7 @@ const ShadowingExercise = ({ sentences }: ShadowingExerciseProps) => {
 
       {completedSentences.size === sentences.length && (
         <div className="completion-message">
-          <svg style={{ width: '48px', height: '48px', color: '#10b981', margin: '0 auto 1rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '48px', height: '48px', color: '#10b981', margin: '0 auto 1rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h3>Xuất sắc!</h3>

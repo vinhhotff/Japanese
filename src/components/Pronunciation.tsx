@@ -110,7 +110,7 @@ const Pronunciation = ({ vocabulary }: PronunciationProps) => {
     <div className="section-container pronunciation-section">
       <div className="section-header">
         <div className="section-icon">
-          <svg style={{ width: '40px', height: '40px', color: '#8b5cf6' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '40px', height: '40px', color: '#8b5cf6' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
         </div>
@@ -136,7 +136,7 @@ const Pronunciation = ({ vocabulary }: PronunciationProps) => {
 
           <div className="pronunciation-actions">
             <button className="btn btn-play-large" onClick={handlePlayAudio}>
-              <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
               Nghe phát âm
@@ -144,7 +144,7 @@ const Pronunciation = ({ vocabulary }: PronunciationProps) => {
 
             {!isRecording ? (
               <button className="btn btn-record-large" onClick={handleStartRecording}>
-                <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
                 Bắt đầu ghi âm

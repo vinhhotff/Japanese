@@ -9,7 +9,6 @@ import {
   getKanji, createKanji, updateKanji, deleteKanji,
   getGrammar, createGrammar, updateGrammar, deleteGrammar,
   getListeningExercises, createListeningExercise, updateListeningExercise, deleteListeningExercise,
-  getSpeakingExercises, createSpeakingExercise, updateSpeakingExercise, deleteSpeakingExercise,
   getSentenceGames, createSentenceGame, updateSentenceGame, deleteSentenceGame,
   getRoleplayScenarios, createRoleplayScenario, updateRoleplayScenario, deleteRoleplayScenario
 } from '../services/supabaseService';
@@ -20,7 +19,7 @@ import { parseSentenceGameBatch } from '../utils/sentenceGameParser';
 import { uploadAudio, uploadImage, validateFileType, validateFileSize } from '../utils/fileUpload';
 import '../App.css';
 
-type TabType = 'courses' | 'lessons' | 'vocabulary' | 'kanji' | 'grammar' | 'listening' | 'speaking' | 'games' | 'roleplay';
+type TabType = 'courses' | 'lessons' | 'vocabulary' | 'kanji' | 'grammar' | 'listening' | 'games' | 'roleplay';
 
 const AdminPanel = () => {
   const { user, signOut } = useAuth();
@@ -87,10 +86,6 @@ const AdminPanel = () => {
         case 'listening':
           const listeningData = await getListeningExercises();
           setData(listeningData || []);
-          break;
-        case 'speaking':
-          const speakingData = await getSpeakingExercises();
-          setData(speakingData || []);
           break;
         case 'games':
           const gamesData = await getSentenceGames();
@@ -192,9 +187,6 @@ const AdminPanel = () => {
         case 'listening':
           await createListeningExercise(formData);
           break;
-        case 'speaking':
-          await createSpeakingExercise(formData);
-          break;
         case 'games':
           // Hỗ trợ cả tạo đơn lẻ và import hàng loạt
           if (Array.isArray(formData)) {
@@ -258,9 +250,6 @@ const AdminPanel = () => {
         case 'listening':
           await updateListeningExercise(id, formData);
           break;
-        case 'speaking':
-          await updateSpeakingExercise(id, formData);
-          break;
         case 'games':
           await updateSentenceGame(id, formData);
           break;
@@ -301,9 +290,6 @@ const AdminPanel = () => {
         case 'listening':
           await deleteListeningExercise(id);
           break;
-        case 'speaking':
-          await deleteSpeakingExercise(id);
-          break;
         case 'games':
           await deleteSentenceGame(id);
           break;
@@ -321,7 +307,7 @@ const AdminPanel = () => {
       <div className="admin-header">
         <div>
           <h1>
-            <svg style={{ width: '36px', height: '36px', display: 'inline', marginRight: '0.75rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '36px', height: '36px', display: 'inline', marginRight: '0.75rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -332,13 +318,13 @@ const AdminPanel = () => {
         <div className="admin-user-info">
           <span>Xin chào, {user?.email}</span>
           <a href="/" className="btn btn-secondary" style={{ marginRight: '0.5rem' }}>
-            <svg style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
             Trang chủ
           </a>
           <button className="btn btn-outline" onClick={signOut}>
-            <svg style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
             Đăng xuất
@@ -351,7 +337,7 @@ const AdminPanel = () => {
           className={`admin-tab ${activeTab === 'courses' ? 'active' : ''}`}
           onClick={() => setActiveTab('courses')}
         >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
           </svg>
           Khóa học
@@ -360,7 +346,7 @@ const AdminPanel = () => {
           className={`admin-tab ${activeTab === 'lessons' ? 'active' : ''}`}
           onClick={() => setActiveTab('lessons')}
         >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
           Bài học
@@ -369,7 +355,7 @@ const AdminPanel = () => {
           className={`admin-tab ${activeTab === 'vocabulary' ? 'active' : ''}`}
           onClick={() => setActiveTab('vocabulary')}
         >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
           Từ vựng
@@ -378,7 +364,7 @@ const AdminPanel = () => {
           className={`admin-tab ${activeTab === 'kanji' ? 'active' : ''}`}
           onClick={() => setActiveTab('kanji')}
         >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
           Kanji
@@ -387,7 +373,7 @@ const AdminPanel = () => {
           className={`admin-tab ${activeTab === 'grammar' ? 'active' : ''}`}
           onClick={() => setActiveTab('grammar')}
         >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           Ngữ pháp
@@ -396,25 +382,16 @@ const AdminPanel = () => {
           className={`admin-tab ${activeTab === 'listening' ? 'active' : ''}`}
           onClick={() => setActiveTab('listening')}
         >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
           Nghe
         </button>
         <button
-          className={`admin-tab ${activeTab === 'speaking' ? 'active' : ''}`}
-          onClick={() => setActiveTab('speaking')}
-        >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-          </svg>
-          Nói
-        </button>
-        <button
           className={`admin-tab ${activeTab === 'games' ? 'active' : ''}`}
           onClick={() => setActiveTab('games')}
         >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
           </svg>
           Game
@@ -423,7 +400,7 @@ const AdminPanel = () => {
           className={`admin-tab ${activeTab === 'roleplay' ? 'active' : ''}`}
           onClick={() => setActiveTab('roleplay')}
         >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           Roleplay
@@ -640,16 +617,6 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
           setAiJsonStatus('Đã parse JSON bài nghe vào form.');
           break;
         }
-        case 'speaking': {
-          setFormData({
-            ...formData,
-            title: json.title || formData.title,
-            prompt: json.prompt || formData.prompt,
-            example_response: json.example_response || formData.example_response,
-          });
-          setAiJsonStatus('Đã parse JSON bài nói vào form.');
-          break;
-        }
         case 'roleplay': {
           setFormData({
             ...formData,
@@ -711,7 +678,7 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
             <label>Hướng dẫn JSON/format cho AI (Từ vựng)</label>
             <div className="format-hint" style={{ lineHeight: 1.6 }}>
               Gợi ý có thể gửi cho AI:
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo một danh sách từ vựng tiếng Nhật trình độ N5.
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy tạo một danh sách từ vựng tiếng Nhật trình độ N5.
 - Trả về dạng text, mỗi dòng một từ.
 - Không giải thích thêm.
 - Format mỗi dòng:
@@ -732,7 +699,7 @@ Ví dụ:
             <label>Hướng dẫn JSON/format cho AI (Kanji)</label>
             <div className="format-hint" style={{ lineHeight: 1.6 }}>
               Gợi ý:
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy liệt kê một số kanji trình độ N5 liên quan tới chủ đề tôi đưa.
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy liệt kê một số kanji trình độ N5 liên quan tới chủ đề tôi đưa.
 - Trả về dạng text, mỗi dòng một kanji.
 - Không giải thích thêm.
 - Format mỗi dòng:
@@ -754,7 +721,7 @@ Ví dụ:
             <label>Hướng dẫn JSON/format cho AI (Ngữ pháp)</label>
             <div className="format-hint" style={{ lineHeight: 1.6 }}>
               Gợi ý:
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy liệt kê các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy liệt kê các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
 - Trả về dạng text, mỗi dòng một mẫu.
 - Không giải thích thêm.
 - Format mỗi dòng:
@@ -775,7 +742,7 @@ Ví dụ:
             <label>Hướng dẫn JSON cho AI (Bài nghe + câu hỏi)</label>
             <div className="format-hint" style={{ lineHeight: 1.6 }}>
               Gợi ý:
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo một bài nghe tiếng Nhật trình độ N5.
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy tạo một bài nghe tiếng Nhật trình độ N5.
 - Trả về JSON, không giải thích thêm.
 - Không cần audio_url (tôi sẽ upload sau), chỉ cần transcript và câu hỏi.
 - Cấu trúc JSON:
@@ -794,30 +761,13 @@ Ví dụ:
             </div>
           </div>
         );
-      case 'speaking':
-        return (
-          <div className="form-group">
-            <label>Hướng dẫn JSON cho AI (Bài nói)</label>
-            <div className="format-hint" style={{ lineHeight: 1.6 }}>
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo 1 bài tập luyện nói tiếng Nhật trình độ N5.
-- Trả về JSON, không giải thích thêm.
-- Giữ nguyên tên các key:
-{
-  "title": "Tiêu đề bài nói",
-  "prompt": "Đề bài: mô tả tình huống bằng tiếng Việt hoặc Nhật",
-  "example_response": "Câu trả lời mẫu bằng tiếng Nhật"
-}`}</pre>
-              Sau khi AI trả JSON, copy `title`, `prompt`, `example_response` vào form Nói.
-            </div>
-          </div>
-        );
       case 'games':
         return (
           <div className="form-group">
             <label>Hướng dẫn JSON/format cho AI (Game sắp xếp câu)</label>
             <div className="format-hint" style={{ lineHeight: 1.6 }}>
               Gợi ý 1 (dạng text để import hàng loạt):
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo các câu ví dụ tiếng Nhật trình độ N5, đã được tách sẵn từng từ bằng khoảng trắng.
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy tạo các câu ví dụ tiếng Nhật trình độ N5, đã được tách sẵn từng từ bằng khoảng trắng.
 - Trả về dạng text, mỗi dòng:
   câu_tiếng_Nhật_đã_tách=nghĩa_tiếng_Việt
 Ví dụ:
@@ -893,8 +843,6 @@ Ví dụ:
         return { lesson_id: '', pattern: '', meaning: '', explanation: '', examples: [] };
       case 'listening':
         return { lesson_id: '', title: '', audio_url: '', image_url: '', transcript: '', questions: [] };
-      case 'speaking':
-        return { lesson_id: '', title: '', prompt: '', example_response: '' };
       case 'games':
         return { lesson_id: '', sentence: '', translation: '', words: [], correct_order: [], hint: '' };
       case 'roleplay':
@@ -2252,74 +2200,6 @@ Hoặc với đọc âm:
             </>
           )}
 
-          {type === 'speaking' && (
-            <>
-              <div className="form-group">
-                <label>Bài học *</label>
-                <select
-                  value={formData.lesson_id}
-                  onChange={(e) => setFormData({ ...formData, lesson_id: e.target.value })}
-                  required
-                >
-                  <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Tiêu đề *</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Đề bài *</label>
-                <textarea
-                  value={formData.prompt}
-                  onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
-                  required
-                  rows={3}
-                />
-              </div>
-              <div className="form-group">
-                <label>Ví dụ trả lời</label>
-                <textarea
-                  value={formData.example_response || ''}
-                  onChange={(e) => setFormData({ ...formData, example_response: e.target.value })}
-                  rows={3}
-                />
-              </div>
-              {!item && (
-                <div className="form-group">
-                  <label>Dán JSON từ AI (Bài nói)</label>
-                  <textarea
-                    value={aiJsonText}
-                    onChange={(e) => setAiJsonText(e.target.value)}
-                    rows={4}
-                    placeholder='Dán JSON {"title": "...", "prompt": "...", "example_response": "..."}'
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{ marginTop: '0.5rem' }}
-                    onClick={handleParseAiJson}
-                  >
-                    🔁 Parse JSON vào form
-                  </button>
-                  {aiJsonStatus && (
-                    <div style={{ marginTop: '0.5rem', color: 'var(--success-color)', fontSize: '0.875rem' }}>
-                      {aiJsonStatus}
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-
           {type === 'games' && !item && (
             <>
               <div className="form-group">
@@ -2840,7 +2720,6 @@ function getTypeLabel(type: TabType): string {
     kanji: 'Kanji',
     grammar: 'Ngữ pháp',
     listening: 'Bài tập nghe',
-    speaking: 'Bài tập nói',
     games: 'Game sắp xếp câu',
     roleplay: 'Roleplay',
   };

@@ -173,7 +173,7 @@ const VoiceRecorder = () => {
     <div className="container">
       <div className="header">
         <h1>
-          <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
           Luyện Phát Âm
@@ -193,8 +193,8 @@ const VoiceRecorder = () => {
               style={{
                 padding: '1rem',
                 borderRadius: '8px',
-                border: selectedPhrase?.id === phrase.id ? '2px solid #3b82f6' : '2px solid #e5e7eb',
-                background: selectedPhrase?.id === phrase.id ? '#eff6ff' : 'white',
+                border: selectedPhrase?.id === phrase.id ? '2px solid var(--primary-color)' : '2px solid var(--border-color)',
+                background: selectedPhrase?.id === phrase.id ? 'var(--primary-light)' : 'var(--card-bg)',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
@@ -224,17 +224,18 @@ const VoiceRecorder = () => {
         <div className="card" style={{ marginBottom: '2rem', textAlign: 'center' }}>
           <div style={{ 
             padding: '2rem',
-            background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+            background: 'var(--primary-light)',
             borderRadius: '12px',
-            marginBottom: '1.5rem'
+            marginBottom: '1.5rem',
+            border: '2px solid var(--primary-color)'
           }}>
-            <div style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem', color: '#1e40af' }}>
+            <div style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--primary-color)' }}>
               {selectedPhrase.japanese}
             </div>
-            <div style={{ fontSize: '1.125rem', color: '#3b82f6', marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '1.125rem', color: 'var(--primary-color)', marginBottom: '0.5rem' }}>
               {selectedPhrase.hiragana}
             </div>
-            <div style={{ fontSize: '1rem', color: '#6b7280' }}>
+            <div style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>
               {selectedPhrase.vietnamese}
             </div>
           </div>
@@ -247,10 +248,10 @@ const VoiceRecorder = () => {
                 style={{ 
                   padding: '1rem 2rem',
                   fontSize: '1.125rem',
-                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  background: 'var(--danger-gradient)'
                 }}
               >
-                <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <circle cx="12" cy="12" r="10" />
                   <circle cx="12" cy="12" r="3" fill="currentColor" />
                 </svg>
@@ -263,11 +264,11 @@ const VoiceRecorder = () => {
                 style={{ 
                   padding: '1rem 2rem',
                   fontSize: '1.125rem',
-                  background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                  background: 'var(--secondary-gradient)',
                   animation: 'pulse 1.5s infinite'
                 }}
               >
-                <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <rect x="6" y="6" width="12" height="12" fill="currentColor" />
                 </svg>
                 Dừng ghi âm
@@ -283,7 +284,7 @@ const VoiceRecorder = () => {
         </h2>
         {recordings.length === 0 ? (
           <div className="empty-state">
-            <svg style={{ width: '64px', height: '64px', margin: '0 auto 1rem', color: '#9ca3af' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '64px', height: '64px', margin: '0 auto 1rem', color: '#9ca3af' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
             <p>Chưa có bản ghi âm nào. Hãy chọn câu và bắt đầu luyện tập!</p>
@@ -296,8 +297,8 @@ const VoiceRecorder = () => {
                 style={{
                   padding: '1rem',
                   borderRadius: '8px',
-                  border: '1px solid #e5e7eb',
-                  background: 'white',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--card-bg)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -320,7 +321,7 @@ const VoiceRecorder = () => {
                     }}
                   >
                     {playingId === recording.id ? (
-                      <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <rect x="6" y="4" width="4" height="16" fill="currentColor" />
                         <rect x="14" y="4" width="4" height="16" fill="currentColor" />
                       </svg>
@@ -359,12 +360,12 @@ const VoiceRecorder = () => {
                       padding: '0.5rem',
                       borderRadius: '6px',
                       border: 'none',
-                      background: '#fee2e2',
-                      color: '#ef4444',
+                      background: 'var(--danger-light)',
+                      color: 'var(--danger-color)',
                       cursor: 'pointer',
                     }}
                   >
-                    <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
@@ -377,14 +378,14 @@ const VoiceRecorder = () => {
 
       <audio ref={audioRef} onEnded={() => setPlayingId(null)} />
 
-      <div className="card" style={{ marginTop: '2rem', background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}>
+      <div className="card" style={{ marginTop: '2rem', background: 'var(--warning-light)', border: '2px solid var(--warning-color)' }}>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-          <svg style={{ width: '32px', height: '32px', color: '#f59e0b', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '32px', height: '32px', color: 'var(--warning-color)', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
           </svg>
           <div>
-            <h3 style={{ fontWeight: '700', color: '#92400e', marginBottom: '0.5rem' }}>Mẹo luyện tập</h3>
-            <ul style={{ color: '#78350f', fontSize: '0.9375rem', lineHeight: '1.8', paddingLeft: '1.25rem' }}>
+            <h3 style={{ fontWeight: '700', color: 'var(--warning-color)', marginBottom: '0.5rem' }}>Mẹo luyện tập</h3>
+            <ul style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.8', paddingLeft: '1.25rem' }}>
               <li>Nghe kỹ phát âm mẫu trước khi ghi âm</li>
               <li>Nói rõ ràng và với tốc độ vừa phải</li>
               <li>Luyện tập nhiều lần để cải thiện điểm số</li>

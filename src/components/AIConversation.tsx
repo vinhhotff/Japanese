@@ -195,7 +195,7 @@ const AIConversation = () => {
       <div className="container">
         <div className="header">
           <h1>
-            <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
             Trò chuyện với AI
@@ -220,20 +220,20 @@ const AIConversation = () => {
           ))}
         </div>
 
-        <div className="card" style={{ marginTop: '2rem', background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}>
+        <div className="card" style={{ marginTop: '2rem', background: 'var(--warning-light)', border: '2px solid var(--warning-color)' }}>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-            <svg style={{ width: '32px', height: '32px', color: '#f59e0b', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '32px', height: '32px', color: 'var(--warning-color)', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h3 style={{ fontWeight: '700', color: '#92400e', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontWeight: '700', color: 'var(--warning-color)', marginBottom: '0.5rem' }}>
                 {import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY 
-                  ? '✅ AI đã được kích hoạt' 
+                  ? 'Hướng dẫn sử dụng' 
                   : '⚠️ Chưa cấu hình AI'}
               </h3>
-              <p style={{ color: '#78350f', fontSize: '0.9375rem', lineHeight: '1.6' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.6' }}>
                 {import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY 
-                  ? 'Bạn đang sử dụng AI thực để trò chuyện. Câu trả lời sẽ tự nhiên và phù hợp với ngữ cảnh.' 
+                  ? 'Chọn tình huống và bắt đầu trò chuyện bằng tiếng Nhật. AI sẽ phản hồi phù hợp với ngữ cảnh.' 
                   : 'Hiện đang dùng câu trả lời mẫu. Để sử dụng AI thực, hãy thêm API key vào file .env (xem hướng dẫn trong README).'}
               </p>
             </div>
@@ -247,7 +247,7 @@ const AIConversation = () => {
     <div className="container" style={{ maxWidth: '900px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <button className="btn btn-outline" onClick={resetConversation}>
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15 19l-7-7 7-7" />
           </svg>
           Quay lại
@@ -264,7 +264,7 @@ const AIConversation = () => {
           className="btn btn-outline"
           onClick={() => setShowTranslation(!showTranslation)}
         >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
           </svg>
           {showTranslation ? 'Ẩn' : 'Hiện'} dịch
@@ -288,9 +288,10 @@ const AIConversation = () => {
                   padding: '0.75rem 1rem',
                   borderRadius: '12px',
                   background: message.role === 'user' 
-                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
-                    : '#f3f4f6',
+                    ? 'var(--primary-gradient)'
+                    : 'var(--card-bg-hover)',
                   color: message.role === 'user' ? 'white' : 'var(--text-primary)',
+                  border: message.role === 'assistant' ? '1px solid var(--border-color)' : 'none',
                 }}
               >
                 <div style={{ whiteSpace: 'pre-line', lineHeight: '1.6' }}>
@@ -311,7 +312,8 @@ const AIConversation = () => {
               <div style={{ 
                 padding: '0.75rem 1rem',
                 borderRadius: '12px',
-                background: '#f3f4f6',
+                background: 'var(--card-bg-hover)',
+                border: '1px solid var(--border-color)',
               }}>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <div className="typing-dot"></div>
@@ -324,7 +326,7 @@ const AIConversation = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div style={{ borderTop: '1px solid #e5e7eb', padding: '1rem' }}>
+        <div style={{ borderTop: '1px solid var(--border-color)', padding: '1rem' }}>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <input
               type="text"
@@ -341,7 +343,7 @@ const AIConversation = () => {
               onClick={sendMessage}
               disabled={loading || !input.trim()}
             >
-              <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
               Gửi

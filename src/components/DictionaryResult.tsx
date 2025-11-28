@@ -38,21 +38,21 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
 
   return (
     <div style={{
-      background: 'white',
+      background: 'var(--card-bg)',
       borderRadius: '20px',
       padding: '2rem',
       boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-      border: '2px solid #e5e7eb',
+      border: '2px solid var(--border-color)',
       transition: 'all 0.3s'
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12)';
-      e.currentTarget.style.borderColor = '#3b82f6';
+      e.currentTarget.style.borderColor = 'var(--primary-color)';
       e.currentTarget.style.transform = 'translateY(-4px)';
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)';
-      e.currentTarget.style.borderColor = '#e5e7eb';
+      e.currentTarget.style.borderColor = 'var(--border-color)';
       e.currentTarget.style.transform = 'translateY(0)';
     }}>
       {/* Header with Word and Badges */}
@@ -69,7 +69,7 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
               <span style={{ 
                 fontSize: '3rem', 
                 fontWeight: '800', 
-                color: '#1f2937',
+                color: 'var(--text-primary)',
                 lineHeight: 1
               }}>
                 {japanese.word}
@@ -81,9 +81,9 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
                   width: '48px',
                   height: '48px',
                   borderRadius: '50%',
-                  border: '2px solid #3b82f6',
-                  background: speakingId === `${id}-kanji` ? '#3b82f6' : '#eff6ff',
-                  color: speakingId === `${id}-kanji` ? 'white' : '#3b82f6',
+                  border: '2px solid var(--primary-color)',
+                  background: speakingId === `${id}-kanji` ? 'var(--primary-color)' : 'var(--primary-light)',
+                  color: speakingId === `${id}-kanji` ? 'white' : 'var(--primary-color)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -92,18 +92,18 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
                 }}
                 onMouseEnter={(e) => {
                   if (speakingId !== `${id}-kanji`) {
-                    e.currentTarget.style.background = '#dbeafe';
+                    e.currentTarget.style.background = 'var(--primary-light)';
                     e.currentTarget.style.transform = 'scale(1.1)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (speakingId !== `${id}-kanji`) {
-                    e.currentTarget.style.background = '#eff6ff';
+                    e.currentTarget.style.background = 'var(--primary-light)';
                     e.currentTarget.style.transform = 'scale(1)';
                   }
                 }}
               >
-                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                 </svg>
               </button>
@@ -118,7 +118,7 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
           }}>
             <span style={{ 
               fontSize: '1.75rem', 
-              color: '#6b7280',
+              color: 'var(--text-secondary)',
               fontFamily: 'serif'
             }}>
               {reading}
@@ -130,9 +130,9 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
                 width: '40px',
                 height: '40px',
                 borderRadius: '50%',
-                border: '2px solid #8b5cf6',
-                background: speakingId === `${id}-reading` ? '#8b5cf6' : '#f3e8ff',
-                color: speakingId === `${id}-reading` ? 'white' : '#8b5cf6',
+                border: '2px solid var(--secondary-color)',
+                background: speakingId === `${id}-reading` ? 'var(--secondary-color)' : 'var(--secondary-light)',
+                color: speakingId === `${id}-reading` ? 'white' : 'var(--secondary-color)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -141,18 +141,18 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
               }}
               onMouseEnter={(e) => {
                 if (speakingId !== `${id}-reading`) {
-                  e.currentTarget.style.background = '#e9d5ff';
+                  e.currentTarget.style.background = 'var(--secondary-light)';
                   e.currentTarget.style.transform = 'scale(1.1)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (speakingId !== `${id}-reading`) {
-                  e.currentTarget.style.background = '#f3e8ff';
+                  e.currentTarget.style.background = 'var(--secondary-light)';
                   e.currentTarget.style.transform = 'scale(1)';
                 }
               }}
             >
-              <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
             </button>
@@ -164,12 +164,12 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
           {item.is_common && (
             <span style={{
               padding: '0.5rem 1rem',
-              background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-              color: '#92400e',
+              background: 'var(--warning-light)',
+              color: 'var(--warning-color)',
               borderRadius: '20px',
               fontSize: '0.875rem',
               fontWeight: '700',
-              border: '2px solid #fbbf24'
+              border: '2px solid var(--warning-color)'
             }}>
               ⭐ Thông dụng
             </span>
@@ -177,12 +177,12 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
           {item.jlpt && item.jlpt.length > 0 && (
             <span style={{
               padding: '0.5rem 1rem',
-              background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
-              color: '#1e40af',
+              background: 'var(--primary-light)',
+              color: 'var(--primary-color)',
               borderRadius: '20px',
               fontSize: '0.875rem',
               fontWeight: '700',
-              border: '2px solid #3b82f6'
+              border: '2px solid var(--primary-color)'
             }}>
               {item.jlpt[0]}
             </span>
@@ -208,23 +208,23 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
           {item.senses.map((senseItem: any, senseIndex: number) => (
             <div key={senseIndex} style={{
               padding: '1rem 1.25rem',
-              background: '#f9fafb',
+              background: 'var(--card-bg-hover)',
               borderRadius: '12px',
-              borderLeft: '4px solid #3b82f6',
+              borderLeft: '4px solid var(--primary-color)',
               transition: 'all 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#f3f4f6';
+              e.currentTarget.style.background = 'var(--card-bg)';
               e.currentTarget.style.transform = 'translateX(4px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#f9fafb';
+              e.currentTarget.style.background = 'var(--card-bg-hover)';
               e.currentTarget.style.transform = 'translateX(0)';
             }}>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'start' }}>
                 <span style={{ 
                   fontWeight: '700', 
-                  color: '#3b82f6',
+                  color: 'var(--primary-color)',
                   fontSize: '1.125rem',
                   minWidth: '28px'
                 }}>
@@ -262,7 +262,7 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
             {sense.tags.map((tag: string, tagIndex: number) => (
               <span key={tagIndex} style={{
                 padding: '0.375rem 0.875rem',
-                background: '#f3f4f6',
+                background: 'var(--card-bg-hover)',
                 borderRadius: '20px',
                 fontSize: '0.8125rem',
                 color: 'var(--text-secondary)',
@@ -278,7 +278,7 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
       {/* Actions */}
       <div style={{ 
         paddingTop: '1.5rem',
-        borderTop: '1px solid #e5e7eb'
+        borderTop: '1px solid var(--border-color)'
       }}>
         <button
           onClick={handleSaveClick}
@@ -287,8 +287,8 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
             borderRadius: '12px',
             border: 'none',
             background: isSaved 
-              ? 'linear-gradient(135deg, #10b981, #059669)' 
-              : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+              ? 'var(--success-gradient)' 
+              : 'var(--primary-gradient)',
             color: 'white',
             fontSize: '1rem',
             fontWeight: '700',
@@ -311,14 +311,14 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
         >
           {isSaved ? (
             <>
-              <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+              <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5">
                 <path d="M5 13l4 4L19 7" />
               </svg>
               Đã lưu vào danh sách
             </>
           ) : (
             <>
-              <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
               </svg>
               Lưu để học sau

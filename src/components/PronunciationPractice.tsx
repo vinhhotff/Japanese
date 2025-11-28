@@ -211,7 +211,7 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
         </div>
 
         <button className="btn btn-secondary" onClick={playExample}>
-          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
           Nghe mẫu
@@ -220,7 +220,7 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
         <div className="recording-section">
           {!isRecording ? (
             <button className="btn btn-record" onClick={startRecording}>
-              <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
               Bắt đầu ghi âm
@@ -236,7 +236,7 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
 
           {recordedAudio && (
             <button className="btn btn-outline" onClick={playRecording}>
-              <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -282,7 +282,7 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
           onClick={previousWord}
           disabled={currentIndex === 0}
         >
-          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15 19l-7-7 7-7" />
           </svg>
           Trước
@@ -293,7 +293,7 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
           disabled={currentIndex === vocabulary.length - 1}
         >
           Sau
-          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9 5l7 7-7 7" />
           </svg>
         </button>

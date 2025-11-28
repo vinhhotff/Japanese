@@ -158,7 +158,7 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
     return (
       <div className="quiz-container">
         <div className="quiz-result">
-          <svg className="result-icon" style={{ width: '100px', height: '100px', color: percentage >= 80 ? '#10b981' : percentage >= 60 ? '#f59e0b' : '#ef4444', margin: '0 auto 1.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="result-icon" style={{ width: '100px', height: '100px', color: percentage >= 80 ? '#10b981' : percentage >= 60 ? '#f59e0b' : '#ef4444', margin: '0 auto 1.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             {percentage >= 80 ? (
               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             ) : percentage >= 60 ? (
@@ -183,7 +183,7 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
               : 'Hãy ôn lại và thử lại nhé! 📚'}
           </div>
           <button className="btn btn-primary" onClick={resetQuiz}>
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             Làm lại Quiz
@@ -224,15 +224,15 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
       <div className="quiz-question-card">
         <div className="question-type-badge">
           {current.type === 'vocabulary' ? (
-            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           ) : current.type === 'kanji' ? (
-            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
           ) : (
-            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           )}
@@ -264,12 +264,12 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
               <span className="option-letter">{String.fromCharCode(65 + index)}</span>
               <span className="option-text">{option}</span>
               {showResult && index === current.correctAnswer && (
-                <svg className="option-icon" style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="option-icon" style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M5 13l4 4L19 7" />
                 </svg>
               )}
               {showResult && index === selectedAnswer && index !== current.correctAnswer && (
-                <svg className="option-icon" style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="option-icon" style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}
@@ -281,7 +281,7 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
       {showResult && current.explanation && (
         <div className="quiz-explanation">
           <div className="explanation-label">
-            <svg style={{ width: '20px', height: '20px', display: 'inline', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '20px', height: '20px', display: 'inline', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
             Giải thích:
@@ -297,7 +297,7 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
             onClick={handleSubmit}
             disabled={selectedAnswer === null}
           >
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Kiểm tra câu trả lời
@@ -307,13 +307,13 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
             {currentIndex < questions.length - 1 ? (
               <>
                 Câu tiếp theo
-                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M9 5l7 7-7 7" />
                 </svg>
               </>
             ) : (
               <>
-                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
                 Xem kết quả

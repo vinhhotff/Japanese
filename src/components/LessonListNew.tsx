@@ -55,8 +55,8 @@ const LessonListNew = () => {
 
   if (loading) {
     return (
-      <div className="container-custom" style={{ textAlign: 'center', paddingTop: '4rem' }}>
-        <div style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
+      <div className="container" style={{ textAlign: 'center', paddingTop: '4rem' }}>
+        <div style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
           読み込み中...
         </div>
       </div>
@@ -64,38 +64,18 @@ const LessonListNew = () => {
   }
 
   return (
-    <div style={{ background: 'var(--color-bg-primary)', minHeight: '100vh' }}>
-      <div className="container-custom">
+    <div className="container">
         {/* Back Button */}
-        <Link 
-          to="/" 
-          style={{ 
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 'var(--space-sm)',
-            color: 'var(--color-text-secondary)',
-            textDecoration: 'none',
-            fontSize: '0.9375rem',
-            marginTop: 'var(--space-2xl)',
-            marginBottom: 'var(--space-xl)',
-            transition: 'color var(--transition-base)'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
-          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-secondary)'}
-        >
-          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
+        <Link to="/" className="back-button">
+          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           Về trang chủ
         </Link>
 
         {/* Header */}
-        <header style={{ 
-          paddingBottom: 'var(--space-2xl)',
-          borderBottom: '1px solid var(--color-border)',
-          marginBottom: 'var(--space-3xl)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)', marginBottom: 'var(--space-md)' }}>
+        <div className="header" style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             {(() => {
               const levelColors: Record<string, { bg: string; border: string; text: string }> = {
                 'N5': { bg: '#e8f5e9', border: '#4caf50', text: '#2e7d32' },
@@ -114,8 +94,8 @@ const LessonListNew = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   background: colors.bg,
-                  border: `2px solid ${colors.border}`,
-                  borderRadius: 'var(--radius-md)',
+                  border: `3px solid ${colors.border}`,
+                  borderRadius: '16px',
                   fontSize: '1.75rem',
                   fontWeight: 700,
                   color: colors.text
@@ -128,23 +108,23 @@ const LessonListNew = () => {
               <h1 style={{ 
                 fontSize: '2rem', 
                 fontWeight: 700,
-                color: 'var(--color-text-primary)',
+                color: 'var(--text-primary)',
                 marginBottom: '0.5rem'
               }}>
                 Cấp độ {level}
               </h1>
               <p style={{ 
-                color: 'var(--color-text-secondary)', 
+                color: 'var(--text-secondary)', 
                 fontSize: '1.125rem'
               }}>
                 {lessons.length} bài học
               </p>
             </div>
           </div>
-        </header>
+        </div>
 
         {/* Lessons List */}
-        <div style={{ display: 'grid', gap: 'var(--space-lg)', paddingBottom: 'var(--space-3xl)' }}>
+        <div style={{ display: 'grid', gap: '1.5rem', paddingBottom: '3rem' }}>
           {lessons.map((lesson, index) => {
             const progress = getLessonCompletionPercentage(lesson.id);
             const completed = isLessonCompleted(lesson.id);
@@ -156,11 +136,10 @@ const LessonListNew = () => {
                 style={{ textDecoration: 'none' }}
               >
                 <div 
-                  className="card-custom animate-fade-in-up"
+                  className="card"
                   style={{ 
-                    padding: 'var(--space-xl)',
+                    padding: '2rem',
                     cursor: 'pointer',
-                    animationDelay: `${index * 30}ms`,
                     position: 'relative'
                   }}
                 >
@@ -168,20 +147,20 @@ const LessonListNew = () => {
                   {completed && (
                     <div style={{
                       position: 'absolute',
-                      top: 'var(--space-lg)',
-                      right: 'var(--space-lg)',
+                      top: '1.5rem',
+                      right: '1.5rem',
                       padding: '0.375rem 0.75rem',
-                      background: 'var(--color-success)',
+                      background: 'var(--success-color)',
                       color: 'white',
                       fontSize: '0.8125rem',
                       fontWeight: 600,
-                      borderRadius: 'var(--radius-sm)'
+                      borderRadius: '8px'
                     }}>
-                      Đã hoàn thành
+                      ✓ Đã hoàn thành
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', gap: 'var(--space-xl)', alignItems: 'start' }}>
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'start' }}>
                     {/* Lesson Number */}
                     {(() => {
                       const levelColors: Record<string, string> = {
@@ -208,9 +187,9 @@ const LessonListNew = () => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          background: completed ? 'var(--color-success)' : bgColor,
-                          border: `2px solid ${completed ? 'var(--color-success)' : color}`,
-                          borderRadius: 'var(--radius-md)',
+                          background: completed ? 'var(--success-color)' : bgColor,
+                          border: `3px solid ${completed ? 'var(--success-color)' : color}`,
+                          borderRadius: '12px',
                           fontSize: '1.25rem',
                           fontWeight: 700,
                           color: completed ? 'white' : color,
@@ -226,8 +205,8 @@ const LessonListNew = () => {
                       <h3 style={{ 
                         fontSize: '1.25rem', 
                         fontWeight: 600, 
-                        color: 'var(--color-text-primary)',
-                        marginBottom: 'var(--space-sm)'
+                        color: 'var(--text-primary)',
+                        marginBottom: '0.75rem'
                       }}>
                         {lesson.title}
                       </h3>
@@ -235,9 +214,9 @@ const LessonListNew = () => {
                       {lesson.description && (
                         <p style={{ 
                           fontSize: '1rem', 
-                          color: 'var(--color-text-secondary)',
-                          marginBottom: 'var(--space-lg)',
-                          lineHeight: 1.6
+                          color: 'var(--text-secondary)',
+                          marginBottom: '1.25rem',
+                          lineHeight: 1.65
                         }}>
                           {lesson.description}
                         </p>
@@ -246,13 +225,13 @@ const LessonListNew = () => {
                       {/* Stats */}
                       <div style={{ 
                         display: 'flex', 
-                        gap: 'var(--space-xl)',
+                        gap: '1.5rem',
                         fontSize: '0.9375rem',
-                        color: 'var(--color-text-muted)'
+                        color: 'var(--text-secondary)'
                       }}>
-                        <span>Từ vựng: {lesson.vocabCount}</span>
-                        <span>Kanji: {lesson.kanjiCount}</span>
-                        <span>Ngữ pháp: {lesson.grammarCount}</span>
+                        <span>📚 Từ vựng: {lesson.vocabCount}</span>
+                        <span>🈯 Kanji: {lesson.kanjiCount}</span>
+                        <span>📖 Ngữ pháp: {lesson.grammarCount}</span>
                       </div>
 
                       {/* Progress Bar */}
@@ -267,29 +246,30 @@ const LessonListNew = () => {
                         const color = levelColors[level || 'N5'] || levelColors['N5'];
                         
                         return (
-                        <div style={{ marginTop: 'var(--space-lg)' }}>
+                        <div style={{ marginTop: '1.25rem' }}>
                           <div style={{ 
                             display: 'flex', 
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            marginBottom: 'var(--space-sm)',
+                            marginBottom: '0.5rem',
                             fontSize: '0.875rem',
-                            color: 'var(--color-text-muted)'
+                            color: 'var(--text-secondary)'
                           }}>
                             <span>Tiến độ</span>
                             <span style={{ fontWeight: 600, color }}>{progress}%</span>
                           </div>
                           <div style={{
-                            height: '4px',
-                            background: 'var(--color-border)',
-                            borderRadius: '2px',
+                            height: '6px',
+                            background: 'var(--border-light)',
+                            borderRadius: '3px',
                             overflow: 'hidden'
                           }}>
                             <div style={{
                               height: '100%',
                               width: `${progress}%`,
                               background: color,
-                              transition: 'width 0.3s ease'
+                              transition: 'width 0.3s ease',
+                              borderRadius: '3px'
                             }} />
                           </div>
                         </div>
@@ -304,17 +284,12 @@ const LessonListNew = () => {
         </div>
 
         {lessons.length === 0 && (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: 'var(--space-3xl)',
-            color: 'var(--color-text-secondary)'
-          }}>
-            <div style={{ fontSize: '2rem', marginBottom: 'var(--space-md)' }}>📚</div>
-            <p>このレベルにはまだレッスンがありません</p>
+          <div className="empty-state">
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
+            <p>Chưa có bài học nào cho cấp độ này</p>
           </div>
         )}
       </div>
-    </div>
   );
 };
 

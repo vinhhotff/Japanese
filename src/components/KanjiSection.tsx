@@ -10,7 +10,7 @@ const KanjiSection = ({ kanji }: KanjiSectionProps) => {
     <div className="section-container kanji-section">
       <div className="section-header kanji-header">
         <div className="section-icon kanji-icon">
-          <svg style={{ width: '40px', height: '40px', color: '#8b5cf6' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '40px', height: '40px', color: 'var(--secondary-color)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
         </div>
@@ -28,7 +28,7 @@ const KanjiSection = ({ kanji }: KanjiSectionProps) => {
                   <div className="kanji-character">{k.character}</div>
                   <div className="kanji-stroke-count">{k.strokeCount} nét</div>
                 </div>
-                <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--kanji-primary)' }}>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                   {k.meaning}
                 </h3>
                 <div className="kanji-readings">

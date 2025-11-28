@@ -500,7 +500,7 @@
 }
 
 .grammar-explanation {
-  color: var(--text-secondary);
+  color: var(--text-grammar);
   font-size: 1.05rem;
   line-height: 1.8;
   margin-bottom: 1.5rem;

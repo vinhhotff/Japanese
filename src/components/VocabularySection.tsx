@@ -35,7 +35,7 @@ const VocabularySection = ({ vocabulary }: VocabularySectionProps) => {
     <div className="section-container vocab-section">
       <div className="section-header vocab-header">
         <div className="section-icon vocab-icon">
-          <svg style={{ width: '40px', height: '40px', color: '#3b82f6' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg style={{ width: '40px', height: '40px', color: 'var(--primary-color)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
         </div>
@@ -51,18 +51,18 @@ const VocabularySection = ({ vocabulary }: VocabularySectionProps) => {
               <div key={vocab.id} style={{
                 padding: '1.5rem',
                 borderRadius: '12px',
-                border: '2px solid #e5e7eb',
-                background: 'white',
+                border: '2px solid var(--border-color)',
+                background: 'var(--card-bg)',
                 transition: 'all 0.2s',
                 cursor: 'pointer',
                 position: 'relative'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#3b82f6';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.1)';
+                e.currentTarget.style.borderColor = 'var(--primary-color)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-md)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.borderColor = 'var(--border-color)';
                 e.currentTarget.style.boxShadow = 'none';
               }}>
                 {/* Badge */}
@@ -74,8 +74,8 @@ const VocabularySection = ({ vocabulary }: VocabularySectionProps) => {
                   borderRadius: '50px',
                   fontSize: '0.75rem',
                   fontWeight: '600',
-                  background: vocab.difficulty === 'hard' ? '#fee2e2' : vocab.difficulty === 'medium' ? '#fef3c7' : '#dbeafe',
-                  color: vocab.difficulty === 'hard' ? '#991b1b' : vocab.difficulty === 'medium' ? '#92400e' : '#1e40af'
+                  background: vocab.difficulty === 'hard' ? 'var(--danger-light)' : vocab.difficulty === 'medium' ? 'var(--warning-light)' : 'var(--primary-light)',
+                  color: vocab.difficulty === 'hard' ? 'var(--danger-color)' : vocab.difficulty === 'medium' ? 'var(--warning-color)' : 'var(--primary-color)'
                 }}>
                   {vocab.difficulty === 'hard' ? 'Khó' : vocab.difficulty === 'medium' ? 'TB' : 'Dễ'}
                 </span>
@@ -86,15 +86,15 @@ const VocabularySection = ({ vocabulary }: VocabularySectionProps) => {
                     <div style={{ flex: 1 }}>
                       {vocab.kanji ? (
                         <>
-                          <h3 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0, lineHeight: '1.2', color: '#1f2937' }}>
+                          <h3 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0, lineHeight: '1.2', color: 'var(--text-primary)' }}>
                             {vocab.kanji}
                           </h3>
-                          <p style={{ fontSize: '1rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
+                          <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
                             {vocab.hiragana}
                           </p>
                         </>
                       ) : (
-                        <h3 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0, lineHeight: '1.2', color: '#1f2937' }}>
+                        <h3 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0, lineHeight: '1.2', color: 'var(--text-primary)' }}>
                           {vocab.word}
                         </h3>
                       )}
@@ -121,17 +121,17 @@ const VocabularySection = ({ vocabulary }: VocabularySectionProps) => {
                 </div>
 
                 {/* Meaning */}
-                <p style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: vocab.example ? '1rem' : 0 }}>
+                <p style={{ fontSize: '1.125rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: vocab.example ? '1rem' : 0 }}>
                   {vocab.meaning}
                 </p>
 
                 {/* Example */}
                 {vocab.example && (
-                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
-                    <p style={{ fontStyle: 'italic', marginBottom: '0.5rem', fontSize: '0.9375rem', color: '#374151' }}>
+                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+                    <p style={{ fontStyle: 'italic', marginBottom: '0.5rem', fontSize: '0.9375rem', color: 'var(--text-primary)' }}>
                       {vocab.example}
                     </p>
-                    <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                       {vocab.exampleTranslation}
                     </p>
                   </div>

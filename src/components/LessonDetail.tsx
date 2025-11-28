@@ -8,7 +8,6 @@ import VocabularySection from './VocabularySection';
 import KanjiSection from './KanjiSection';
 import GrammarSection from './GrammarSection';
 import ListeningSection from './ListeningSection';
-import SpeakingSection from './SpeakingSection';
 import SentenceGame from './SentenceGame';
 import Flashcard from './Flashcard';
 import Quiz from './Quiz';
@@ -31,7 +30,7 @@ const LessonDetail = () => {
 
   // Sub-tabs for each step
   const [learnTab, setLearnTab] = useState<'vocab' | 'kanji' | 'grammar'>('vocab');
-  const [practiceTab, setPracticeTab] = useState<'listening' | 'speaking' | 'flashcard' | 'game'>('listening');
+  const [practiceTab, setPracticeTab] = useState<'listening' | 'flashcard' | 'game'>('listening');
 
   useEffect(() => {
     if (lessonId) {
@@ -120,14 +119,14 @@ const LessonDetail = () => {
   return (
     <div className="container">
       <Link to={`/courses/${courseLevel}`} className="back-button">
-        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Về danh sách bài học
       </Link>
 
       {/* Lesson Header */}
-      <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none' }}>
+      <div className="card" style={{ marginBottom: '2rem', background: 'var(--secondary-gradient)', color: 'white', border: 'none' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
           <div style={{ flex: 1 }}>
             <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'white' }}>{lesson.title}</h1>
@@ -180,8 +179,8 @@ const LessonDetail = () => {
           className="card"
           style={{
             cursor: 'pointer',
-            border: currentStep === 'learn' ? '3px solid #3b82f6' : '2px solid #e5e7eb',
-            background: currentStep === 'learn' ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : 'white',
+            border: currentStep === 'learn' ? '3px solid var(--primary-color)' : '2px solid var(--border-color)',
+            background: currentStep === 'learn' ? 'var(--primary-light)' : 'var(--card-bg)',
             transition: 'all 0.2s',
             position: 'relative'
           }}
@@ -194,7 +193,7 @@ const LessonDetail = () => {
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              background: '#10b981',
+              background: 'var(--success-color)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -203,10 +202,10 @@ const LessonDetail = () => {
               ✓
             </div>
           )}
-          <svg style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', color: currentStep === 'learn' ? '#3b82f6' : '#9ca3af', strokeWidth: '1.5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', color: currentStep === 'learn' ? 'var(--primary-color)' : 'var(--text-secondary)', strokeWidth: '1.5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem', color: currentStep === 'learn' ? '#1e40af' : 'var(--text-primary)' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem', color: currentStep === 'learn' ? 'var(--primary-color)' : 'var(--text-primary)' }}>
             Bước 1: Học
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
@@ -219,13 +218,13 @@ const LessonDetail = () => {
           className="card"
           style={{
             cursor: 'pointer',
-            border: currentStep === 'practice' ? '3px solid #10b981' : '2px solid #e5e7eb',
-            background: currentStep === 'practice' ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : 'white',
+            border: currentStep === 'practice' ? '3px solid var(--success-color)' : '2px solid var(--border-color)',
+            background: currentStep === 'practice' ? 'var(--success-light)' : 'var(--card-bg)',
             transition: 'all 0.2s',
             position: 'relative'
           }}
         >
-          {completedSteps.has('practice-listening') && completedSteps.has('practice-speaking') && (
+          {completedSteps.has('practice-listening') && (
             <div style={{
               position: 'absolute',
               top: '0.5rem',
@@ -233,7 +232,7 @@ const LessonDetail = () => {
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              background: '#10b981',
+              background: 'var(--success-color)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -242,10 +241,10 @@ const LessonDetail = () => {
               ✓
             </div>
           )}
-          <svg style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', color: currentStep === 'practice' ? '#10b981' : '#9ca3af', strokeWidth: '1.5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', color: currentStep === 'practice' ? 'var(--success-color)' : 'var(--text-secondary)', strokeWidth: '1.5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem', color: currentStep === 'practice' ? '#065f46' : 'var(--text-primary)' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem', color: currentStep === 'practice' ? 'var(--success-color)' : 'var(--text-primary)' }}>
             Bước 2: Luyện tập
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
@@ -258,8 +257,8 @@ const LessonDetail = () => {
           className="card"
           style={{
             cursor: 'pointer',
-            border: currentStep === 'test' ? '3px solid #f59e0b' : '2px solid #e5e7eb',
-            background: currentStep === 'test' ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' : 'white',
+            border: currentStep === 'test' ? '3px solid var(--warning-color)' : '2px solid var(--border-color)',
+            background: currentStep === 'test' ? 'var(--warning-light)' : 'var(--card-bg)',
             transition: 'all 0.2s',
             position: 'relative'
           }}
@@ -272,7 +271,7 @@ const LessonDetail = () => {
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              background: '#10b981',
+              background: 'var(--success-color)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -281,10 +280,10 @@ const LessonDetail = () => {
               ✓
             </div>
           )}
-          <svg style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', color: currentStep === 'test' ? '#f59e0b' : '#9ca3af', strokeWidth: '1.5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', color: currentStep === 'test' ? 'var(--warning-color)' : 'var(--text-secondary)', strokeWidth: '1.5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem', color: currentStep === 'test' ? '#92400e' : 'var(--text-primary)' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem', color: currentStep === 'test' ? 'var(--warning-color)' : 'var(--text-primary)' }}>
             Bước 3: Kiểm tra
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
@@ -382,13 +381,6 @@ const LessonDetail = () => {
               {completedSteps.has('practice-listening') && ' ✓'}
             </button>
             <button
-              onClick={() => setPracticeTab('speaking')}
-              className={practiceTab === 'speaking' ? 'btn btn-primary' : 'btn btn-outline'}
-            >
-              🗣️ Nói ({lesson.speaking.length})
-              {completedSteps.has('practice-speaking') && ' ✓'}
-            </button>
-            <button
               onClick={() => setPracticeTab('flashcard')}
               className={practiceTab === 'flashcard' ? 'btn btn-primary' : 'btn btn-outline'}
             >
@@ -415,22 +407,6 @@ const LessonDetail = () => {
                     style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}
                   >
                     ✓ Hoàn thành bài nghe
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          {practiceTab === 'speaking' && (
-            <div>
-              <SpeakingSection speaking={lesson.speaking} vocabulary={lesson.vocabulary} />
-              {!completedSteps.has('practice-speaking') && lesson.speaking.length > 0 && (
-                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => markStepComplete('practice-speaking')}
-                    style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}
-                  >
-                    ✓ Hoàn thành bài nói
                   </button>
                 </div>
               )}
