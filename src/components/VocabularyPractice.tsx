@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { speakText } from '../utils/speech';
+import { speakText, getAvailableVoices } from '../utils/speech';
 import '../App.css';
+
+type Language = 'japanese' | 'chinese';
 
 interface VocabularyItem {
   kanji: string;
@@ -8,14 +10,23 @@ interface VocabularyItem {
   meaning: string;
 }
 
+interface ChineseVocabularyItem {
+  hanzi: string;
+  pinyin: string;
+  meaning: string;
+}
+
 const VocabularyPractice = () => {
+  const [language, setLanguage] = useState<Language>('japanese');
   const [vocabList, setVocabList] = useState<VocabularyItem[]>([]);
+  const [chineseVocabList, setChineseVocabList] = useState<ChineseVocabularyItem[]>([]);
   const [importText, setImportText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [incorrectWords, setIncorrectWords] = useState<VocabularyItem[]>([]);
+  const [incorrectChineseWords, setIncorrectChineseWords] = useState<ChineseVocabularyItem[]>([]);
   const [started, setStarted] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [skipping, setSkipping] = useState(false);
@@ -43,23 +54,53 @@ const VocabularyPractice = () => {
     return vocab;
   };
 
+  const parseChineseVocabularyList = (text: string): ChineseVocabularyItem[] => {
+    const lines = text.split('\n').filter(line => line.trim());
+    const vocab: ChineseVocabularyItem[] = [];
+
+    lines.forEach((line, index) => {
+      const parts = line.trim().split('=');
+      if (parts.length >= 2) {
+        const hanzi = parts[0].trim();
+        const pinyin = parts[1].trim();
+        const meaning = parts[2]?.trim() || '';
+        
+        if (hanzi && pinyin) {
+          vocab.push({ hanzi, pinyin, meaning });
+        }
+      }
+    });
+
+    return vocab;
+  };
+
   const handleImport = () => {
     if (!importText.trim()) {
       alert('Vui lòng nhập danh sách từ vựng');
       return;
     }
 
-    const parsed = parseVocabularyList(importText);
-    if (parsed.length === 0) {
-      alert('Không tìm thấy từ vựng hợp lệ. Format: kanji=hiragana=tiếng việt');
-      return;
+    if (language === 'japanese') {
+      const parsed = parseVocabularyList(importText);
+      if (parsed.length === 0) {
+        alert('Không tìm thấy từ vựng hợp lệ. Format: kanji=hiragana=tiếng việt');
+        return;
+      }
+      setVocabList(parsed);
+      setIncorrectWords([]);
+    } else {
+      const parsed = parseChineseVocabularyList(importText);
+      if (parsed.length === 0) {
+        alert('Không tìm thấy từ vựng hợp lệ. Format: hanzi=pinyin=tiếng việt');
+        return;
+      }
+      setChineseVocabList(parsed);
+      setIncorrectChineseWords([]);
     }
 
-    setVocabList(parsed);
     setCurrentIndex(0);
     setStarted(true);
     setCompleted(false);
-    setIncorrectWords([]);
     setUserInput('');
     setShowAnswer(false);
     setIsCorrect(null);
@@ -68,33 +109,59 @@ const VocabularyPractice = () => {
   const handleCheckAnswer = () => {
     if (!userInput.trim()) return;
 
-    const current = vocabList[currentIndex];
     const normalizedInput = userInput.trim().toLowerCase();
-    const normalizedHiragana = current.hiragana.toLowerCase();
+    let correct = false;
 
-    const correct = normalizedInput === normalizedHiragana;
+    if (language === 'japanese') {
+      const current = vocabList[currentIndex];
+      const normalizedHiragana = current.hiragana.toLowerCase();
+      correct = normalizedInput === normalizedHiragana;
+
+      if (!correct) {
+        setIncorrectWords(prev => {
+          if (!prev.find(w => w.kanji === current.kanji)) {
+            return [...prev, current];
+          }
+          return prev;
+        });
+      }
+    } else {
+      const current = chineseVocabList[currentIndex];
+      const normalizedPinyin = current.pinyin.toLowerCase();
+      correct = normalizedInput === normalizedPinyin;
+
+      if (!correct) {
+        setIncorrectChineseWords(prev => {
+          if (!prev.find(w => w.hanzi === current.hanzi)) {
+            return [...prev, current];
+          }
+          return prev;
+        });
+      }
+    }
+
     setIsCorrect(correct);
+    setShowAnswer(true);
+  };
 
-    if (!correct) {
+  const handleSkip = () => {
+    if (language === 'japanese') {
+      const current = vocabList[currentIndex];
       setIncorrectWords(prev => {
         if (!prev.find(w => w.kanji === current.kanji)) {
           return [...prev, current];
         }
         return prev;
       });
+    } else {
+      const current = chineseVocabList[currentIndex];
+      setIncorrectChineseWords(prev => {
+        if (!prev.find(w => w.hanzi === current.hanzi)) {
+          return [...prev, current];
+        }
+        return prev;
+      });
     }
-
-    setShowAnswer(true);
-  };
-
-  const handleSkip = () => {
-    const current = vocabList[currentIndex];
-    setIncorrectWords(prev => {
-      if (!prev.find(w => w.kanji === current.kanji)) {
-        return [...prev, current];
-      }
-      return prev;
-    });
 
     setShowAnswer(true);
     setSkipping(true);
@@ -135,7 +202,9 @@ const VocabularyPractice = () => {
       countdownIntervalRef.current = null;
     }
 
-    if (currentIndex < vocabList.length - 1) {
+    const totalWords = language === 'japanese' ? vocabList.length : chineseVocabList.length;
+    
+    if (currentIndex < totalWords - 1) {
       setCurrentIndex(currentIndex + 1);
       setUserInput('');
       setShowAnswer(false);
@@ -163,12 +232,62 @@ const VocabularyPractice = () => {
   };
 
   const handlePlayAudio = async () => {
-    if (vocabList[currentIndex]) {
-      await speakText(vocabList[currentIndex].hiragana);
+    try {
+      if (language === 'japanese' && vocabList[currentIndex]) {
+        const text = vocabList[currentIndex].hiragana;
+        console.log('Playing Japanese:', text);
+        await speakText(text, { 
+          lang: 'ja-JP',
+          rate: 0.75,
+          pitch: 1.0,
+          volume: 1.0
+        });
+      } else if (language === 'chinese' && chineseVocabList[currentIndex]) {
+        const text = chineseVocabList[currentIndex].hanzi;
+        console.log('Playing Chinese:', text);
+        
+        // Đảm bảo voices đã được load
+        if (window.speechSynthesis.getVoices().length === 0) {
+          console.log('Waiting for voices to load...');
+          await new Promise(resolve => {
+            window.speechSynthesis.onvoiceschanged = () => {
+              console.log('Voices loaded:', window.speechSynthesis.getVoices().length);
+              resolve(true);
+            };
+          });
+        }
+        
+        await speakText(text, { 
+          lang: 'zh-CN',
+          rate: 0.7,
+          pitch: 1.0,
+          volume: 1.0
+        });
+      }
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      alert('Không thể phát âm. Vui lòng thử lại.');
     }
   };
 
   useEffect(() => {
+    // Log available voices for debugging
+    const logVoices = () => {
+      const voices = getAvailableVoices();
+      console.log('Available voices:', voices.length);
+      const chineseVoices = voices.filter(v => v.lang.startsWith('zh'));
+      console.log('Chinese voices:', chineseVoices.map(v => `${v.name} (${v.lang})`));
+      const japaneseVoices = voices.filter(v => v.lang.startsWith('ja'));
+      console.log('Japanese voices:', japaneseVoices.map(v => `${v.name} (${v.lang})`));
+    };
+
+    // Voices might not be loaded immediately
+    if (window.speechSynthesis.getVoices().length > 0) {
+      logVoices();
+    } else {
+      window.speechSynthesis.onvoiceschanged = logVoices;
+    }
+
     return () => {
       if (skipTimeoutRef.current) {
         clearTimeout(skipTimeoutRef.current);
@@ -179,8 +298,10 @@ const VocabularyPractice = () => {
     };
   }, []);
 
-  const progress = vocabList.length > 0 ? ((currentIndex + 1) / vocabList.length) * 100 : 0;
-  const currentWord = vocabList[currentIndex];
+  const totalWords = language === 'japanese' ? vocabList.length : chineseVocabList.length;
+  const progress = totalWords > 0 ? ((currentIndex + 1) / totalWords) * 100 : 0;
+  const currentWord = language === 'japanese' ? vocabList[currentIndex] : null;
+  const currentChineseWord = language === 'chinese' ? chineseVocabList[currentIndex] : null;
 
   if (completed) {
     return (
@@ -254,20 +375,59 @@ const VocabularyPractice = () => {
             </svg>
             Luyện Từ Vựng
           </h1>
-          <p>Nhập danh sách từ vựng và luyện tập gõ hiragana</p>
+          <p>Chọn ngôn ngữ và nhập danh sách từ vựng để luyện tập</p>
+        </div>
+
+        {/* Language Tabs */}
+        <div className="tab-container" style={{ marginBottom: '2rem' }}>
+          <button
+            className={`tab ${language === 'japanese' ? 'active' : ''}`}
+            onClick={() => {
+              setLanguage('japanese');
+              setImportText('');
+            }}
+          >
+            <span className="tab-icon">🇯🇵</span>
+            <span className="tab-text">Tiếng Nhật</span>
+          </button>
+          <button
+            className={`tab ${language === 'chinese' ? 'active' : ''}`}
+            onClick={() => {
+              setLanguage('chinese');
+              setImportText('');
+            }}
+          >
+            <span className="tab-icon">🇨🇳</span>
+            <span className="tab-text">Tiếng Trung</span>
+          </button>
         </div>
 
         <div className="practice-import-card">
           <div className="import-instructions">
             <h3>📝 Hướng dẫn nhập từ vựng</h3>
-            <p>Format: <code>kanji=hiragana=tiếng việt</code></p>
-            <p>Mỗi từ trên một dòng</p>
-            <div className="example-box">
-              <strong>Ví dụ:</strong>
-              <pre>{`学生=がくせい=sinh viên
+            {language === 'japanese' ? (
+              <>
+                <p>Format: <code>kanji=hiragana=tiếng việt</code></p>
+                <p>Mỗi từ trên một dòng</p>
+                <div className="example-box">
+                  <strong>Ví dụ:</strong>
+                  <pre>{`学生=がくせい=sinh viên
 私=わたし=tôi
 本=ほん=sách`}</pre>
-            </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>Format: <code>hanzi=pinyin=tiếng việt</code></p>
+                <p>Mỗi từ trên một dòng</p>
+                <div className="example-box">
+                  <strong>Ví dụ:</strong>
+                  <pre>{`你好=nǐ hǎo=xin chào
+谢谢=xiè xie=cảm ơn
+再见=zài jiàn=tạm biệt`}</pre>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="import-form">
@@ -276,12 +436,39 @@ const VocabularyPractice = () => {
               className="import-textarea"
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
-              placeholder="学生=がくせい=sinh viên&#10;私=わたし=tôi&#10;本=ほん=sách"
+              placeholder={language === 'japanese' 
+                ? "学生=がくせい=sinh viên&#10;私=わたし=tôi&#10;本=ほん=sách"
+                : "你好=nǐ hǎo=xin chào&#10;谢谢=xiè xie=cảm ơn&#10;再见=zài jiàn=tạm biệt"
+              }
               rows={10}
             />
-            <button className="btn btn-primary" onClick={handleImport}>
-              Bắt đầu luyện tập
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <button className="btn btn-primary" onClick={handleImport}>
+                Bắt đầu luyện tập
+              </button>
+              <button 
+                className="btn btn-secondary" 
+                onClick={async () => {
+                  try {
+                    const testText = language === 'japanese' ? 'こんにちは' : '你好';
+                    const testLang = language === 'japanese' ? 'ja-JP' : 'zh-CN';
+                    console.log('Testing voice:', testText, testLang);
+                    await speakText(testText, { 
+                      lang: testLang,
+                      rate: language === 'japanese' ? 0.75 : 0.7,
+                      pitch: 1.0,
+                      volume: 1.0
+                    });
+                  } catch (error) {
+                    console.error('Test voice error:', error);
+                    alert('Lỗi: ' + error);
+                  }
+                }}
+                title="Test giọng nói"
+              >
+                🔊 Test giọng
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -291,10 +478,10 @@ const VocabularyPractice = () => {
   return (
     <div className="container">
       <div className="practice-header">
-        <h2>Luyện Từ Vựng</h2>
+        <h2>Luyện Từ Vựng {language === 'japanese' ? '🇯🇵' : '🇨🇳'}</h2>
         <div className="practice-progress">
           <div className="progress-info">
-            Từ {currentIndex + 1} / {vocabList.length}
+            Từ {currentIndex + 1} / {totalWords}
           </div>
           <div className="progress-bar-container">
             <div 
@@ -307,12 +494,18 @@ const VocabularyPractice = () => {
 
       <div className="practice-card">
         <div className="practice-kanji-display">
-          <div className="kanji-large">{currentWord.kanji}</div>
+          <div className="kanji-large">
+            {language === 'japanese' ? currentWord?.kanji : currentChineseWord?.hanzi}
+          </div>
           {showAnswer && (
             <div className="answer-display">
-              <div className="hiragana-answer">{currentWord.hiragana}</div>
-              {currentWord.meaning && (
-                <div className="meaning-answer">{currentWord.meaning}</div>
+              <div className="hiragana-answer">
+                {language === 'japanese' ? currentWord?.hiragana : currentChineseWord?.pinyin}
+              </div>
+              {(language === 'japanese' ? currentWord?.meaning : currentChineseWord?.meaning) && (
+                <div className="meaning-answer">
+                  {language === 'japanese' ? currentWord?.meaning : currentChineseWord?.meaning}
+                </div>
               )}
             </div>
           )}
@@ -320,7 +513,7 @@ const VocabularyPractice = () => {
 
         {!showAnswer && (
           <div className="practice-input-section">
-            <label>Gõ hiragana:</label>
+            <label>{language === 'japanese' ? 'Gõ hiragana:' : 'Gõ pinyin:'}</label>
             <input
               type="text"
               className="practice-input"
@@ -331,7 +524,7 @@ const VocabularyPractice = () => {
                   handleCheckAnswer();
                 }
               }}
-              placeholder="Nhập hiragana..."
+              placeholder={language === 'japanese' ? 'Nhập hiragana...' : 'Nhập pinyin...'}
               autoFocus
             />
             <div className="practice-actions">
@@ -372,7 +565,9 @@ const VocabularyPractice = () => {
                   <div className="feedback-icon">⚠️</div>
                   <div className="feedback-text">Sai rồi</div>
                   <div className="feedback-correct-answer">
-                    Đáp án đúng: <strong>{currentWord.hiragana}</strong>
+                    Đáp án đúng: <strong>
+                      {language === 'japanese' ? currentWord?.hiragana : currentChineseWord?.pinyin}
+                    </strong>
                   </div>
                 </>
               )}
@@ -383,7 +578,7 @@ const VocabularyPractice = () => {
               </div>
             )}
             <button className="btn btn-primary" onClick={handleNext}>
-              {currentIndex < vocabList.length - 1 ? 'Từ tiếp theo →' : 'Hoàn thành'}
+              {currentIndex < totalWords - 1 ? 'Từ tiếp theo →' : 'Hoàn thành'}
             </button>
           </div>
         )}

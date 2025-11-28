@@ -128,13 +128,56 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
 
     const data = await response.json();
     console.log('Gemini API Response:', data);
-    
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
-    if (!content) {
-      throw new Error('Không nhận được phản hồi từ AI');
+
+    // Extract content in a more robust way to handle different Gemini response shapes
+    let content = '';
+
+    try {
+      const candidate = Array.isArray(data.candidates) && data.candidates.length > 0
+        ? data.candidates[0]
+        : null;
+
+      if (candidate) {
+        if (candidate.content?.parts && Array.isArray(candidate.content.parts)) {
+          // Standard generative-language response
+          content = candidate.content.parts
+            .map((p: any) => p.text || '')
+            .join('\n')
+            .trim();
+        } else if (Array.isArray(candidate.parts)) {
+          // Fallback shape: parts at top level
+          content = candidate.parts
+            .map((p: any) => p.text || '')
+            .join('\n')
+            .trim();
+        } else if (typeof (candidate.output_text || candidate.text) === 'string') {
+          // Some experimental APIs may return plain text fields
+          content = (candidate.output_text || candidate.text).trim();
+        }
+      }
+    } catch (parseError) {
+      console.warn('Could not parse Gemini response content:', parseError);
     }
-    
+
+    // Nếu vẫn không lấy được content, trả về thông báo thân thiện thay vì ném lỗi
+    if (!content) {
+      const blockReason =
+        data.promptFeedback?.blockReason ||
+        data.candidates?.[0]?.finishReason ||
+        '';
+
+      const fallbackMessage = blockReason
+        ? 'Nội dung đã bị bộ lọc an toàn của Gemini chặn. Hãy thử câu ngắn và đơn giản hơn.'
+        : 'Hiện tại AI không trả lời được. Hãy thử hỏi lại bằng câu khác, đơn giản hơn một chút.';
+
+      return {
+        // Trả về nội dung fallback như một câu trả lời bình thường
+        // KHÔNG set error để frontend không coi đây là lỗi cứng
+        content: fallbackMessage,
+        error: undefined,
+      };
+    }
+
     return { content };
   } catch (error: any) {
     console.error('Gemini Error:', error);

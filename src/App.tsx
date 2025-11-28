@@ -20,6 +20,12 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AIConversation from './components/AIConversation';
 import VoiceRecorder from './components/VoiceRecorder';
 import AIRoleplay from './components/AIRoleplay';
+import AIRoleplayNew from './components/AIRoleplayNew';
+import './styles/theme-variables.css';
+import './styles/custom-theme.css';
+import './styles/modern-effects.css';
+import './styles/dark-mode-fixes.css';
+import './styles/ai-roleplay-new.css';
 import './App.css';
 
 function App() {
@@ -42,7 +48,8 @@ function App() {
                   <Route path="/kanji-writing" element={<KanjiWritingPractice />} />
                   <Route path="/spaced-repetition" element={<SpacedRepetition />} />
                   <Route path="/ai-conversation" element={<AIConversation />} />
-                  <Route path="/ai-roleplay" element={<AIRoleplay />} />
+                  <Route path="/ai-roleplay" element={<AIRoleplayNew />} />
+                  <Route path="/ai-roleplay-old" element={<AIRoleplay />} />
                   <Route path="/voice-recorder" element={<VoiceRecorder />} />
                   <Route path="/login" element={<Login />} />
                   <Route

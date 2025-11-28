@@ -1,0 +1,333 @@
+/* ===== DARK MODE FIXES FOR ALL COMPONENTS ===== */
+
+/* Tab Container */
+[data-theme="dark"] .tab-container {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .tab:hover {
+  background: var(--card-bg-hover);
+  color: var(--text-primary);
+}
+
+/* Section Styles */
+[data-theme="dark"] .section-container {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .section-icon {
+  background: var(--card-bg-hover);
+}
+
+/* Vocab Cards */
+[data-theme="dark"] .vocab-card {
+  background: var(--card-bg);
+  border-left-color: var(--primary-color);
+}
+
+/* Grammar Cards */
+[data-theme="dark"] .grammar-card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* Kanji Cards */
+[data-theme="dark"] .kanji-card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* Listening & Speaking Cards */
+[data-theme="dark"] .listening-card,
+[data-theme="dark"] .speaking-card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .audio-player-wrapper,
+[data-theme="dark"] .transcript-box,
+[data-theme="dark"] .prompt-box {
+  background: var(--card-bg-hover);
+  border-left-color: var(--primary-color);
+}
+
+/* Question Cards */
+[data-theme="dark"] .question-card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .option-item {
+  background: var(--card-bg-hover);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .option-item:hover {
+  background: var(--card-bg);
+  border-color: var(--primary-color);
+}
+
+/* Game Container */
+[data-theme="dark"] .game-container {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .word-chip.available {
+  background: var(--card-bg-hover);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .word-chip.available:hover {
+  background: var(--card-bg);
+}
+
+/* Flashcard Container */
+[data-theme="dark"] .flashcard-container {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .flashcard-front {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* Quiz Container */
+[data-theme="dark"] .quiz-container {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .quiz-option {
+  background: var(--card-bg-hover);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .quiz-option:hover:not(:disabled) {
+  background: var(--card-bg);
+  border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .quiz-option.selected {
+  background: var(--card-bg);
+  border-color: var(--primary-color);
+}
+
+/* Roleplay Cards */
+[data-theme="dark"] .roleplay-card {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .character-card {
+  background: var(--card-bg-hover);
+  border-color: var(--border-color);
+}
+
+/* Dictionary Styles */
+[data-theme="dark"] .dictionary-search {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .type-btn {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .type-btn:hover {
+  border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .dictionary-input {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .dictionary-result-card {
+  background: var(--card-bg);
+  border-left-color: var(--primary-color);
+}
+
+[data-theme="dark"] .meaning-item {
+  background: var(--card-bg-hover);
+}
+
+[data-theme="dark"] .meaning-item:hover {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .tag {
+  background: var(--card-bg-hover);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .no-results,
+[data-theme="dark"] .empty-search-state,
+[data-theme="dark"] .loading-state {
+  background: var(--card-bg);
+}
+
+/* Login Styles */
+[data-theme="dark"] .login-card {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group textarea,
+[data-theme="dark"] .form-group select {
+  background: var(--card-bg-hover);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-group input:disabled {
+  background: var(--card-bg);
+}
+
+/* Admin Panel */
+[data-theme="dark"] .admin-header {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .admin-tabs {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .admin-tab:hover {
+  background: var(--card-bg-hover);
+}
+
+[data-theme="dark"] .admin-content {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .admin-item {
+  background: var(--card-bg-hover);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .admin-item:hover {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .modal-content {
+  background: var(--card-bg);
+}
+
+/* Speaking Tabs */
+[data-theme="dark"] .speaking-tab:hover {
+  background: var(--card-bg-hover);
+}
+
+[data-theme="dark"] .speaking-tab.active {
+  background: var(--card-bg-hover);
+}
+
+[data-theme="dark"] .vocab-speaking-card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .vocab-meaning {
+  background: var(--card-bg-hover);
+}
+
+[data-theme="dark"] .vocab-result {
+  background: var(--card-bg-hover);
+  border-left-color: var(--primary-color);
+}
+
+[data-theme="dark"] .result-transcript {
+  background: var(--card-bg);
+}
+
+/* Pronunciation Practice */
+[data-theme="dark"] .pronunciation-card {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .transcript-result {
+  background: var(--card-bg-hover);
+  border-left-color: var(--primary-color);
+}
+
+/* Shadowing Exercise */
+[data-theme="dark"] .shadowing-card {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .shadowing-instructions {
+  background: var(--card-bg-hover);
+  border-left-color: var(--primary-color);
+}
+
+/* Batch Input */
+[data-theme="dark"] .batch-input {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .format-example {
+  background: var(--card-bg-hover);
+  border-left-color: var(--primary-color);
+}
+
+[data-theme="dark"] .format-hint code {
+  background: var(--card-bg-hover);
+  color: var(--primary-color);
+}
+
+/* Progress Bar */
+[data-theme="dark"] .progress-bar {
+  background: var(--border-dark);
+}
+
+/* Back Button */
+[data-theme="dark"] .back-button:hover {
+  background: var(--card-bg-hover);
+}
+
+/* Search Results */
+[data-theme="dark"] .search-results {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .search-result-item {
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .search-result-item:hover {
+  background: var(--card-bg-hover);
+}
+
+/* Empty State */
+[data-theme="dark"] .empty-state {
+  background: var(--card-bg);
+}
+
+/* Difficult Vocab Section */
+[data-theme="dark"] .difficult-vocab-section {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* Mode Buttons */
+[data-theme="dark"] .mode-btn {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .mode-btn:hover {
+  border-color: var(--primary-color);
+}
+
+/* Preview Items */
+[data-theme="dark"] .preview-item {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .batch-preview {
+  background: var(--card-bg-hover);
+  border-color: var(--success-color);
+}

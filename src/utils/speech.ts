@@ -95,6 +95,33 @@ const getBestJapaneseVoice = (): SpeechSynthesisVoice | null => {
   return null;
 };
 
+// Lấy giọng tiếng Trung tốt nhất
+const getBestChineseVoice = (): SpeechSynthesisVoice | null => {
+  const voices = getAvailableVoices();
+  
+  // Ưu tiên Google Chinese voices
+  const googleChinese = voices.find(v => 
+    v.lang.startsWith('zh') && v.name.toLowerCase().includes('google')
+  );
+  if (googleChinese) return googleChinese;
+  
+  // Ưu tiên giọng nữ tiếng Trung
+  const femaleChinese = voices.find(v => 
+    v.lang.startsWith('zh') && v.name.toLowerCase().includes('female')
+  );
+  if (femaleChinese) return femaleChinese;
+  
+  // Tìm giọng tiếng Trung Mandarin (zh-CN)
+  const mandarinVoice = voices.find(v => v.lang === 'zh-CN');
+  if (mandarinVoice) return mandarinVoice;
+  
+  // Tìm giọng tiếng Trung bất kỳ
+  const chineseVoice = voices.find(v => v.lang.startsWith('zh'));
+  if (chineseVoice) return chineseVoice;
+  
+  return null;
+};
+
 export const speakText = (
   text: string, 
   config: Partial<SpeechConfig> = {}
@@ -123,10 +150,22 @@ export const speakText = (
         utterance.voice = selectedVoice;
       }
     } else {
-      // Tự động chọn giọng tiếng Nhật tốt nhất
-      const bestVoice = getBestJapaneseVoice();
+      // Tự động chọn giọng tốt nhất dựa trên ngôn ngữ
+      let bestVoice: SpeechSynthesisVoice | null = null;
+      
+      if (finalConfig.lang.startsWith('zh')) {
+        // Tiếng Trung
+        bestVoice = getBestChineseVoice();
+      } else if (finalConfig.lang.startsWith('ja')) {
+        // Tiếng Nhật
+        bestVoice = getBestJapaneseVoice();
+      }
+      
       if (bestVoice) {
         utterance.voice = bestVoice;
+        console.log('Selected voice:', bestVoice.name, bestVoice.lang);
+      } else {
+        console.warn('No suitable voice found for language:', finalConfig.lang);
       }
     }
 
