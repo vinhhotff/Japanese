@@ -235,7 +235,6 @@ const VocabularyPractice = () => {
     try {
       if (language === 'japanese' && vocabList[currentIndex]) {
         const text = vocabList[currentIndex].hiragana;
-        console.log('Playing Japanese:', text);
         await speakText(text, { 
           lang: 'ja-JP',
           rate: 0.75,
@@ -244,14 +243,11 @@ const VocabularyPractice = () => {
         });
       } else if (language === 'chinese' && chineseVocabList[currentIndex]) {
         const text = chineseVocabList[currentIndex].hanzi;
-        console.log('Playing Chinese:', text);
         
         // Đảm bảo voices đã được load
         if (window.speechSynthesis.getVoices().length === 0) {
-          console.log('Waiting for voices to load...');
           await new Promise(resolve => {
             window.speechSynthesis.onvoiceschanged = () => {
-              console.log('Voices loaded:', window.speechSynthesis.getVoices().length);
               resolve(true);
             };
           });
@@ -272,14 +268,7 @@ const VocabularyPractice = () => {
 
   useEffect(() => {
     // Log available voices for debugging
-    const logVoices = () => {
-      const voices = getAvailableVoices();
-      console.log('Available voices:', voices.length);
-      const chineseVoices = voices.filter(v => v.lang.startsWith('zh'));
-      console.log('Chinese voices:', chineseVoices.map(v => `${v.name} (${v.lang})`));
-      const japaneseVoices = voices.filter(v => v.lang.startsWith('ja'));
-      console.log('Japanese voices:', japaneseVoices.map(v => `${v.name} (${v.lang})`));
-    };
+
 
     // Voices might not be loaded immediately
     if (window.speechSynthesis.getVoices().length > 0) {
@@ -452,7 +441,6 @@ const VocabularyPractice = () => {
                   try {
                     const testText = language === 'japanese' ? 'こんにちは' : '你好';
                     const testLang = language === 'japanese' ? 'ja-JP' : 'zh-CN';
-                    console.log('Testing voice:', testText, testLang);
                     await speakText(testText, { 
                       lang: testLang,
                       rate: language === 'japanese' ? 0.75 : 0.7,

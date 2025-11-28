@@ -163,19 +163,13 @@ export const speakText = (
       
       if (bestVoice) {
         utterance.voice = bestVoice;
-        console.log('Selected voice:', bestVoice.name, bestVoice.lang);
       } else {
         console.warn('No suitable voice found for language:', finalConfig.lang);
         
         // Fallback: Thử sử dụng giọng mặc định của hệ thống
         const allVoices = getAvailableVoices();
         if (allVoices.length > 0) {
-          // Sử dụng giọng đầu tiên có sẵn
           utterance.voice = allVoices[0];
-          console.log('Using fallback voice:', allVoices[0].name, allVoices[0].lang);
-        } else {
-          // Không có giọng nào, sử dụng giọng mặc định của trình duyệt
-          console.log('Using browser default voice');
         }
       }
     }

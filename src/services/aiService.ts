@@ -65,7 +65,6 @@ async function callDeepSeek(messages: Message[]): Promise<AIResponse> {
   }
 
   try {
-    console.log('Calling DeepSeek API with key:', apiKey.substring(0, 10) + '...');
 
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -103,7 +102,6 @@ async function callDeepSeek(messages: Message[]): Promise<AIResponse> {
     }
 
     const data = await response.json();
-    console.log('DeepSeek API Response:', data);
 
     const content = data.choices?.[0]?.message?.content || '';
     
@@ -170,7 +168,6 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
     }
 
     const data = await response.json();
-    console.log('Hugging Face Response:', data);
     
     let content = '';
     if (Array.isArray(data) && data[0]?.generated_text) {
@@ -203,7 +200,6 @@ async function callQwen(messages: Message[]): Promise<AIResponse> {
   }
 
   try {
-    console.log('Calling Qwen API with key:', apiKey.substring(0, 10) + '...');
 
     // Qwen sử dụng format khác với OpenAI
     const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
@@ -254,7 +250,6 @@ async function callQwen(messages: Message[]): Promise<AIResponse> {
     }
 
     const data = await response.json();
-    console.log('Qwen API Response:', data);
 
     // Parse Qwen response format
     const content = data.output?.text || data.output?.choices?.[0]?.message?.content || '';
@@ -293,7 +288,6 @@ async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
   }
 
   try {
-    console.log('Calling OpenRouter API with key:', apiKey.substring(0, 15) + '...');
 
     // Sử dụng model miễn phí của Qwen thông qua OpenRouter
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -339,7 +333,6 @@ async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
     }
 
     const data = await response.json();
-    console.log('OpenRouter API Response:', data);
 
     // Parse OpenRouter response (tương tự OpenAI format)
     const content = data.choices?.[0]?.message?.content || '';
@@ -370,10 +363,6 @@ async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
 async function callGemini(messages: Message[]): Promise<AIResponse> {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   
-  console.log('🔑 GEMINI_API_KEY:', apiKey);
-  console.log('🔑 Key length:', apiKey?.length);
-  console.log('🔑 All env vars:', import.meta.env);
-  
   if (!apiKey || apiKey === 'YOUR_NEW_API_KEY_HERE') {
     return { 
       content: '', 
@@ -394,8 +383,6 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
     const prompt = systemMessage 
       ? `${systemMessage.content}\n\n${conversationHistory[conversationHistory.length - 1].parts[0].text}`
       : conversationHistory[conversationHistory.length - 1].parts[0].text;
-
-    console.log('Calling Gemini API with key:', apiKey.substring(0, 10) + '...');
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -458,7 +445,6 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
     }
 
     const data = await response.json();
-    console.log('Gemini API Response:', data);
 
     // Extract content in a more robust way to handle different Gemini response shapes
     let content = '';
@@ -496,9 +482,6 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
         data.promptFeedback?.blockReason ||
         data.candidates?.[0]?.finishReason ||
         '';
-
-      console.log('Block reason:', blockReason);
-      console.log('Prompt feedback:', data.promptFeedback);
 
       // Nếu bị chặn do safety, đưa ra gợi ý cụ thể
       if (blockReason === 'SAFETY' || data.promptFeedback?.blockReason) {
@@ -540,21 +523,18 @@ export async function getAIResponse(
     response = await callOpenRouter(messages);
     // Nếu OpenRouter lỗi, fallback sang Gemini
     if (response.error) {
-      console.log('OpenRouter gặp lỗi, chuyển sang Gemini...', response.error);
       response = await callGemini(messages);
     }
   } else if (selectedProvider === 'qwen') {
     response = await callQwen(messages);
     // Nếu Qwen lỗi, fallback sang Gemini
     if (response.error) {
-      console.log('Qwen gặp lỗi, chuyển sang Gemini...', response.error);
       response = await callGemini(messages);
     }
   } else if (selectedProvider === 'deepseek') {
     response = await callDeepSeek(messages);
     // Nếu DeepSeek lỗi, fallback sang Gemini
     if (response.error && response.error.includes('Insufficient Balance')) {
-      console.log('DeepSeek hết credit, chuyển sang Gemini...');
       response = await callGemini(messages);
     }
   } else if (selectedProvider === 'huggingface') {

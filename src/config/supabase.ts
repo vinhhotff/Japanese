@@ -22,10 +22,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
       'JWT token phải có 3 phần cách nhau bởi dấu chấm (.)\n' +
       'Vui lòng kiểm tra lại key trong file .env'
     );
-  } else {
-    console.log('✅ Supabase config loaded successfully');
-    console.log('URL:', supabaseUrl);
-    console.log('Key (first 20 chars):', supabaseAnonKey.substring(0, 20) + '...');
   }
 }
 
