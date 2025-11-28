@@ -1,12 +1,16 @@
 .app-header {
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
   z-index: 100;
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+[data-theme="dark"] .app-header {
+  background: rgba(30, 41, 59, 0.95);
 }
 
 .header-container {
@@ -24,21 +28,21 @@
   align-items: center;
   gap: 0.75rem;
   text-decoration: none;
-  color: #1f2937;
-  font-weight: 700;
+  color: var(--text-primary);
+  font-weight: var(--font-weight-bold);
   font-size: 1.25rem;
   transition: all 0.3s ease;
 }
 
 .header-logo:hover {
-  color: #3b82f6;
+  color: var(--primary-color);
   transform: translateY(-1px);
 }
 
 .logo-icon {
   width: 32px;
   height: 32px;
-  color: #3b82f6;
+  color: var(--primary-color);
   transition: transform 0.3s ease;
 }
 
@@ -64,7 +68,7 @@
   padding: 0.625rem 1rem;
   border-radius: 8px;
   text-decoration: none;
-  color: #4b5563;
+  color: var(--text-secondary);
   font-weight: 500;
   font-size: 0.9375rem;
   transition: all 0.2s ease;
@@ -79,14 +83,14 @@
   left: 50%;
   width: 0;
   height: 2px;
-  background: #3b82f6;
+  background: var(--primary-color);
   transform: translateX(-50%);
   transition: width 0.3s ease;
 }
 
 .nav-link:hover {
-  color: #3b82f6;
-  background: #eff6ff;
+  color: var(--primary-color);
+  background: var(--primary-light);
 }
 
 .nav-link:hover::before {
@@ -94,13 +98,13 @@
 }
 
 .nav-link-primary {
-  background: #3b82f6;
-  color: white;
+  background: var(--primary-color);
+  color: var(--text-inverse);
 }
 
 .nav-link-primary:hover {
-  background: #2563eb;
-  color: white;
+  background: var(--primary-dark);
+  color: var(--text-inverse);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
@@ -149,14 +153,16 @@
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
-  background: white;
+  background: var(--card-bg);
+  color: var(--text-primary);
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
   min-width: 220px;
   padding: 0.5rem;
   z-index: 1000;
   animation: slideDown 0.2s ease;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @keyframes slideDown {
@@ -177,7 +183,7 @@
   padding: 0.75rem 1rem;
   border-radius: 8px;
   text-decoration: none;
-  color: #4b5563;
+  color: var(--text-secondary);
   font-weight: 500;
   font-size: 0.9375rem;
   transition: all 0.2s ease;
@@ -185,8 +191,8 @@
 }
 
 .dropdown-item:hover {
-  background: #f3f4f6;
-  color: #3b82f6;
+  background: var(--bg-secondary);
+  color: var(--primary-color);
 }
 
 .dropdown-icon {

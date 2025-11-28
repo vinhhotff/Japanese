@@ -110,14 +110,15 @@ const CourseList = () => {
         </svg>
         Về trang chủ
       </Link>
-      <div className="header">
-        <h1>
-          <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-          </svg>
-          Chọn cấp độ JLPT
+
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.75rem' }}>
+          📚 Khóa học tiếng Nhật
         </h1>
-        <p>Chọn cấp độ phù hợp với trình độ của bạn</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
+          Chọn cấp độ phù hợp và bắt đầu hành trình học tiếng Nhật của bạn
+        </p>
       </div>
 
       {courses.length === 0 ? (
@@ -125,35 +126,107 @@ const CourseList = () => {
           <p>Chưa có khóa học nào.</p>
         </div>
       ) : (
-        <div className="card-grid">
-          {courses.map((course) => (
-            <Link key={course.level} to={`/courses/${course.level}`}>
-              <div className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', fontWeight: '700' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+          {courses.map((course, index) => (
+            <Link key={course.level} to={`/courses/${course.level}`} style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                height: '100%',
+                transition: 'all 0.3s',
+                cursor: 'pointer',
+                borderRadius: '20px',
+                overflow: 'hidden',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                background: 'white',
+                border: '3px solid transparent',
+                position: 'relative'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-8px)';
+                e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.15)';
+                e.currentTarget.style.borderColor = index === 0 ? '#10b981' :
+                  index === 1 ? '#3b82f6' :
+                  index === 2 ? '#f59e0b' :
+                  index === 3 ? '#ef4444' : '#8b5cf6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)';
+                e.currentTarget.style.borderColor = 'transparent';
+              }}>
+                {/* Gradient Header */}
+                <div style={{
+                  background: `linear-gradient(135deg, ${
+                    index === 0 ? '#10b981, #059669' :
+                    index === 1 ? '#3b82f6, #2563eb' :
+                    index === 2 ? '#f59e0b, #d97706' :
+                    index === 3 ? '#ef4444, #dc2626' :
+                    '#8b5cf6, #7c3aed'
+                  })`,
+                  padding: '2rem',
+                  color: 'white',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '3.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
                     {course.level}
-                  </h2>
-                  <span className={`badge badge-${course.level.toLowerCase()}`}>
-                    {course.totalLessons || course.lessons.length} bài
-                  </span>
-                </div>
-                <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)', fontSize: '1.125rem' }}>
-                  {course.title}
-                </h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.6' }}>
-                  {course.description}
-                </p>
-                {course.courseCount > 1 && (
-                  <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: '#eff6ff', borderRadius: '8px', fontSize: '0.875rem', color: '#3b82f6', fontWeight: '600' }}>
-                    📚 {course.courseCount} khóa học
                   </div>
-                )}
-                <div style={{ marginTop: '1.25rem' }}>
-                  <button className="btn btn-primary" style={{ width: '100%' }}>
-                    <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <div style={{ 
+                    background: 'rgba(255,255,255,0.2)',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '50px',
+                    display: 'inline-block',
+                    backdropFilter: 'blur(10px)',
+                    fontSize: '0.875rem',
+                    fontWeight: '600'
+                  }}>
+                    {course.lessons.length} bài học
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div style={{ padding: '2rem' }}>
+                  <h3 style={{ 
+                    fontSize: '1.5rem', 
+                    fontWeight: '700', 
+                    color: 'var(--text-primary)',
+                    marginBottom: '1rem'
+                  }}>
+                    {course.title}
+                  </h3>
+                  <p style={{ 
+                    color: 'var(--text-secondary)', 
+                    fontSize: '1rem', 
+                    lineHeight: '1.6', 
+                    marginBottom: '1.5rem',
+                    minHeight: '3rem'
+                  }}>
+                    {course.description}
+                  </p>
+                  <button style={{
+                    width: '100%',
+                    padding: '1rem',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: `linear-gradient(135deg, ${
+                      index === 0 ? '#10b981, #059669' :
+                      index === 1 ? '#3b82f6, #2563eb' :
+                      index === 2 ? '#f59e0b, #d97706' :
+                      index === 3 ? '#ef4444, #dc2626' :
+                      '#8b5cf6, #7c3aed'
+                    })`,
+                    color: 'white',
+                    fontSize: '1.125rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    transition: 'all 0.2s'
+                  }}>
+                    Bắt đầu học
+                    <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
-                    Xem bài học
                   </button>
                 </div>
               </div>

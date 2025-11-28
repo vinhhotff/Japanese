@@ -46,46 +46,99 @@ const VocabularySection = ({ vocabulary }: VocabularySectionProps) => {
       </div>
       <div className="section-content">
         {vocabulary.length > 0 ? (
-          vocabulary.map((vocab) => (
-              <div key={vocab.id} className={`vocab-card ${getDifficultyClass(vocab.difficulty)}`}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                      <h3 style={{ fontSize: '1.75rem', fontWeight: 'bold', margin: 0 }}>
-                        {vocab.kanji || vocab.word}
-                      </h3>
-                      <button
-                        className={`btn-speak-word ${speakingId === vocab.id ? 'speaking' : ''}`}
-                        onClick={() => handleSpeak(vocab)}
-                        title="Phát âm từ này"
-                        disabled={!isSpeechSynthesisSupported()}
-                      >
-                        {speakingId === vocab.id ? '⏸️' : '🔊'}
-                      </button>
-                    </div>
-                    <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontFamily: 'serif' }}>
-                      {vocab.hiragana}
-                    </p>
-                    <p style={{ fontSize: '1.15rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '1rem' }}>
-                      {vocab.meaning}
-                    </p>
-                  {vocab.example && (
-                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid var(--border-color)' }}>
-                      <p style={{ fontStyle: 'italic', marginBottom: '0.5rem', fontSize: '1.05rem', color: 'var(--text-primary)' }}>
-                        {vocab.example}
-                      </p>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-                        {vocab.exampleTranslation}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <span className={`badge badge-${vocab.difficulty === 'hard' ? 'n1' : vocab.difficulty === 'medium' ? 'n3' : 'n5'}`}>
-                  {vocab.difficulty === 'hard' ? 'Khó' : vocab.difficulty === 'medium' ? 'Trung bình' : 'Dễ'}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+            {vocabulary.map((vocab) => (
+              <div key={vocab.id} style={{
+                padding: '1.5rem',
+                borderRadius: '12px',
+                border: '2px solid #e5e7eb',
+                background: 'white',
+                transition: 'all 0.2s',
+                cursor: 'pointer',
+                position: 'relative'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#3b82f6';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.boxShadow = 'none';
+              }}>
+                {/* Badge */}
+                <span style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '50px',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  background: vocab.difficulty === 'hard' ? '#fee2e2' : vocab.difficulty === 'medium' ? '#fef3c7' : '#dbeafe',
+                  color: vocab.difficulty === 'hard' ? '#991b1b' : vocab.difficulty === 'medium' ? '#92400e' : '#1e40af'
+                }}>
+                  {vocab.difficulty === 'hard' ? 'Khó' : vocab.difficulty === 'medium' ? 'TB' : 'Dễ'}
                 </span>
+
+                {/* Word */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                    <div style={{ flex: 1 }}>
+                      {vocab.kanji ? (
+                        <>
+                          <h3 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0, lineHeight: '1.2', color: '#1f2937' }}>
+                            {vocab.kanji}
+                          </h3>
+                          <p style={{ fontSize: '1rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
+                            {vocab.hiragana}
+                          </p>
+                        </>
+                      ) : (
+                        <h3 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0, lineHeight: '1.2', color: '#1f2937' }}>
+                          {vocab.word}
+                        </h3>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleSpeak(vocab)}
+                      title="Phát âm"
+                      disabled={!isSpeechSynthesisSupported()}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '1.5rem',
+                        padding: '0.25rem',
+                        opacity: speakingId === vocab.id ? 1 : 0.6,
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = speakingId === vocab.id ? '1' : '0.6'}
+                    >
+                      {speakingId === vocab.id ? '⏸️' : '🔊'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Meaning */}
+                <p style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: vocab.example ? '1rem' : 0 }}>
+                  {vocab.meaning}
+                </p>
+
+                {/* Example */}
+                {vocab.example && (
+                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+                    <p style={{ fontStyle: 'italic', marginBottom: '0.5rem', fontSize: '0.9375rem', color: '#374151' }}>
+                      {vocab.example}
+                    </p>
+                    <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                      {vocab.exampleTranslation}
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         ) : (
           <div className="empty-state">
             <p>Bài này chưa có từ vựng</p>

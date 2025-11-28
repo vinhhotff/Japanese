@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../config/supabase';
+import { logger } from '../utils/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -61,7 +62,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(data.session.user);
       
       // Log user info for debugging
-      console.log('Signed in user:', {
+      logger.log('Signed in user:', {
         email: data.session.user.email,
         metadata: data.session.user.user_metadata,
         isAdmin: data.session.user.email?.toLowerCase().includes('admin') || 

@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import Header from './Header';
+import HeaderNew from './HeaderNew';
 import Footer from './Footer';
 
 interface LayoutProps {
@@ -18,13 +18,18 @@ const Layout = ({ children }: LayoutProps) => {
   }
 
   return (
-    <>
-      <Header />
-      <main className="app-main">
+    <div style={{ 
+      background: 'var(--color-bg-primary)', 
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      <HeaderNew />
+      <main style={{ flex: 1 }}>
         {children}
       </main>
       <Footer />
-    </>
+    </div>
   );
 };
 

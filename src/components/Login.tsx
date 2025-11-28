@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { logger } from '../utils/logger';
 import '../App.css';
 
 const Login = () => {
@@ -42,9 +43,9 @@ const Login = () => {
         user.user_metadata?.role === 'admin' ||
         user.email?.toLowerCase() === 'admin@japanese-learning.com';
 
-      console.log('User email:', user.email);
-      console.log('User metadata:', user.user_metadata);
-      console.log('Is admin:', userIsAdmin);
+      logger.log('User email:', user.email);
+      logger.log('User metadata:', user.user_metadata);
+      logger.log('Is admin:', userIsAdmin);
 
       if (userIsAdmin) {
         navigate('/admin');

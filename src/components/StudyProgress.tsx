@@ -1,153 +1,371 @@
 import { useState, useEffect } from 'react';
-import { getVocabulary, getKanji, getLessons } from '../services/supabaseService';
+import { Link } from 'react-router-dom';
+import { 
+  getProgressStats, 
+  getStartedLessons, 
+  getCompletedLessons,
+  resetLessonProgress,
+  resetAllProgress 
+} from '../services/progressService';
+import { getLessonById } from '../services/supabaseService';
 import '../App.css';
 
-interface StudyStats {
-  totalVocab: number;
-  masteredVocab: number;
-  totalKanji: number;
-  masteredKanji: number;
-  lessonsCompleted: number;
-  totalLessons: number;
-  studyStreak: number;
-  totalStudyTime: number; // minutes
-}
-
 const StudyProgress = () => {
-  const [stats, setStats] = useState<StudyStats>({
-    totalVocab: 0,
-    masteredVocab: 0,
-    totalKanji: 0,
-    masteredKanji: 0,
-    lessonsCompleted: 0,
-    totalLessons: 0,
-    studyStreak: 0,
-    totalStudyTime: 0
-  });
+  const [stats, setStats] = useState<any>(null);
+  const [allLessons, setAllLessons] = useState<any[]>([]);
+  const [filter, setFilter] = useState<'all' | 'completed' | 'inProgress'>('all');
   const [loading, setLoading] = useState(true);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
-    loadStats();
+    loadProgress();
   }, []);
 
-  const loadStats = async () => {
+  const loadProgress = async () => {
     try {
-      const [vocabData, kanjiData, lessonsData] = await Promise.all([
-        getVocabulary(),
-        getKanji(),
-        getLessons()
-      ]);
+      setLoading(true);
+      const progressStats = getProgressStats();
+      setStats(progressStats);
 
-      // Get from localStorage
-      const masteredVocab = JSON.parse(localStorage.getItem('mastered_vocab') || '[]');
-      const masteredKanji = JSON.parse(localStorage.getItem('mastered_kanji') || '[]');
-      const completedLessons = JSON.parse(localStorage.getItem('completed_lessons') || '[]');
-      const streakInfo = JSON.parse(localStorage.getItem('study_streak') || '{"currentStreak": 0}');
-      const studyTime = parseInt(localStorage.getItem('total_study_time') || '0');
-
-      setStats({
-        totalVocab: vocabData.length,
-        masteredVocab: masteredVocab.length,
-        totalKanji: kanjiData.length,
-        masteredKanji: masteredKanji.length,
-        lessonsCompleted: completedLessons.length,
-        totalLessons: lessonsData.length,
-        studyStreak: streakInfo.currentStreak || 0,
-        totalStudyTime: studyTime
-      });
-    } catch (error) {
-      console.error('Error loading stats:', error);
+      const started = getStartedLessons();
+      const lessonsWithDetails = await Promise.all(
+        started.map(async (progress) => {
+          try {
+            const lesson = await getLessonById(progress.lessonId);
+            return {
+              ...progress,
+              title: lesson?.title || 'Bài học',
+              level: lesson?.level || 'N5',
+              description: lesson?.description || '',
+            };
+          } catch {
+            return {
+              ...progress,
+              title: 'Bài học',
+              level: 'N5',
+              description: '',
+            };
+          }
+        })
+      );
+      setAllLessons(lessonsWithDetails);
+    } catch (err) {
+      console.error('Error loading progress:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleResetLesson = (lessonId: string) => {
+    if (confirm('Bạn có chắc muốn xóa tiến độ bài học này?')) {
+      resetLessonProgress(lessonId);
+      loadProgress();
+    }
+  };
+
+  const handleResetAll = () => {
+    resetAllProgress();
+    setShowResetConfirm(false);
+    loadProgress();
+  };
+
+  const filteredLessons = allLessons.filter((lesson) => {
+    if (filter === 'completed') return lesson.completedAt;
+    if (filter === 'inProgress') return !lesson.completedAt;
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="container">
-        <div className="loading">Đang tải thống kê...</div>
+        <div className="loading">Đang tải...</div>
       </div>
     );
   }
 
-  const vocabProgress = stats.totalVocab > 0 ? (stats.masteredVocab / stats.totalVocab) * 100 : 0;
-  const kanjiProgress = stats.totalKanji > 0 ? (stats.masteredKanji / stats.totalKanji) * 100 : 0;
-  const lessonProgress = stats.totalLessons > 0 ? (stats.lessonsCompleted / stats.totalLessons) * 100 : 0;
-
   return (
     <div className="container">
-      <div className="header">
-        <h1>
-          <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          Thống Kê Học Tập
+      <Link to="/" className="back-button">
+        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Về trang chủ
+      </Link>
+
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.75rem' }}>
+          📊 Thống kê tiến độ học tập
         </h1>
-        <p>Theo dõi tiến độ học tập của bạn</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
+          Theo dõi chi tiết quá trình học của bạn
+        </p>
       </div>
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">📚</div>
-          <div className="stat-value">{stats.masteredVocab}/{stats.totalVocab}</div>
-          <div className="stat-label">Từ vựng đã thuộc</div>
-          <div className="stat-progress">
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${vocabProgress}%` }}></div>
+      {stats && stats.totalLessonsStarted > 0 ? (
+        <>
+          {/* Stats Overview */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+            <div className="card" style={{ textAlign: 'center', background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '2px solid #3b82f6' }}>
+              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: '#3b82f6', marginBottom: '0.5rem' }}>
+                {stats.totalLessonsStarted}
+              </div>
+              <div style={{ color: '#1e40af', fontWeight: '600', fontSize: '1.125rem' }}>
+                Bài đã bắt đầu
+              </div>
             </div>
-            <span className="progress-text">{Math.round(vocabProgress)}%</span>
-          </div>
-        </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">🈳</div>
-          <div className="stat-value">{stats.masteredKanji}/{stats.totalKanji}</div>
-          <div className="stat-label">Kanji đã thuộc</div>
-          <div className="stat-progress">
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${kanjiProgress}%` }}></div>
+            <div className="card" style={{ textAlign: 'center', background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: '2px solid #10b981' }}>
+              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: '#10b981', marginBottom: '0.5rem' }}>
+                {stats.totalLessonsCompleted}
+              </div>
+              <div style={{ color: '#065f46', fontWeight: '600', fontSize: '1.125rem' }}>
+                Bài đã hoàn thành
+              </div>
             </div>
-            <span className="progress-text">{Math.round(kanjiProgress)}%</span>
-          </div>
-        </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">📖</div>
-          <div className="stat-value">{stats.lessonsCompleted}/{stats.totalLessons}</div>
-          <div className="stat-label">Bài học đã hoàn thành</div>
-          <div className="stat-progress">
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${lessonProgress}%` }}></div>
+            <div className="card" style={{ textAlign: 'center', background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '2px solid #f59e0b' }}>
+              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: '#f59e0b', marginBottom: '0.5rem' }}>
+                {stats.overallProgress}%
+              </div>
+              <div style={{ color: '#92400e', fontWeight: '600', fontSize: '1.125rem' }}>
+                Tiến độ tổng
+              </div>
             </div>
-            <span className="progress-text">{Math.round(lessonProgress)}%</span>
+
+            <div className="card" style={{ textAlign: 'center', background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '2px solid #ef4444' }}>
+              <div style={{ fontSize: '3.5rem', fontWeight: '800', color: '#ef4444', marginBottom: '0.5rem' }}>
+                {stats.totalStepsCompleted}
+              </div>
+              <div style={{ color: '#991b1b', fontWeight: '600', fontSize: '1.125rem' }}>
+                Hoạt động hoàn thành
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Tabs */}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setFilter('all')}
+              className={filter === 'all' ? 'btn btn-primary' : 'btn btn-outline'}
+            >
+              Tất cả ({allLessons.length})
+            </button>
+            <button
+              onClick={() => setFilter('inProgress')}
+              className={filter === 'inProgress' ? 'btn btn-primary' : 'btn btn-outline'}
+            >
+              Đang học ({allLessons.filter(l => !l.completedAt).length})
+            </button>
+            <button
+              onClick={() => setFilter('completed')}
+              className={filter === 'completed' ? 'btn btn-primary' : 'btn btn-outline'}
+            >
+              Đã hoàn thành ({allLessons.filter(l => l.completedAt).length})
+            </button>
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="btn btn-danger"
+              style={{ marginLeft: 'auto' }}
+            >
+              🗑️ Xóa tất cả tiến độ
+            </button>
+          </div>
+
+          {/* Lessons List */}
+          <div style={{ display: 'grid', gap: '1.5rem' }}>
+            {filteredLessons.map((lesson) => {
+              const progress = Math.round((lesson.completedSteps.length / lesson.totalSteps) * 100);
+              const completed = lesson.completedAt !== undefined;
+
+              return (
+                <div key={lesson.lessonId} className="card" style={{ 
+                  background: completed ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : 'white',
+                  border: completed ? '2px solid #10b981' : '1px solid #e5e7eb',
+                  position: 'relative'
+                }}>
+                  {completed && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '1.5rem',
+                      right: '1.5rem',
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '50%',
+                      background: '#10b981',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: '1.5rem',
+                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)'
+                    }}>
+                      ✓
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '2rem', alignItems: 'start', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '250px' }}>
+                      <div style={{ 
+                        display: 'inline-block',
+                        padding: '0.375rem 0.875rem',
+                        background: '#eff6ff',
+                        color: '#3b82f6',
+                        borderRadius: '20px',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        marginBottom: '1rem'
+                      }}>
+                        {lesson.level}
+                      </div>
+
+                      <h3 style={{ 
+                        fontSize: '1.5rem', 
+                        fontWeight: '700', 
+                        marginBottom: '0.75rem',
+                        color: 'var(--text-primary)',
+                        paddingRight: completed ? '4rem' : '0'
+                      }}>
+                        {lesson.title}
+                      </h3>
+
+                      <p style={{ 
+                        color: 'var(--text-secondary)', 
+                        fontSize: '1rem', 
+                        lineHeight: '1.6',
+                        marginBottom: '1rem'
+                      }}>
+                        {lesson.description}
+                      </p>
+
+                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                        <span>
+                          📅 Học lần cuối: {new Date(lesson.lastStudied).toLocaleDateString('vi-VN', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                        {completed && lesson.completedAt && (
+                          <span>
+                            ✅ Hoàn thành: {new Date(lesson.completedAt).toLocaleDateString('vi-VN', { 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })}
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          marginBottom: '0.75rem'
+                        }}>
+                          <span style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                            Tiến độ: {lesson.completedSteps.length}/{lesson.totalSteps} hoạt động
+                          </span>
+                          <span style={{ fontSize: '1.25rem', fontWeight: '700', color: completed ? '#10b981' : '#3b82f6' }}>
+                            {progress}%
+                          </span>
+                        </div>
+                        <div style={{ 
+                          height: '10px', 
+                          background: '#e5e7eb', 
+                          borderRadius: '999px',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{ 
+                            height: '100%',
+                            width: `${progress}%`,
+                            background: completed 
+                              ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
+                              : 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
+                            transition: 'width 0.5s ease'
+                          }} />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        <Link to={`/lessons/${lesson.lessonId}`} style={{ textDecoration: 'none' }}>
+                          <button className="btn btn-primary">
+                            {completed ? '🔄 Ôn tập lại' : '📖 Tiếp tục học'}
+                          </button>
+                        </Link>
+                        <button 
+                          className="btn btn-outline"
+                          onClick={() => handleResetLesson(lesson.lessonId)}
+                          style={{ borderColor: '#ef4444', color: '#ef4444' }}
+                        >
+                          🗑️ Xóa tiến độ
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {filteredLessons.length === 0 && (
+            <div className="empty-state">
+              <p>Không có bài học nào trong danh mục này.</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="empty-state">
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📚</div>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Chưa có tiến độ học tập</h2>
+          <p style={{ marginBottom: '2rem' }}>Bắt đầu học một bài học để theo dõi tiến độ của bạn!</p>
+          <Link to="/" className="btn btn-primary">
+            Khám phá khóa học
+          </Link>
+        </div>
+      )}
+
+      {/* Reset Confirmation Modal */}
+      {showResetConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }} onClick={() => setShowResetConfirm(false)}>
+          <div className="card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Xác nhận xóa tất cả tiến độ</h2>
+            <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)' }}>
+              Hành động này sẽ xóa toàn bộ tiến độ học tập của bạn và không thể hoàn tác. Bạn có chắc chắn muốn tiếp tục?
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button 
+                className="btn btn-outline"
+                onClick={() => setShowResetConfirm(false)}
+              >
+                Hủy
+              </button>
+              <button 
+                className="btn btn-danger"
+                onClick={handleResetAll}
+              >
+                Xóa tất cả
+              </button>
+            </div>
           </div>
         </div>
-
-        <div className="stat-card highlight">
-          <div className="stat-icon">🔥</div>
-          <div className="stat-value">{stats.studyStreak}</div>
-          <div className="stat-label">Ngày học liên tiếp</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">⏱️</div>
-          <div className="stat-value">{Math.round(stats.totalStudyTime / 60)}h {stats.totalStudyTime % 60}m</div>
-          <div className="stat-label">Tổng thời gian học</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">📊</div>
-          <div className="stat-value">
-            {stats.totalVocab + stats.totalKanji > 0 
-              ? Math.round(((stats.masteredVocab + stats.masteredKanji) / (stats.totalVocab + stats.totalKanji)) * 100)
-              : 0}%
-          </div>
-          <div className="stat-label">Tổng tiến độ</div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
 
 export default StudyProgress;
-

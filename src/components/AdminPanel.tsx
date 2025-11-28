@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from './Toast';
+import { logger } from '../utils/logger';
 import { 
   getCourses, createCourse, updateCourse, deleteCourse,
   getLessons, createLesson, updateLesson, deleteLesson,
@@ -22,6 +24,7 @@ type TabType = 'courses' | 'lessons' | 'vocabulary' | 'kanji' | 'grammar' | 'lis
 
 const AdminPanel = () => {
   const { user, signOut } = useAuth();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('courses');
   const [data, setData] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
@@ -99,7 +102,8 @@ const AdminPanel = () => {
           break;
       }
     } catch (error: any) {
-      alert('Lỗi khi tải dữ liệu: ' + error.message);
+      logger.error('Error loading data:', error);
+      showToast('Lỗi khi tải dữ liệu: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -130,9 +134,9 @@ const AdminPanel = () => {
               }
             }
             if (errorCount === 0) {
-              alert(`✅ Đã thêm ${successCount} từ vựng thành công!`);
+              showToast(`Đã thêm ${successCount} từ vựng thành công!`, 'success');
             } else {
-              alert(`⚠️ Đã thêm ${successCount} từ vựng, ${errorCount} từ vựng bị lỗi.`);
+              showToast(`Đã thêm ${successCount} từ vựng, ${errorCount} từ vựng bị lỗi.`, 'warning');
             }
           } else {
             // Single import
@@ -154,9 +158,9 @@ const AdminPanel = () => {
               }
             }
             if (errorCount === 0) {
-              alert(`✅ Đã thêm ${successCount} kanji thành công!`);
+              showToast(`Đã thêm ${successCount} kanji thành công!`, 'success');
             } else {
-              alert(`⚠️ Đã thêm ${successCount} kanji, ${errorCount} kanji bị lỗi.`);
+              showToast(`Đã thêm ${successCount} kanji, ${errorCount} kanji bị lỗi.`, 'warning');
             }
           } else {
             await createKanji(formData);
@@ -177,9 +181,9 @@ const AdminPanel = () => {
               }
             }
             if (errorCount === 0) {
-              alert(`✅ Đã thêm ${successCount} ngữ pháp thành công!`);
+              showToast(`Đã thêm ${successCount} ngữ pháp thành công!`, 'success');
             } else {
-              alert(`⚠️ Đã thêm ${successCount} ngữ pháp, ${errorCount} ngữ pháp bị lỗi.`);
+              showToast(`Đã thêm ${successCount} ngữ pháp, ${errorCount} ngữ pháp bị lỗi.`, 'warning');
             }
           } else {
             await createGrammar(formData);
@@ -206,9 +210,9 @@ const AdminPanel = () => {
               }
             }
             if (errorCount === 0) {
-              alert(`✅ Đã thêm ${successCount} game sắp xếp câu thành công!`);
+              showToast(`Đã thêm ${successCount} game sắp xếp câu thành công!`, 'success');
             } else {
-              alert(`⚠️ Đã thêm ${successCount} game, ${errorCount} game bị lỗi.`);
+              showToast(`Đã thêm ${successCount} game, ${errorCount} game bị lỗi.`, 'warning');
             }
           } else {
             await createSentenceGame(formData);
@@ -223,8 +227,10 @@ const AdminPanel = () => {
       await loadData();
       if (activeTab === 'lessons') await loadLessons();
       if (activeTab === 'courses') await loadCourses();
+      showToast('Tạo thành công!', 'success');
     } catch (error: any) {
-      alert('Lỗi khi tạo: ' + error.message);
+      logger.error('Error creating:', error);
+      showToast('Lỗi khi tạo: ' + error.message, 'error');
     }
   };
 
@@ -262,8 +268,10 @@ const AdminPanel = () => {
       setShowForm(false);
       setEditingItem(null);
       await loadData();
+      showToast('Cập nhật thành công!', 'success');
     } catch (error: any) {
-      alert('Lỗi khi cập nhật: ' + error.message);
+      logger.error('Error updating:', error);
+      showToast('Lỗi khi cập nhật: ' + error.message, 'error');
     }
   };
 
@@ -301,8 +309,10 @@ const AdminPanel = () => {
           break;
       }
       await loadData();
+      showToast('Xóa thành công!', 'success');
     } catch (error: any) {
-      alert('Lỗi khi xóa: ' + error.message);
+      logger.error('Error deleting:', error);
+      showToast('Lỗi khi xóa: ' + error.message, 'error');
     }
   };
 
@@ -595,14 +605,14 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
   // Parse JSON từ AI và đổ vào form tương ứng
   const handleParseAiJson = () => {
     if (!aiJsonText.trim()) {
-      alert('Vui lòng dán JSON trước.');
+      showToast('Vui lòng dán JSON trước.', 'warning');
       return;
     }
     let json: any;
     try {
       json = JSON.parse(aiJsonText);
     } catch (e) {
-      alert('JSON không hợp lệ. Hãy kiểm tra lại (không được có text ngoài JSON).');
+      showToast('JSON không hợp lệ. Hãy kiểm tra lại (không được có text ngoài JSON).', 'error');
       return;
     }
 
@@ -680,13 +690,13 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
           break;
         }
         default: {
-          alert('Loại này hiện chỉ hỗ trợ import dạng text/batch, chưa hỗ trợ JSON tự parse.');
+          showToast('Loại này hiện chỉ hỗ trợ import dạng text/batch, chưa hỗ trợ JSON tự parse.', 'info');
           break;
         }
       }
     } catch (e) {
-      console.error('Parse AI JSON error', e);
-      alert('Có lỗi khi áp dụng JSON vào form. Hãy kiểm tra lại cấu trúc.');
+      logger.error('Parse AI JSON error', e);
+      showToast('Có lỗi khi áp dụng JSON vào form. Hãy kiểm tra lại cấu trúc.', 'error');
     }
   };
 
@@ -916,17 +926,17 @@ Ví dụ:
     // Handle batch import for vocabulary
     if (type === 'vocabulary' && importMode === 'batch' && !item) {
       if (!formData.lesson_id) {
-        alert('Vui lòng chọn bài học');
+        showToast('Vui lòng chọn bài học', 'warning');
         return;
       }
       
       if (batchPreview.length === 0) {
-        alert('Vui lòng nhập từ vựng');
+        showToast('Vui lòng nhập từ vựng', 'warning');
         return;
       }
 
       if (batchError) {
-        alert('Vui lòng sửa lỗi trước khi lưu');
+        showToast('Vui lòng sửa lỗi trước khi lưu', 'warning');
         return;
       }
 
@@ -2012,13 +2022,13 @@ Hoặc với đọc âm:
 
                       // Validate file type
                       if (!validateFileType(file, ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3'])) {
-                        alert('Chỉ chấp nhận file audio (MP3, WAV, OGG)');
+                        showToast('Chỉ chấp nhận file audio (MP3, WAV, OGG)', 'error');
                         return;
                       }
 
                       // Validate file size (10MB)
                       if (!validateFileSize(file, 10)) {
-                        alert('File quá lớn. Tối đa 10MB');
+                        showToast('File quá lớn. Tối đa 10MB', 'error');
                         return;
                       }
 
@@ -2027,10 +2037,10 @@ Hoặc với đọc âm:
                       setUploadingAudio(false);
 
                       if (result.error) {
-                        alert('Lỗi upload: ' + result.error);
+                        showToast('Lỗi upload: ' + result.error, 'error');
                       } else {
                         setFormData({ ...formData, audio_url: result.url });
-                        alert('Upload thành công!');
+                        showToast('Upload thành công!', 'success');
                       }
                     }}
                     disabled={uploadingAudio}
@@ -2064,13 +2074,13 @@ Hoặc với đọc âm:
 
                       // Validate file type
                       if (!validateFileType(file, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'])) {
-                        alert('Chỉ chấp nhận file ảnh (JPG, PNG, WebP, GIF)');
+                        showToast('Chỉ chấp nhận file ảnh (JPG, PNG, WebP, GIF)', 'error');
                         return;
                       }
 
                       // Validate file size (5MB)
                       if (!validateFileSize(file, 5)) {
-                        alert('File quá lớn. Tối đa 5MB');
+                        showToast('File quá lớn. Tối đa 5MB', 'error');
                         return;
                       }
 
@@ -2079,10 +2089,10 @@ Hoặc với đọc âm:
                       setUploadingImage(false);
 
                       if (result.error) {
-                        alert('Lỗi upload: ' + result.error);
+                        showToast('Lỗi upload: ' + result.error, 'error');
                       } else {
                         setFormData({ ...formData, image_url: result.url });
-                        alert('Upload thành công!');
+                        showToast('Upload thành công!', 'success');
                       }
                     }}
                     disabled={uploadingImage}
@@ -2777,10 +2787,10 @@ Hoặc với đọc âm:
                       setUploadingImage(false);
 
                       if (result.error) {
-                        alert('Lỗi upload: ' + result.error);
+                        showToast('Lỗi upload: ' + result.error, 'error');
                       } else {
                         setFormData({ ...formData, image_url: result.url });
-                        alert('Upload thành công!');
+                        showToast('Upload thành công!', 'success');
                       }
                     }}
                     disabled={uploadingImage}
