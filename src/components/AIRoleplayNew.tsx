@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getAIResponse } from '../services/aiService';
 import { speakText, isSpeechSynthesisSupported } from '../utils/speech';
 import { useTheme } from '../contexts/ThemeContext';
+import Character3D from './Character3D';
 import '../styles/ai-roleplay-new.css';
 
 interface Message {
@@ -304,23 +305,45 @@ OPTIONS:
           {characters.map((character) => (
             <div
               key={character.id}
-              className={`character-card ${hoveredCharacter === character.id ? 'hovered' : ''}`}
+              className={`character-preview-card ${hoveredCharacter === character.id ? 'hovered' : ''}`}
               onMouseEnter={() => setHoveredCharacter(character.id)}
               onMouseLeave={() => setHoveredCharacter(null)}
               onClick={() => startConversation(character)}
             >
+              {/* 3D Character Frame */}
               <div 
-                className="character-avatar"
+                className="character-frame-3d"
                 style={{ 
-                  background: `linear-gradient(135deg, ${character.color}20, ${character.color}40)`,
-                  borderColor: character.color
+                  borderColor: character.color,
+                  boxShadow: `0 20px 60px ${character.color}40`
                 }}
               >
-                <span className="character-emoji">{character.emoji}</span>
-                <div className="wave-hand">👋</div>
+                <div className="character-stage">
+                  <div className="character-model">
+                    <div className="character-head">
+                      <span className="character-face">{character.emoji}</span>
+                      <div className="character-eyes">
+                        <span className="eye left">👁️</span>
+                        <span className="eye right">👁️</span>
+                      </div>
+                    </div>
+                    <div className="character-body">
+                      <div className="character-arm left">🤚</div>
+                      <div className="character-torso"></div>
+                      <div className="character-arm right">🤚</div>
+                    </div>
+                  </div>
+                  <div className="stage-floor"></div>
+                </div>
               </div>
-              <h3>{character.name}</h3>
-              <p>{character.scenario.replace('Bạn là ', '')}</p>
+              
+              <div className="character-info">
+                <h3>{character.name}</h3>
+                <p>{character.scenario.replace('Bạn là ', '')}</p>
+                <button className="start-button" style={{ background: character.color }}>
+                  Bắt đầu trò chuyện
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -336,20 +359,78 @@ OPTIONS:
         </svg>
       </button>
 
-      {/* Character Avatar - Always visible */}
-      <div className={`character-display ${characterActive ? 'active' : ''}`}>
-        <div 
-          className="character-avatar-large"
-          style={{ 
-            background: `linear-gradient(135deg, ${selectedCharacter.color}30, ${selectedCharacter.color}60)`,
-            borderColor: selectedCharacter.color,
-            boxShadow: `0 20px 60px ${selectedCharacter.color}40`
-          }}
-        >
-          <span className="character-emoji-large">{selectedCharacter.emoji}</span>
-          {loading && <div className="thinking-indicator">💭</div>}
+      {/* Large 3D Character Frame */}
+      <div 
+        className={`character-video-frame ${loading ? 'thinking' : 'talking'}`}
+        style={{ 
+          borderColor: selectedCharacter.color,
+          boxShadow: `0 30px 80px ${selectedCharacter.color}50`
+        }}
+      >
+        <div className="video-frame-header">
+          <div className="frame-title">
+            <span className="status-indicator"></span>
+            {selectedCharacter.name}
+          </div>
+          <div className="frame-controls">
+            <span className="control-dot"></span>
+            <span className="control-dot"></span>
+            <span className="control-dot"></span>
+          </div>
         </div>
-        <h2>{selectedCharacter.name}</h2>
+        
+        <div className="character-viewport">
+          <div className={`character-3d-model ${loading ? 'thinking-state' : 'idle-state'}`}>
+            {/* Character Head with expressions */}
+            <div className="model-head">
+              <div className="head-container">
+                <span className="face-emoji">{selectedCharacter.emoji}</span>
+                
+                {/* Animated Eyes */}
+                <div className="eyes-container">
+                  <div className="eye left-eye">
+                    <div className="pupil"></div>
+                  </div>
+                  <div className="eye right-eye">
+                    <div className="pupil"></div>
+                  </div>
+                </div>
+                
+                {/* Mouth Animation */}
+                <div className={`mouth ${loading ? 'thinking' : 'talking'}`}>
+                  {loading ? '🤔' : '😊'}
+                </div>
+              </div>
+            </div>
+            
+            {/* Character Body */}
+            <div className="model-body">
+              <div className="shoulders"></div>
+              <div className="torso"></div>
+            </div>
+            
+            {/* Thinking Bubble */}
+            {loading && (
+              <div className="thought-bubble">
+                <div className="bubble-content">
+                  <span className="dot"></span>
+                  <span className="dot"></span>
+                  <span className="dot"></span>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Background Effects */}
+          <div className="viewport-background">
+            <div className="bg-gradient" style={{ background: `radial-gradient(circle, ${selectedCharacter.color}20, transparent)` }}></div>
+            <div className="bg-particles">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Messages */}

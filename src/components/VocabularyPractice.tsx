@@ -268,7 +268,14 @@ const VocabularyPractice = () => {
 
   useEffect(() => {
     // Log available voices for debugging
-
+    const logVoices = () => {
+      const voices = getAvailableVoices();
+      console.log('Available voices:', voices.length);
+      const chineseVoices = voices.filter(v => v.lang.startsWith('zh'));
+      console.log('Chinese voices:', chineseVoices.map(v => `${v.name} (${v.lang})`));
+      const japaneseVoices = voices.filter(v => v.lang.startsWith('ja'));
+      console.log('Japanese voices:', japaneseVoices.map(v => `${v.name} (${v.lang})`));
+    };
 
     // Voices might not be loaded immediately
     if (window.speechSynthesis.getVoices().length > 0) {
