@@ -19,17 +19,13 @@ import AdminPanel from './components/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import AIConversation from './components/AIConversation';
 import VoiceRecorder from './components/VoiceRecorder';
-import AIRoleplay from './components/AIRoleplay';
-import AIRoleplayNew from './components/AIRoleplayNew';
-import AIRoleplaySimple from './components/AIRoleplaySimple';
 import AIRoleplayCSSOnly from './components/AIRoleplayCSSOnly';
 import './styles/theme-variables.css';
 import './styles/custom-theme.css';
 import './styles/modern-effects.css';
 import './styles/dark-mode-fixes.css';
-import './styles/ai-roleplay-new.css';
-import './styles/ai-roleplay-simple.css';
 import './styles/ai-roleplay-css.css';
+import './styles/ai-roleplay-simple-fix.css';
 import './App.css';
 
 function App() {
@@ -53,9 +49,6 @@ function App() {
                   <Route path="/spaced-repetition" element={<SpacedRepetition />} />
                   <Route path="/ai-conversation" element={<AIConversation />} />
                   <Route path="/ai-roleplay" element={<AIRoleplayCSSOnly />} />
-                  <Route path="/ai-roleplay-3d" element={<AIRoleplaySimple />} />
-                  <Route path="/ai-roleplay-new" element={<AIRoleplayNew />} />
-                  <Route path="/ai-roleplay-old" element={<AIRoleplay />} />
                   <Route path="/voice-recorder" element={<VoiceRecorder />} />
                   <Route path="/login" element={<Login />} />
                   <Route

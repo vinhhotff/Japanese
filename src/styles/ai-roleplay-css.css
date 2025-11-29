@@ -274,8 +274,6 @@
     box-shadow: 0 0 0 10px #10b98100;
   }
 }
-
-/* Character Stage */
 .character-stage-css {
   flex: 1;
   display: flex;
@@ -284,198 +282,204 @@
   background: linear-gradient(180deg, var(--card-bg) 0%, var(--card-bg-hover) 100%);
   position: relative;
   perspective: 1000px;
+  overflow: visible; /* cho model nhô ra khỏi frame mà không bị cắt */
 }
 
+/* Character wrapper - control z-index baseline */
 .character-model-css {
   transform-style: preserve-3d;
   position: relative;
-  width: 200px;
-  height: 400px;
+  width: 180px;
+  height: 380px;
+  z-index: 20; /* đặt wrapper trên đế nhưng dưới header nếu cần */
 }
 
-.character-model-css.talking {
-  animation: modelIdle 4s ease-in-out infinite;
-}
-
-.character-model-css.thinking {
-  animation: modelThink 2s ease-in-out infinite;
-}
+/* Model states */
+.character-model-css.talking { animation: modelIdle 3s ease-in-out infinite; }
+.character-model-css.thinking { animation: modelThink 2.2s ease-in-out infinite; }
 
 @keyframes modelIdle {
-  0%, 100% { transform: translateY(0) rotateY(0deg); }
-  50% { transform: translateY(-15px) rotateY(5deg); }
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
-
 @keyframes modelThink {
-  0%, 100% { transform: translateY(0) rotateY(0deg); }
-  25% { transform: translateY(-10px) rotateY(-10deg); }
-  75% { transform: translateY(-10px) rotateY(10deg); }
+  0%,100% { transform: translateY(0) rotateY(0deg); }
+  50% { transform: translateY(-10px) rotateY(6deg); }
 }
 
-/* Detailed Head */
+/* HEAD (mức z-index cao nhất trên model) */
 .model-face-css {
   position: absolute;
-  top: 0;
+  top: 18px;
   left: 50%;
   transform: translateX(-50%);
-  width: 100px;
-  height: 110px;
-  background: #ffd4a3;
+  width: 90px;
+  height: 50px;
+  background: linear-gradient(#ffe7c8, #ffcf9d);
   border-radius: 50% 50% 45% 45%;
-  box-shadow: 
-    inset 0 -10px 20px rgba(0,0,0,0.1),
-    0 10px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
   animation: headBob 3s ease-in-out infinite;
+  z-index: 60; /* RẤT CAO để luôn trên tất cả chân/chỗ khác */
 }
-
 @keyframes headBob {
-  0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-  50% { transform: translateX(-50%) translateY(-5px) rotate(2deg); }
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-6px); }
 }
-
-/* Eyes */
-.model-face-css::before,
-.model-face-css::after {
-  content: '';
+.model-face-css::before{
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92px;
+  height: 48px;
+  border-radius: 50% 50% 0 0;
+  background: #2c2c2c;
+  box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3);
+}
+.model-face-css::after{
+  content: "👀";
   position: absolute;
   top: 40%;
-  width: 16px;
-  height: 16px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
-  animation: eyeBlink 5s infinite;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.4rem;
+  animation: eyeBlink 4s infinite;
+}
+@keyframes eyeBlink {
+  0%,45%,55%,100% { opacity: 1; }
+  50% { opacity: 0.1; }
 }
 
-.model-face-css::before {
-  left: 22%;
-}
-
-.model-face-css::after {
-  right: 22%;
-}
-
-/* Pupils */
-.character-model-css::before,
-.character-model-css::after {
-  content: '';
-  position: absolute;
-  top: 18%;
-  width: 8px;
-  height: 8px;
-  background: #2c3e50;
-  border-radius: 50%;
-  z-index: 10;
-  animation: pupilMove 6s ease-in-out infinite;
-}
-
-.character-model-css::before {
-  left: 32%;
-}
-
-.character-model-css::after {
-  right: 32%;
-}
-
-@keyframes pupilMove {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-2px, 0); }
-  75% { transform: translate(2px, 0); }
-}
-
-/* Nose */
-.model-face-css {
-  box-shadow: 
-    inset 0 -10px 20px rgba(0,0,0,0.1),
-    inset 0 15px 5px rgba(255,255,255,0.3),
-    0 10px 30px rgba(0,0,0,0.3);
-}
-
-/* Body/Torso */
+/* BODY (kế dưới face nhưng trên chân) */
 .model-body-css {
   position: absolute;
-  top: 110px;
+  top: 118px;
   left: 50%;
   transform: translateX(-50%);
   width: 120px;
   height: 150px;
-  border-radius: 60px 60px 30px 30px;
-  box-shadow: 
-    inset 0 -20px 40px rgba(0,0,0,0.2),
-    0 10px 30px rgba(0,0,0,0.3);
-  animation: bodyBreathe 4s ease-in-out infinite;
+  border-radius: 55px 55px 30px 30px;
+  background: linear-gradient(180deg,#ffffff,#f7f7f7);
+  box-shadow:
+    inset 0 -18px 36px rgba(0,0,0,0.10),
+    0 10px 26px rgba(0,0,0,0.14);
+  animation: bodyBreath 4s ease-in-out infinite;
+  z-index: 50; /* cao để đè lên chân */
+}
+@keyframes bodyBreath {
+  0%,100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.03); }
+}
+.model-body-css::before{
+  content:"";
+  position:absolute;
+  top:6px;
+  left:50%;
+  transform:translateX(-50%);
+  width:50px;
+  height:22px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 14px 14px 0 0;
+}
+.model-body-css::after{
+  content:"•";
+  position:absolute;
+  top:40px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:0.6rem;
+  opacity:.45;
 }
 
-/* Shoulders */
-.model-body-css::before {
-  content: '';
+/* ARMS - sử dụng pseudo của wrapper (không xung đột với face/body) */
+.character-model-css .arm-left,
+.character-model-css .arm-right { position:absolute; top:140px; width:22px; height:90px; border-radius:12px; background:#ffd4a3; box-shadow:0 3px 10px rgba(0,0,0,0.18); transform-origin:top center; z-index:45; }
+.character-model-css .arm-left { left: calc(50% - 75px); animation: armLeft 3s ease-in-out infinite; }
+.character-model-css .arm-right { right: calc(50% - 75px); animation: armRight 3s ease-in-out infinite; }
+@keyframes armLeft { 0%,100%{ transform: rotate(-8deg); } 50%{ transform: rotate(10deg); } }
+@keyframes armRight { 0%,100%{ transform: rotate(8deg); } 50%{ transform: rotate(-10deg); } }
+
+/* LEGS & FEET (đặt dưới cùng, z-index thấp) */
+/* leg block (visual stripes) */
+.character-stage-css__legs {
   position: absolute;
-  top: 10px;
+  bottom: 40px; /* đặt thấp hơn so với face/body */
   left: 50%;
   transform: translateX(-50%);
-  width: 140px;
-  height: 40px;
-  background: inherit;
-  border-radius: 70px 70px 0 0;
-  box-shadow: inset 0 5px 10px rgba(0,0,0,0.2);
+  width: 70px;
+  height: 95px;
+  border-radius: 0 0 18px 18px;
+  background: linear-gradient(90deg, transparent 0%, transparent 38%, #2c5f8d 38%, #2c5f8d 48%, transparent 48%, transparent 52%, #2c5f8d 52%, #2c5f8d 62%, transparent 62%);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.18);
+  z-index: 5; /* thấp */
+  pointer-events: none;
 }
 
-/* Left Arm */
-.model-body-css::after {
-  content: '';
+/* feet shadow / pads */
+.character-stage-css__feet {
   position: absolute;
-  top: 20px;
-  left: -25px;
-  width: 20px;
-  height: 80px;
-  background: #ffd4a3;
-  border-radius: 10px;
-  transform-origin: top center;
-  animation: armSwingLeft 3s ease-in-out infinite;
-  box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
-}
-
-/* Right Arm - using character-stage-css */
-.character-stage-css::before {
-  content: '';
-  position: absolute;
-  top: 38%;
-  right: 35%;
-  width: 20px;
-  height: 80px;
-  background: #ffd4a3;
-  border-radius: 10px;
-  transform-origin: top center;
-  animation: armSwingRight 3s ease-in-out infinite;
-  box-shadow: -2px 2px 10px rgba(0,0,0,0.3);
-  z-index: 1;
-}
-
-/* Legs */
-.character-stage-css::after {
-  content: '';
-  position: absolute;
-  bottom: 25%;
+  bottom: 20px; /* thấp hơn nữa để không chồng lên mặt */
   left: 50%;
   transform: translateX(-50%);
   width: 80px;
-  height: 100px;
-  background: linear-gradient(to bottom, transparent 0%, #ffd4a3 30%, #ffd4a3 100%);
-  border-radius: 0 0 15px 15px;
-  clip-path: polygon(20% 0%, 45% 0%, 45% 100%, 35% 100%, 35% 0%, 65% 0%, 65% 100%, 55% 100%, 55% 0%, 80% 0%, 80% 100%, 20% 100%);
+  height: 22px;
+  border-radius: 50px;
+  background:
+    radial-gradient(circle at 25% 50%, #444 0%, #444 35%, transparent 35%),
+    radial-gradient(circle at 75% 50%, #444 0%, #444 35%, transparent 35%);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+  z-index: 4; /* rất thấp, luôn phía sau model */
+  pointer-events: none;
 }
 
+/* nếu bạn dùng pseudo elements trên .character-stage-css thay vì element nodes,
+   set their z-index tương ứng (dưới mặt & thân): */
+.character-stage-css::before {
+  /* fallback legacy leg strip if used */
+  content: "";
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 95px;
+  border-radius: 0 0 18px 18px;
+  background: linear-gradient(90deg, transparent 0%, transparent 38%, #2c5f8d 38%, #2c5f8d 48%, transparent 48%, transparent 52%, #2c5f8d 52%, #2c5f8d 62%, transparent 62%);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+  z-index: 6;
+  pointer-events: none;
+}
+.character-stage-css::after {
+  content: "";
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 22px;
+  border-radius: 50px;
+  background:
+    radial-gradient(circle at 25% 50%, #444 0%, #444 35%, transparent 35%),
+    radial-gradient(circle at 75% 50%, #444 0%, #444 35%, transparent 35%);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.16);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Thought bubble */
 .thought-bubble-css {
   position: absolute;
-  top: 10%;
-  right: -20%;
-  font-size: 4rem;
-  animation: bubbleFloat 2s ease-in-out infinite;
+  top: 6%;
+  right: 10%;
+  font-size: 3rem;
+  animation: bubbleFloat 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.18));
+  z-index: 55; /* trên body nhưng dưới face nếu cần */
 }
-
 @keyframes bubbleFloat {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-15px) scale(1.1); }
+  0%,100% { transform: translateY(0) scale(1) rotate(-5deg); opacity:.95; }
+  50% { transform: translateY(-16px) scale(1.12) rotate(5deg); opacity:1; }
 }
 
 /* Chat Frame */
@@ -599,4 +603,25 @@
   .model-face-css {
     font-size: 8rem;
   }
+}
+
+/* Additional Animations for improved model */
+@keyframes armSwingLeft {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  50% { transform: rotate(12deg) translateY(-5px); }
+}
+
+@keyframes armSwingRight {
+  0%, 100% { transform: rotate(8deg) translateY(0); }
+  50% { transform: rotate(-12deg) translateY(-5px); }
+}
+
+/* Smooth mouth animation for talking */
+.character-model-css.talking .model-face-css {
+  animation: headBob 3s ease-in-out infinite, mouthMove 0.5s ease-in-out infinite;
+}
+
+@keyframes mouthMove {
+  0%, 100% { border-radius: 50% 50% 48% 48%; }
+  50% { border-radius: 50% 50% 45% 45%; }
 }
