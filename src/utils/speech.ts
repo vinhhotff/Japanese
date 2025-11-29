@@ -44,11 +44,11 @@ const DEFAULT_SPEECH_CONFIG: SpeechConfig = {
   lang: 'ja-JP',           // Ngôn ngữ: 'ja-JP' (tiếng Nhật)
   
   // TỐC ĐỘ (rate): 0.1 - 10
-  // - 0.5-0.7: Rất chậm, dễ nghe cho người mới học
-  // - 0.8-0.9: Chậm vừa phải (KHUYẾN NGHỊ)
+  // - 0.5-0.7: Rất chậm, dễ nghe cho người mới học (KHUYẾN NGHỊ)
+  // - 0.8-0.9: Chậm vừa phải
   // - 1.0: Tốc độ bình thường
   // - 1.2-1.5: Nhanh
-  rate: 0.75,              // 👈 CHỈNH SỐ NÀY để thay đổi tốc độ (0.7 = chậm, dễ nghe)
+  rate: 0.65,              // 👈 Chậm rõ ràng cho người mới học (0.65)
   
   // CAO ĐỘ (pitch): 0 - 2
   // - 0.5-0.8: Giọng trầm (nam)
@@ -82,13 +82,19 @@ export const getAvailableVoices = (): SpeechSynthesisVoice[] => {
 const getBestJapaneseVoice = (): SpeechSynthesisVoice | null => {
   const voices = getAvailableVoices();
   
-  // Ưu tiên giọng nữ tiếng Nhật
+  // Ưu tiên 1: Google Japanese (rõ ràng nhất)
+  const googleJapanese = voices.find(v => 
+    v.lang.startsWith('ja') && v.name.toLowerCase().includes('google')
+  );
+  if (googleJapanese) return googleJapanese;
+  
+  // Ưu tiên 2: Giọng nữ tiếng Nhật (dễ nghe hơn)
   const femaleJapanese = voices.find(v => 
     v.lang.startsWith('ja') && v.name.toLowerCase().includes('female')
   );
   if (femaleJapanese) return femaleJapanese;
   
-  // Tìm giọng tiếng Nhật bất kỳ
+  // Ưu tiên 3: Giọng tiếng Nhật bất kỳ
   const japaneseVoice = voices.find(v => v.lang.startsWith('ja'));
   if (japaneseVoice) return japaneseVoice;
   

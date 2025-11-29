@@ -134,12 +134,27 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
   }
 
   try {
-    // Sử dụng model miễn phí của Hugging Face
-    const model = 'microsoft/DialoGPT-medium';
+    // Dùng Qwen - model tốt cho tiếng Nhật
+    const model = 'Qwen/Qwen2.5-Coder-32B-Instruct';
     
-    // Lấy tin nhắn cuối cùng của user
-    const userMessage = messages[messages.length - 1]?.content || '';
+    // Build conversation prompt
+    const systemMsg = messages.find(m => m.role === 'system');
+    const conversationMsgs = messages.filter(m => m.role !== 'system');
     
+    let prompt = '';
+    if (systemMsg) {
+      prompt = `${systemMsg.content}\n\n`;
+    }
+    
+    conversationMsgs.forEach(msg => {
+      if (msg.role === 'user') {
+        prompt += `User: ${msg.content}\n`;
+      } else {
+        prompt += `Assistant: ${msg.content}\n`;
+      }
+    });
+    prompt += 'Assistant:';
+
     const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
       method: 'POST',
       headers: {
@@ -147,11 +162,13 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        inputs: userMessage,
+        inputs: prompt,
         parameters: {
-          max_length: 100,
+          max_new_tokens: 500,
           temperature: 0.7,
+          top_p: 0.9,
           do_sample: true,
+          return_full_text: false
         },
       }),
     });
@@ -160,9 +177,8 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
       const errorText = await response.text();
       console.error('Hugging Face API Error:', errorText);
       
-      // Fallback response
       return {
-        content: 'こんにちは！\n(Xin chào!)',
+        content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
         error: undefined,
       };
     }
@@ -171,11 +187,13 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
     
     let content = '';
     if (Array.isArray(data) && data[0]?.generated_text) {
-      content = data[0].generated_text.replace(userMessage, '').trim();
+      content = data[0].generated_text.trim();
+    } else if (data.generated_text) {
+      content = data.generated_text.trim();
     }
     
     if (!content) {
-      content = 'はい、そうですね。\n(Vâng, đúng vậy.)';
+      content = 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)'
     }
 
     return { content };
@@ -359,6 +377,132 @@ async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
   }
 }
 
+// Cloudflare Workers AI Integration (Miễn phí)
+async function callCloudflare(messages: Message[]): Promise<AIResponse> {
+  // Ưu tiên dùng Worker proxy (không bị CORS)
+  const workerUrl = import.meta.env.VITE_CLOUDFLARE_WORKER_URL;
+  
+  if (workerUrl) {
+    // Gọi qua Worker proxy - Không cần API token, không bị CORS
+    try {
+      const response = await fetch(workerUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: messages.map(m => ({
+            role: m.role === 'assistant' ? 'assistant' : m.role === 'system' ? 'system' : 'user',
+            content: m.content
+          }))
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Worker error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.result?.response || data.result?.content || '';
+      
+      if (!content) {
+        return {
+          content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
+          error: undefined,
+        };
+      }
+
+      return { content };
+    } catch (error: any) {
+      console.error('Cloudflare Worker Error:', error);
+      return { 
+        content: '', 
+        error: error.message || 'Không thể kết nối với Cloudflare Worker' 
+      };
+    }
+  }
+  
+  // Fallback: Gọi trực tiếp API (có thể bị CORS ở localhost)
+  const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+  const apiToken = import.meta.env.VITE_CLOUDFLARE_API_TOKEN;
+  
+  if (!accountId || !apiToken) {
+    return { 
+      content: '', 
+      error: 'Chưa cấu hình Cloudflare Workers AI.\n\nCách 1 (Khuyến nghị): Deploy Worker proxy\n- Xem hướng dẫn: cloudflare-worker/README.md\n- Thêm VITE_CLOUDFLARE_WORKER_URL vào .env.local\n\nCách 2: Dùng trực tiếp API (có thể bị CORS)\n- Thêm VITE_CLOUDFLARE_ACCOUNT_ID và VITE_CLOUDFLARE_API_TOKEN' 
+    };
+  }
+
+  try {
+    // Sử dụng model miễn phí của Cloudflare (Llama 3.1 hoặc Qwen)
+    const model = '@cf/meta/llama-3.1-8b-instruct'; // Hoặc '@cf/qwen/qwen1.5-14b-chat'
+    
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: messages.map(m => ({
+            role: m.role === 'assistant' ? 'assistant' : m.role === 'system' ? 'system' : 'user',
+            content: m.content
+          })),
+          stream: false,
+          max_tokens: 1000,
+          temperature: 0.7,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Cloudflare Workers AI Error Response:', errorText);
+      
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+      
+      const errorMessage = errorData.errors?.[0]?.message || errorData.error?.message || 'Cloudflare Workers AI error';
+      
+      if (errorMessage.includes('authentication') || errorMessage.includes('token')) {
+        throw new Error('API token không hợp lệ. Vui lòng kiểm tra lại VITE_CLOUDFLARE_API_TOKEN');
+      }
+      
+      if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
+        throw new Error('Đã vượt quá hạn mức sử dụng. Vui lòng đợi hoặc nâng cấp tài khoản.');
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+
+    // Parse Cloudflare Workers AI response
+    const content = data.result?.response || data.result?.content || '';
+    
+    if (!content) {
+      return {
+        content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
+        error: undefined,
+      };
+    }
+
+    return { content };
+  } catch (error: any) {
+    console.error('Cloudflare Workers AI Error:', error);
+    return { 
+      content: '', 
+      error: error.message || 'Không thể kết nối với Cloudflare Workers AI' 
+    };
+  }
+}
+
 // Google Gemini Integration
 async function callGemini(messages: Message[]): Promise<AIResponse> {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -400,7 +544,12 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
           ],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 1000,
+            maxOutputTokens: 500,
+            topP: 0.9,
+            topK: 40,
+          },
+          systemInstruction: {
+            parts: [{ text: "You are a helpful assistant. Respond directly without thinking process or evaluation." }]
           },
           safetySettings: [
             {
@@ -445,6 +594,9 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
     }
 
     const data = await response.json();
+    
+    // 🔍 DEBUG: Log Gemini response
+    console.log('🤖 Gemini API Response:', JSON.stringify(data, null, 2));
 
     // Extract content in a more robust way to handle different Gemini response shapes
     let content = '';
@@ -453,6 +605,8 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
       const candidate = Array.isArray(data.candidates) && data.candidates.length > 0
         ? data.candidates[0]
         : null;
+      
+      console.log('📝 Candidate:', candidate);
 
       if (candidate) {
         if (candidate.content?.parts && Array.isArray(candidate.content.parts)) {
@@ -512,14 +666,20 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
 // Main function to call AI based on provider
 export async function getAIResponse(
   messages: Message[],
-  provider?: 'openai' | 'gemini' | 'deepseek' | 'huggingface' | 'qwen' | 'openrouter'
+  provider?: 'openai' | 'gemini' | 'deepseek' | 'huggingface' | 'qwen' | 'openrouter' | 'cloudflare'
 ): Promise<AIResponse> {
-  const selectedProvider = provider || import.meta.env.VITE_AI_PROVIDER || 'openrouter';
+  const selectedProvider = provider || import.meta.env.VITE_AI_PROVIDER || 'cloudflare';
   
   // Thử provider được chọn trước
   let response: AIResponse;
   
-  if (selectedProvider === 'openrouter') {
+  if (selectedProvider === 'cloudflare') {
+    response = await callCloudflare(messages);
+    // Nếu Cloudflare lỗi, fallback sang Gemini
+    if (response.error) {
+      response = await callGemini(messages);
+    }
+  } else if (selectedProvider === 'openrouter') {
     response = await callOpenRouter(messages);
     // Nếu OpenRouter lỗi, fallback sang Gemini
     if (response.error) {

@@ -1,0 +1,14 @@
+# Cloudflare Worker Configuration
+
+name = "japanese-ai-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Workers AI binding
+[ai]
+binding = "AI"
+
+# Routes (optional - nếu muốn custom domain)
+# routes = [
+#   { pattern = "ai.yourdomain.com/*", zone_name = "yourdomain.com" }
+# ]

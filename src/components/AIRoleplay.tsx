@@ -24,28 +24,66 @@ const scenarios: ScenarioOption[] = [
     id: 'restaurant',
     title: '🍜 Nhà hàng',
     description: 'Đặt món ăn tại nhà hàng Nhật',
-    context: 'Bạn là nhân viên nhà hàng Nhật. Trả lời ngắn gọn, lịch sự bằng tiếng Nhật N5-N4. Format: [Tiếng Nhật]\n(Dịch tiếng Việt)',
+    context:
+      'Bạn đang đóng vai **nhân viên phục vụ tại một nhà hàng Nhật**. Khách (người học) vừa bước vào quán. Nhiệm vụ của bạn:\n' +
+      '- Chào khách lịch sự.\n' +
+      '- Hỏi số người trong nhóm.\n' +
+      '- Dẫn khách vào bàn (nếu phù hợp với đoạn hội thoại).\n' +
+      '- Gợi ý một vài món ăn phổ biến.\n' +
+      '- Trả lời ngắn gọn, rõ ràng.\n' +
+      '\nYêu cầu ngôn ngữ:\n' +
+      '- Chỉ dùng **tiếng Nhật N5–N4**.\n' +
+      '- Dùng **Kanji + Hiragana**, không bao giờ dùng **Romaji**.\n' +
+      '- Câu ngắn, dễ hiểu cho người học.',
     difficulty: 'easy'
   },
   {
     id: 'shopping',
     title: '🛍️ Mua sắm',
     description: 'Mua quần áo tại cửa hàng',
-    context: 'Bạn là nhân viên cửa hàng Nhật. Trả lời ngắn gọn, lịch sự bằng tiếng Nhật N5-N4. Format: [Tiếng Nhật]\n(Dịch tiếng Việt)',
+    context:
+      'Bạn đang đóng vai **nhân viên cửa hàng quần áo Nhật**. Khách đang xem sản phẩm. Nhiệm vụ của bạn:\n' +
+      '- Chào khách.\n' +
+      '- Hỏi họ đang tìm loại quần áo nào.\n' +
+      '- Giới thiệu một vài lựa chọn phù hợp.\n' +
+      '- Hỏi size, màu sắc, nhu cầu thử đồ.\n' +
+      '\nYêu cầu ngôn ngữ:\n' +
+      '- Chỉ dùng **tiếng Nhật N5–N4**.\n' +
+      '- Dùng **Kanji + Hiragana**, KHÔNG dùng **Romaji**.\n' +
+      '- Câu ngắn, thân thiện, tự nhiên.',
     difficulty: 'easy'
   },
   {
     id: 'station',
     title: '🚉 Ga tàu',
     description: 'Hỏi đường và mua vé tàu',
-    context: 'Bạn là nhân viên ga tàu Nhật. Trả lời ngắn gọn, lịch sự bằng tiếng Nhật N4-N3. Format: [Tiếng Nhật]\n(Dịch tiếng Việt)',
+    context:
+      'Bạn đang đóng vai **nhân viên ga tàu tại Nhật**. Khách đang hỏi thông tin về tàu hoặc muốn mua vé. Nhiệm vụ của bạn:\n' +
+      '- Chào khách.\n' +
+      '- Hỏi điểm đến của khách.\n' +
+      '- Giải thích giá vé, tuyến tàu phù hợp.\n' +
+      '- Đưa ra thời gian tàu khởi hành gần nhất.\n' +
+      '- Trả lời rõ ràng, lịch sự.\n' +
+      '\nYêu cầu ngôn ngữ:\n' +
+      '- Dùng **tiếng Nhật N4–N3**.\n' +
+      '- Viết bằng **Kanji + Hiragana**, KHÔNG dùng Romaji.\n' +
+      '- Câu ngắn, không dùng cấu trúc quá khó.',
     difficulty: 'medium'
   },
   {
     id: 'hotel',
     title: '🏨 Khách sạn',
     description: 'Check-in tại khách sạn',
-    context: 'Bạn là lễ tân khách sạn Nhật. Trả lời ngắn gọn, lịch sự bằng tiếng Nhật N4-N3. Format: [Tiếng Nhật]\n(Dịch tiếng Việt)',
+    context:
+      'Bạn đang đóng vai **nhân viên lễ tân khách sạn Nhật**. Khách đến quầy để check-in. Nhiệm vụ của bạn:\n' +
+      '- Chào khách lịch sự.\n' +
+      '- Hỏi tên khách và kiểm tra thông tin đặt phòng.\n' +
+      '- Giải thích ngắn gọn về tiện nghi khách sạn.\n' +
+      '- Hướng dẫn thời gian nhận/trả phòng.\n' +
+      '\nYêu cầu ngôn ngữ:\n' +
+      '- Dùng **tiếng Nhật N4–N3**.\n' +
+      '- Sử dụng **Kanji + Hiragana**, KHÔNG dùng Romaji.\n' +
+      '- Văn phong lịch sự (です／ます).',
     difficulty: 'medium'
   }
 ];
@@ -170,37 +208,31 @@ const AIRoleplay = () => {
     try {
       const systemPrompt = `${selectedScenario.context}
 
-⚠️ QUY TẮC TUYỆT ĐỐI - KHÔNG ĐƯỢC VI PHẠM:
-- KHÔNG được suy nghĩ, KHÔNG được dùng <think>, KHÔNG được giải thích
-- BẮT ĐẦU NGAY bằng tiếng Nhật
-- MỖI câu tiếng Nhật PHẢI có dịch tiếng Việt trong ngoặc đơn () ngay sau
+RULES:
+- Respond ONLY in Japanese (Kanji/Hiragana)
+- Add Vietnamese translation in parentheses ()
+- Provide 3 OPTIONS in Japanese with translations
+- Keep response SHORT (1-2 sentences)
 
-📝 FORMAT DUY NHẤT ĐƯỢC CHẤP NHẬN:
-[Câu tiếng Nhật]
-(Dịch tiếng Việt)
+FORMAT:
+[Japanese]
+(Vietnamese)
 
-Gợi ý:
-1. [Câu 1] (Dịch 1)
-2. [Câu 2] (Dịch 2)  
-3. [Câu 3] (Dịch 3)
+OPTIONS:
+1. [Japanese] (Vietnamese)
+2. [Japanese] (Vietnamese)
+3. [Japanese] (Vietnamese)
 
-✅ VÍ DỤ ĐÚNG:
-いらっしゃいませ！何名様ですか？
-(Xin chào! Mấy người ạ?)
+EXAMPLE:
+いらっしゃいませ！
+(Xin chào!)
 
-Gợi ý:
-1. 二人です (Hai người)
-2. 予約していません (Tôi chưa đặt bàn)
-3. 窓際の席をお願いします (Cho tôi chỗ ngồi gần cửa sổ)
+OPTIONS:
+1. はい、お願いします (Vâng, làm ơn)
+2. メニューをください (Cho tôi menu)
+3. 水をください (Cho tôi nước)
 
-❌ VÍ DỤ SAI (TUYỆT ĐỐI KHÔNG LÀM):
-<think>Let me think...</think>
-いらっしゃいませ
-Gợi ý:
-1. はい
-2. お願いします
-
-Bắt đầu trả lời NGAY:`;
+Respond now:`;
       
       const conversationMessages = [
         { role: 'system' as const, content: systemPrompt },
@@ -212,6 +244,11 @@ Bắt đầu trả lời NGAY:`;
       ];
 
       const response = await getAIResponse(conversationMessages);
+      
+      // 🔍 DEBUG: Console log AI response
+      console.log('========== AI RAW RESPONSE ==========');
+      console.log(response.content);
+      console.log('=====================================');
       
       let aiContent: string;
       if (response.error) {
@@ -232,17 +269,21 @@ Bắt đầu trả lời NGAY:`;
         // Step 2: Remove EVERYTHING before first Japanese character or marker
         aiContent = aiContent.replace(/^[\s\S]*?(?=([ぁ-んァ-ヶー一-龯]|Gợi ý:|OPTIONS:))/i, '');
         
-        // Step 3: Remove English thinking patterns line by line
+        // Step 3: Keep only Japanese content and OPTIONS
         aiContent = aiContent
           .split('\n')
           .filter(line => {
-            // Keep lines with Japanese characters or markers
-            if (/[ぁ-んァ-ヶー一-龯]/.test(line)) return true;
-            if (/^(Gợi ý:|OPTIONS:|\d\.)/i.test(line)) return true;
-            if (/^\(.*\)$/.test(line.trim())) return true; // Keep translation lines
-            // Remove English thinking lines
-            if (/^(Okay|Alright|Let me|Let's|So|Well|Now|First|Hmm|The user|I need|I should|This|That|Next|Check)/i.test(line)) return false;
-            return line.trim().length > 0;
+            const trimmed = line.trim();
+            // Keep Japanese lines
+            if (/[ぁ-んァ-ヶー一-龯]/.test(trimmed)) return true;
+            // Keep OPTIONS marker and numbered items
+            if (/^(Gợi ý:|OPTIONS:)$/i.test(trimmed)) return true;
+            if (/^\d+\.\s*.+/.test(trimmed)) return true;
+            // Keep translation lines
+            if (/^\(.*\)$/.test(trimmed)) return true;
+            // Remove English thinking
+            if (/^(Okay|Alright|Let me|Let's|So|Well|Now|First|Hmm|The user|I need|I should|This|That|Next|Check)/i.test(trimmed)) return false;
+            return false; // Remove other lines
           })
           .join('\n')
           .replace(/\n{3,}/g, '\n\n')
@@ -263,9 +304,14 @@ Bắt đầu trả lời NGAY:`;
       let mainContent = aiContent;
       let options: string[] = [];
       
+      console.log('🔍 Checking for OPTIONS in:', aiContent);
+      
       if (aiContent.includes('Gợi ý:') || aiContent.includes('OPTIONS:')) {
         const parts = aiContent.split(/Gợi ý:|OPTIONS:/i);
         mainContent = parts[0].trim();
+        
+        console.log('✅ Found OPTIONS! Main content:', mainContent);
+        console.log('📝 Options part:', parts[1]);
         
         if (parts[1]) {
           const rawOptions = parts[1]
@@ -273,6 +319,8 @@ Bắt đầu trả lời NGAY:`;
             .filter(line => line.match(/^\d\./))
             .map(line => line.replace(/^\d\.\s*/, '').trim())
             .slice(0, 3);
+          
+          console.log('🎯 Parsed options:', rawOptions);
           
           // Tự động dịch các options không có dịch
           const translationPromises = rawOptions.map(async (option) => {
@@ -404,17 +452,34 @@ Bắt đầu trả lời NGAY:`;
 
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-          gap: '1.5rem',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+          gap: '2rem',
           paddingBottom: '3rem'
         }}>
           {scenarios.map((scenario) => {
-            const difficultyColors = {
-              easy: { bg: '#e8f5e9', border: '#4caf50', text: '#2e7d32' },
-              medium: { bg: '#fff3e0', border: '#ff9800', text: '#e65100' },
-              hard: { bg: '#fce4ec', border: '#e91e63', text: '#c2185b' }
+            const roleColors = {
+              restaurant: { 
+                color: '#10b981', 
+                gradient: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+                shadow: 'rgba(16, 185, 129, 0.3)'
+              },
+              shopping: { 
+                color: '#3b82f6', 
+                gradient: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+                shadow: 'rgba(59, 130, 246, 0.3)'
+              },
+              station: { 
+                color: '#8b5cf6', 
+                gradient: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)',
+                shadow: 'rgba(139, 92, 246, 0.3)'
+              },
+              hotel: { 
+                color: '#ec4899', 
+                gradient: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)',
+                shadow: 'rgba(236, 72, 153, 0.3)'
+              }
             };
-            const colors = difficultyColors[scenario.difficulty];
+            const colors = roleColors[scenario.id as keyof typeof roleColors];
             
             return (
               <button
@@ -424,41 +489,94 @@ Bắt đầu trả lời NGAY:`;
                 style={{
                   padding: '2rem',
                   cursor: 'pointer',
-                  textAlign: 'left',
-                  border: '1px solid var(--border-color)',
-                  borderTop: `3px solid ${colors.border}`,
-                  background: `linear-gradient(to bottom, ${colors.bg}, var(--card-bg))`
+                  textAlign: 'center',
+                  border: `3px solid ${colors.color}`,
+                  borderRadius: '20px',
+                  background: colors.gradient,
+                  boxShadow: `0 8px 24px ${colors.shadow}`,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = `0 16px 40px ${colors.shadow}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = `0 8px 24px ${colors.shadow}`;
                 }}
               >
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+                {/* Decorative background */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  opacity: 0.1,
+                  background: `radial-gradient(circle at 30% 30%, ${colors.color} 0%, transparent 60%)`,
+                  pointerEvents: 'none'
+                }} />
+
+                {/* Emoji icon */}
+                <div style={{ 
+                  fontSize: '4rem', 
+                  marginBottom: '1rem',
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
+                  position: 'relative',
+                  zIndex: 1
+                }}>
                   {scenario.title.split(' ')[0]}
                 </div>
+
+                {/* Title */}
                 <h3 style={{ 
-                  fontSize: '1.125rem', 
-                  fontWeight: 600, 
-                  color: colors.text,
-                  marginBottom: '0.5rem'
+                  fontSize: '1.25rem', 
+                  fontWeight: 700, 
+                  color: colors.color,
+                  marginBottom: '0.75rem',
+                  position: 'relative',
+                  zIndex: 1
                 }}>
                   {scenario.title.split(' ').slice(1).join(' ')}
                 </h3>
+
+                {/* Description */}
                 <p style={{ 
                   fontSize: '0.9375rem', 
                   color: 'var(--text-secondary)',
-                  marginBottom: '0.75rem',
-                  lineHeight: 1.65
+                  marginBottom: '1.25rem',
+                  lineHeight: 1.7,
+                  position: 'relative',
+                  zIndex: 1
                 }}>
                   {scenario.description}
                 </p>
+
+                {/* Difficulty badge */}
                 <div style={{
-                  display: 'inline-block',
-                  padding: '0.25rem 0.75rem',
-                  background: colors.bg,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: '8px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: colors.text
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  background: 'white',
+                  border: `2px solid ${colors.color}`,
+                  borderRadius: '12px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  color: colors.color,
+                  boxShadow: `0 2px 8px ${colors.shadow}`,
+                  position: 'relative',
+                  zIndex: 1
                 }}>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: colors.color,
+                    boxShadow: `0 0 8px ${colors.color}`
+                  }} />
                   {scenario.difficulty === 'easy' ? 'Dễ' : scenario.difficulty === 'medium' ? 'Trung bình' : 'Khó'}
                 </div>
               </button>

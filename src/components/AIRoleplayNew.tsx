@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getAIResponse } from '../services/aiService';
 import { speakText, isSpeechSynthesisSupported } from '../utils/speech';
 import { useTheme } from '../contexts/ThemeContext';
-import Character3D from './Character3D';
+import CharacterAvatar from './CharacterAvatar';
 import '../styles/ai-roleplay-new.css';
 
 interface Message {
