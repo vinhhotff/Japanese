@@ -1003,6 +1003,7 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
   const [batchText, setBatchText] = useState('');
   const [batchPreview, setBatchPreview] = useState<any[]>([]);
   const [batchError, setBatchError] = useState<string | null>(null);
+  const [showJSONHint, setShowJSONHint] = useState<Record<string, boolean>>({});
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [aiJsonText, setAiJsonText] = useState(''); // ô dán JSON từ AI
@@ -1175,11 +1176,74 @@ Ví dụ:
           </div>
         );
       case 'grammar':
+        const showGrammarJSON = showJSONHint['grammar'] ?? false;
         return (
           <div className="form-group">
-            <label>Hướng dẫn JSON/format cho AI (Ngữ pháp)</label>
-            <div className="format-hint" style={{ lineHeight: 1.6 }}>
-              Gợi ý:
+            <label>
+              Hướng dẫn JSON/format cho AI (Ngữ pháp)
+              <button
+                type="button"
+                onClick={() => setShowJSONHint({ ...showJSONHint, grammar: !showGrammarJSON })}
+                style={{
+                  marginLeft: '0.5rem',
+                  padding: '0.25rem 0.75rem',
+                  fontSize: '0.75rem',
+                  background: 'var(--primary-color)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                {showGrammarJSON ? '▼ Thu gọn' : '▶ Mở rộng'}
+              </button>
+            </label>
+            {showGrammarJSON && (
+              <div className="format-hint" style={{ lineHeight: 1.6 }}>
+                <strong>Gợi ý 1 (JSON đầy đủ - khuyến nghị):</strong>
+                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy tạo các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
+- Trả về JSON array, không giải thích thêm.
+- Không dùng markdown, chỉ JSON thuần.
+- Giữ nguyên tên các key:
+
+[
+  {
+    "pattern": "〜たいです",
+    "meaning": "Muốn làm gì đó",
+    "explanation": "Diễn tả mong muốn của người nói. Động từ chuyển sang thể ます rồi bỏ ます, thêm たいです.",
+    "examples": [
+      {
+        "japanese": "コーヒーを飲みたいです。",
+        "romaji": "Kōhī o nomitai desu.",
+        "translation": "Tôi muốn uống cà phê."
+      },
+      {
+        "japanese": "日本に行きたいです。",
+        "romaji": "Nihon ni ikitai desu.",
+        "translation": "Tôi muốn đi Nhật Bản."
+      }
+    ]
+  },
+  {
+    "pattern": "〜てください",
+    "meaning": "Hãy làm gì đó",
+    "explanation": "Dùng khi nhờ vả, yêu cầu một cách lịch sự. Động từ chuyển sang thể て rồi thêm ください.",
+    "examples": [
+      {
+        "japanese": "窓を開けてください。",
+        "romaji": "Mado o akete kudasai.",
+        "translation": "Hãy mở cửa sổ."
+      },
+      {
+        "japanese": "静かにしてください。",
+        "romaji": "Shizuka ni shite kudasai.",
+        "translation": "Hãy giữ yên lặng."
+      }
+    ]
+  }
+]`}</pre>
+              <strong style={{ marginTop: '1rem', display: 'block' }}>Gợi ý 2 (Format text đơn giản - để import hàng loạt):</strong>
               <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy liệt kê các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
 - Trả về dạng text, mỗi dòng một mẫu.
 - Không giải thích thêm.
@@ -1191,8 +1255,11 @@ Ví dụ:
 Ví dụ:
 〜たいです=Muốn làm gì đó=Diễn tả mong muốn của người nói
 〜てください=Hãy làm gì đó=Dùng khi nhờ vả lịch sự`}</pre>
-              Dán vào import hàng loạt Ngữ pháp.
-            </div>
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fef3c7', borderRadius: '6px', fontSize: '0.875rem' }}>
+                  <strong>💡 Lưu ý:</strong> Nếu dùng JSON, bạn có thể copy từng field (pattern, meaning, explanation) và thêm examples vào form. Nếu dùng format text, chỉ có thể import pattern và meaning, cần thêm examples sau.
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'listening':
@@ -1440,12 +1507,29 @@ Ví dụ:
       }
 
       // Convert preview to form data format
-      const batchData = batchPreview.map(grammar => ({
-        lesson_id: formData.lesson_id,
-        pattern: grammar.pattern,
-        meaning: grammar.meaning,
-        explanation: grammar.explanation || '',
-      }));
+      const batchData = batchPreview.map((grammar: any) => {
+        // Map examples to correct format for database
+        let examples = [];
+        if (grammar.examples && Array.isArray(grammar.examples)) {
+          examples = grammar.examples.map((ex: any) => {
+            // Ensure examples have correct field names for database
+            return {
+              japanese: ex.japanese || ex.chinese || '', // Support both japanese and chinese
+              romaji: ex.romaji || ex.pinyin || '', // Support both romaji and pinyin
+              translation: ex.translation || ''
+            };
+          }).filter((ex: any) => ex.japanese && ex.translation); // Filter out invalid examples
+        }
+        
+        return {
+          lesson_id: formData.lesson_id,
+          pattern: grammar.pattern || '',
+          meaning: grammar.meaning || '',
+          explanation: grammar.explanation || '',
+          examples: examples,
+          language: formData.language || 'japanese',
+        };
+      });
 
       onSave(batchData);
       return;
@@ -2548,9 +2632,14 @@ Hoặc với đọc âm:
                       const lessonCourse = courses.find((c: any) => c.id === l.course_id);
                       return lessonCourse?.language === (formData.language || 'japanese');
                     })
-                    .map((l: any) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
+                    .map((l: any) => {
+                      const course = courses.find((c: any) => c.id === l.course_id);
+                      return (
+                        <option key={l.id} value={l.id}>
+                          {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
               <div className="form-group">
@@ -2569,6 +2658,7 @@ Hoặc với đọc âm:
                   value={formData.meaning}
                   onChange={(e) => setFormData({ ...formData, meaning: e.target.value })}
                   required
+                  style={{ fontSize: '1rem', fontWeight: '600', padding: '0.75rem', color: 'var(--text-primary)' }}
                 />
               </div>
               <div className="form-group">
@@ -2577,7 +2667,128 @@ Hoặc với đọc âm:
                   value={formData.explanation || ''}
                   onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
                   rows={3}
+                  placeholder="Giải thích chi tiết cách dùng mẫu ngữ pháp này..."
                 />
+              </div>
+              <div className="form-group">
+                <label>
+                  Ví dụ
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const language = formData.language || 'japanese';
+                      const exampleFormat = language === 'chinese' 
+                        ? `[\n  {\n    "chinese": "我正在学习中文。",\n    "pinyin": "Wǒ zhèngzài xuéxí Zhōngwén.",\n    "translation": "Tôi đang học tiếng Trung."\n  }\n]`
+                        : `[\n  {\n    "japanese": "コーヒーを飲みたいです。",\n    "romaji": "Kōhī o nomitai desu.",\n    "translation": "Tôi muốn uống cà phê."\n  }\n]`;
+                      const jsonText = prompt(`Dán JSON examples (array) cho ${language === 'chinese' ? 'tiếng Trung' : 'tiếng Nhật'}:\n\n${exampleFormat}`);
+                      if (jsonText) {
+                        try {
+                          const parsed = JSON.parse(jsonText);
+                          const examplesArray = Array.isArray(parsed) ? parsed : [parsed];
+                          const mappedExamples = examplesArray.map((ex: any) => {
+                            if (language === 'chinese') {
+                              return {
+                                japanese: ex.chinese || ex.japanese || '',
+                                romaji: ex.pinyin || ex.romaji || '',
+                                translation: ex.translation || ''
+                              };
+                            } else {
+                              return {
+                                japanese: ex.japanese || '',
+                                romaji: ex.romaji || '',
+                                translation: ex.translation || ''
+                              };
+                            }
+                          }).filter((ex: any) => ex.japanese && ex.translation);
+                          setFormData({ ...formData, examples: [...(formData.examples || []), ...mappedExamples] });
+                          showToast(`Đã thêm ${mappedExamples.length} ví dụ!`, 'success');
+                        } catch (err) {
+                          showToast('Lỗi parse JSON. Vui lòng kiểm tra lại format.', 'error');
+                        }
+                      }
+                    }}
+                    style={{
+                      marginLeft: '0.5rem',
+                      padding: '0.25rem 0.75rem',
+                      fontSize: '0.75rem',
+                      background: 'var(--primary-color)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: '600'
+                    }}
+                  >
+                    📥 Import JSON
+                  </button>
+                </label>
+                <div style={{ marginTop: '0.5rem' }}>
+                  {(formData.examples || []).map((ex: any, idx: number) => (
+                    <div key={idx} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <strong style={{ color: 'var(--text-primary)' }}>Ví dụ {idx + 1}</strong>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          onClick={() => {
+                            const newExamples = [...(formData.examples || [])];
+                            newExamples.splice(idx, 1);
+                            setFormData({ ...formData, examples: newExamples });
+                          }}
+                        >
+                          🗑️ Xóa
+                        </button>
+                      </div>
+                      <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                        <label>{formData.language === 'chinese' ? 'Câu tiếng Trung' : 'Câu tiếng Nhật'}</label>
+                        <input
+                          type="text"
+                          value={ex.japanese || ''}
+                          onChange={(e) => {
+                            const newExamples = [...(formData.examples || [])];
+                            newExamples[idx] = { ...newExamples[idx], japanese: e.target.value };
+                            setFormData({ ...formData, examples: newExamples });
+                          }}
+                          placeholder={formData.language === 'chinese' ? '我正在学习中文。' : '今日は暑いです'}
+                          style={{ fontFamily: formData.language === 'chinese' ? '"Noto Sans SC", sans-serif' : '"Noto Sans JP", sans-serif' }}
+                        />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                        <label>{formData.language === 'chinese' ? 'Pinyin' : 'Romaji'} (tùy chọn)</label>
+                        <input
+                          type="text"
+                          value={ex.romaji || ''}
+                          onChange={(e) => {
+                            const newExamples = [...(formData.examples || [])];
+                            newExamples[idx] = { ...newExamples[idx], romaji: e.target.value };
+                            setFormData({ ...formData, examples: newExamples });
+                          }}
+                          placeholder={formData.language === 'chinese' ? 'Wǒ zhèngzài xuéxí Zhōngwén.' : 'Kyou wa atsui desu'}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Dịch tiếng Việt</label>
+                        <input
+                          type="text"
+                          value={ex.translation || ''}
+                          onChange={(e) => {
+                            const newExamples = [...(formData.examples || [])];
+                            newExamples[idx] = { ...newExamples[idx], translation: e.target.value };
+                            setFormData({ ...formData, examples: newExamples });
+                          }}
+                          placeholder="Hôm nay nóng"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => addExample('grammar')}
+                  >
+                    ➕ Thêm ví dụ
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -2627,17 +2838,66 @@ Hoặc với đọc âm:
               </div>
               <div className="form-group">
                 <label>
-                  Nhập ngữ pháp (mỗi dòng một mẫu câu) *
-                  <span className="format-hint">
-                    Format: <code>pattern=nghĩa</code> hoặc <code>pattern=nghĩa=giải_thích</code>
+                  Nhập ngữ pháp *
+                  <span className="format-hint" style={{ display: 'block', marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                    <strong>Format 1 (JSON - khuyến nghị):</strong> Dán JSON array với đầy đủ pattern, meaning, explanation và examples. Xem hướng dẫn JSON ở trên.
+                    <br />
+                    <strong>Format 2 (Text đơn giản):</strong> Mỗi dòng một mẫu: <code>pattern=nghĩa</code> hoặc <code>pattern=nghĩa=giải_thích</code>
                   </span>
                 </label>
                 <textarea
                   className="batch-input"
                   value={batchText}
                   onChange={(e) => {
-                    setBatchText(e.target.value);
-                    const { grammars, errors } = parseGrammarBatch(e.target.value);
+                    const text = e.target.value;
+                    setBatchText(text);
+                    
+                    // Try to parse as JSON first
+                    const trimmedText = text.trim();
+                    if (trimmedText.startsWith('[') || trimmedText.startsWith('{')) {
+                      try {
+                        const json = JSON.parse(trimmedText);
+                        const jsonArray = Array.isArray(json) ? json : [json];
+                        const language = formData.language || 'japanese';
+                        const grammars = jsonArray.map((item: any) => {
+                          // Map examples based on language
+                          let examples = [];
+                          if (item.examples && Array.isArray(item.examples)) {
+                            examples = item.examples.map((ex: any) => {
+                              if (language === 'chinese') {
+                                // Chinese format: chinese -> japanese, pinyin -> romaji
+                                return {
+                                  japanese: ex.chinese || ex.japanese || '',
+                                  romaji: ex.pinyin || ex.romaji || '',
+                                  translation: ex.translation || ''
+                                };
+                              } else {
+                                // Japanese format: keep as is
+                                return {
+                                  japanese: ex.japanese || '',
+                                  romaji: ex.romaji || '',
+                                  translation: ex.translation || ''
+                                };
+                              }
+                            });
+                          }
+                          return {
+                            pattern: item.pattern || '',
+                            meaning: item.meaning || '',
+                            explanation: item.explanation || '',
+                            examples: examples
+                          };
+                        });
+                        setBatchPreview(grammars);
+                        setBatchError(null);
+                        return;
+                      } catch (err) {
+                        // If JSON parse fails, fall back to text format
+                      }
+                    }
+                    
+                    // Parse as text format
+                    const { grammars, errors } = parseGrammarBatch(text);
                     setBatchPreview(grammars);
                     setBatchError(errors.length > 0 ? errors.join('\n') : null);
                   }}
@@ -2648,10 +2908,13 @@ Hoặc với đọc âm:
                   required
                 />
                 <div className="format-example">
-                  <strong>Ví dụ:</strong>
+                  <strong>Ví dụ Format 2 (Text):</strong>
                   <pre>{`です=Là (cách nói lịch sự)
 ます=Động từ thể lịch sự
 ません=Phủ định thể lịch sự`}</pre>
+                  <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0f9ff', borderRadius: '6px', fontSize: '0.875rem' }}>
+                    <strong>💡 Lưu ý:</strong> Để import đầy đủ cả examples, hãy dùng Format 1 (JSON). Format 2 chỉ import pattern, meaning và explanation.
+                  </div>
                 </div>
               </div>
 
@@ -2668,13 +2931,146 @@ Hoặc với đọc âm:
                     <strong>✅ Preview ({batchPreview.length} ngữ pháp):</strong>
                   </div>
                   <div className="preview-list">
-                    {batchPreview.map((grammar, idx) => (
-                      <div key={idx} className="preview-item grammar-preview-item">
-                        <span className="preview-pattern">{grammar.pattern}</span>
-                        <span className="preview-meaning">{grammar.meaning}</span>
+                    {batchPreview.map((grammar: any, idx: number) => (
+                      <div key={idx} className="preview-item grammar-preview-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', gap: '1rem', width: '100%', alignItems: 'center' }}>
+                          <span className="preview-pattern" style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--primary-color)' }}>{grammar.pattern}</span>
+                          <span className="preview-meaning" style={{ fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-primary)' }}>{grammar.meaning}</span>
+                        </div>
                         {grammar.explanation && (
-                          <span className="preview-explanation">{grammar.explanation}</span>
+                          <span className="preview-explanation" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>{grammar.explanation}</span>
                         )}
+                        <div style={{ marginTop: '0.5rem', width: '100%' }}>
+                          {grammar.examples && Array.isArray(grammar.examples) && grammar.examples.length > 0 ? (
+                            <div style={{ padding: '0.75rem', background: 'var(--bg-color)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                <strong style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>Ví dụ ({grammar.examples.length}):</strong>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const jsonText = prompt(`Dán JSON examples cho "${grammar.pattern}":\n\n${formData.language === 'chinese' 
+                                      ? `[\n  {\n    "chinese": "我正在学习中文。",\n    "pinyin": "Wǒ zhèngzài xuéxí Zhōngwén.",\n    "translation": "Tôi đang học tiếng Trung."\n  }\n]`
+                                      : `[\n  {\n    "japanese": "コーヒーを飲みたいです。",\n    "romaji": "Kōhī o nomitai desu.",\n    "translation": "Tôi muốn uống cà phê."\n  }\n]`}`);
+                                    if (jsonText) {
+                                      try {
+                                        const parsed = JSON.parse(jsonText);
+                                        const examplesArray = Array.isArray(parsed) ? parsed : [parsed];
+                                        const language = formData.language || 'japanese';
+                                        const mappedExamples = examplesArray.map((ex: any) => {
+                                          if (language === 'chinese') {
+                                            return {
+                                              japanese: ex.chinese || ex.japanese || '',
+                                              romaji: ex.pinyin || ex.romaji || '',
+                                              translation: ex.translation || ''
+                                            };
+                                          } else {
+                                            return {
+                                              japanese: ex.japanese || '',
+                                              romaji: ex.romaji || '',
+                                              translation: ex.translation || ''
+                                            };
+                                          }
+                                        }).filter((ex: any) => ex.japanese && ex.translation);
+                                        
+                                        const newPreview = [...batchPreview];
+                                        newPreview[idx] = { ...newPreview[idx], examples: [...(grammar.examples || []), ...mappedExamples] };
+                                        setBatchPreview(newPreview);
+                                        showToast(`Đã thêm ${mappedExamples.length} ví dụ cho "${grammar.pattern}"!`, 'success');
+                                      } catch (err) {
+                                        showToast('Lỗi parse JSON. Vui lòng kiểm tra lại format.', 'error');
+                                      }
+                                    }
+                                  }}
+                                  style={{
+                                    padding: '0.25rem 0.5rem',
+                                    fontSize: '0.7rem',
+                                    background: 'var(--primary-color)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                  }}
+                                >
+                                  ➕ Thêm
+                                </button>
+                              </div>
+                              {grammar.examples.slice(0, 2).map((ex: any, exIdx: number) => (
+                                <div key={exIdx} style={{ marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                                  <div style={{ fontFamily: formData.language === 'chinese' ? '"Noto Sans SC", sans-serif' : '"Noto Sans JP", sans-serif', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                                    {ex.japanese || ex.chinese || ''}
+                                  </div>
+                                  {ex.romaji || ex.pinyin ? (
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                                      {ex.romaji || ex.pinyin}
+                                    </div>
+                                  ) : null}
+                                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                    {ex.translation || ''}
+                                  </div>
+                                </div>
+                              ))}
+                              {grammar.examples.length > 2 && (
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                  ... và {grammar.examples.length - 2} ví dụ khác
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'var(--bg-color)', borderRadius: '6px', border: '1px dashed var(--border-color)' }}>
+                              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Chưa có ví dụ</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const jsonText = prompt(`Dán JSON examples cho "${grammar.pattern}":\n\n${formData.language === 'chinese' 
+                                    ? `[\n  {\n    "chinese": "我正在学习中文。",\n    "pinyin": "Wǒ zhèngzài xuéxí Zhōngwén.",\n    "translation": "Tôi đang học tiếng Trung."\n  }\n]`
+                                    : `[\n  {\n    "japanese": "コーヒーを飲みたいです。",\n    "romaji": "Kōhī o nomitai desu.",\n    "translation": "Tôi muốn uống cà phê."\n  }\n]`}`);
+                                  if (jsonText) {
+                                    try {
+                                      const parsed = JSON.parse(jsonText);
+                                      const examplesArray = Array.isArray(parsed) ? parsed : [parsed];
+                                      const language = formData.language || 'japanese';
+                                      const mappedExamples = examplesArray.map((ex: any) => {
+                                        if (language === 'chinese') {
+                                          return {
+                                            japanese: ex.chinese || ex.japanese || '',
+                                            romaji: ex.pinyin || ex.romaji || '',
+                                            translation: ex.translation || ''
+                                          };
+                                        } else {
+                                          return {
+                                            japanese: ex.japanese || '',
+                                            romaji: ex.romaji || '',
+                                            translation: ex.translation || ''
+                                          };
+                                        }
+                                      }).filter((ex: any) => ex.japanese && ex.translation);
+                                      
+                                      const newPreview = [...batchPreview];
+                                      newPreview[idx] = { ...newPreview[idx], examples: mappedExamples };
+                                      setBatchPreview(newPreview);
+                                      showToast(`Đã thêm ${mappedExamples.length} ví dụ cho "${grammar.pattern}"!`, 'success');
+                                    } catch (err) {
+                                      showToast('Lỗi parse JSON. Vui lòng kiểm tra lại format.', 'error');
+                                    }
+                                  }
+                                }}
+                                style={{
+                                  padding: '0.25rem 0.75rem',
+                                  fontSize: '0.75rem',
+                                  background: 'var(--primary-color)',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontWeight: '600'
+                                }}
+                              >
+                                📥 Import JSON
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
