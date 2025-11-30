@@ -1,0 +1,480 @@
+/* ===== LANGUAGE-SPECIFIC THEMES ===== */
+/* Japanese & Chinese Cultural Themes with Beautiful Animations */
+
+/* ===== JAPANESE THEME ===== */
+[data-language="japanese"] {
+  /* Japanese Traditional Colors */
+  --jp-primary: #c41e3a;        /* Japanese Red (Akai) */
+  --jp-primary-light: #ff6b9d;
+  --jp-primary-dark: #8b1538;
+  --jp-secondary: #ffb6c1;      /* Sakura Pink */
+  --jp-accent: #2e7d32;         /* Bamboo Green */
+  --jp-gold: #ffd700;           /* Gold accent */
+  --jp-cream: #fff8e1;          /* Cream background */
+  
+  /* Background gradients with cultural patterns */
+  --jp-bg-gradient: linear-gradient(135deg, 
+    #fff8e1 0%, 
+    #ffe0e6 25%, 
+    #fff8e1 50%, 
+    #e8f5e9 75%, 
+    #fff8e1 100%);
+  
+  --jp-card-gradient: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(255, 248, 225, 0.8) 100%);
+  
+  /* Shadows with warm tones */
+  --jp-shadow: 0 4px 20px rgba(196, 30, 58, 0.15);
+  --jp-shadow-lg: 0 10px 40px rgba(196, 30, 58, 0.2);
+  
+  /* Text colors */
+  --jp-text-primary: #2c1810;
+  --jp-text-secondary: #5d4037;
+}
+
+/* ===== CHINESE THEME ===== */
+[data-language="chinese"] {
+  /* Chinese Traditional Colors */
+  --cn-primary: #dc143c;        /* Chinese Red */
+  --cn-primary-light: #ff4757;
+  --cn-primary-dark: #b71c1c;
+  --cn-secondary: #ffd700;      /* Imperial Gold */
+  --cn-accent: #1e88e5;        /* Azure Blue */
+  --cn-jade: #00b894;          /* Jade Green */
+  --cn-cream: #fffef0;          /* Cream background */
+  
+  /* Background gradients */
+  --cn-bg-gradient: linear-gradient(135deg, 
+    #fffef0 0%, 
+    #ffeaa7 20%, 
+    #fffef0 40%, 
+    #e3f2fd 60%, 
+    #fffef0 80%, 
+    #fffef0 100%);
+  
+  --cn-card-gradient: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(255, 254, 240, 0.9) 100%);
+  
+  /* Shadows with warm tones */
+  --cn-shadow: 0 4px 20px rgba(220, 20, 60, 0.15);
+  --cn-shadow-lg: 0 10px 40px rgba(220, 20, 60, 0.2);
+  
+  /* Text colors */
+  --cn-text-primary: #1a1a1a;
+  --cn-text-secondary: #4a4a4a;
+}
+
+/* ===== FLOATING ANIMATIONS ===== */
+
+/* Japanese Floating Elements */
+.jp-floating-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--jp-bg-gradient);
+}
+
+.jp-floating-bg::before {
+  content: '🌸';
+  position: absolute;
+  top: 10%;
+  right: 8%;
+  font-size: 4rem;
+  opacity: 0.1;
+  animation: sakuraFloat 12s ease-in-out infinite;
+}
+
+.jp-floating-bg::after {
+  content: '🏮';
+  position: absolute;
+  top: 20%;
+  left: 5%;
+  font-size: 3rem;
+  opacity: 0.1;
+  animation: lanternSwing 8s ease-in-out infinite;
+}
+
+@keyframes sakuraFloat {
+  0%, 100% { 
+    transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    opacity: 0.1;
+  }
+  25% { 
+    transform: translateY(-30px) translateX(20px) rotate(90deg) scale(1.1);
+    opacity: 0.15;
+  }
+  50% { 
+    transform: translateY(-60px) translateX(0) rotate(180deg) scale(1);
+    opacity: 0.1;
+  }
+  75% { 
+    transform: translateY(-30px) translateX(-20px) rotate(270deg) scale(1.1);
+    opacity: 0.15;
+  }
+}
+
+@keyframes lanternSwing {
+  0%, 100% { 
+    transform: translateX(0) rotate(-10deg);
+    opacity: 0.1;
+  }
+  50% { 
+    transform: translateX(15px) rotate(10deg);
+    opacity: 0.15;
+  }
+}
+
+/* Chinese Floating Elements */
+.cn-floating-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--cn-bg-gradient);
+}
+
+.cn-floating-bg::before {
+  content: '🐉';
+  position: absolute;
+  top: 15%;
+  right: 10%;
+  font-size: 5rem;
+  opacity: 0.08;
+  animation: dragonFloat 15s ease-in-out infinite;
+}
+
+.cn-floating-bg::after {
+  content: '🏮';
+  position: absolute;
+  top: 25%;
+  left: 8%;
+  font-size: 4rem;
+  opacity: 0.1;
+  animation: lanternFloat 10s ease-in-out infinite;
+}
+
+.cn-floating-bg .cn-decoration {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0.1;
+}
+
+.cn-floating-bg .cn-decoration:nth-child(1) {
+  content: '☯';
+  top: 60%;
+  left: 5%;
+  animation: yinYangRotate 20s linear infinite;
+}
+
+.cn-floating-bg .cn-decoration:nth-child(2) {
+  content: '🀄';
+  top: 40%;
+  right: 15%;
+  animation: mahjongFloat 12s ease-in-out infinite;
+}
+
+@keyframes dragonFloat {
+  0%, 100% { 
+    transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    opacity: 0.08;
+  }
+  33% { 
+    transform: translateY(-40px) translateX(30px) rotate(120deg) scale(1.15);
+    opacity: 0.12;
+  }
+  66% { 
+    transform: translateY(-80px) translateX(0) rotate(240deg) scale(1);
+    opacity: 0.08;
+  }
+}
+
+@keyframes lanternFloat {
+  0%, 100% { 
+    transform: translateY(0) rotate(-5deg);
+    opacity: 0.1;
+  }
+  50% { 
+    transform: translateY(-25px) rotate(5deg);
+    opacity: 0.15;
+  }
+}
+
+@keyframes yinYangRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes mahjongFloat {
+  0%, 100% { 
+    transform: translateY(0) translateX(0);
+    opacity: 0.1;
+  }
+  50% { 
+    transform: translateY(-20px) translateX(15px);
+    opacity: 0.15;
+  }
+}
+
+/* ===== ENHANCED FLOATING CHARACTERS ===== */
+
+.jp-float-char {
+  position: absolute;
+  font-size: 3.5rem;
+  font-weight: 300;
+  background: linear-gradient(135deg, 
+    var(--jp-primary) 0%, 
+    var(--jp-secondary) 50%, 
+    var(--jp-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0.2;
+  animation: jpCharFloat 25s infinite ease-in-out;
+  user-select: none;
+  filter: drop-shadow(0 0 15px rgba(196, 30, 58, 0.3));
+  text-shadow: 0 0 20px rgba(255, 182, 193, 0.4);
+}
+
+.cn-float-char {
+  position: absolute;
+  font-size: 3.5rem;
+  font-weight: 400;
+  background: linear-gradient(135deg, 
+    var(--cn-primary) 0%, 
+    var(--cn-secondary) 50%, 
+    var(--cn-jade) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0.2;
+  animation: cnCharFloat 25s infinite ease-in-out;
+  user-select: none;
+  filter: drop-shadow(0 0 15px rgba(220, 20, 60, 0.3));
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+@keyframes jpCharFloat {
+  0%, 100% { 
+    transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    opacity: 0.2;
+  }
+  25% { 
+    transform: translateY(-40px) translateX(30px) rotate(5deg) scale(1.1);
+    opacity: 0.25;
+  }
+  50% { 
+    transform: translateY(-80px) translateX(0) rotate(0deg) scale(1);
+    opacity: 0.2;
+  }
+  75% { 
+    transform: translateY(-40px) translateX(-30px) rotate(-5deg) scale(1.1);
+    opacity: 0.25;
+  }
+}
+
+@keyframes cnCharFloat {
+  0%, 100% { 
+    transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    opacity: 0.2;
+  }
+  25% { 
+    transform: translateY(-50px) translateX(40px) rotate(8deg) scale(1.15);
+    opacity: 0.28;
+  }
+  50% { 
+    transform: translateY(-100px) translateX(0) rotate(0deg) scale(1);
+    opacity: 0.2;
+  }
+  75% { 
+    transform: translateY(-50px) translateX(-40px) rotate(-8deg) scale(1.15);
+    opacity: 0.28;
+  }
+}
+
+/* ===== CULTURAL PATTERNS ===== */
+
+/* Japanese Seigaiha (Wave) Pattern */
+.jp-pattern-bg {
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(196, 30, 58, 0.03) 2px, transparent 2px),
+    radial-gradient(circle at 80% 50%, rgba(46, 125, 50, 0.03) 2px, transparent 2px);
+  background-size: 60px 60px;
+  background-position: 0 0, 30px 30px;
+}
+
+/* Chinese Cloud Pattern */
+.cn-pattern-bg {
+  background-image: 
+    radial-gradient(ellipse at 30% 40%, rgba(220, 20, 60, 0.03) 3px, transparent 3px),
+    radial-gradient(ellipse at 70% 60%, rgba(255, 215, 0, 0.03) 3px, transparent 3px);
+  background-size: 80px 80px;
+  background-position: 0 0, 40px 40px;
+}
+
+/* ===== CARD STYLES WITH CULTURAL THEMES ===== */
+
+.jp-card {
+  background: var(--card-bg);
+  border: 2px solid rgba(196, 30, 58, 0.15);
+  box-shadow: var(--jp-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .jp-card {
+  background: var(--card-bg);
+  border-color: rgba(196, 30, 58, 0.3);
+}
+
+.jp-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 182, 193, 0.2), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.jp-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: var(--jp-shadow-lg);
+  border-color: rgba(196, 30, 58, 0.3);
+}
+
+.jp-card:hover::before {
+  left: 100%;
+}
+
+.cn-card {
+  background: var(--card-bg);
+  border: 2px solid rgba(220, 20, 60, 0.15);
+  box-shadow: var(--cn-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .cn-card {
+  background: var(--card-bg);
+  border-color: rgba(220, 20, 60, 0.3);
+}
+
+.cn-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 215, 0, 0.2), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.cn-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: var(--cn-shadow-lg);
+  border-color: rgba(220, 20, 60, 0.3);
+}
+
+.cn-card:hover::before {
+  left: 100%;
+}
+
+/* ===== BUTTON STYLES ===== */
+
+.jp-btn-primary {
+  background: linear-gradient(135deg, var(--jp-primary) 0%, var(--jp-primary-dark) 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+  transition: all 0.3s ease;
+}
+
+.jp-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+  background: linear-gradient(135deg, var(--jp-primary-light) 0%, var(--jp-primary) 100%);
+}
+
+.cn-btn-primary {
+  background: linear-gradient(135deg, var(--cn-primary) 0%, var(--cn-primary-dark) 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3);
+  transition: all 0.3s ease;
+}
+
+.cn-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 20, 60, 0.4);
+  background: linear-gradient(135deg, var(--cn-primary-light) 0%, var(--cn-primary) 100%);
+}
+
+/* ===== PROGRESS BARS ===== */
+
+.jp-progress {
+  background: linear-gradient(90deg, 
+    var(--jp-primary) 0%, 
+    var(--jp-secondary) 50%, 
+    var(--jp-accent) 100%);
+  box-shadow: 0 0 10px rgba(196, 30, 58, 0.3);
+  animation: jpProgressShine 2s ease-in-out infinite;
+}
+
+@keyframes jpProgressShine {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.9; }
+}
+
+.cn-progress {
+  background: linear-gradient(90deg, 
+    var(--cn-primary) 0%, 
+    var(--cn-secondary) 50%, 
+    var(--cn-jade) 100%);
+  box-shadow: 0 0 10px rgba(220, 20, 60, 0.3);
+  animation: cnProgressShine 2s ease-in-out infinite;
+}
+
+@keyframes cnProgressShine {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.9; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .jp-float-char,
+  .cn-float-char {
+    font-size: 2.5rem;
+  }
+  
+  .jp-floating-bg::before,
+  .cn-floating-bg::before {
+    font-size: 3rem;
+  }
+  
+  .jp-floating-bg::after,
+  .cn-floating-bg::after {
+    font-size: 2.5rem;
+  }
+}
+

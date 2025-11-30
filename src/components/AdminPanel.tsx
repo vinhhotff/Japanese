@@ -17,7 +17,9 @@ import { parseKanjiBatch } from '../utils/kanjiParser';
 import { parseGrammarBatch } from '../utils/grammarParser';
 import { parseSentenceGameBatch } from '../utils/sentenceGameParser';
 import { uploadAudio, uploadImage, validateFileType, validateFileSize } from '../utils/fileUpload';
+import AdminHelpGuide from './AdminHelpGuide';
 import '../App.css';
+import '../styles/admin-help-guide.css';
 
 type TabType = 'courses' | 'lessons' | 'vocabulary' | 'kanji' | 'grammar' | 'listening' | 'games' | 'roleplay';
 
@@ -38,7 +40,75 @@ const AdminPanel = () => {
   const [filterLevel, setFilterLevel] = useState('');
   const [filterLesson, setFilterLesson] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20);
+  const [itemsPerPage] = useState(10);
+  const [showHelpGuide, setShowHelpGuide] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input/textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+
+      // Ctrl/Cmd + N: Thêm mới
+      if (ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        setEditingItem(null);
+        setShowForm(true);
+      }
+
+      // Ctrl/Cmd + K: Mở hướng dẫn
+      if (ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        setShowHelpGuide(true);
+      }
+
+      // Ctrl/Cmd + F: Focus vào ô tìm kiếm
+      if (ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[placeholder*="Tìm kiếm"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+
+      // Esc: Đóng form/hướng dẫn
+      if (e.key === 'Escape') {
+        if (showHelpGuide) {
+          setShowHelpGuide(false);
+        } else if (showForm) {
+          setShowForm(false);
+          setEditingItem(null);
+        }
+      }
+
+      // Số 1-8: Chuyển tab (chỉ khi không có form/hướng dẫn mở)
+      if (!showForm && !showHelpGuide && e.key >= '1' && e.key <= '8') {
+        const tabIndex = parseInt(e.key) - 1;
+        const tabs: TabType[] = ['courses', 'lessons', 'vocabulary', 'kanji', 'grammar', 'listening', 'games', 'roleplay'];
+        if (tabs[tabIndex]) {
+          e.preventDefault();
+          setActiveTab(tabs[tabIndex]);
+        }
+      }
+
+      // ?: Hiển thị/ẩn danh sách phím tắt
+      if (e.key === '?' && !ctrlKey && !e.shiftKey) {
+        e.preventDefault();
+        setShowShortcuts(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showForm, showHelpGuide]);
 
   useEffect(() => {
     loadCourses();
@@ -383,87 +453,117 @@ const AdminPanel = () => {
         <button
           className={`admin-tab ${activeTab === 'courses' ? 'active' : ''}`}
           onClick={() => setActiveTab('courses')}
+          title="Khóa học (Phím 1)"
         >
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
           </svg>
           Khóa học
+          <span className="tab-shortcut">1</span>
         </button>
         <button
           className={`admin-tab ${activeTab === 'lessons' ? 'active' : ''}`}
           onClick={() => setActiveTab('lessons')}
+          title="Bài học (Phím 2)"
         >
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
           Bài học
+          <span className="tab-shortcut">2</span>
         </button>
         <button
           className={`admin-tab ${activeTab === 'vocabulary' ? 'active' : ''}`}
           onClick={() => setActiveTab('vocabulary')}
+          title="Từ vựng (Phím 3)"
         >
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
           Từ vựng
+          <span className="tab-shortcut">3</span>
         </button>
         <button
           className={`admin-tab ${activeTab === 'kanji' ? 'active' : ''}`}
           onClick={() => setActiveTab('kanji')}
+          title="Kanji (Phím 4)"
         >
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
           Kanji
+          <span className="tab-shortcut">4</span>
         </button>
         <button
           className={`admin-tab ${activeTab === 'grammar' ? 'active' : ''}`}
           onClick={() => setActiveTab('grammar')}
+          title="Ngữ pháp (Phím 5)"
         >
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           Ngữ pháp
+          <span className="tab-shortcut">5</span>
         </button>
         <button
           className={`admin-tab ${activeTab === 'listening' ? 'active' : ''}`}
           onClick={() => setActiveTab('listening')}
+          title="Nghe (Phím 6)"
         >
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
           Nghe
+          <span className="tab-shortcut">6</span>
         </button>
         <button
           className={`admin-tab ${activeTab === 'games' ? 'active' : ''}`}
           onClick={() => setActiveTab('games')}
+          title="Game (Phím 7)"
         >
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
           </svg>
           Game
+          <span className="tab-shortcut">7</span>
         </button>
         <button
           className={`admin-tab ${activeTab === 'roleplay' ? 'active' : ''}`}
           onClick={() => setActiveTab('roleplay')}
+          title="Roleplay (Phím 8)"
         >
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           Roleplay
+          <span className="tab-shortcut">8</span>
         </button>
       </div>
 
       <div className="admin-content">
-        <div className="admin-actions">
+        <div className="admin-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <button
             className="btn btn-primary"
             onClick={() => {
               setEditingItem(null);
               setShowForm(true);
             }}
+            title="Thêm mới (Ctrl/Cmd + N)"
           >
             ➕ Thêm mới
+            <span className="keyboard-shortcut">⌘N</span>
+          </button>
+          <button
+            className="help-button"
+            onClick={() => setShowHelpGuide(true)}
+            title="Xem hướng dẫn sử dụng (Ctrl/Cmd + K)"
+          >
+            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 22c5.421 0 10-4.579 10-10S17.421 2 12 2 2 6.579 2 12s4.579 10 10 10z" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+            Hướng dẫn
+            <span className="keyboard-shortcut">⌘K</span>
           </button>
         </div>
 
@@ -481,9 +581,16 @@ const AdminPanel = () => {
           <div style={{ flex: '1 1 300px' }}>
             <input
               type="text"
-              placeholder="🔍 Tìm kiếm..."
+              placeholder="🔍 Tìm kiếm... (Ctrl/Cmd + F)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+                const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+                if (ctrlKey && e.key === 'f') {
+                  e.preventDefault();
+                }
+              }}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -738,6 +845,99 @@ const AdminPanel = () => {
             setEditingItem(null);
           }}
         />
+      )}
+
+      {showHelpGuide && (
+        <AdminHelpGuide
+          type={activeTab}
+          onClose={() => setShowHelpGuide(false)}
+        />
+      )}
+
+      {showShortcuts && (
+        <div className="shortcuts-overlay" onClick={() => setShowShortcuts(false)}>
+          <div className="shortcuts-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="shortcuts-header">
+              <h3>⌨️ Phím Tắt</h3>
+              <button className="close-btn" onClick={() => setShowShortcuts(false)}>✕</button>
+            </div>
+            <div className="shortcuts-content">
+              <div className="shortcuts-section">
+                <h4>Thao tác chung</h4>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">Ctrl/Cmd + N</span>
+                  <span className="shortcut-desc">Thêm mới</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">Ctrl/Cmd + K</span>
+                  <span className="shortcut-desc">Mở hướng dẫn</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">Ctrl/Cmd + F</span>
+                  <span className="shortcut-desc">Tìm kiếm</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">?</span>
+                  <span className="shortcut-desc">Hiển thị phím tắt</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">Esc</span>
+                  <span className="shortcut-desc">Đóng form/hướng dẫn</span>
+                </div>
+              </div>
+              <div className="shortcuts-section">
+                <h4>Chuyển tab</h4>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">1</span>
+                  <span className="shortcut-desc">Khóa học</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">2</span>
+                  <span className="shortcut-desc">Bài học</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">3</span>
+                  <span className="shortcut-desc">Từ vựng</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">4</span>
+                  <span className="shortcut-desc">Kanji</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">5</span>
+                  <span className="shortcut-desc">Ngữ pháp</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">6</span>
+                  <span className="shortcut-desc">Nghe</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">7</span>
+                  <span className="shortcut-desc">Game</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">8</span>
+                  <span className="shortcut-desc">Roleplay</span>
+                </div>
+              </div>
+              <div className="shortcuts-section">
+                <h4>Trong form</h4>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">Ctrl/Cmd + S</span>
+                  <span className="shortcut-desc">Lưu</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">Esc</span>
+                  <span className="shortcut-desc">Hủy</span>
+                </div>
+                <div className="shortcut-item">
+                  <span className="shortcut-key">Enter</span>
+                  <span className="shortcut-desc">Submit form</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1134,31 +1334,58 @@ Ví dụ:
     // Handle batch import for vocabulary
     if (type === 'vocabulary' && importMode === 'batch' && !item) {
       if (!formData.lesson_id) {
-        showToast('Vui lòng chọn bài học', 'warning');
+        showToast('⚠️ Vui lòng chọn bài học trước khi import từ vựng. Nếu chưa có bài học, hãy tạo bài học trước.', 'warning');
         return;
       }
       
       if (batchPreview.length === 0) {
-        showToast('Vui lòng nhập từ vựng', 'warning');
+        showToast('⚠️ Vui lòng nhập từ vựng theo format đúng. Xem ví dụ trong form để biết cách nhập.', 'warning');
         return;
       }
 
       if (batchError) {
-        showToast('Vui lòng sửa lỗi trước khi lưu', 'warning');
+        showToast('⚠️ Có lỗi trong format. Vui lòng xem phần "Lỗi" bên dưới và sửa lại. Format đúng: kanji=hiragana=nghĩa hoặc hiragana=nghĩa', 'error');
         return;
       }
 
       // Convert preview to form data format
-      const batchData = batchPreview.map(vocab => ({
-        lesson_id: formData.lesson_id,
-        word: vocab.word,
-        kanji: vocab.kanji,
-        hiragana: vocab.hiragana,
-        meaning: vocab.meaning,
-        difficulty: formData.difficulty || 'easy',
-        is_difficult: false,
-        language: formData.language || 'japanese',
-      }));
+      const batchData = batchPreview.map(vocab => {
+        if (formData.language === 'chinese') {
+          const simplified = vocab.simplified || vocab.word || '';
+          const pinyin = vocab.pinyin || '';
+          if (!simplified || !pinyin || !vocab.meaning) {
+            throw new Error(`Thiếu thông tin: hán tự, pinyin hoặc nghĩa`);
+          }
+          return {
+            lesson_id: formData.lesson_id,
+            word: simplified, // word should be simplified hanzi
+            character: simplified, // character is simplified hanzi for Chinese
+            hiragana: pinyin, // Use pinyin for hiragana field (database compatibility)
+            simplified: simplified,
+            traditional: vocab.traditional || null,
+            pinyin: pinyin,
+            meaning: vocab.meaning,
+            difficulty: formData.difficulty || 'easy',
+            is_difficult: false,
+            language: 'chinese',
+          };
+        } else {
+          const hiragana = vocab.hiragana || '';
+          if (!hiragana || !vocab.meaning) {
+            throw new Error(`Thiếu thông tin: hiragana hoặc nghĩa`);
+          }
+          return {
+            lesson_id: formData.lesson_id,
+            word: vocab.word || hiragana,
+            character: vocab.kanji || null,
+            hiragana: hiragana,
+            meaning: vocab.meaning,
+            difficulty: formData.difficulty || 'easy',
+            is_difficult: false,
+            language: 'japanese',
+          };
+        }
+      });
 
       onSave(batchData);
       return;
@@ -1167,17 +1394,17 @@ Ví dụ:
     // Handle batch import for kanji
     if (type === 'kanji' && importMode === 'batch' && !item) {
       if (!formData.lesson_id) {
-        alert('Vui lòng chọn bài học');
+        showToast('⚠️ Vui lòng chọn bài học trước khi import kanji/hán tự. Nếu chưa có bài học, hãy tạo bài học trước.', 'warning');
         return;
       }
       
       if (batchPreview.length === 0) {
-        alert('Vui lòng nhập kanji');
+        showToast('⚠️ Vui lòng nhập kanji/hán tự theo format đúng. Xem ví dụ trong form để biết cách nhập.', 'warning');
         return;
       }
 
       if (batchError) {
-        alert('Vui lòng sửa lỗi trước khi lưu');
+        showToast('⚠️ Có lỗi trong format. Vui lòng xem phần "Lỗi" bên dưới và sửa lại. Format đúng: kanji=nghĩa', 'error');
         return;
       }
 
@@ -1198,17 +1425,17 @@ Ví dụ:
     // Handle batch import for grammar
     if (type === 'grammar' && importMode === 'batch' && !item) {
       if (!formData.lesson_id) {
-        alert('Vui lòng chọn bài học');
+        showToast('⚠️ Vui lòng chọn bài học trước khi import ngữ pháp. Nếu chưa có bài học, hãy tạo bài học trước.', 'warning');
         return;
       }
       
       if (batchPreview.length === 0) {
-        alert('Vui lòng nhập ngữ pháp');
+        showToast('⚠️ Vui lòng nhập ngữ pháp theo format đúng. Xem ví dụ trong form để biết cách nhập.', 'warning');
         return;
       }
 
       if (batchError) {
-        alert('Vui lòng sửa lỗi trước khi lưu');
+        showToast('⚠️ Có lỗi trong format. Vui lòng xem phần "Lỗi" bên dưới và sửa lại. Format đúng: pattern=nghĩa', 'error');
         return;
       }
 
@@ -1227,17 +1454,17 @@ Ví dụ:
     // Handle batch import for sentence games (sắp xếp câu)
     if (type === 'games' && importMode === 'batch' && !item) {
       if (!formData.lesson_id) {
-        alert('Vui lòng chọn bài học');
+        showToast('⚠️ Vui lòng chọn bài học trước khi import game. Nếu chưa có bài học, hãy tạo bài học trước.', 'warning');
         return;
       }
 
       if (batchPreview.length === 0) {
-        alert('Vui lòng nhập danh sách câu');
+        showToast('⚠️ Vui lòng nhập danh sách câu theo format đúng. Xem ví dụ trong form để biết cách nhập.', 'warning');
         return;
       }
 
       if (batchError) {
-        alert('Vui lòng sửa lỗi trước khi lưu');
+        showToast('⚠️ Có lỗi trong format. Vui lòng xem phần "Lỗi" bên dưới và sửa lại. Format đúng: câu_đã_tách_từ=nghĩa', 'error');
         return;
       }
 
@@ -1256,6 +1483,23 @@ Ví dụ:
     
     // Process form data based on type
     let processedData = { ...formData };
+    
+    // Process vocabulary fields for Chinese
+    if (type === 'vocabulary' && formData.language === 'chinese') {
+      // Map form fields to database fields for Chinese
+      const simplified = formData.word || '';
+      const pinyin = formData.hiragana || ''; // pinyin is stored in hiragana field in form
+      const traditional = formData.kanji || null; // traditional hanzi (stored in kanji field in form)
+      
+      processedData.word = simplified;
+      processedData.character = simplified; // character is simplified hanzi for Chinese
+      processedData.hiragana = pinyin; // Use pinyin for hiragana field (database compatibility)
+      processedData.simplified = simplified;
+      processedData.traditional = traditional;
+      processedData.pinyin = pinyin;
+      // Remove Japanese-specific fields
+      delete processedData.kanji;
+    }
     
     if (type === 'kanji' && typeof formData.onyomi === 'string') {
       processedData.onyomi = formData.onyomi.split(',').map((s: string) => s.trim()).filter(Boolean);
@@ -1303,6 +1547,49 @@ Ví dụ:
     }
   };
 
+
+  // Keyboard shortcuts for form
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input/textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        // Allow Ctrl/Cmd + S to save even when in input
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+        if (ctrlKey && e.key === 's') {
+          e.preventDefault();
+          const form = document.querySelector('.modal-content form') as HTMLFormElement;
+          if (form) {
+            form.requestSubmit();
+          }
+        }
+        return;
+      }
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+
+      // Ctrl/Cmd + S: Lưu
+      if (ctrlKey && e.key === 's') {
+        e.preventDefault();
+        const form = document.querySelector('.modal-content form') as HTMLFormElement;
+        if (form) {
+          form.requestSubmit();
+        }
+      }
+
+      // Esc: Hủy
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCancel();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
+
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -1312,7 +1599,15 @@ Ví dụ:
           {type === 'courses' && (
             <>
               <div className="form-group">
-                <label>Ngôn ngữ *</label>
+                <label>
+                  Ngôn ngữ *
+                  <span className="field-tooltip">
+                    <span className="field-tooltip-icon">?</span>
+                    <span className="field-tooltip-content">
+                      Chọn ngôn ngữ cho khóa học. Tiếng Nhật có 5 cấp độ (N5-N1), Tiếng Trung có 6 cấp độ (HSK1-HSK6)
+                    </span>
+                  </span>
+                </label>
                 <select
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
@@ -1330,7 +1625,16 @@ Ví dụ:
                 </select>
               </div>
               <div className="form-group">
-                <label>Cấp độ *</label>
+                <label>
+                  Cấp độ *
+                  <span className="field-tooltip">
+                    <span className="field-tooltip-icon">?</span>
+                    <span className="field-tooltip-content">
+                      N5/HSK1: Dễ nhất, dành cho người mới bắt đầu<br/>
+                      N1/HSK6: Khó nhất, trình độ cao cấp
+                    </span>
+                  </span>
+                </label>
                 <select
                   value={formData.level}
                   onChange={(e) => setFormData({ ...formData, level: e.target.value })}
@@ -1357,20 +1661,38 @@ Ví dụ:
                 </select>
               </div>
               <div className="form-group">
-                <label>Tiêu đề *</label>
+                <label>
+                  Tiêu đề *
+                  <span className="field-tooltip">
+                    <span className="field-tooltip-icon">?</span>
+                    <span className="field-tooltip-content">
+                      Tên khóa học, ví dụ: "Tiếng Nhật N5 - Cơ bản" hoặc "HSK1 - Giao tiếp hàng ngày"
+                    </span>
+                  </span>
+                </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
+                  placeholder="Ví dụ: Tiếng Nhật N5 - Cơ bản"
                 />
               </div>
               <div className="form-group">
-                <label>Mô tả</label>
+                <label>
+                  Mô tả
+                  <span className="field-tooltip">
+                    <span className="field-tooltip-icon">?</span>
+                    <span className="field-tooltip-content">
+                      Mô tả ngắn về khóa học, nội dung sẽ học, đối tượng phù hợp. Có thể để trống.
+                    </span>
+                  </span>
+                </label>
                 <textarea
                   value={formData.description || ''}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
+                  placeholder="Ví dụ: Khóa học dành cho người mới bắt đầu học tiếng Nhật, bao gồm các bài học cơ bản về chào hỏi, giới thiệu bản thân..."
                 />
               </div>
             </>
@@ -1501,7 +1823,15 @@ Ví dụ:
           {type === 'vocabulary' && importMode === 'single' && (
             <>
               <div className="form-group">
-                <label>Ngôn ngữ *</label>
+                <label>
+                  Ngôn ngữ *
+                  <span className="field-tooltip">
+                    <span className="field-tooltip-icon">?</span>
+                    <span className="field-tooltip-content">
+                      Chọn ngôn ngữ cho từ vựng. Tiếng Nhật cần Hiragana và Kanji (nếu có). Tiếng Trung cần Hán tự và Pinyin.
+                    </span>
+                  </span>
+                </label>
                 <select
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
@@ -1519,7 +1849,15 @@ Ví dụ:
                 </select>
               </div>
               <div className="form-group">
-                <label>Bài học *</label>
+                <label>
+                  Bài học *
+                  <span className="field-tooltip">
+                    <span className="field-tooltip-icon">?</span>
+                    <span className="field-tooltip-content">
+                      Chọn bài học mà từ vựng này thuộc về. Danh sách chỉ hiển thị bài học cùng ngôn ngữ bạn đã chọn.
+                    </span>
+                  </span>
+                </label>
                 <select
                   value={formData.lesson_id}
                   onChange={(e) => setFormData({ ...formData, lesson_id: e.target.value })}
@@ -1541,6 +1879,14 @@ Ví dụ:
                       );
                     })}
                 </select>
+                {lessons.filter((l: any) => {
+                  const lessonCourse = courses.find((c: any) => c.id === l.course_id);
+                  return lessonCourse?.language === (formData.language || 'japanese');
+                }).length === 0 && (
+                  <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'var(--warning-light)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--warning-color)' }}>
+                    ⚠️ Chưa có bài học nào cho ngôn ngữ này. Hãy tạo bài học trước!
+                  </div>
+                )}
               </div>
               
               {formData.language === 'chinese' ? (
@@ -1718,7 +2064,7 @@ Ví dụ:
                   value={batchText}
                   onChange={(e) => {
                     setBatchText(e.target.value);
-                    const { vocabularies, errors } = parseVocabularyBatch(e.target.value);
+                    const { vocabularies, errors } = parseVocabularyBatch(e.target.value, formData.language || 'japanese');
                     setBatchPreview(vocabularies);
                     setBatchError(errors.length > 0 ? errors.join('\n') : null);
                   }}
@@ -1765,11 +2111,11 @@ Ví dụ:
                       <div key={idx} className="preview-item">
                         <span className="preview-kanji">
                           {formData.language === 'chinese' ? 
-                            (vocab.kanji ? `${vocab.kanji} / ${vocab.word}` : vocab.word) : 
+                            (vocab.traditional ? `${vocab.traditional} / ${vocab.simplified || vocab.word}` : (vocab.simplified || vocab.word)) : 
                             (vocab.kanji || '-')}
                         </span>
                         <span className="preview-hiragana">
-                          {formData.language === 'chinese' ? vocab.hiragana : vocab.hiragana}
+                          {formData.language === 'chinese' ? (vocab.pinyin || '-') : (vocab.hiragana || '-')}
                         </span>
                         <span className="preview-meaning">{vocab.meaning}</span>
                       </div>
@@ -3332,11 +3678,13 @@ Hoặc với đọc âm:
           )}
 
           <div className="form-actions">
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" title="Lưu (Ctrl/Cmd + S)">
               {item ? 'Cập nhật' : 'Tạo mới'}
+              <span className="keyboard-shortcut">⌘S</span>
             </button>
-            <button type="button" className="btn btn-outline" onClick={onCancel}>
+            <button type="button" className="btn btn-outline" onClick={onCancel} title="Hủy (Esc)">
               Hủy
+              <span className="keyboard-shortcut">Esc</span>
             </button>
           </div>
         </form>

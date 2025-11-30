@@ -4,6 +4,7 @@ import { getCourses, getLessons } from '../services/supabaseService.v2';
 import { transformCourseFromDB } from '../utils/dataTransform';
 import type { Language } from '../services/supabaseService.v2';
 import FloatingCharacters from './FloatingCharacters';
+import { useLanguageTheme, useLanguageClasses } from '../hooks/useLanguageTheme';
 import '../App.css';
 
 interface CourseListProps {
@@ -13,6 +14,8 @@ interface CourseListProps {
 const CourseList = ({ language }: CourseListProps) => {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  useLanguageTheme(language);
+  const { cardClass } = useLanguageClasses(language);
 
   useEffect(() => {
     loadCourses();
@@ -118,7 +121,11 @@ const CourseList = ({ language }: CourseListProps) => {
   }
 
   return (
-    <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+    <div 
+      className="container" 
+      data-language={language}
+      style={{ position: 'relative', zIndex: 1 }}
+    >
       <FloatingCharacters language={language} count={15} />
       <Link to="/" className="back-button">
         <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -147,15 +154,14 @@ const CourseList = ({ language }: CourseListProps) => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
           {courses.map((course, index) => (
             <Link key={course.level} to={`/${language}/courses/${course.level}`} style={{ textDecoration: 'none' }}>
-              <div style={{ 
+              <div 
+                className={cardClass}
+                style={{ 
                 height: '100%',
                 transition: 'all 0.3s',
                 cursor: 'pointer',
                 borderRadius: '20px',
                 overflow: 'hidden',
-                boxShadow: 'var(--shadow-md)',
-                background: 'var(--card-bg)',
-                border: '3px solid transparent',
                 position: 'relative'
               }}
               onMouseEnter={(e) => {

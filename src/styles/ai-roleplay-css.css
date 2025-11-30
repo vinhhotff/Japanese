@@ -124,16 +124,32 @@
 
 /* Simple avatar for selection screen */
 .char-avatar-css {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   margin: 0 auto 1rem;
   border: 3px solid;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 4rem;
-  background: linear-gradient(135deg, var(--card-bg-hover), var(--card-bg));
+  background: var(--card-bg);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.char-avatar-css:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.avatar-emoji {
+  transition: transform 0.3s ease;
+}
+
+.char-card-css:hover .avatar-emoji {
+  transform: scale(1.1) rotate(5deg);
 }
 
 /* Conversation Layout */

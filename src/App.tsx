@@ -33,6 +33,7 @@ import './styles/ai-roleplay-css.css';
 import './styles/dashboard-v2.css';
 import './styles/assignments.css';
 import './styles/grading.css';
+import './styles/language-themes.css';
 import './App.css';
 
 function App() {

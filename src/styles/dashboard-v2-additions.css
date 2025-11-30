@@ -1,0 +1,288 @@
+/* Dashboard V2 - Cultural Additions */
+
+/* ===== THEME VARIATIONS ===== */
+
+/* Japanese Theme */
+.theme-japanese {
+  --theme-primary: #ff6b6b;
+  --theme-secondary: #f7b731;
+  --theme-accent: #ff8787;
+}
+
+.theme-japanese .floating-characters {
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(255, 182, 193, 0.05), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(255, 192, 203, 0.05), transparent 40%);
+}
+
+/* Chinese Theme */
+.theme-chinese {
+  --theme-primary: #dc2626;
+  --theme-secondary: #f59e0b;
+  --theme-accent: #ef4444;
+}
+
+.theme-chinese .floating-characters {
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.05), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(245, 158, 11, 0.05), transparent 40%);
+}
+
+/* ===== CULTURAL DECORATIONS ===== */
+
+/* Sakura petals for Japanese */
+.theme-japanese::before,
+.theme-japanese::after {
+  position: fixed;
+  font-size: 2.5rem;
+  opacity: 0.12;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.theme-japanese::before {
+  content: '🌸';
+  top: 8%;
+  right: 8%;
+  animation: sakuraFall 12s ease-in-out infinite;
+}
+
+.theme-japanese::after {
+  content: '⛩️';
+  bottom: 10%;
+  left: 5%;
+  animation: shrineGlow 4s ease-in-out infinite;
+}
+
+@keyframes sakuraFall {
+  0%, 100% { 
+    transform: translateY(0) rotate(0deg); 
+    opacity: 0.12;
+  }
+  50% { 
+    transform: translateY(30px) rotate(180deg); 
+    opacity: 0.20;
+  }
+}
+
+@keyframes shrineGlow {
+  0%, 100% { 
+    opacity: 0.12;
+    filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.3));
+  }
+  50% { 
+    opacity: 0.18;
+    filter: drop-shadow(0 0 20px rgba(255, 107, 107, 0.5));
+  }
+}
+
+/* Lanterns & Dragon for Chinese */
+.theme-chinese::before,
+.theme-chinese::after {
+  position: fixed;
+  font-size: 2.5rem;
+  opacity: 0.12;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.theme-chinese::before {
+  content: '🏮';
+  top: 8%;
+  left: 8%;
+  animation: lanternSwing 8s ease-in-out infinite;
+}
+
+.theme-chinese::after {
+  content: '🐉';
+  bottom: 10%;
+  right: 5%;
+  animation: dragonFloat 10s ease-in-out infinite;
+}
+
+@keyframes lanternSwing {
+  0%, 100% { 
+    transform: rotate(-8deg); 
+    opacity: 0.12;
+  }
+  50% { 
+    transform: rotate(8deg); 
+    opacity: 0.20;
+  }
+}
+
+@keyframes dragonFloat {
+  0%, 100% { 
+    transform: translateX(0) translateY(0) scale(1); 
+    opacity: 0.12;
+  }
+  50% { 
+    transform: translateX(20px) translateY(-20px) scale(1.1); 
+    opacity: 0.18;
+  }
+}
+
+/* ===== ENHANCED FLOATING CHARACTERS ===== */
+
+/* Add more characters */
+.float-char.char-13 { top: 12%; left: 70%; animation-delay: 6s; animation-duration: 30s; }
+.float-char.char-14 { top: 55%; left: 88%; animation-delay: 7s; animation-duration: 28s; }
+.float-char.char-15 { top: 88%; left: 15%; animation-delay: 8s; animation-duration: 32s; }
+
+/* Japanese characters - Elegant serif font */
+.theme-japanese .float-char {
+  font-family: 'Noto Serif JP', 'Yu Mincho', 'MS Mincho', serif;
+  background: linear-gradient(135deg, #ff6b6b, #ff8787, #ffa5a5, #ffb6b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 15px rgba(255, 107, 107, 0.4));
+}
+
+/* Chinese characters - Bold traditional font */
+.theme-chinese .float-char {
+  font-family: 'Noto Serif SC', 'SimSun', 'STSong', serif;
+  background: linear-gradient(135deg, #dc2626, #f59e0b, #fbbf24, #fcd34d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 15px rgba(220, 38, 38, 0.4));
+}
+
+/* ===== LEVEL CARDS CULTURAL PATTERNS ===== */
+
+/* Japanese - Wave pattern (Seigaiha) */
+.theme-japanese .level-card::before {
+  background: 
+    radial-gradient(circle at 0% 50%, transparent 40%, var(--card-color)15 40%, var(--card-color)15 50%, transparent 50%),
+    radial-gradient(circle at 100% 50%, transparent 40%, var(--card-color)15 40%, var(--card-color)15 50%, transparent 50%);
+  background-size: 40px 40px;
+  background-position: 0 0, 20px 0;
+}
+
+/* Chinese - Cloud pattern */
+.theme-chinese .level-card::before {
+  background: 
+    radial-gradient(ellipse at 30% 50%, var(--card-color)20 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 50%, var(--card-color)15 0%, transparent 50%);
+  background-size: 60px 30px;
+}
+
+/* ===== LANGUAGE TABS CULTURAL STYLE ===== */
+
+/* Japanese tab - Sakura gradient */
+.theme-japanese .lang-tab.active {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 50%, #ffa5a5 100%);
+  box-shadow: 
+    0 4px 16px rgba(255, 107, 107, 0.4), 
+    0 0 30px rgba(255, 135, 135, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Chinese tab - Red & Gold gradient */
+.theme-chinese .lang-tab.active {
+  background: linear-gradient(135deg, #dc2626 0%, #f59e0b 50%, #fbbf24 100%);
+  box-shadow: 
+    0 4px 16px rgba(220, 38, 38, 0.4), 
+    0 0 30px rgba(245, 158, 11, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* ===== TITLE ENHANCEMENTS ===== */
+
+/* Japanese title - Elegant */
+.theme-japanese .main-title {
+  font-family: 'Noto Serif JP', serif;
+  letter-spacing: 0.05em;
+}
+
+.theme-japanese .gradient-text {
+  background: linear-gradient(135deg, #ff6b6b, #ff8787, #ffa5a5, #ffb6b6, #ff6b6b);
+  background-size: 300% 300%;
+  animation: sakuraGradient 8s ease infinite;
+}
+
+@keyframes sakuraGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Chinese title - Bold */
+.theme-chinese .main-title {
+  font-family: 'Noto Serif SC', serif;
+  letter-spacing: 0.08em;
+}
+
+.theme-chinese .gradient-text {
+  background: linear-gradient(135deg, #dc2626, #f59e0b, #fbbf24, #fcd34d, #dc2626);
+  background-size: 300% 300%;
+  animation: dragonGradient 8s ease infinite;
+}
+
+@keyframes dragonGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== LEVEL CARDS ICONS ===== */
+
+/* Japanese level icons */
+.theme-japanese .level-card[href*="N5"] .level-icon::before { content: '🌸'; }
+.theme-japanese .level-card[href*="N4"] .level-icon::before { content: '🗾'; }
+.theme-japanese .level-card[href*="N3"] .level-icon::before { content: '⛩️'; }
+.theme-japanese .level-card[href*="N2"] .level-icon::before { content: '🗻'; }
+.theme-japanese .level-card[href*="N1"] .level-icon::before { content: '🎌'; }
+
+/* Chinese level icons */
+.theme-chinese .level-card[href*="HSK1"] .level-icon::before { content: '🏮'; }
+.theme-chinese .level-card[href*="HSK2"] .level-icon::before { content: '🐉'; }
+.theme-chinese .level-card[href*="HSK3"] .level-icon::before { content: '🧧'; }
+.theme-chinese .level-card[href*="HSK4"] .level-icon::before { content: '🏯'; }
+.theme-chinese .level-card[href*="HSK5"] .level-icon::before { content: '🐼'; }
+.theme-chinese .level-card[href*="HSK6"] .level-icon::before { content: '🎋'; }
+
+.level-icon::before {
+  position: absolute;
+  font-size: 4rem;
+  opacity: 0.15;
+}
+
+/* ===== QUICK FEATURES CULTURAL ICONS ===== */
+
+.theme-japanese .quick-feature:nth-child(1) .qf-icon { 
+  filter: drop-shadow(0 2px 4px rgba(255, 107, 107, 0.3));
+}
+
+.theme-chinese .quick-feature:nth-child(1) .qf-icon { 
+  filter: drop-shadow(0 2px 4px rgba(220, 38, 38, 0.3));
+}
+
+/* ===== PAPER TEXTURE OVERLAY ===== */
+
+/* Japanese - Washi paper texture */
+.theme-japanese .level-card {
+  background: 
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 107, 0.02) 2px, rgba(255, 107, 107, 0.02) 4px),
+    var(--card-bg);
+}
+
+/* Chinese - Rice paper texture */
+.theme-chinese .level-card {
+  background: 
+    repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(220, 38, 38, 0.02) 3px, rgba(220, 38, 38, 0.02) 6px),
+    var(--card-bg);
+}
+
+/* ===== LOADING SPINNER CULTURAL ===== */
+
+.theme-japanese .spinner {
+  border-top-color: #ff6b6b;
+  border-right-color: #ff8787;
+}
+
+.theme-chinese .spinner {
+  border-top-color: #dc2626;
+  border-right-color: #f59e0b;
+}

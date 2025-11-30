@@ -110,8 +110,22 @@ OPTIONS:
           {characters.map(char => (
             <div key={char.id} className="char-card-css" onClick={() => startConversation(char)}>
               <div className="char-avatar-css" style={{ borderColor: char.color }}>
-                <div className="avatar-face"></div>
-                <div className="avatar-body" style={{ background: char.color }}></div>
+                <div 
+                  className="avatar-emoji"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${char.color}20, ${char.color}40)`,
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    fontSize: '3.5rem',
+                    filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
+                  }}
+                >
+                  {char.emoji}
+                </div>
               </div>
               <h3>{char.name}</h3>
               <button style={{ background: char.color }}>Bắt đầu</button>

@@ -2001,11 +2001,35 @@
 }
 
 .preview-item {
+  display: grid;
+  grid-template-columns: 100px 1fr 2fr;
+  gap: 1rem;
   padding: 0.75rem;
   background: white;
   border-radius: 6px;
   font-size: 0.875rem;
   border: 1px solid #d1fae5;
+  align-items: center;
+}
+
+.preview-kanji {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  text-align: center;
+  word-break: break-all;
+}
+
+.preview-hiragana {
+  font-family: serif;
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+.preview-meaning {
+  color: var(--text-primary);
+  font-weight: 500;
+  word-break: break-word;
 }
 
 /* Responsive Admin */

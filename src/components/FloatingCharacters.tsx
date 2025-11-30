@@ -64,3 +64,4 @@ const FloatingCharacters = ({ language, count = 20 }: FloatingCharactersProps) =
 
 export default FloatingCharacters;
 
+
