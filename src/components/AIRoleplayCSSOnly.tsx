@@ -136,7 +136,7 @@ OPTIONS:
           <div className="character-stage-css">
             <AnimatedCharacter 
               isSpeaking={messages.length > 0 && messages[messages.length - 1].role === 'ai' && !loading} 
-              character="teacher" 
+              character={selectedCharacter.id as 'waiter' | 'shopkeeper' | 'friend'}
             />
             {loading && <div className="thought-bubble-css">💭</div>}
           </div>

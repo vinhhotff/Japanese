@@ -3,7 +3,7 @@ import '../styles/animated-character.css';
 
 interface AnimatedCharacterProps {
   isSpeaking?: boolean;
-  character?: 'teacher' | 'student';
+  character?: 'waiter' | 'shopkeeper' | 'friend' | 'teacher' | 'student';
 }
 
 const AnimatedCharacter = ({ isSpeaking = false, character = 'teacher' }: AnimatedCharacterProps) => {
@@ -20,7 +20,7 @@ const AnimatedCharacter = ({ isSpeaking = false, character = 'teacher' }: Animat
   }, [isSpeaking]);
 
   return (
-    <div className={`character-wrapper ${isAnimating ? 'speaking' : ''}`}>
+    <div className={`character-wrapper ${isAnimating ? 'speaking' : ''} character-${character}`}>
       <div className="background-circle">
         <div className="border-circle" id="one"></div>
         <div className="border-circle" id="two"></div>
