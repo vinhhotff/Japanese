@@ -27,20 +27,9 @@ const Dictionary = ({ language }: DictionaryProps) => {
   // Debounce search term để tránh search quá nhiều lần
   const debouncedSearchTerm = useDebounce(searchTerm.trim(), 500);
 
-  // Auto search khi debounced term thay đổi
-  useEffect(() => {
-    if (!debouncedSearchTerm) {
-      setResults([]);
-      setError(null);
-      return;
-    }
-
-    performSearch(debouncedSearchTerm, searchType);
-  }, [debouncedSearchTerm, searchType, language]);
-
   const performSearch = useCallback(async (term: string, type: 'word' | 'kanji') => {
-    // Check cache first
-    const cacheKey = getCacheKey(term, type);
+    // Check cache first with language
+    const cacheKey = getCacheKey(term, type, language);
     const cachedResults = searchCache.get(cacheKey);
     
     if (cachedResults) {
@@ -102,7 +91,25 @@ const Dictionary = ({ language }: DictionaryProps) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [language]);
+
+  // Clear results when language changes
+  useEffect(() => {
+    setResults([]);
+    setError(null);
+    setSearchTerm(''); // Clear search term when switching language
+  }, [language]);
+
+  // Auto search khi debounced term thay đổi
+  useEffect(() => {
+    if (!debouncedSearchTerm) {
+      setResults([]);
+      setError(null);
+      return;
+    }
+
+    performSearch(debouncedSearchTerm, searchType);
+  }, [debouncedSearchTerm, searchType, performSearch]);
 
   const handleSearch = useCallback(() => {
     if (!searchTerm.trim()) {
@@ -112,7 +119,7 @@ const Dictionary = ({ language }: DictionaryProps) => {
     performSearch(searchTerm.trim(), searchType);
   }, [searchTerm, searchType, performSearch]);
 
-  const handleSpeak = useCallback(async (text: string, id: string) => {
+  const handleSpeak = useCallback(async (text: string, id: string, lang?: string) => {
     if (!isSpeechSynthesisSupported()) {
       alert('Trình duyệt của bạn không hỗ trợ tính năng phát âm');
       return;
@@ -120,7 +127,9 @@ const Dictionary = ({ language }: DictionaryProps) => {
 
     setSpeakingId(id);
     try {
-      await speakText(text);
+      // Use language-specific config
+      const speechLang = lang === 'chinese' ? 'zh-CN' : 'ja-JP';
+      await speakText(text, { lang: speechLang });
     } catch (error) {
       console.error('Error speaking:', error);
     } finally {
@@ -169,12 +178,6 @@ const Dictionary = ({ language }: DictionaryProps) => {
   return (
     <div className="container" style={{ position: 'relative', zIndex: 1 }}>
       <FloatingCharacters language={language} count={18} />
-      <Link to="/" className="back-button">
-        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Về trang chủ
-      </Link>
 
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -400,6 +403,7 @@ const Dictionary = ({ language }: DictionaryProps) => {
                 speakingId={speakingId}
                 onSpeak={handleSpeak}
                 onAddToLesson={handleAddToLesson}
+                language={language}
               />
             ))}
           </div>

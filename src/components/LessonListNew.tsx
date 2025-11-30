@@ -86,57 +86,162 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
         </Link>
 
         {/* Header */}
-        <div className="header" style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            {(() => {
-              const levelColors: Record<string, { bg: string; border: string; text: string }> = {
-                'N5': { bg: '#e8f5e9', border: '#4caf50', text: '#2e7d32' },
-                'N4': { bg: '#e3f2fd', border: '#2196f3', text: '#1565c0' },
-                'N3': { bg: '#fff3e0', border: '#ff9800', text: '#e65100' },
-                'N2': { bg: '#fce4ec', border: '#e91e63', text: '#c2185b' },
-                'N1': { bg: '#f3e5f5', border: '#9c27b0', text: '#6a1b9a' },
-                'HSK1': { bg: '#e8f5e9', border: '#4caf50', text: '#2e7d32' },
-                'HSK2': { bg: '#e3f2fd', border: '#2196f3', text: '#1565c0' },
-                'HSK3': { bg: '#fff3e0', border: '#ff9800', text: '#e65100' },
-                'HSK4': { bg: '#fce4ec', border: '#e91e63', text: '#c2185b' },
-                'HSK5': { bg: '#f3e5f5', border: '#9c27b0', text: '#6a1b9a' },
-                'HSK6': { bg: '#fce4ec', border: '#ec4899', text: '#be185d' }
-              };
-              const defaultLevel = language === 'japanese' ? 'N5' : 'HSK1';
-              const colors = levelColors[level || defaultLevel] || levelColors[defaultLevel];
-              
-              return (
-                <div style={{
-                  width: '72px',
-                  height: '72px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: colors.bg,
-                  border: `3px solid ${colors.border}`,
-                  borderRadius: '16px',
-                  fontSize: '1.75rem',
-                  fontWeight: 700,
-                  color: colors.text
+        <div style={{ 
+          marginBottom: '3rem',
+          background: language === 'japanese' 
+            ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' 
+            : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          borderRadius: '24px',
+          padding: '3rem 2rem',
+          color: 'white',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Decorative background elements */}
+          <div style={{
+            position: 'absolute',
+            top: '-50px',
+            right: '-50px',
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)',
+            zIndex: 0
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-30px',
+            left: '-30px',
+            width: '150px',
+            height: '150px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)',
+            zIndex: 0
+          }} />
+
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '4rem' }}>
+                {language === 'japanese' ? '🇯🇵' : '🇨🇳'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ 
+                  display: 'inline-block',
+                  background: 'rgba(255,255,255,0.2)',
+                  padding: '0.5rem 1.5rem',
+                  borderRadius: '20px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  marginBottom: '0.75rem',
+                  backdropFilter: 'blur(10px)'
                 }}>
-                  {level}
+                  {language === 'japanese' ? 'JLPT' : 'HSK'} {level}
                 </div>
-              );
-            })()}
-            <div>
-              <h1 style={{ 
-                fontSize: '2rem', 
-                fontWeight: 700,
-                color: 'var(--text-primary)',
-                marginBottom: '0.5rem'
+                <h1 style={{ 
+                  fontSize: '2.5rem', 
+                  fontWeight: '800', 
+                  margin: 0,
+                  color: 'white',
+                  textShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                }}>
+                  {language === 'japanese' 
+                    ? `Khóa học tiếng Nhật ${level}` 
+                    : `Khóa học tiếng Trung ${level}`}
+                </h1>
+              </div>
+            </div>
+
+            <div style={{ 
+              display: 'flex', 
+              gap: '1rem', 
+              flexWrap: 'wrap',
+              fontSize: '1rem'
+            }}>
+              <div style={{
+                background: 'rgba(255,255,255,0.2)',
+                padding: '0.75rem 1.25rem',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
               }}>
-                Cấp độ {level}
-              </h1>
+                <span style={{ fontSize: '1.25rem' }}>📚</span>
+                <span style={{ fontWeight: '600' }}>{lessons.length} bài học</span>
+              </div>
+              <div style={{
+                background: 'rgba(255,255,255,0.2)',
+                padding: '0.75rem 1.25rem',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <span style={{ fontSize: '1.25rem' }}>
+                  {language === 'japanese' ? '🗾' : '🐉'}
+                </span>
+                <span style={{ fontWeight: '600' }}>
+                  {language === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}
+                </span>
+              </div>
+              <div style={{
+                background: 'rgba(255,255,255,0.2)',
+                padding: '0.75rem 1.25rem',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <span style={{ fontSize: '1.25rem' }}>⭐</span>
+                <span style={{ fontWeight: '600' }}>
+                  {language === 'japanese' 
+                    ? level === 'N5' ? 'Sơ cấp' : level === 'N4' ? 'Sơ-Trung cấp' : level === 'N3' ? 'Trung cấp' : level === 'N2' ? 'Trung-Cao cấp' : 'Cao cấp'
+                    : level === 'HSK1' ? 'Sơ cấp' : level === 'HSK2' ? 'Sơ-Trung cấp' : level === 'HSK3' ? 'Trung cấp' : level === 'HSK4' ? 'Trung-Cao cấp' : level === 'HSK5' ? 'Cao cấp' : 'Thành thạo'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Info Box */}
+        <div style={{
+          background: 'var(--card-bg)',
+          borderRadius: '16px',
+          padding: '1.5rem',
+          marginBottom: '2rem',
+          border: `2px solid ${language === 'japanese' ? '#8b5cf6' : '#ef4444'}`,
+          boxShadow: 'var(--shadow-md)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'start', gap: '1rem' }}>
+            <div style={{ 
+              fontSize: '2rem',
+              background: language === 'japanese' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+              padding: '0.75rem',
+              borderRadius: '12px'
+            }}>
+              💡
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ 
+                fontSize: '1.125rem', 
+                fontWeight: '700', 
+                marginBottom: '0.5rem',
+                color: 'var(--text-primary)'
+              }}>
+                {language === 'japanese' ? 'Về JLPT' : 'Về HSK'}
+              </h3>
               <p style={{ 
-                color: 'var(--text-secondary)', 
-                fontSize: '1.125rem'
+                fontSize: '0.9375rem', 
+                color: 'var(--text-secondary)',
+                lineHeight: '1.6',
+                margin: 0
               }}>
-                {lessons.length} bài học
+                {language === 'japanese' 
+                  ? `JLPT (Japanese Language Proficiency Test) ${level} là kỳ thi năng lực tiếng Nhật quốc tế. Hoàn thành khóa học này sẽ giúp bạn đạt trình độ ${level}.`
+                  : `HSK (Hanyu Shuiping Kaoshi) ${level} là kỳ thi năng lực tiếng Trung quốc tế. Hoàn thành khóa học này sẽ giúp bạn đạt trình độ ${level}.`}
               </p>
             </div>
           </div>
@@ -181,56 +286,30 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
 
                   <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'start' }}>
                     {/* Lesson Number */}
-                    {(() => {
-                      const levelColors: Record<string, string> = {
-                        'N5': '#4caf50',
-                        'N4': '#2196f3',
-                        'N3': '#ff9800',
-                        'N2': '#e91e63',
-                        'N1': '#9c27b0',
-                        'HSK1': '#4caf50',
-                        'HSK2': '#2196f3',
-                        'HSK3': '#ff9800',
-                        'HSK4': '#e91e63',
-                        'HSK5': '#9c27b0',
-                        'HSK6': '#ec4899'
-                      };
-                      const levelBgColors: Record<string, string> = {
-                        'N5': '#e8f5e9',
-                        'N4': '#e3f2fd',
-                        'N3': '#fff3e0',
-                        'N2': '#fce4ec',
-                        'N1': '#f3e5f5',
-                        'HSK1': '#e8f5e9',
-                        'HSK2': '#e3f2fd',
-                        'HSK3': '#fff3e0',
-                        'HSK4': '#fce4ec',
-                        'HSK5': '#f3e5f5',
-                        'HSK6': '#fce4ec'
-                      };
-                      const defaultLevel = language === 'japanese' ? 'N5' : 'HSK1';
-                      const color = levelColors[level || defaultLevel] || levelColors[defaultLevel];
-                      const bgColor = levelBgColors[level || defaultLevel] || levelBgColors[defaultLevel];
-                      
-                      return (
-                        <div style={{
-                          width: '56px',
-                          height: '56px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: completed ? 'var(--success-color)' : bgColor,
-                          border: `3px solid ${completed ? 'var(--success-color)' : color}`,
-                          borderRadius: '12px',
-                          fontSize: '1.25rem',
-                          fontWeight: 700,
-                          color: completed ? 'white' : color,
-                          flexShrink: 0
-                        }}>
-                          {lesson.lessonNumber || index + 1}
-                        </div>
-                      );
-                    })()}
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: completed 
+                        ? 'linear-gradient(135deg, #10b981, #059669)' 
+                        : language === 'japanese'
+                          ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+                          : 'linear-gradient(135deg, #ef4444, #dc2626)',
+                      borderRadius: '16px',
+                      fontSize: '1.5rem',
+                      fontWeight: 800,
+                      color: 'white',
+                      flexShrink: 0,
+                      boxShadow: completed
+                        ? '0 4px 12px rgba(16, 185, 129, 0.3)'
+                        : language === 'japanese'
+                          ? '0 4px 12px rgba(139, 92, 246, 0.3)'
+                          : '0 4px 12px rgba(239, 68, 68, 0.3)'
+                    }}>
+                      {lesson.lessonNumber || index + 1}
+                    </div>
 
                     {/* Content */}
                     <div style={{ flex: 1, paddingRight: completed ? '6rem' : '0' }}>
@@ -259,32 +338,51 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                         display: 'flex', 
                         gap: '1.5rem',
                         fontSize: '0.9375rem',
-                        color: 'var(--text-secondary)'
+                        flexWrap: 'wrap'
                       }}>
-                        <span>📖 Từ vựng: {lesson.vocabCount}</span>
-                        <span>🈯 Kanji: {lesson.kanjiCount}</span>
-                        <span>📖 Ngữ pháp: {lesson.grammarCount}</span>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem 0.75rem',
+                          background: 'var(--bg-secondary)',
+                          borderRadius: '8px'
+                        }}>
+                          <span>📖</span>
+                          <span style={{ color: 'var(--text-secondary)' }}>
+                            {lesson.vocabCount} từ vựng
+                          </span>
+                        </div>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem 0.75rem',
+                          background: 'var(--bg-secondary)',
+                          borderRadius: '8px'
+                        }}>
+                          <span>{language === 'japanese' ? '㊗️' : '🈶'}</span>
+                          <span style={{ color: 'var(--text-secondary)' }}>
+                            {lesson.kanjiCount} {language === 'japanese' ? 'kanji' : 'hán tự'}
+                          </span>
+                        </div>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem 0.75rem',
+                          background: 'var(--bg-secondary)',
+                          borderRadius: '8px'
+                        }}>
+                          <span>📝</span>
+                          <span style={{ color: 'var(--text-secondary)' }}>
+                            {lesson.grammarCount} ngữ pháp
+                          </span>
+                        </div>
                       </div>
 
                       {/* Progress Bar */}
-                      {progress > 0 && !completed && (() => {
-                        const levelColors: Record<string, string> = {
-                          'N5': '#4caf50',
-                          'N4': '#2196f3',
-                          'N3': '#ff9800',
-                          'N2': '#e91e63',
-                          'N1': '#9c27b0',
-                          'HSK1': '#4caf50',
-                          'HSK2': '#2196f3',
-                          'HSK3': '#ff9800',
-                          'HSK4': '#e91e63',
-                          'HSK5': '#9c27b0',
-                          'HSK6': '#ec4899'
-                        };
-                        const defaultLevel = language === 'japanese' ? 'N5' : 'HSK1';
-                        const color = levelColors[level || defaultLevel] || levelColors[defaultLevel];
-                        
-                        return (
+                      {progress > 0 && !completed && (
                         <div style={{ marginTop: '1.25rem' }}>
                           <div style={{ 
                             display: 'flex', 
@@ -295,10 +393,15 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                             color: 'var(--text-secondary)'
                           }}>
                             <span>Tiến độ</span>
-                            <span style={{ fontWeight: 600, color }}>{progress}%</span>
+                            <span style={{ 
+                              fontWeight: 600, 
+                              color: language === 'japanese' ? '#8b5cf6' : '#ef4444'
+                            }}>
+                              {progress}%
+                            </span>
                           </div>
                           <div style={{
-                            height: '6px',
+                            height: '8px',
                             background: 'var(--border-light)',
                             borderRadius: '3px',
                             overflow: 'hidden'
@@ -306,14 +409,15 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                             <div style={{
                               height: '100%',
                               width: `${progress}%`,
-                              background: color,
+                              background: language === 'japanese'
+                                ? 'linear-gradient(90deg, #8b5cf6, #7c3aed)'
+                                : 'linear-gradient(90deg, #ef4444, #dc2626)',
                               transition: 'width 0.3s ease',
-                              borderRadius: '3px'
+                              borderRadius: '4px'
                             }} />
                           </div>
                         </div>
-                        );
-                      })()}
+                      )}
                     </div>
                   </div>
                 </div>

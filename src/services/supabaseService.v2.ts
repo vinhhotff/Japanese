@@ -18,7 +18,7 @@ export type Level = JapaneseLevel | ChineseLevel;
 async function getPaginated<T>(
   tableName: string,
   page: number = 1,
-  pageSize: number = 20,
+  pageSize: number = 10,
   filters?: Record<string, any>,
   orderBy?: { column: string; ascending?: boolean }
 ): Promise<PaginatedResponse<T>> {
@@ -61,7 +61,7 @@ async function getPaginated<T>(
 export const getCourses = async (
   language?: Language,
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 10
 ): Promise<PaginatedResponse<any>> => {
   return getPaginated(
     'courses',
@@ -113,7 +113,7 @@ export const getLessons = async (
   courseId?: string,
   language?: Language,
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 10
 ): Promise<PaginatedResponse<any>> => {
   const filters: Record<string, any> = {};
   if (courseId) filters.course_id = courseId;
@@ -512,7 +512,7 @@ export const getListeningExercises = async (
   lessonId?: string,
   language?: Language,
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 10
 ): Promise<PaginatedResponse<any>> => {
   const filters: Record<string, any> = {};
   if (lessonId) filters.lesson_id = lessonId;
@@ -691,7 +691,7 @@ export const getRoleplayScenarios = async (
   lessonId?: string,
   language?: Language,
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 10
 ): Promise<PaginatedResponse<any>> => {
   const filters: Record<string, any> = {};
   if (lessonId) filters.lesson_id = lessonId;
@@ -750,7 +750,7 @@ export const getSpeakingExercises = async (
   lessonId?: string,
   language?: Language,
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 10
 ): Promise<PaginatedResponse<any>> => {
   const filters: Record<string, any> = {};
   if (lessonId) filters.lesson_id = lessonId;

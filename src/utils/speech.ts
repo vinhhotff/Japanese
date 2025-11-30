@@ -38,37 +38,26 @@ export interface SpeechConfig {
 // ⚙️ CẤU HÌNH GIỌNG NÓI - CHỈNH Ở ĐÂY ⚙️
 // ============================================
 // 
-// Thay đổi các giá trị bên dưới để điều chỉnh giọng nói:
+// Cấu hình riêng cho từng ngôn ngữ:
 //
-const DEFAULT_SPEECH_CONFIG: SpeechConfig = {
-  lang: 'ja-JP',           // Ngôn ngữ: 'ja-JP' (tiếng Nhật)
-  
-  // TỐC ĐỘ (rate): 0.1 - 10
-  // - 0.5-0.7: Rất chậm, dễ nghe cho người mới học (KHUYẾN NGHỊ)
-  // - 0.8-0.9: Chậm vừa phải
-  // - 1.0: Tốc độ bình thường
-  // - 1.2-1.5: Nhanh
-  rate: 0.65,              // 👈 Chậm rõ ràng cho người mới học (0.65)
-  
-  // CAO ĐỘ (pitch): 0 - 2
-  // - 0.5-0.8: Giọng trầm (nam)
-  // - 1.0: Bình thường
-  // - 1.2-1.5: Giọng cao (nữ)
-  pitch: 1.0,               // 👈 CHỈNH SỐ NÀY để thay đổi cao độ (1.2 = cao hơn, 0.8 = trầm hơn)
-  
-  // ÂM LƯỢNG (volume): 0 - 1
-  // - 0.5-0.7: Nhỏ
-  // - 0.8-0.9: Vừa
-  // - 1.0: To nhất
-  volume: 1.0,              // 👈 CHỈNH SỐ NÀY để thay đổi âm lượng (1.0 = to nhất)
-  
-  // GIỌNG CỤ THỂ (voiceName): 
-  // - undefined: Tự động chọn giọng tiếng Nhật tốt nhất
-  // - Hoặc đặt tên giọng cụ thể, ví dụ: 'Google 日本語'
-  // Để xem danh sách giọng có sẵn, mở Console trình duyệt và chạy:
-  //   speechSynthesis.getVoices().forEach(v => console.log(v.name, v.lang))
-  voiceName: undefined       // 👈 Đặt tên giọng cụ thể nếu muốn (ví dụ: 'Google 日本語')
+const JAPANESE_SPEECH_CONFIG: SpeechConfig = {
+  lang: 'ja-JP',
+  rate: 0.8,               // Tốc độ vừa phải, tự nhiên hơn
+  pitch: 1.0,              // Giọng tự nhiên
+  volume: 1.0,
+  voiceName: undefined
 };
+
+const CHINESE_SPEECH_CONFIG: SpeechConfig = {
+  lang: 'zh-CN',           // Tiếng Trung Phổ thông (Mandarin)
+  rate: 0.75,              // Chậm vừa để nghe rõ thanh điệu
+  pitch: 1.0,              // Giọng tự nhiên
+  volume: 1.0,
+  voiceName: undefined
+};
+
+// Default config (Japanese)
+const DEFAULT_SPEECH_CONFIG: SpeechConfig = JAPANESE_SPEECH_CONFIG;
 
 // Lấy danh sách giọng có sẵn
 export const getAvailableVoices = (): SpeechSynthesisVoice[] => {
@@ -82,19 +71,28 @@ export const getAvailableVoices = (): SpeechSynthesisVoice[] => {
 const getBestJapaneseVoice = (): SpeechSynthesisVoice | null => {
   const voices = getAvailableVoices();
   
-  // Ưu tiên 1: Google Japanese (rõ ràng nhất)
+  // Ưu tiên 1: Kyoko (giọng nữ macOS - rất tự nhiên)
+  const kyoko = voices.find(v => 
+    v.name.toLowerCase().includes('kyoko')
+  );
+  if (kyoko) return kyoko;
+  
+  // Ưu tiên 2: Google Japanese (rõ ràng)
   const googleJapanese = voices.find(v => 
     v.lang.startsWith('ja') && v.name.toLowerCase().includes('google')
   );
   if (googleJapanese) return googleJapanese;
   
-  // Ưu tiên 2: Giọng nữ tiếng Nhật (dễ nghe hơn)
+  // Ưu tiên 3: Giọng nữ tiếng Nhật
   const femaleJapanese = voices.find(v => 
-    v.lang.startsWith('ja') && v.name.toLowerCase().includes('female')
+    v.lang.startsWith('ja') && (
+      v.name.toLowerCase().includes('female') ||
+      v.name.toLowerCase().includes('woman')
+    )
   );
   if (femaleJapanese) return femaleJapanese;
   
-  // Ưu tiên 3: Giọng tiếng Nhật bất kỳ
+  // Ưu tiên 4: Giọng tiếng Nhật bất kỳ
   const japaneseVoice = voices.find(v => v.lang.startsWith('ja'));
   if (japaneseVoice) return japaneseVoice;
   
@@ -105,23 +103,32 @@ const getBestJapaneseVoice = (): SpeechSynthesisVoice | null => {
 const getBestChineseVoice = (): SpeechSynthesisVoice | null => {
   const voices = getAvailableVoices();
   
-  // Ưu tiên Google Chinese voices
+  // Ưu tiên 1: Ting-Ting (giọng nữ macOS - rất tự nhiên)
+  const tingting = voices.find(v => 
+    v.name.toLowerCase().includes('ting-ting')
+  );
+  if (tingting) return tingting;
+  
+  // Ưu tiên 2: Google Chinese voices
   const googleChinese = voices.find(v => 
     v.lang.startsWith('zh') && v.name.toLowerCase().includes('google')
   );
   if (googleChinese) return googleChinese;
   
-  // Ưu tiên giọng nữ tiếng Trung
+  // Ưu tiên 3: Giọng nữ tiếng Trung
   const femaleChinese = voices.find(v => 
-    v.lang.startsWith('zh') && v.name.toLowerCase().includes('female')
+    v.lang.startsWith('zh') && (
+      v.name.toLowerCase().includes('female') ||
+      v.name.toLowerCase().includes('woman')
+    )
   );
   if (femaleChinese) return femaleChinese;
   
-  // Tìm giọng tiếng Trung Mandarin (zh-CN)
+  // Ưu tiên 4: Giọng tiếng Trung Mandarin (zh-CN)
   const mandarinVoice = voices.find(v => v.lang === 'zh-CN');
   if (mandarinVoice) return mandarinVoice;
   
-  // Tìm giọng tiếng Trung bất kỳ
+  // Ưu tiên 5: Giọng tiếng Trung bất kỳ
   const chineseVoice = voices.find(v => v.lang.startsWith('zh'));
   if (chineseVoice) return chineseVoice;
   
@@ -136,9 +143,31 @@ export const speakText = (
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
-    // Kết hợp cấu hình mặc định với cấu hình tùy chỉnh
+    // Auto-detect language from text if not specified
+    let baseConfig = DEFAULT_SPEECH_CONFIG;
+    
+    // If language is specified in config, use appropriate config
+    if (config.lang) {
+      if (config.lang.startsWith('zh')) {
+        baseConfig = CHINESE_SPEECH_CONFIG;
+      } else if (config.lang.startsWith('ja')) {
+        baseConfig = JAPANESE_SPEECH_CONFIG;
+      }
+    } else {
+      // Auto-detect from text content
+      const hasChineseChars = /[\u4e00-\u9fff]/.test(text);
+      const hasJapaneseChars = /[\u3040-\u309f\u30a0-\u30ff]/.test(text);
+      
+      if (hasChineseChars && !hasJapaneseChars) {
+        baseConfig = CHINESE_SPEECH_CONFIG;
+      } else if (hasJapaneseChars) {
+        baseConfig = JAPANESE_SPEECH_CONFIG;
+      }
+    }
+
+    // Kết hợp cấu hình base với cấu hình tùy chỉnh
     const finalConfig: SpeechConfig = {
-      ...DEFAULT_SPEECH_CONFIG,
+      ...baseConfig,
       ...config
     };
 

@@ -193,6 +193,37 @@
   color: #3730a3;
 }
 
+/* HSK Level Badges - Chinese */
+.badge-hsk1 {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-hsk2 {
+  background: #fed7aa;
+  color: #9a3412;
+}
+
+.badge-hsk3 {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-hsk4 {
+  background: #fce7f3;
+  color: #9f1239;
+}
+
+.badge-hsk5 {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.badge-hsk6 {
+  background: #ddd6fe;
+  color: #5b21b6;
+}
+
 /* ===== TABS ===== */
 .tab-container {
   display: flex;
@@ -8553,4 +8584,26 @@
 
 .chat-message-bubble.has-translation:hover::before {
   opacity: 1;
+}
+/* ==
+=== FIX IMAGE BORDERS ===== */
+/* Remove borders from all images */
+img {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Remove borders from images in cards */
+.card img,
+.course-card img,
+.level-card img,
+[class*="card"] img {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Remove borders from background images */
+div[style*="background-image"] {
+  border: none !important;
+  outline: none !important;
 }

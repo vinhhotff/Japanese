@@ -201,7 +201,38 @@ const CourseList = ({ language }: CourseListProps) => {
                 </div>
 
                 {/* Content */}
-                <div style={{ padding: '2rem' }}>
+                <div style={{ padding: '2rem', position: 'relative' }}>
+                  {/* Japan/China Map Icon */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '1rem',
+                    right: '1rem',
+                    opacity: 0.15,
+                    pointerEvents: 'none'
+                  }}>
+                    {language === 'japanese' ? (
+                      // Japan Map
+                      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M75 25C75 25 70 20 65 22C60 24 58 28 55 30C52 32 48 30 45 32C42 34 40 38 38 40C36 42 32 42 30 45C28 48 28 52 30 55C32 58 35 58 38 60C41 62 42 65 45 67C48 69 52 68 55 70C58 72 60 75 63 77C66 79 70 78 73 75C76 72 78 68 80 65C82 62 82 58 80 55C78 52 75 50 75 47C75 44 77 40 75 37C73 34 70 32 70 29C70 26 72 23 70 20C68 17 65 18 63 20C61 22 60 25 58 27C56 29 52 28 50 30C48 32 48 35 50 37C52 39 55 38 57 40C59 42 58 45 60 47C62 49 65 48 67 50C69 52 68 55 70 57C72 59 75 58 75 55C75 52 73 50 73 47C73 44 75 42 75 39C75 36 73 34 73 31C73 28 75 26 75 25Z" 
+                          fill={index === 0 ? '#10b981' :
+                            index === 1 ? '#3b82f6' :
+                            index === 2 ? '#f59e0b' :
+                            index === 3 ? '#ef4444' : '#8b5cf6'}
+                        />
+                      </svg>
+                    ) : (
+                      // China Map
+                      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 30L25 25L30 20L35 22L40 25L45 23L50 20L55 22L60 25L65 28L70 30L75 35L78 40L80 45L82 50L80 55L78 60L75 65L70 68L65 70L60 72L55 70L50 68L45 70L40 72L35 70L30 68L25 65L22 60L20 55L18 50L20 45L22 40L20 35L20 30Z" 
+                          fill={index === 0 ? '#10b981' :
+                            index === 1 ? '#3b82f6' :
+                            index === 2 ? '#f59e0b' :
+                            index === 3 ? '#ef4444' : '#8b5cf6'}
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  
                   <h3 style={{ 
                     fontSize: '1.5rem', 
                     fontWeight: '700', 

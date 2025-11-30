@@ -6,9 +6,11 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import DashboardNew from './components/DashboardNew.v2';
 import CourseList from './components/CourseList';
+import AllCourses from './components/AllCourses';
 import LessonListNew from './components/LessonListNew';
 import LessonDetail from './components/LessonDetail';
 import Dictionary from './components/Dictionary';
+import AllDictionary from './components/AllDictionary';
 import SavedWords from './components/SavedWords';
 import VocabularyPractice from './components/VocabularyPractice';
 import StudyProgress from './components/StudyProgress';
@@ -89,10 +91,10 @@ function App() {
                   />
                   
                   {/* Legacy redirects for backward compatibility */}
-                  <Route path="/courses" element={<CourseList language="japanese" />} />
+                  <Route path="/courses" element={<AllCourses />} />
                   <Route path="/courses/:level" element={<LessonListNew language="japanese" />} />
                   <Route path="/lessons/:lessonId" element={<LessonDetail language="japanese" />} />
-                  <Route path="/dictionary" element={<Dictionary language="japanese" />} />
+                  <Route path="/dictionary" element={<AllDictionary />} />
                   <Route path="/saved-words" element={<SavedWords language="japanese" />} />
                   <Route path="/vocabulary-practice" element={<VocabularyPractice language="japanese" />} />
                   <Route path="/kanji-writing" element={<KanjiWritingPractice language="japanese" />} />

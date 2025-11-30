@@ -26,11 +26,19 @@ const AdminPanel = () => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('courses');
   const [data, setData] = useState<any[]>([]);
+  const [filteredData, setFilteredData] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
+  
+  // Filter and Pagination states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterLevel, setFilterLevel] = useState('');
+  const [filterLesson, setFilterLesson] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
 
   useEffect(() => {
     loadCourses();
@@ -39,7 +47,46 @@ const AdminPanel = () => {
 
   useEffect(() => {
     loadData();
+    // Reset filters when changing tabs
+    setSearchTerm('');
+    setFilterLevel('');
+    setFilterLesson('');
+    setCurrentPage(1);
   }, [activeTab]);
+
+  // Filter data whenever search term, filters, or data changes
+  useEffect(() => {
+    let filtered = [...data];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(item => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          (item.title?.toLowerCase().includes(searchLower)) ||
+          (item.word?.toLowerCase().includes(searchLower)) ||
+          (item.kanji?.toLowerCase().includes(searchLower)) ||
+          (item.character?.toLowerCase().includes(searchLower)) ||
+          (item.pattern?.toLowerCase().includes(searchLower)) ||
+          (item.meaning?.toLowerCase().includes(searchLower)) ||
+          (item.description?.toLowerCase().includes(searchLower))
+        );
+      });
+    }
+
+    // Level filter
+    if (filterLevel) {
+      filtered = filtered.filter(item => item.level === filterLevel);
+    }
+
+    // Lesson filter
+    if (filterLesson) {
+      filtered = filtered.filter(item => item.lesson_id === filterLesson);
+    }
+
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [data, searchTerm, filterLevel, filterLesson]);
 
   const loadCourses = async () => {
     try {
@@ -420,16 +467,134 @@ const AdminPanel = () => {
           </button>
         </div>
 
+        {/* Filters */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          marginBottom: '1.5rem', 
+          flexWrap: 'wrap',
+          padding: '1rem',
+          background: 'var(--bg-secondary)',
+          borderRadius: '12px'
+        }}>
+          {/* Search */}
+          <div style={{ flex: '1 1 300px' }}>
+            <input
+              type="text"
+              placeholder="🔍 Tìm kiếm..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                borderRadius: '8px',
+                border: '2px solid var(--border-color)',
+                fontSize: '0.9375rem'
+              }}
+            />
+          </div>
+
+          {/* Level Filter */}
+          {(activeTab === 'courses' || activeTab === 'lessons' || activeTab === 'vocabulary' || activeTab === 'kanji' || activeTab === 'grammar') && (
+            <div style={{ flex: '0 1 150px' }}>
+              <select
+                value={filterLevel}
+                onChange={(e) => setFilterLevel(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: '2px solid var(--border-color)',
+                  fontSize: '0.9375rem'
+                }}
+              >
+                <option value="">Tất cả cấp độ</option>
+                <option value="N5">N5</option>
+                <option value="N4">N4</option>
+                <option value="N3">N3</option>
+                <option value="N2">N2</option>
+                <option value="N1">N1</option>
+                <option value="HSK1">HSK1</option>
+                <option value="HSK2">HSK2</option>
+                <option value="HSK3">HSK3</option>
+                <option value="HSK4">HSK4</option>
+                <option value="HSK5">HSK5</option>
+                <option value="HSK6">HSK6</option>
+              </select>
+            </div>
+          )}
+
+          {/* Lesson Filter */}
+          {(activeTab === 'vocabulary' || activeTab === 'kanji' || activeTab === 'grammar') && (
+            <div style={{ flex: '0 1 200px' }}>
+              <select
+                value={filterLesson}
+                onChange={(e) => setFilterLesson(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: '2px solid var(--border-color)',
+                  fontSize: '0.9375rem'
+                }}
+              >
+                <option value="">Tất cả bài học</option>
+                {lessons.map((lesson: any) => (
+                  <option key={lesson.id} value={lesson.id}>
+                    {lesson.title} ({lesson.level})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Clear Filters */}
+          {(searchTerm || filterLevel || filterLesson) && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setFilterLevel('');
+                setFilterLesson('');
+              }}
+              style={{
+                padding: '0.75rem 1rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#ef4444',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.9375rem',
+                fontWeight: '600'
+              }}
+            >
+              ✕ Xóa bộ lọc
+            </button>
+          )}
+        </div>
+
+        {/* Results count */}
+        <div style={{ 
+          marginBottom: '1rem', 
+          color: 'var(--text-secondary)',
+          fontSize: '0.9375rem',
+          fontWeight: '600'
+        }}>
+          Hiển thị {Math.min((currentPage - 1) * itemsPerPage + 1, filteredData.length)}-{Math.min(currentPage * itemsPerPage, filteredData.length)} / {filteredData.length} kết quả
+        </div>
+
         {loading ? (
           <div className="loading">Đang tải...</div>
         ) : (
-          <div className="admin-list">
-            {data.length === 0 ? (
-              <div className="empty-state">
-                <p>Chưa có dữ liệu. Hãy thêm mới!</p>
-              </div>
-            ) : (
-              data.map((item) => (
+          <>
+            <div className="admin-list">
+              {filteredData.length === 0 ? (
+                <div className="empty-state">
+                  <p>{data.length === 0 ? 'Chưa có dữ liệu. Hãy thêm mới!' : 'Không tìm thấy kết quả phù hợp.'}</p>
+                </div>
+              ) : (
+                filteredData
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((item) => (
                 <div key={item.id} className="admin-item">
                   <div className="item-content">
                     {activeTab === 'kanji' ? (
@@ -465,6 +630,98 @@ const AdminPanel = () => {
               ))
             )}
           </div>
+
+          {/* Pagination */}
+          {filteredData.length > itemsPerPage && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginTop: '2rem',
+              padding: '1rem',
+              background: 'var(--bg-secondary)',
+              borderRadius: '12px'
+            }}>
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: currentPage === 1 ? 'var(--border-color)' : 'var(--primary-color)',
+                  color: 'white',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '600'
+                }}
+              >
+                ⏮️ Đầu
+              </button>
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: currentPage === 1 ? 'var(--border-color)' : 'var(--primary-color)',
+                  color: 'white',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '600'
+                }}
+              >
+                ◀️ Trước
+              </button>
+
+              <span style={{
+                padding: '0.5rem 1rem',
+                fontSize: '0.9375rem',
+                fontWeight: '600',
+                color: 'var(--text-primary)'
+              }}>
+                Trang {currentPage} / {Math.ceil(filteredData.length / itemsPerPage)}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredData.length / itemsPerPage), prev + 1))}
+                disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: currentPage >= Math.ceil(filteredData.length / itemsPerPage) ? 'var(--border-color)' : 'var(--primary-color)',
+                  color: 'white',
+                  cursor: currentPage >= Math.ceil(filteredData.length / itemsPerPage) ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '600'
+                }}
+              >
+                Sau ▶️
+              </button>
+
+              <button
+                onClick={() => setCurrentPage(Math.ceil(filteredData.length / itemsPerPage))}
+                disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: currentPage >= Math.ceil(filteredData.length / itemsPerPage) ? 'var(--border-color)' : 'var(--primary-color)',
+                  color: 'white',
+                  cursor: currentPage >= Math.ceil(filteredData.length / itemsPerPage) ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '600'
+                }}
+              >
+                Cuối ⏭️
+              </button>
+            </div>
+          )}
+        </>
         )}
       </div>
 
@@ -838,15 +1095,15 @@ Ví dụ:
       case 'lessons':
         return { course_id: '', title: '', lesson_number: 1, description: '', level: 'N5' };
       case 'vocabulary':
-        return { lesson_id: '', word: '', kanji: '', hiragana: '', meaning: '', example: '', example_translation: '', difficulty: 'easy', is_difficult: false };
+        return { lesson_id: '', word: '', kanji: '', hiragana: '', meaning: '', example: '', example_translation: '', difficulty: 'easy', is_difficult: false, language: 'japanese' };
       case 'kanji':
         return { lesson_id: '', character: '', meaning: '', onyomi: [], kunyomi: [], stroke_count: 0, examples: [] };
       case 'grammar':
-        return { lesson_id: '', pattern: '', meaning: '', explanation: '', examples: [] };
+        return { lesson_id: '', pattern: '', meaning: '', explanation: '', examples: [], language: 'japanese' };
       case 'listening':
-        return { lesson_id: '', title: '', audio_url: '', image_url: '', transcript: '', questions: [] };
+        return { lesson_id: '', title: '', audio_url: '', image_url: '', transcript: '', questions: [], language: 'japanese' };
       case 'games':
-        return { lesson_id: '', sentence: '', translation: '', words: [], correct_order: [], hint: '' };
+        return { lesson_id: '', sentence: '', translation: '', words: [], correct_order: [], hint: '', language: 'japanese' };
       case 'roleplay':
         return { 
           lesson_id: '', 
@@ -863,7 +1120,8 @@ Ví dụ:
           grammar_points: [], 
           difficulty: 'easy',
           image_url: '',
-          enable_scoring: false
+          enable_scoring: false,
+          language: 'japanese'
         };
       default:
         return {};
@@ -899,6 +1157,7 @@ Ví dụ:
         meaning: vocab.meaning,
         difficulty: formData.difficulty || 'easy',
         is_difficult: false,
+        language: formData.language || 'japanese',
       }));
 
       onSave(batchData);
@@ -1053,17 +1312,48 @@ Ví dụ:
           {type === 'courses' && (
             <>
               <div className="form-group">
+                <label>Ngôn ngữ *</label>
+                <select
+                  value={formData.language || 'japanese'}
+                  onChange={(e) => {
+                    const newLanguage = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      language: newLanguage,
+                      level: newLanguage === 'japanese' ? 'N5' : 'HSK1'
+                    });
+                  }}
+                  required
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Cấp độ *</label>
                 <select
                   value={formData.level}
                   onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                   required
                 >
-                  <option value="N5">N5</option>
-                  <option value="N4">N4</option>
-                  <option value="N3">N3</option>
-                  <option value="N2">N2</option>
-                  <option value="N1">N1</option>
+                  {(formData.language === 'chinese') ? (
+                    <>
+                      <option value="HSK1">HSK1</option>
+                      <option value="HSK2">HSK2</option>
+                      <option value="HSK3">HSK3</option>
+                      <option value="HSK4">HSK4</option>
+                      <option value="HSK5">HSK5</option>
+                      <option value="HSK6">HSK6</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="N5">N5</option>
+                      <option value="N4">N4</option>
+                      <option value="N3">N3</option>
+                      <option value="N2">N2</option>
+                      <option value="N1">N1</option>
+                    </>
+                  )}
                 </select>
               </div>
               <div className="form-group">
@@ -1089,6 +1379,25 @@ Ví dụ:
           {type === 'lessons' && (
             <>
               <div className="form-group">
+                <label>Ngôn ngữ *</label>
+                <select
+                  value={formData.language || 'japanese'}
+                  onChange={(e) => {
+                    const newLanguage = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      language: newLanguage,
+                      level: newLanguage === 'japanese' ? 'N5' : 'HSK1',
+                      course_id: '' // Reset course selection when language changes
+                    });
+                  }}
+                  required
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Khóa học *</label>
                 <select
                   value={formData.course_id}
@@ -1096,9 +1405,11 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn khóa học</option>
-                  {courses.map((c: any) => (
-                    <option key={c.id} value={c.id}>{c.title}</option>
-                  ))}
+                  {courses
+                    .filter((c: any) => c.language === (formData.language || 'japanese'))
+                    .map((c: any) => (
+                      <option key={c.id} value={c.id}>{c.title} ({c.level})</option>
+                    ))}
                 </select>
               </div>
               <div className="form-group">
@@ -1126,11 +1437,24 @@ Ví dụ:
                   onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                   required
                 >
-                  <option value="N5">N5</option>
-                  <option value="N4">N4</option>
-                  <option value="N3">N3</option>
-                  <option value="N2">N2</option>
-                  <option value="N1">N1</option>
+                  {(formData.language === 'chinese') ? (
+                    <>
+                      <option value="HSK1">HSK1</option>
+                      <option value="HSK2">HSK2</option>
+                      <option value="HSK3">HSK3</option>
+                      <option value="HSK4">HSK4</option>
+                      <option value="HSK5">HSK5</option>
+                      <option value="HSK6">HSK6</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="N5">N5</option>
+                      <option value="N4">N4</option>
+                      <option value="N3">N3</option>
+                      <option value="N2">N2</option>
+                      <option value="N1">N1</option>
+                    </>
+                  )}
                 </select>
               </div>
               <div className="form-group">
@@ -1177,6 +1501,24 @@ Ví dụ:
           {type === 'vocabulary' && importMode === 'single' && (
             <>
               <div className="form-group">
+                <label>Ngôn ngữ *</label>
+                <select
+                  value={formData.language || 'japanese'}
+                  onChange={(e) => {
+                    const newLanguage = e.target.value as 'japanese' | 'chinese';
+                    setFormData({ 
+                      ...formData, 
+                      language: newLanguage,
+                      lesson_id: '' // Reset lesson when language changes
+                    });
+                  }}
+                  required
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Bài học *</label>
                 <select
                   value={formData.lesson_id}
@@ -1184,37 +1526,84 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons
+                    .filter((l: any) => {
+                      // Filter lessons by language
+                      const lessonCourse = courses.find((c: any) => c.id === l.course_id);
+                      return lessonCourse?.language === (formData.language || 'japanese');
+                    })
+                    .map((l: any) => (
+                      <option key={l.id} value={l.id}>{l.title}</option>
+                    ))}
                 </select>
               </div>
-              <div className="form-group">
-                <label>Từ (Hiragana) *</label>
-                <input
-                  type="text"
-                  value={formData.word}
-                  onChange={(e) => setFormData({ ...formData, word: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Kanji</label>
-                <input
-                  type="text"
-                  value={formData.kanji || ''}
-                  onChange={(e) => setFormData({ ...formData, kanji: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Hiragana *</label>
-                <input
-                  type="text"
-                  value={formData.hiragana}
-                  onChange={(e) => setFormData({ ...formData, hiragana: e.target.value })}
-                  required
-                />
-              </div>
+              
+              {formData.language === 'chinese' ? (
+                <>
+                  <div className="form-group">
+                    <label>Hán tự giản thể (简体) *</label>
+                    <input
+                      type="text"
+                      value={formData.word}
+                      onChange={(e) => setFormData({ ...formData, word: e.target.value })}
+                      required
+                      placeholder="你好"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Hán tự phồn thể (繁體)</label>
+                    <input
+                      type="text"
+                      value={formData.kanji || ''}
+                      onChange={(e) => setFormData({ ...formData, kanji: e.target.value })}
+                      placeholder="你好 (để trống nếu giống giản thể)"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Pinyin (拼音) *</label>
+                    <input
+                      type="text"
+                      value={formData.hiragana}
+                      onChange={(e) => setFormData({ ...formData, hiragana: e.target.value })}
+                      required
+                      placeholder="nǐ hǎo"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label>Từ (Hiragana) *</label>
+                    <input
+                      type="text"
+                      value={formData.word}
+                      onChange={(e) => setFormData({ ...formData, word: e.target.value })}
+                      required
+                      placeholder="こんにちは"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Kanji (漢字)</label>
+                    <input
+                      type="text"
+                      value={formData.kanji || ''}
+                      onChange={(e) => setFormData({ ...formData, kanji: e.target.value })}
+                      placeholder="今日は"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Hiragana (ひらがな) *</label>
+                    <input
+                      type="text"
+                      value={formData.hiragana}
+                      onChange={(e) => setFormData({ ...formData, hiragana: e.target.value })}
+                      required
+                      placeholder="こんにちは"
+                    />
+                  </div>
+                </>
+              )}
+              
               <div className="form-group">
                 <label>Nghĩa *</label>
                 <input
@@ -1267,6 +1656,24 @@ Ví dụ:
           {type === 'vocabulary' && importMode === 'batch' && (
             <>
               <div className="form-group">
+                <label>Ngôn ngữ *</label>
+                <select
+                  value={formData.language || 'japanese'}
+                  onChange={(e) => {
+                    const newLanguage = e.target.value as 'japanese' | 'chinese';
+                    setFormData({ 
+                      ...formData, 
+                      language: newLanguage,
+                      lesson_id: '' // Reset lesson when language changes
+                    });
+                  }}
+                  required
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Bài học *</label>
                 <select
                   value={formData.lesson_id}
@@ -1274,8 +1681,14 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
+                  {lessons
+                    .filter((l: any) => {
+                      // Filter lessons by language
+                      const lessonCourse = courses.find((c: any) => c.id === l.course_id);
+                      return lessonCourse?.language === (formData.language || 'japanese');
+                    })
+                    .map((l: any) => (
+                      <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
               </div>
@@ -1283,7 +1696,11 @@ Ví dụ:
                 <label>
                   Nhập từ vựng (mỗi dòng một từ) *
                   <span className="format-hint">
-                    Format: <code>kanji=hiragana=nghĩa</code> hoặc <code>hiragana=nghĩa</code>
+                    {formData.language === 'chinese' ? (
+                      <>Format: <code>hanzi=pinyin=nghĩa</code> hoặc <code>hanzi_phồn_thể=hanzi_giản_thể=pinyin=nghĩa</code></>
+                    ) : (
+                      <>Format: <code>kanji=hiragana=nghĩa</code> hoặc <code>hiragana=nghĩa</code></>
+                    )}
                   </span>
                 </label>
                 <textarea
@@ -1295,7 +1712,12 @@ Ví dụ:
                     setBatchPreview(vocabularies);
                     setBatchError(errors.length > 0 ? errors.join('\n') : null);
                   }}
-                  placeholder={`私=わたし=Tôi
+                  placeholder={formData.language === 'chinese' ? 
+                    `你好=nǐ hǎo=Xin chào
+谢谢=xiè xie=Cảm ơn
+再见=zài jiàn=Tạm biệt
+学习=xué xí=Học tập` :
+                    `私=わたし=Tôi
 学生=がくせい=Học sinh
 こんにちは=Xin chào (ban ngày)
 はじめまして=Lần đầu gặp mặt`}
@@ -1303,8 +1725,13 @@ Ví dụ:
                   required
                 />
                 <div className="format-example">
-                  <strong>Ví dụ:</strong>
-                  <pre>{`私=わたし=Tôi
+                  <strong>Ví dụ {formData.language === 'chinese' ? 'tiếng Trung' : 'tiếng Nhật'}:</strong>
+                  <pre>{formData.language === 'chinese' ? 
+                    `你好=nǐ hǎo=Xin chào
+谢谢=xiè xie=Cảm ơn
+再见=zài jiàn=Tạm biệt
+学习=xué xí=Học tập` :
+                    `私=わたし=Tôi
 学生=がくせい=Học sinh
 こんにちは=Xin chào
 はじめまして=Lần đầu gặp mặt`}</pre>
@@ -1326,8 +1753,14 @@ Ví dụ:
                   <div className="preview-list">
                     {batchPreview.map((vocab, idx) => (
                       <div key={idx} className="preview-item">
-                        <span className="preview-kanji">{vocab.kanji || '-'}</span>
-                        <span className="preview-hiragana">{vocab.hiragana}</span>
+                        <span className="preview-kanji">
+                          {formData.language === 'chinese' ? 
+                            (vocab.kanji ? `${vocab.kanji} / ${vocab.word}` : vocab.word) : 
+                            (vocab.kanji || '-')}
+                        </span>
+                        <span className="preview-hiragana">
+                          {formData.language === 'chinese' ? vocab.hiragana : vocab.hiragana}
+                        </span>
                         <span className="preview-meaning">{vocab.meaning}</span>
                       </div>
                     ))}
@@ -1709,6 +2142,24 @@ Hoặc với đọc âm:
           {type === 'grammar' && importMode === 'single' && !item && (
             <>
               <div className="form-group">
+                <label>Ngôn ngữ *</label>
+                <select
+                  value={formData.language || 'japanese'}
+                  onChange={(e) => {
+                    const newLanguage = e.target.value as 'japanese' | 'chinese';
+                    setFormData({ 
+                      ...formData, 
+                      language: newLanguage,
+                      lesson_id: '' // Reset lesson when language changes
+                    });
+                  }}
+                  required
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Bài học *</label>
                 <select
                   value={formData.lesson_id}
@@ -1716,9 +2167,14 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons
+                    .filter((l: any) => {
+                      const lessonCourse = courses.find((c: any) => c.id === l.course_id);
+                      return lessonCourse?.language === (formData.language || 'japanese');
+                    })
+                    .map((l: any) => (
+                      <option key={l.id} value={l.id}>{l.title}</option>
+                    ))}
                 </select>
               </div>
               <div className="form-group">
@@ -1753,6 +2209,24 @@ Hoặc với đọc âm:
           {type === 'grammar' && importMode === 'batch' && !item && (
             <>
               <div className="form-group">
+                <label>Ngôn ngữ *</label>
+                <select
+                  value={formData.language || 'japanese'}
+                  onChange={(e) => {
+                    const newLanguage = e.target.value as 'japanese' | 'chinese';
+                    setFormData({ 
+                      ...formData, 
+                      language: newLanguage,
+                      lesson_id: '' // Reset lesson when language changes
+                    });
+                  }}
+                  required
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Bài học *</label>
                 <select
                   value={formData.lesson_id}
@@ -1760,9 +2234,14 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons
+                    .filter((l: any) => {
+                      const lessonCourse = courses.find((c: any) => c.id === l.course_id);
+                      return lessonCourse?.language === (formData.language || 'japanese');
+                    })
+                    .map((l: any) => (
+                      <option key={l.id} value={l.id}>{l.title}</option>
+                    ))}
                 </select>
               </div>
               <div className="form-group">
@@ -1939,6 +2418,24 @@ Hoặc với đọc âm:
           {type === 'listening' && (
             <>
               <div className="form-group">
+                <label>Ngôn ngữ *</label>
+                <select
+                  value={formData.language || 'japanese'}
+                  onChange={(e) => {
+                    const newLanguage = e.target.value as 'japanese' | 'chinese';
+                    setFormData({ 
+                      ...formData, 
+                      language: newLanguage,
+                      lesson_id: '' // Reset lesson when language changes
+                    });
+                  }}
+                  required
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Bài học *</label>
                 <select
                   value={formData.lesson_id}
@@ -1946,9 +2443,14 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons
+                    .filter((l: any) => {
+                      const lessonCourse = courses.find((c: any) => c.id === l.course_id);
+                      return lessonCourse?.language === (formData.language || 'japanese');
+                    })
+                    .map((l: any) => (
+                      <option key={l.id} value={l.id}>{l.title}</option>
+                    ))}
                 </select>
               </div>
               <div className="form-group">
@@ -2237,6 +2739,24 @@ Hoặc với đọc âm:
           {type === 'games' && importMode === 'single' && (
             <>
               <div className="form-group">
+                <label>Ngôn ngữ *</label>
+                <select
+                  value={formData.language || 'japanese'}
+                  onChange={(e) => {
+                    const newLanguage = e.target.value as 'japanese' | 'chinese';
+                    setFormData({ 
+                      ...formData, 
+                      language: newLanguage,
+                      lesson_id: '' // Reset lesson when language changes
+                    });
+                  }}
+                  required
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Bài học *</label>
                 <select
                   value={formData.lesson_id}
@@ -2244,9 +2764,14 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons
+                    .filter((l: any) => {
+                      const lessonCourse = courses.find((c: any) => c.id === l.course_id);
+                      return lessonCourse?.language === (formData.language || 'japanese');
+                    })
+                    .map((l: any) => (
+                      <option key={l.id} value={l.id}>{l.title}</option>
+                    ))}
                 </select>
               </div>
               <div className="form-group">
@@ -2325,6 +2850,24 @@ Hoặc với đọc âm:
           {type === 'games' && importMode === 'batch' && !item && (
             <>
               <div className="form-group">
+                <label>Ngôn ngữ *</label>
+                <select
+                  value={formData.language || 'japanese'}
+                  onChange={(e) => {
+                    const newLanguage = e.target.value as 'japanese' | 'chinese';
+                    setFormData({ 
+                      ...formData, 
+                      language: newLanguage,
+                      lesson_id: '' // Reset lesson when language changes
+                    });
+                  }}
+                  required
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Bài học *</label>
                 <select
                   value={formData.lesson_id}
@@ -2332,9 +2875,14 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons
+                    .filter((l: any) => {
+                      const lessonCourse = courses.find((c: any) => c.id === l.course_id);
+                      return lessonCourse?.language === (formData.language || 'japanese');
+                    })
+                    .map((l: any) => (
+                      <option key={l.id} value={l.id}>{l.title}</option>
+                    ))}
                 </select>
               </div>
               <div className="form-group">
@@ -2389,6 +2937,24 @@ Hoặc với đọc âm:
           {type === 'roleplay' && (
             <>
               <div className="form-group">
+                <label>Ngôn ngữ *</label>
+                <select
+                  value={formData.language || 'japanese'}
+                  onChange={(e) => {
+                    const newLanguage = e.target.value as 'japanese' | 'chinese';
+                    setFormData({ 
+                      ...formData, 
+                      language: newLanguage,
+                      lesson_id: '' // Reset lesson when language changes
+                    });
+                  }}
+                  required
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Bài học *</label>
                 <select
                   value={formData.lesson_id}
@@ -2396,9 +2962,14 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons
+                    .filter((l: any) => {
+                      const lessonCourse = courses.find((c: any) => c.id === l.course_id);
+                      return lessonCourse?.language === (formData.language || 'japanese');
+                    })
+                    .map((l: any) => (
+                      <option key={l.id} value={l.id}>{l.title}</option>
+                    ))}
                 </select>
               </div>
 

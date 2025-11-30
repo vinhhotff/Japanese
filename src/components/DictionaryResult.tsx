@@ -6,11 +6,12 @@ interface DictionaryResultProps {
   item: any;
   index: number;
   speakingId: string | null;
-  onSpeak: (text: string, id: string) => void;
+  onSpeak: (text: string, id: string, lang?: string) => void;
   onAddToLesson: (item: any) => void;
+  language?: 'japanese' | 'chinese';
 }
 
-const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson }: DictionaryResultProps) => {
+const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson, language = 'japanese' }: DictionaryResultProps) => {
   const id = `result-${index}`;
   const japanese = item.japanese?.[0];
   const wordId = item.slug || `${japanese?.word || japanese?.reading || ''}-${index}`;
@@ -20,13 +21,24 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
     setIsSaved(isWordSaved(wordId));
   }, [wordId, onAddToLesson]);
 
+  // Check if this is Chinese data
+  const isChinese = language === 'chinese' || !!item.chinese;
+  
   // Safety check for data structure
-  if (!item || !item.japanese || item.japanese.length === 0 || !item.senses || item.senses.length === 0) {
+  if (!item || !item.senses || item.senses.length === 0) {
     return null;
   }
   
   const sense = item.senses[0];
-  const reading = japanese?.reading || '';
+  
+  // Chinese data
+  const chinese = item.chinese;
+  const hanzi = chinese?.hanzi || chinese?.simplified || '';
+  const pinyin = chinese?.pinyin || '';
+  const traditional = chinese?.traditional || '';
+  
+  // Japanese data (only use if NOT Chinese)
+  const reading = !isChinese && japanese?.reading ? japanese.reading : '';
 
   const handleSaveClick = () => {
     onAddToLesson(item);
@@ -58,8 +70,8 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
       {/* Header with Word and Badges */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ flex: 1 }}>
-          {/* Kanji */}
-          {japanese?.word && (
+          {/* Hanzi (Chinese) or Kanji (Japanese) */}
+          {((isChinese && hanzi) || (!isChinese && japanese?.word)) && (
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -69,21 +81,21 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
               <span style={{ 
                 fontSize: '3rem', 
                 fontWeight: '800', 
-                color: 'var(--text-primary)',
+                color: isChinese ? '#ef4444' : '#8b5cf6',
                 lineHeight: 1
               }}>
-                {japanese.word}
+                {isChinese ? hanzi : (japanese?.word || '')}
               </span>
               <button
-                onClick={() => onSpeak(japanese.word, `${id}-kanji`)}
+                onClick={() => onSpeak(isChinese ? hanzi : japanese.word, `${id}-kanji`, language)}
                 title="Phát âm"
                 style={{
                   width: '48px',
                   height: '48px',
                   borderRadius: '50%',
-                  border: '2px solid var(--primary-color)',
-                  background: speakingId === `${id}-kanji` ? 'var(--primary-color)' : 'var(--primary-light)',
-                  color: speakingId === `${id}-kanji` ? 'white' : 'var(--primary-color)',
+                  border: `2px solid ${isChinese ? '#ef4444' : 'var(--primary-color)'}`,
+                  background: speakingId === `${id}-kanji` ? (isChinese ? '#ef4444' : 'var(--primary-color)') : (isChinese ? 'rgba(239, 68, 68, 0.1)' : 'var(--primary-light)'),
+                  color: speakingId === `${id}-kanji` ? 'white' : (isChinese ? '#ef4444' : 'var(--primary-color)'),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -92,13 +104,13 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
                 }}
                 onMouseEnter={(e) => {
                   if (speakingId !== `${id}-kanji`) {
-                    e.currentTarget.style.background = 'var(--primary-light)';
+                    e.currentTarget.style.background = isChinese ? 'rgba(239, 68, 68, 0.2)' : 'var(--primary-light)';
                     e.currentTarget.style.transform = 'scale(1.1)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (speakingId !== `${id}-kanji`) {
-                    e.currentTarget.style.background = 'var(--primary-light)';
+                    e.currentTarget.style.background = isChinese ? 'rgba(239, 68, 68, 0.1)' : 'var(--primary-light)';
                     e.currentTarget.style.transform = 'scale(1)';
                   }
                 }}
@@ -110,29 +122,42 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
             </div>
           )}
           
-          {/* Reading */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '1rem'
-          }}>
-            <span style={{ 
-              fontSize: '1.75rem', 
-              color: 'var(--text-secondary)',
-              fontFamily: 'serif'
+          {/* Reading (Pinyin for Chinese, Hiragana for Japanese) */}
+          {((isChinese && pinyin) || (!isChinese && reading)) && (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '1rem',
+              marginBottom: '0.5rem'
             }}>
-              {reading}
-            </span>
-            <button
-              onClick={() => onSpeak(reading, `${id}-reading`)}
-              title="Phát âm"
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                border: '2px solid var(--secondary-color)',
-                background: speakingId === `${id}-reading` ? 'var(--secondary-color)' : 'var(--secondary-light)',
-                color: speakingId === `${id}-reading` ? 'white' : 'var(--secondary-color)',
+              <div>
+                <div style={{ 
+                  fontSize: '0.875rem',
+                  color: 'var(--text-secondary)',
+                  marginBottom: '0.25rem',
+                  fontWeight: '600'
+                }}>
+                  {isChinese ? 'Pinyin (拼音)' : 'Hiragana (ひらがな)'}
+                </div>
+                <span style={{ 
+                  fontSize: '1.5rem', 
+                  color: isChinese ? '#ef4444' : 'var(--text-secondary)',
+                  fontFamily: isChinese ? 'system-ui' : 'serif',
+                  fontWeight: '500'
+                }}>
+                  {isChinese ? pinyin : reading}
+                </span>
+              </div>
+              <button
+                onClick={() => onSpeak(isChinese ? hanzi : reading, `${id}-reading`, language)}
+                title="Phát âm"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  border: `2px solid ${isChinese ? '#f59e0b' : 'var(--secondary-color)'}`,
+                  background: speakingId === `${id}-reading` ? (isChinese ? '#f59e0b' : 'var(--secondary-color)') : (isChinese ? 'rgba(245, 158, 11, 0.1)' : 'var(--secondary-light)'),
+                  color: speakingId === `${id}-reading` ? 'white' : (isChinese ? '#f59e0b' : 'var(--secondary-color)'),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -141,13 +166,13 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
               }}
               onMouseEnter={(e) => {
                 if (speakingId !== `${id}-reading`) {
-                  e.currentTarget.style.background = 'var(--secondary-light)';
+                  e.currentTarget.style.background = isChinese ? 'rgba(245, 158, 11, 0.2)' : 'var(--secondary-light)';
                   e.currentTarget.style.transform = 'scale(1.1)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (speakingId !== `${id}-reading`) {
-                  e.currentTarget.style.background = 'var(--secondary-light)';
+                  e.currentTarget.style.background = isChinese ? 'rgba(245, 158, 11, 0.1)' : 'var(--secondary-light)';
                   e.currentTarget.style.transform = 'scale(1)';
                 }
               }}
@@ -156,7 +181,34 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
                 <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
             </button>
-          </div>
+            </div>
+          )}
+
+          {/* Traditional Chinese (if different from simplified) */}
+          {isChinese && traditional && traditional !== hanzi && (
+            <div style={{
+              padding: '0.75rem 1rem',
+              background: 'rgba(239, 68, 68, 0.05)',
+              borderRadius: '8px',
+              marginBottom: '0.5rem'
+            }}>
+              <span style={{ 
+                fontSize: '0.875rem',
+                color: 'var(--text-secondary)',
+                marginRight: '0.5rem',
+                fontWeight: '600'
+              }}>
+                Phồn thể:
+              </span>
+              <span style={{ 
+                fontSize: '1.25rem',
+                color: '#ef4444',
+                fontWeight: '600'
+              }}>
+                {traditional}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Badges */}

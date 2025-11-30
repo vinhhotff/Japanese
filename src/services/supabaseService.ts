@@ -160,6 +160,7 @@ export const createVocabulary = async (vocab: {
   example_translation?: string;
   difficulty?: 'easy' | 'medium' | 'hard';
   is_difficult?: boolean;
+  language?: 'japanese' | 'chinese';
 }) => {
   const { data, error } = await supabase
     .from('vocabulary')

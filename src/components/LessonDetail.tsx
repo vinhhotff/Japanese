@@ -16,6 +16,7 @@ import Roleplay from './Roleplay';
 import Pronunciation from './Pronunciation';
 import Shadowing from './Shadowing';
 import '../App.css';
+import FloatingCharacters from './FloatingCharacters';
 
 type LearningStep = 'learn' | 'practice' | 'test';
 
@@ -133,15 +134,55 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
       </Link>
 
       {/* Lesson Header */}
-      <div className="card" style={{ marginBottom: '2rem', background: 'var(--secondary-gradient)', color: 'white', border: 'none' }}>
+      <div className="card" style={{ 
+        marginBottom: '2rem', 
+        background: language === 'japanese' 
+          ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' 
+          : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', 
+        color: 'white', 
+        border: 'none' 
+      }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
           <div style={{ flex: 1 }}>
-            <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'white' }}>{lesson.title}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '2rem' }}>{language === 'japanese' ? '🇯🇵' : '🇨🇳'}</span>
+              <h1 style={{ fontSize: '2rem', margin: 0, color: 'white' }}>{lesson.title}</h1>
+            </div>
             <p style={{ fontSize: '1.125rem', opacity: 0.9, marginBottom: '1rem' }}>{lesson.description}</p>
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem' }}>
-              <span>📖 {lesson.vocabulary.length} từ vựng</span>
-              <span>{language === 'japanese' ? '㊗️' : '🈶'} {lesson.kanji.length} {language === 'japanese' ? 'kanji' : 'hán tự'}</span>
-              <span>📝 {lesson.grammar.length} ngữ pháp</span>
+            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', flexWrap: 'wrap' }}>
+              <div style={{ 
+                background: 'rgba(255,255,255,0.2)', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <span>📖</span>
+                <span>{lesson.vocabulary.length} từ vựng</span>
+              </div>
+              <div style={{ 
+                background: 'rgba(255,255,255,0.2)', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <span>{language === 'japanese' ? '㊗️' : '🈶'}</span>
+                <span>{lesson.kanji.length} {language === 'japanese' ? 'kanji' : 'hán tự'}</span>
+              </div>
+              <div style={{ 
+                background: 'rgba(255,255,255,0.2)', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <span>📝</span>
+                <span>{lesson.grammar.length} ngữ pháp</span>
+              </div>
             </div>
           </div>
           <div style={{ textAlign: 'center', minWidth: '120px' }}>
@@ -186,8 +227,12 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
           className="card"
           style={{
             cursor: 'pointer',
-            border: currentStep === 'learn' ? '3px solid var(--primary-color)' : '2px solid var(--border-color)',
-            background: currentStep === 'learn' ? 'var(--primary-light)' : 'var(--card-bg)',
+            border: currentStep === 'learn' 
+              ? `3px solid ${language === 'japanese' ? '#8b5cf6' : '#ef4444'}` 
+              : '2px solid var(--border-color)',
+            background: currentStep === 'learn' 
+              ? (language === 'japanese' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)') 
+              : 'var(--card-bg)',
             transition: 'all 0.2s',
             position: 'relative'
           }}
@@ -209,14 +254,29 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
               ✓
             </div>
           )}
-          <svg style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', color: currentStep === 'learn' ? 'var(--primary-color)' : 'var(--text-secondary)', strokeWidth: '1.5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg style={{ 
+            width: '48px', 
+            height: '48px', 
+            margin: '0 auto 0.5rem', 
+            color: currentStep === 'learn' 
+              ? (language === 'japanese' ? '#8b5cf6' : '#ef4444') 
+              : 'var(--text-secondary)', 
+            strokeWidth: '1.5' 
+          }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem', color: currentStep === 'learn' ? 'var(--primary-color)' : 'var(--text-primary)' }}>
+          <h3 style={{ 
+            fontSize: '1.25rem', 
+            fontWeight: '700', 
+            marginBottom: '0.25rem', 
+            color: currentStep === 'learn' 
+              ? (language === 'japanese' ? '#8b5cf6' : '#ef4444') 
+              : 'var(--text-primary)' 
+          }}>
             Bước 1: Học
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            Từ vựng, Kanji, Ngữ pháp
+            Từ vựng, {language === 'japanese' ? 'Kanji' : 'Hán tự'}, Ngữ pháp
           </p>
         </button>
 
@@ -225,8 +285,12 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
           className="card"
           style={{
             cursor: 'pointer',
-            border: currentStep === 'practice' ? '3px solid var(--success-color)' : '2px solid var(--border-color)',
-            background: currentStep === 'practice' ? 'var(--success-light)' : 'var(--card-bg)',
+            border: currentStep === 'practice' 
+              ? `3px solid ${language === 'japanese' ? '#10b981' : '#f59e0b'}` 
+              : '2px solid var(--border-color)',
+            background: currentStep === 'practice' 
+              ? (language === 'japanese' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)') 
+              : 'var(--card-bg)',
             transition: 'all 0.2s',
             position: 'relative'
           }}
@@ -248,10 +312,25 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
               ✓
             </div>
           )}
-          <svg style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', color: currentStep === 'practice' ? 'var(--success-color)' : 'var(--text-secondary)', strokeWidth: '1.5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg style={{ 
+            width: '48px', 
+            height: '48px', 
+            margin: '0 auto 0.5rem', 
+            color: currentStep === 'practice' 
+              ? (language === 'japanese' ? '#10b981' : '#f59e0b') 
+              : 'var(--text-secondary)', 
+            strokeWidth: '1.5' 
+          }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem', color: currentStep === 'practice' ? 'var(--success-color)' : 'var(--text-primary)' }}>
+          <h3 style={{ 
+            fontSize: '1.25rem', 
+            fontWeight: '700', 
+            marginBottom: '0.25rem', 
+            color: currentStep === 'practice' 
+              ? (language === 'japanese' ? '#10b981' : '#f59e0b') 
+              : 'var(--text-primary)' 
+          }}>
             Bước 2: Luyện tập
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
@@ -264,8 +343,12 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
           className="card"
           style={{
             cursor: 'pointer',
-            border: currentStep === 'test' ? '3px solid var(--warning-color)' : '2px solid var(--border-color)',
-            background: currentStep === 'test' ? 'var(--warning-light)' : 'var(--card-bg)',
+            border: currentStep === 'test' 
+              ? `3px solid ${language === 'japanese' ? '#3b82f6' : '#ec4899'}` 
+              : '2px solid var(--border-color)',
+            background: currentStep === 'test' 
+              ? (language === 'japanese' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)') 
+              : 'var(--card-bg)',
             transition: 'all 0.2s',
             position: 'relative'
           }}
@@ -287,10 +370,25 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
               ✓
             </div>
           )}
-          <svg style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', color: currentStep === 'test' ? 'var(--warning-color)' : 'var(--text-secondary)', strokeWidth: '1.5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg style={{ 
+            width: '48px', 
+            height: '48px', 
+            margin: '0 auto 0.5rem', 
+            color: currentStep === 'test' 
+              ? (language === 'japanese' ? '#3b82f6' : '#ec4899') 
+              : 'var(--text-secondary)', 
+            strokeWidth: '1.5' 
+          }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem', color: currentStep === 'test' ? 'var(--warning-color)' : 'var(--text-primary)' }}>
+          <h3 style={{ 
+            fontSize: '1.25rem', 
+            fontWeight: '700', 
+            marginBottom: '0.25rem', 
+            color: currentStep === 'test' 
+              ? (language === 'japanese' ? '#3b82f6' : '#ec4899') 
+              : 'var(--text-primary)' 
+          }}>
             Bước 3: Kiểm tra
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>

@@ -10,7 +10,7 @@ export const getAssignments = async (
   lessonId?: string,
   language?: 'japanese' | 'chinese',
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 10
 ): Promise<PaginatedResponse<any>> => {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -150,7 +150,7 @@ export const getMySubmissions = async (
   userId: string,
   assignmentId?: string,
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 10
 ): Promise<PaginatedResponse<any>> => {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -278,7 +278,7 @@ export const getAllSubmissions = async (
   assignmentId?: string,
   status?: SubmissionStatus,
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 10
 ): Promise<PaginatedResponse<any>> => {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;

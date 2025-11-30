@@ -45,8 +45,9 @@ class SearchCache {
 
 export const searchCache = new SearchCache();
 
-// Generate cache key from search term and type
-export const getCacheKey = (term: string, type: 'word' | 'kanji'): string => {
-  return `${type}:${term.toLowerCase().trim()}`;
+// Generate cache key from search term, type, and language
+export const getCacheKey = (term: string, type: 'word' | 'kanji', language?: string): string => {
+  const lang = language || 'japanese';
+  return `${lang}:${type}:${term.toLowerCase().trim()}`;
 };
 
