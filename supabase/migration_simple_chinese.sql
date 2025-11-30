@@ -89,5 +89,15 @@ CREATE INDEX IF NOT EXISTS idx_grammar_language ON grammar(language);
 -- Comments
 COMMENT ON COLUMN vocabulary.language IS 'Language: japanese or chinese';
 COMMENT ON COLUMN vocabulary.word IS 'Hiragana for Japanese, Simplified Hanzi for Chinese';
-COMMENT ON COLUMN vocabulary.kanji IS 'Kanji for Japanese, Traditional Hanzi for Chinese (optional)';
 COMMENT ON COLUMN vocabulary.hiragana IS 'Hiragana for Japanese, Pinyin for Chinese';
+
+-- Add character column if it doesn't exist (renamed from kanji)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name='vocabulary' AND column_name='character') THEN
+    ALTER TABLE vocabulary ADD COLUMN character VARCHAR(255);
+  END IF;
+END $$;
+
+COMMENT ON COLUMN vocabulary.character IS 'Kanji for Japanese, Traditional Hanzi for Chinese (optional)';

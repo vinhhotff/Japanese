@@ -154,6 +154,7 @@ export const createVocabulary = async (vocab: {
   lesson_id: string;
   word: string;
   kanji?: string;
+  character?: string;
   hiragana: string;
   meaning: string;
   example?: string;
@@ -162,9 +163,16 @@ export const createVocabulary = async (vocab: {
   is_difficult?: boolean;
   language?: 'japanese' | 'chinese';
 }) => {
+  // Map kanji to character if needed (for backward compatibility)
+  const vocabData = { ...vocab };
+  if (vocab.kanji && !vocab.character) {
+    vocabData.character = vocab.kanji;
+    delete vocabData.kanji;
+  }
+  
   const { data, error } = await supabase
     .from('vocabulary')
-    .insert(vocab)
+    .insert(vocabData)
     .select()
     .single();
   

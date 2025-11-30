@@ -1532,9 +1532,14 @@ Ví dụ:
                       const lessonCourse = courses.find((c: any) => c.id === l.course_id);
                       return lessonCourse?.language === (formData.language || 'japanese');
                     })
-                    .map((l: any) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
+                    .map((l: any) => {
+                      const course = courses.find((c: any) => c.id === l.course_id);
+                      return (
+                        <option key={l.id} value={l.id}>
+                          {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
               
@@ -1687,9 +1692,14 @@ Ví dụ:
                       const lessonCourse = courses.find((c: any) => c.id === l.course_id);
                       return lessonCourse?.language === (formData.language || 'japanese');
                     })
-                    .map((l: any) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                    .map((l: any) => {
+                      const course = courses.find((c: any) => c.id === l.course_id);
+                      return (
+                        <option key={l.id} value={l.id}>
+                          {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
               <div className="form-group">
@@ -1792,9 +1802,14 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons.map((l: any) => {
+                    const course = courses.find((c: any) => c.id === l.course_id);
+                    return (
+                      <option key={l.id} value={l.id}>
+                        {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div className="form-group">
@@ -1912,9 +1927,14 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons.map((l: any) => {
+                    const course = courses.find((c: any) => c.id === l.course_id);
+                    return (
+                      <option key={l.id} value={l.id}>
+                        {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div className="form-group">
@@ -1975,9 +1995,14 @@ Ví dụ:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons.map((l: any) => {
+                    const course = courses.find((c: any) => c.id === l.course_id);
+                    return (
+                      <option key={l.id} value={l.id}>
+                        {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div className="form-group">
@@ -2056,9 +2081,14 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons.map((l: any) => {
+                    const course = courses.find((c: any) => c.id === l.course_id);
+                    return (
+                      <option key={l.id} value={l.id}>
+                        {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div className="form-group">
@@ -2239,9 +2269,14 @@ Hoặc với đọc âm:
                       const lessonCourse = courses.find((c: any) => c.id === l.course_id);
                       return lessonCourse?.language === (formData.language || 'japanese');
                     })
-                    .map((l: any) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
+                    .map((l: any) => {
+                      const course = courses.find((c: any) => c.id === l.course_id);
+                      return (
+                        <option key={l.id} value={l.id}>
+                          {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
               <div className="form-group">
@@ -2312,9 +2347,14 @@ Hoặc với đọc âm:
                   required
                 >
                   <option value="">Chọn bài học</option>
-                  {lessons.map((l: any) => (
-                    <option key={l.id} value={l.id}>{l.title}</option>
-                  ))}
+                  {lessons.map((l: any) => {
+                    const course = courses.find((c: any) => c.id === l.course_id);
+                    return (
+                      <option key={l.id} value={l.id}>
+                        {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div className="form-group">
@@ -2448,9 +2488,14 @@ Hoặc với đọc âm:
                       const lessonCourse = courses.find((c: any) => c.id === l.course_id);
                       return lessonCourse?.language === (formData.language || 'japanese');
                     })
-                    .map((l: any) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
+                    .map((l: any) => {
+                      const course = courses.find((c: any) => c.id === l.course_id);
+                      return (
+                        <option key={l.id} value={l.id}>
+                          {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
               <div className="form-group">
@@ -2769,9 +2814,14 @@ Hoặc với đọc âm:
                       const lessonCourse = courses.find((c: any) => c.id === l.course_id);
                       return lessonCourse?.language === (formData.language || 'japanese');
                     })
-                    .map((l: any) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
+                    .map((l: any) => {
+                      const course = courses.find((c: any) => c.id === l.course_id);
+                      return (
+                        <option key={l.id} value={l.id}>
+                          {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
               <div className="form-group">
@@ -2880,9 +2930,14 @@ Hoặc với đọc âm:
                       const lessonCourse = courses.find((c: any) => c.id === l.course_id);
                       return lessonCourse?.language === (formData.language || 'japanese');
                     })
-                    .map((l: any) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
+                    .map((l: any) => {
+                      const course = courses.find((c: any) => c.id === l.course_id);
+                      return (
+                        <option key={l.id} value={l.id}>
+                          {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
               <div className="form-group">
@@ -2967,9 +3022,14 @@ Hoặc với đọc âm:
                       const lessonCourse = courses.find((c: any) => c.id === l.course_id);
                       return lessonCourse?.language === (formData.language || 'japanese');
                     })
-                    .map((l: any) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
+                    .map((l: any) => {
+                      const course = courses.find((c: any) => c.id === l.course_id);
+                      return (
+                        <option key={l.id} value={l.id}>
+                          {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
 
