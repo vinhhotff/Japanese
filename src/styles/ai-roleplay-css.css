@@ -1,4 +1,4 @@
-/* AI Roleplay - Pure CSS 3D */
+/* AI Roleplay - Clean CSS */
 
 .roleplay-css-container {
   min-height: 100vh;
@@ -17,6 +17,12 @@
   margin-bottom: 2rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.back-link:hover, .back-btn-css:hover {
+  background: var(--card-bg-hover);
+  transform: translateX(-4px);
 }
 
 .roleplay-css-container h1 {
@@ -25,10 +31,11 @@
   margin-bottom: 3rem;
   background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Character Selection */
+/* Character Selection Grid */
 .characters-grid-css {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -50,167 +57,12 @@
 .char-card-css:hover {
   transform: translateY(-8px);
   box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-}
-
-.char-avatar-css {
-  width: 200px;
-  height: 280px;
-  margin: 0 auto 1.5rem;
-  border: 3px solid;
-  border-radius: 16px;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(180deg, var(--card-bg-hover), var(--card-bg));
-  perspective: 1000px;
-}
-
-/* Detailed Human-like Character */
-.avatar-face {
-  position: absolute;
-  top: 15%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 90px;
-  background: #ffd4a3;
-  border-radius: 50% 50% 45% 45%;
-  animation: faceFloat 3s ease-in-out infinite;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-/* Eyes */
-.avatar-face::before,
-.avatar-face::after {
-  content: '';
-  position: absolute;
-  top: 35%;
-  width: 12px;
-  height: 12px;
-  background: #2c3e50;
-  border-radius: 50%;
-  animation: eyeBlink 4s infinite;
-}
-
-.avatar-face::before {
-  left: 20%;
-}
-
-.avatar-face::after {
-  right: 20%;
-}
-
-@keyframes eyeBlink {
-  0%, 48%, 52%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(0.1); }
-}
-
-/* Nose */
-.char-avatar-css .avatar-face {
-  box-shadow: 
-    inset 0 -5px 10px rgba(0,0,0,0.1),
-    0 5px 15px rgba(0,0,0,0.2);
-}
-
-/* Mouth */
-.char-avatar-css::before {
-  content: '😊';
-  position: absolute;
-  top: 28%;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 1.5rem;
-  z-index: 10;
-  animation: mouthTalk 2s ease-in-out infinite;
-}
-
-@keyframes mouthTalk {
-  0%, 100% { transform: translateX(-50%) scale(1); }
-  50% { transform: translateX(-50%) scale(1.1); }
-}
-
-@keyframes faceFloat {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-8px); }
-}
-
-/* Body/Torso */
-.avatar-body {
-  position: absolute;
-  top: 45%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70px;
-  height: 90px;
-  border-radius: 35px 35px 20px 20px;
-  animation: bodyBreathe 4s ease-in-out infinite;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-@keyframes bodyBreathe {
-  0%, 100% { transform: translateX(-50%) scale(1); }
-  50% { transform: translateX(-50%) scale(1.03); }
-}
-
-/* Arms */
-.char-avatar-css::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 15%;
-  width: 15px;
-  height: 60px;
-  background: #ffd4a3;
-  border-radius: 10px;
-  transform-origin: top center;
-  animation: armSwingLeft 3s ease-in-out infinite;
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-}
-
-.char-card-css .char-avatar-css::after {
-  left: 15%;
-}
-
-@keyframes armSwingLeft {
-  0%, 100% { transform: rotate(-10deg); }
-  50% { transform: rotate(10deg); }
-}
-
-/* Right Arm */
-.avatar-body::before {
-  content: '';
-  position: absolute;
-  top: 10px;
-  right: -20px;
-  width: 15px;
-  height: 60px;
-  background: #ffd4a3;
-  border-radius: 10px;
-  transform-origin: top center;
-  animation: armSwingRight 3s ease-in-out infinite;
-  box-shadow: -2px 2px 5px rgba(0,0,0,0.2);
-}
-
-@keyframes armSwingRight {
-  0%, 100% { transform: rotate(10deg); }
-  50% { transform: rotate(-10deg); }
-}
-
-/* Legs */
-.avatar-body::after {
-  content: '';
-  position: absolute;
-  bottom: -50px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 50px;
-  background: linear-gradient(to bottom, transparent 0%, #ffd4a3 20%);
-  border-radius: 0 0 10px 10px;
+  border-color: var(--primary-color);
 }
 
 .char-card-css h3 {
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  margin: 1rem 0;
   color: var(--text-primary);
 }
 
@@ -219,40 +71,61 @@
   border: none;
   border-radius: 12px;
   color: white;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-/* 2-Column Layout */
+.char-card-css button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* Simple avatar for selection screen */
+.char-avatar-css {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1rem;
+  border: 3px solid;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  background: linear-gradient(135deg, var(--card-bg-hover), var(--card-bg));
+}
+
+/* Conversation Layout */
 .conversation-grid {
   display: grid;
-  grid-template-columns: 500px 1fr;
+  grid-template-columns: 400px 1fr;
   gap: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  height: calc(100vh - 150px);
+  height: calc(100vh - 200px);
 }
 
-/* Character Frame */
+/* Character Frame (Left) */
 .character-frame-css {
   background: var(--card-bg);
-  border: 4px solid;
-  border-radius: 24px;
+  border: 3px solid;
+  border-radius: 20px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
 }
 
 .frame-header-css {
   padding: 1rem 1.5rem;
-  background: var(--card-bg-hover);
+  background: linear-gradient(135deg, var(--card-bg-hover), var(--card-bg));
   border-bottom: 2px solid var(--border-color);
+  font-weight: 700;
+  font-size: 1.125rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -265,287 +138,136 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 0 0 #10b98180;
-  }
-  50% {
-    opacity: 0.7;
-    box-shadow: 0 0 0 10px #10b98100;
-  }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
 }
+
+/* Character Stage - AnimatedCharacter container */
 .character-stage-css {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, var(--card-bg) 0%, var(--card-bg-hover) 100%);
+  background: linear-gradient(180deg, #95B3BF 0%, #7A9AA8 100%);
   position: relative;
-  perspective: 1000px;
-  overflow: visible; /* cho model nhô ra khỏi frame mà không bị cắt */
+  overflow: hidden;
+  padding: 1rem;
 }
 
-/* Character wrapper - control z-index baseline */
-.character-model-css {
-  transform-style: preserve-3d;
-  position: relative;
-  width: 180px;
-  height: 380px;
-  z-index: 20; /* đặt wrapper trên đế nhưng dưới header nếu cần */
-}
-
-/* Model states */
-.character-model-css.talking { animation: modelIdle 3s ease-in-out infinite; }
-.character-model-css.thinking { animation: modelThink 2.2s ease-in-out infinite; }
-
-@keyframes modelIdle {
-  0%,100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-@keyframes modelThink {
-  0%,100% { transform: translateY(0) rotateY(0deg); }
-  50% { transform: translateY(-10px) rotateY(6deg); }
-}
-
-/* HEAD (mức z-index cao nhất trên model) */
-.model-face-css {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90px;
-  height: 50px;
-  background: linear-gradient(#ffe7c8, #ffcf9d);
-  border-radius: 50% 50% 45% 45%;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  animation: headBob 3s ease-in-out infinite;
-  z-index: 60; /* RẤT CAO để luôn trên tất cả chân/chỗ khác */
-}
-@keyframes headBob {
-  0%,100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-6px); }
-}
-.model-face-css::before{
-  content: "";
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 92px;
-  height: 48px;
-  border-radius: 50% 50% 0 0;
-  background: #2c2c2c;
-  box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3);
-}
-.model-face-css::after{
-  content: "👀";
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 1.4rem;
-  animation: eyeBlink 4s infinite;
-}
-@keyframes eyeBlink {
-  0%,45%,55%,100% { opacity: 1; }
-  50% { opacity: 0.1; }
-}
-
-/* BODY (kế dưới face nhưng trên chân) */
-.model-body-css {
-  position: absolute;
-  top: 118px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 150px;
-  border-radius: 55px 55px 30px 30px;
-  background: linear-gradient(180deg,#ffffff,#f7f7f7);
-  box-shadow:
-    inset 0 -18px 36px rgba(0,0,0,0.10),
-    0 10px 26px rgba(0,0,0,0.14);
-  animation: bodyBreath 4s ease-in-out infinite;
-  z-index: 50; /* cao để đè lên chân */
-}
-@keyframes bodyBreath {
-  0%,100% { transform: translateX(-50%) scale(1); }
-  50% { transform: translateX(-50%) scale(1.03); }
-}
-.model-body-css::before{
-  content:"";
-  position:absolute;
-  top:6px;
-  left:50%;
-  transform:translateX(-50%);
-  width:50px;
-  height:22px;
-  background: rgba(255,255,255,0.9);
-  border-radius: 14px 14px 0 0;
-}
-.model-body-css::after{
-  content:"•";
-  position:absolute;
-  top:40px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:0.6rem;
-  opacity:.45;
-}
-
-/* ARMS - sử dụng pseudo của wrapper (không xung đột với face/body) */
-.character-model-css .arm-left,
-.character-model-css .arm-right { position:absolute; top:140px; width:22px; height:90px; border-radius:12px; background:#ffd4a3; box-shadow:0 3px 10px rgba(0,0,0,0.18); transform-origin:top center; z-index:45; }
-.character-model-css .arm-left { left: calc(50% - 75px); animation: armLeft 3s ease-in-out infinite; }
-.character-model-css .arm-right { right: calc(50% - 75px); animation: armRight 3s ease-in-out infinite; }
-@keyframes armLeft { 0%,100%{ transform: rotate(-8deg); } 50%{ transform: rotate(10deg); } }
-@keyframes armRight { 0%,100%{ transform: rotate(8deg); } 50%{ transform: rotate(-10deg); } }
-
-/* LEGS & FEET (đặt dưới cùng, z-index thấp) */
-/* leg block (visual stripes) */
-.character-stage-css__legs {
-  position: absolute;
-  bottom: 40px; /* đặt thấp hơn so với face/body */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70px;
-  height: 95px;
-  border-radius: 0 0 18px 18px;
-  background: linear-gradient(90deg, transparent 0%, transparent 38%, #2c5f8d 38%, #2c5f8d 48%, transparent 48%, transparent 52%, #2c5f8d 52%, #2c5f8d 62%, transparent 62%);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.18);
-  z-index: 5; /* thấp */
-  pointer-events: none;
-}
-
-/* feet shadow / pads */
-.character-stage-css__feet {
-  position: absolute;
-  bottom: 20px; /* thấp hơn nữa để không chồng lên mặt */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 22px;
-  border-radius: 50px;
-  background:
-    radial-gradient(circle at 25% 50%, #444 0%, #444 35%, transparent 35%),
-    radial-gradient(circle at 75% 50%, #444 0%, #444 35%, transparent 35%);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.22);
-  z-index: 4; /* rất thấp, luôn phía sau model */
-  pointer-events: none;
-}
-
-/* nếu bạn dùng pseudo elements trên .character-stage-css thay vì element nodes,
-   set their z-index tương ứng (dưới mặt & thân): */
-.character-stage-css::before {
-  /* fallback legacy leg strip if used */
-  content: "";
-  position: absolute;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70px;
-  height: 95px;
-  border-radius: 0 0 18px 18px;
-  background: linear-gradient(90deg, transparent 0%, transparent 38%, #2c5f8d 38%, #2c5f8d 48%, transparent 48%, transparent 52%, #2c5f8d 52%, #2c5f8d 62%, transparent 62%);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.12);
-  z-index: 6;
-  pointer-events: none;
-}
-.character-stage-css::after {
-  content: "";
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 22px;
-  border-radius: 50px;
-  background:
-    radial-gradient(circle at 25% 50%, #444 0%, #444 35%, transparent 35%),
-    radial-gradient(circle at 75% 50%, #444 0%, #444 35%, transparent 35%);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.16);
-  z-index: 5;
-  pointer-events: none;
+/* Scale AnimatedCharacter to fit */
+.character-stage-css .character-wrapper {
+  transform: scale(0.85);
 }
 
 /* Thought bubble */
 .thought-bubble-css {
   position: absolute;
-  top: 6%;
-  right: 10%;
+  top: 20px;
+  right: 20px;
   font-size: 3rem;
-  animation: bubbleFloat 2.2s ease-in-out infinite;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.18));
-  z-index: 55; /* trên body nhưng dưới face nếu cần */
-}
-@keyframes bubbleFloat {
-  0%,100% { transform: translateY(0) scale(1) rotate(-5deg); opacity:.95; }
-  50% { transform: translateY(-16px) scale(1.12) rotate(5deg); opacity:1; }
+  animation: float 2s ease-in-out infinite;
+  z-index: 100;
 }
 
-/* Chat Frame */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Chat Frame (Right) */
 .chat-frame-css {
   background: var(--card-bg);
   border: 2px solid var(--border-color);
   border-radius: 20px;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(0,0,0,0.1);
 }
 
 .messages-list-css {
   flex: 1;
-  padding: 2rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding-right: 0.5rem;
 }
 
+.messages-list-css::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages-list-css::-webkit-scrollbar-track {
+  background: var(--card-bg-hover);
+  border-radius: 4px;
+}
+
+.messages-list-css::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.messages-list-css::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Messages */
 .message-css {
   padding: 1rem 1.5rem;
   border-radius: 16px;
   max-width: 80%;
-  animation: slideIn 0.3s ease;
+  line-height: 1.6;
+  font-size: 1.125rem;
+  animation: messageSlide 0.3s ease;
 }
 
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes messageSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .message-css.ai {
-  background: linear-gradient(135deg, var(--primary-color)15, var(--primary-color)05);
-  border: 2px solid var(--primary-color);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
   align-self: flex-start;
-  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
 }
 
 .message-css.user {
-  background: linear-gradient(135deg, var(--success-color)15, var(--success-color)05);
-  border: 2px solid var(--success-color);
+  background: var(--card-bg-hover);
+  color: var(--text-primary);
   align-self: flex-end;
-  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border: 2px solid var(--border-color);
 }
 
-/* Options */
+/* Options List */
 .options-list-css {
-  padding: 1.5rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 1rem;
   border-top: 2px solid var(--border-color);
-  background: var(--card-bg-hover);
 }
 
 .options-list-css p {
-  font-weight: 600;
-  margin-bottom: 1rem;
+  font-weight: 700;
   color: var(--text-primary);
+  margin-bottom: 0.5rem;
 }
 
 .option-css {
-  width: 100%;
   padding: 1rem 1.5rem;
-  margin-bottom: 0.75rem;
-  background: var(--card-bg);
+  background: var(--card-bg-hover);
   border: 2px solid var(--border-color);
   border-radius: 12px;
   text-align: left;
@@ -554,14 +276,14 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  color: var(--text-primary);
   font-size: 1rem;
+  color: var(--text-primary);
 }
 
 .option-css:hover {
+  background: var(--primary-light);
   border-color: var(--primary-color);
   transform: translateX(8px);
-  background: var(--card-bg-hover);
 }
 
 .num-css {
@@ -575,18 +297,21 @@
   justify-content: center;
   font-weight: 700;
   flex-shrink: 0;
-  transition: all 0.3s ease;
-}
-
-.option-css:hover .num-css {
-  transform: rotate(360deg) scale(1.2);
 }
 
 /* Responsive */
 @media (max-width: 1024px) {
   .conversation-grid {
     grid-template-columns: 1fr;
-    grid-template-rows: 400px 1fr;
+    height: auto;
+  }
+  
+  .character-frame-css {
+    height: 400px;
+  }
+  
+  .character-stage-css .character-wrapper {
+    transform: scale(0.7);
   }
 }
 
@@ -596,32 +321,23 @@
   }
   
   .conversation-grid {
-    grid-template-rows: 350px 1fr;
-    height: calc(100vh - 100px);
+    gap: 1rem;
   }
   
-  .model-face-css {
-    font-size: 8rem;
+  .character-frame-css {
+    height: 300px;
   }
-}
-
-/* Additional Animations for improved model */
-@keyframes armSwingLeft {
-  0%, 100% { transform: rotate(-8deg) translateY(0); }
-  50% { transform: rotate(12deg) translateY(-5px); }
-}
-
-@keyframes armSwingRight {
-  0%, 100% { transform: rotate(8deg) translateY(0); }
-  50% { transform: rotate(-12deg) translateY(-5px); }
-}
-
-/* Smooth mouth animation for talking */
-.character-model-css.talking .model-face-css {
-  animation: headBob 3s ease-in-out infinite, mouthMove 0.5s ease-in-out infinite;
-}
-
-@keyframes mouthMove {
-  0%, 100% { border-radius: 50% 50% 48% 48%; }
-  50% { border-radius: 50% 50% 45% 45%; }
+  
+  .character-stage-css .character-wrapper {
+    transform: scale(0.5);
+  }
+  
+  .chat-frame-css {
+    padding: 1rem;
+  }
+  
+  .message-css {
+    font-size: 1rem;
+    max-width: 90%;
+  }
 }

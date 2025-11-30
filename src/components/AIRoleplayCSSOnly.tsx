@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAIResponse } from '../services/aiService';
+import AnimatedCharacter from './AnimatedCharacter';
 import '../styles/ai-roleplay-css.css';
 
 interface Message {
@@ -133,10 +134,10 @@ OPTIONS:
             {selectedCharacter.name}
           </div>
           <div className="character-stage-css">
-            <div className={`character-model-css ${loading ? 'thinking' : 'talking'}`}>
-              <div className="model-face-css"></div>
-              <div className="model-body-css" style={{ background: selectedCharacter.color }}></div>
-            </div>
+            <AnimatedCharacter 
+              isSpeaking={messages.length > 0 && messages[messages.length - 1].role === 'ai' && !loading} 
+              character="teacher" 
+            />
             {loading && <div className="thought-bubble-css">💭</div>}
           </div>
         </div>

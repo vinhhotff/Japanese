@@ -30,7 +30,6 @@ import './styles/custom-theme.css';
 import './styles/modern-effects.css';
 import './styles/dark-mode-fixes.css';
 import './styles/ai-roleplay-css.css';
-import './styles/ai-roleplay-simple-fix.css';
 import './styles/dashboard-v2.css';
 import './styles/assignments.css';
 import './styles/grading.css';
