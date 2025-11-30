@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { getKanji } from '../services/supabaseService';
+import { getKanji } from '../services/supabaseService.v2';
+import type { Language } from '../services/supabaseService.v2';
 import '../App.css';
 
 interface KanjiItem {
@@ -8,10 +9,18 @@ interface KanjiItem {
   meaning: string;
   onyomi?: string[];
   kunyomi?: string[];
+  pinyin?: string;
+  radical?: string;
+  simplified?: string;
+  traditional?: string;
   strokeCount?: number;
 }
 
-const KanjiWritingPractice = () => {
+interface KanjiWritingPracticeProps {
+  language: Language;
+}
+
+const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
   const [kanjiList, setKanjiList] = useState<KanjiItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -23,16 +32,17 @@ const KanjiWritingPractice = () => {
 
   useEffect(() => {
     loadKanji();
-  }, []);
+  }, [language]);
 
   const loadKanji = async () => {
     try {
       setLoading(true);
       setError(null);
-      const allKanji = await getKanji();
+      const result = await getKanji(undefined, language, 1, 1000);
+      const allKanji = result.data;
       
       if (!allKanji || allKanji.length === 0) {
-        setError('Không có kanji nào. Vui lòng thêm kanji trong Admin Panel.');
+        setError(`Không có ${language === 'japanese' ? 'kanji' : 'hán tự'} nào. Vui lòng thêm trong Admin Panel.`);
         setLoading(false);
         return;
       }
@@ -44,11 +54,15 @@ const KanjiWritingPractice = () => {
         meaning: k.meaning || '',
         onyomi: Array.isArray(k.onyomi) ? k.onyomi : [],
         kunyomi: Array.isArray(k.kunyomi) ? k.kunyomi : [],
+        pinyin: k.pinyin || undefined,
+        radical: k.radical || undefined,
+        simplified: k.simplified || undefined,
+        traditional: k.traditional || undefined,
         strokeCount: k.stroke_count || undefined
       })).filter((k: KanjiItem) => k.character && k.meaning);
 
       if (mappedKanji.length === 0) {
-        setError('Không có kanji hợp lệ để luyện tập.');
+        setError(`Không có ${language === 'japanese' ? 'kanji' : 'hán tự'} hợp lệ để luyện tập.`);
         setLoading(false);
         return;
       }
@@ -57,7 +71,7 @@ const KanjiWritingPractice = () => {
       setCurrentIndex(0);
     } catch (error) {
       console.error('Error loading kanji:', error);
-      setError('Lỗi khi tải kanji: ' + (error as Error).message);
+      setError(`Lỗi khi tải ${language === 'japanese' ? 'kanji' : 'hán tự'}: ` + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -198,9 +212,9 @@ const KanjiWritingPractice = () => {
           <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
-          Luyện Viết Kanji
+          Luyện Viết {language === 'japanese' ? 'Kanji' : 'Hán tự'}
         </h1>
-        <p>Luyện tập viết và nhớ kanji</p>
+        <p>Luyện tập viết và nhớ {language === 'japanese' ? 'kanji' : 'hán tự'}</p>
       </div>
 
       <div className="kanji-practice-mode">
@@ -208,32 +222,32 @@ const KanjiWritingPractice = () => {
           className={`mode-btn ${practiceMode === 'meaning' ? 'active' : ''}`}
           onClick={() => setPracticeMode('meaning')}
         >
-          Nghĩa → Kanji
+          Nghĩa → {language === 'japanese' ? 'Kanji' : 'Hán tự'}
         </button>
         <button
           className={`mode-btn ${practiceMode === 'reading' ? 'active' : ''}`}
           onClick={() => setPracticeMode('reading')}
         >
-          Đọc → Kanji
+          {language === 'japanese' ? 'Đọc' : 'Pinyin'} → {language === 'japanese' ? 'Kanji' : 'Hán tự'}
         </button>
         <button
           className={`mode-btn ${practiceMode === 'stroke' ? 'active' : ''}`}
           onClick={() => setPracticeMode('stroke')}
         >
-          Viết Kanji
+          Viết {language === 'japanese' ? 'Kanji' : 'Hán tự'}
         </button>
       </div>
 
       <div className="kanji-practice-card">
         <div className="practice-progress">
-          Kanji {currentIndex + 1} / {kanjiList.length}
+          {language === 'japanese' ? 'Kanji' : 'Hán tự'} {currentIndex + 1} / {kanjiList.length}
         </div>
 
         {practiceMode === 'meaning' && (
           <div className="kanji-practice-content">
             <div className="practice-question">
               <h2>Nghĩa: {currentKanji.meaning}</h2>
-              <p>Hãy viết kanji này</p>
+              <p>Hãy viết {language === 'japanese' ? 'kanji' : 'hán tự'} này</p>
             </div>
             <div className="kanji-answer-display">
               {showAnswer ? (
@@ -249,26 +263,50 @@ const KanjiWritingPractice = () => {
           <div className="kanji-practice-content">
             <div className="practice-question">
               <div style={{ marginBottom: '1rem' }}>
-                {currentKanji.onyomi && currentKanji.onyomi.length > 0 && (
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <strong>Onyomi (音読み):</strong> {currentKanji.onyomi.join(', ')}
-                  </div>
-                )}
-                {currentKanji.kunyomi && currentKanji.kunyomi.length > 0 && (
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <strong>Kunyomi (訓読み):</strong> {currentKanji.kunyomi.join(', ')}
-                  </div>
-                )}
-                {(!currentKanji.onyomi || currentKanji.onyomi.length === 0) && 
-                 (!currentKanji.kunyomi || currentKanji.kunyomi.length === 0) && (
-                  <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
-                    <strong>Nghĩa:</strong> {currentKanji.meaning}
-                    <br />
-                    <span style={{ fontSize: '0.875rem' }}>(Chưa có thông tin đọc âm)</span>
-                  </div>
+                {language === 'japanese' ? (
+                  <>
+                    {currentKanji.onyomi && currentKanji.onyomi.length > 0 && (
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <strong>Onyomi (音読み):</strong> {currentKanji.onyomi.join(', ')}
+                      </div>
+                    )}
+                    {currentKanji.kunyomi && currentKanji.kunyomi.length > 0 && (
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <strong>Kunyomi (訓読み):</strong> {currentKanji.kunyomi.join(', ')}
+                      </div>
+                    )}
+                    {(!currentKanji.onyomi || currentKanji.onyomi.length === 0) && 
+                     (!currentKanji.kunyomi || currentKanji.kunyomi.length === 0) && (
+                      <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                        <strong>Nghĩa:</strong> {currentKanji.meaning}
+                        <br />
+                        <span style={{ fontSize: '0.875rem' }}>(Chưa có thông tin đọc âm)</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {currentKanji.pinyin && (
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <strong>Pinyin:</strong> {currentKanji.pinyin}
+                      </div>
+                    )}
+                    {currentKanji.radical && (
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <strong>Bộ thủ:</strong> {currentKanji.radical}
+                      </div>
+                    )}
+                    {!currentKanji.pinyin && (
+                      <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                        <strong>Nghĩa:</strong> {currentKanji.meaning}
+                        <br />
+                        <span style={{ fontSize: '0.875rem' }}>(Chưa có thông tin pinyin)</span>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
-              <p>Hãy viết kanji này</p>
+              <p>Hãy viết {language === 'japanese' ? 'kanji' : 'hán tự'} này</p>
             </div>
             <div className="kanji-answer-display">
               {showAnswer ? (

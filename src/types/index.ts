@@ -1,30 +1,43 @@
 export type JLPTLevel = 'N5' | 'N4' | 'N3' | 'N2' | 'N1';
+export type HSKLevel = 'HSK1' | 'HSK2' | 'HSK3' | 'HSK4' | 'HSK5' | 'HSK6';
+export type Language = 'japanese' | 'chinese';
+export type Level = JLPTLevel | HSKLevel;
 
 export interface Vocabulary {
   id: string;
   word: string;
-  kanji?: string;
-  hiragana: string;
+  kanji?: string; // For Japanese
+  character?: string; // Generic: Kanji for Japanese, Hanzi for Chinese
+  hiragana?: string; // For Japanese
+  pinyin?: string; // For Chinese
+  simplified?: string; // For Chinese
+  traditional?: string; // For Chinese
   meaning: string;
   example?: string;
   exampleTranslation?: string;
   difficulty: 'easy' | 'medium' | 'hard';
+  language?: Language;
 }
 
 export interface Kanji {
   id: string;
   character: string;
   meaning: string;
-  readings: {
+  readings?: {
     onyomi: string[];
     kunyomi: string[];
   };
+  pinyin?: string; // For Chinese
+  simplified?: string; // For Chinese
+  traditional?: string; // For Chinese
+  radical?: string; // For Chinese
   strokeCount: number;
   examples: {
     word: string;
     reading: string;
     meaning: string;
   }[];
+  language?: Language;
 }
 
 export interface Grammar {
@@ -63,7 +76,7 @@ export interface SpeakingExercise {
 export interface Lesson {
   id: string;
   title: string;
-  level: JLPTLevel;
+  level: Level;
   lessonNumber: number;
   description: string;
   vocabulary: Vocabulary[];
@@ -73,13 +86,15 @@ export interface Lesson {
   speaking: SpeakingExercise[];
   roleplay?: RoleplayScenario[];
   difficultVocabulary: string[]; // IDs of difficult vocabulary words
+  language?: Language;
 }
 
 export interface Course {
-  level: JLPTLevel;
+  level: Level;
   title: string;
   description: string;
   lessons: Lesson[];
+  language?: Language;
 }
 
 export interface SentenceGame {

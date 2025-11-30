@@ -1,29 +1,40 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getLessons } from '../services/supabaseService';
+import { getLessons } from '../services/supabaseService.v2';
 import { getLessonCompletionPercentage, isLessonCompleted } from '../services/progressService';
+import type { Language } from '../services/supabaseService.v2';
+import FloatingCharacters from './FloatingCharacters';
 import '../styles/custom-theme.css';
 
-const LessonListNew = () => {
+interface LessonListNewProps {
+  language: Language;
+}
+
+const LessonListNew = ({ language }: LessonListNewProps) => {
   const { level } = useParams<{ level: string }>();
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadLessons();
-  }, [level]);
+  }, [level, language]);
 
   const loadLessons = async () => {
     try {
       setLoading(true);
-      const lessonsData = await getLessons();
+      const lessonsResult = await getLessons(undefined, language, 1, 1000);
+      const lessonsData = lessonsResult.data;
       
-      const { getVocabulary, getKanji, getGrammar } = await import('../services/supabaseService');
-      const [allVocab, allKanji, allGrammar] = await Promise.all([
-        getVocabulary(),
-        getKanji(),
-        getGrammar()
+      const { getVocabulary, getKanji, getGrammar } = await import('../services/supabaseService.v2');
+      const [allVocabResult, allKanjiResult, allGrammarResult] = await Promise.all([
+        getVocabulary(undefined, language, 1, 1000),
+        getKanji(undefined, language, 1, 1000),
+        getGrammar(undefined, language, 1, 1000)
       ]);
+
+      const allVocab = allVocabResult.data;
+      const allKanji = allKanjiResult.data;
+      const allGrammar = allGrammarResult.data;
 
       const lessonsOfLevel = lessonsData
         .filter((l: any) => (l.level || '').toUpperCase() === (level || '').toUpperCase())
@@ -64,7 +75,8 @@ const LessonListNew = () => {
   }
 
   return (
-    <div className="container">
+    <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+        <FloatingCharacters language={language} count={12} />
         {/* Back Button */}
         <Link to="/" className="back-button">
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -82,9 +94,16 @@ const LessonListNew = () => {
                 'N4': { bg: '#e3f2fd', border: '#2196f3', text: '#1565c0' },
                 'N3': { bg: '#fff3e0', border: '#ff9800', text: '#e65100' },
                 'N2': { bg: '#fce4ec', border: '#e91e63', text: '#c2185b' },
-                'N1': { bg: '#f3e5f5', border: '#9c27b0', text: '#6a1b9a' }
+                'N1': { bg: '#f3e5f5', border: '#9c27b0', text: '#6a1b9a' },
+                'HSK1': { bg: '#e8f5e9', border: '#4caf50', text: '#2e7d32' },
+                'HSK2': { bg: '#e3f2fd', border: '#2196f3', text: '#1565c0' },
+                'HSK3': { bg: '#fff3e0', border: '#ff9800', text: '#e65100' },
+                'HSK4': { bg: '#fce4ec', border: '#e91e63', text: '#c2185b' },
+                'HSK5': { bg: '#f3e5f5', border: '#9c27b0', text: '#6a1b9a' },
+                'HSK6': { bg: '#fce4ec', border: '#ec4899', text: '#be185d' }
               };
-              const colors = levelColors[level || 'N5'] || levelColors['N5'];
+              const defaultLevel = language === 'japanese' ? 'N5' : 'HSK1';
+              const colors = levelColors[level || defaultLevel] || levelColors[defaultLevel];
               
               return (
                 <div style={{
@@ -132,7 +151,7 @@ const LessonListNew = () => {
             return (
               <Link 
                 key={lesson.id} 
-                to={`/lessons/${lesson.id}`}
+                to={`/${language}/lessons/${lesson.id}`}
                 style={{ textDecoration: 'none' }}
               >
                 <div 
@@ -168,17 +187,30 @@ const LessonListNew = () => {
                         'N4': '#2196f3',
                         'N3': '#ff9800',
                         'N2': '#e91e63',
-                        'N1': '#9c27b0'
+                        'N1': '#9c27b0',
+                        'HSK1': '#4caf50',
+                        'HSK2': '#2196f3',
+                        'HSK3': '#ff9800',
+                        'HSK4': '#e91e63',
+                        'HSK5': '#9c27b0',
+                        'HSK6': '#ec4899'
                       };
                       const levelBgColors: Record<string, string> = {
                         'N5': '#e8f5e9',
                         'N4': '#e3f2fd',
                         'N3': '#fff3e0',
                         'N2': '#fce4ec',
-                        'N1': '#f3e5f5'
+                        'N1': '#f3e5f5',
+                        'HSK1': '#e8f5e9',
+                        'HSK2': '#e3f2fd',
+                        'HSK3': '#fff3e0',
+                        'HSK4': '#fce4ec',
+                        'HSK5': '#f3e5f5',
+                        'HSK6': '#fce4ec'
                       };
-                      const color = levelColors[level || 'N5'] || levelColors['N5'];
-                      const bgColor = levelBgColors[level || 'N5'] || levelBgColors['N5'];
+                      const defaultLevel = language === 'japanese' ? 'N5' : 'HSK1';
+                      const color = levelColors[level || defaultLevel] || levelColors[defaultLevel];
+                      const bgColor = levelBgColors[level || defaultLevel] || levelBgColors[defaultLevel];
                       
                       return (
                         <div style={{
@@ -241,9 +273,16 @@ const LessonListNew = () => {
                           'N4': '#2196f3',
                           'N3': '#ff9800',
                           'N2': '#e91e63',
-                          'N1': '#9c27b0'
+                          'N1': '#9c27b0',
+                          'HSK1': '#4caf50',
+                          'HSK2': '#2196f3',
+                          'HSK3': '#ff9800',
+                          'HSK4': '#e91e63',
+                          'HSK5': '#9c27b0',
+                          'HSK6': '#ec4899'
                         };
-                        const color = levelColors[level || 'N5'] || levelColors['N5'];
+                        const defaultLevel = language === 'japanese' ? 'N5' : 'HSK1';
+                        const color = levelColors[level || defaultLevel] || levelColors[defaultLevel];
                         
                         return (
                         <div style={{ marginTop: '1.25rem' }}>

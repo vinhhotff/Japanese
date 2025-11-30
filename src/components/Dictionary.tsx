@@ -1,15 +1,22 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { searchWord, searchKanji } from '../services/jishoService';
+import { searchChineseWord, searchChineseCharacter, formatChineseWordToJishoFormat } from '../services/chineseDictionaryService';
 import { speakText, isSpeechSynthesisSupported } from '../utils/speech';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchCache, getCacheKey } from '../utils/searchCache';
 import { saveWord, isWordSaved, removeSavedWord, getSavedWords, SavedWord } from '../utils/savedWords';
 import { logger } from '../utils/logger';
+import type { Language } from '../services/supabaseService.v2';
+import FloatingCharacters from './FloatingCharacters';
 import DictionaryResult from './DictionaryResult';
 import '../App.css';
 
-const Dictionary = () => {
+interface DictionaryProps {
+  language: Language;
+}
+
+const Dictionary = ({ language }: DictionaryProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState<'word' | 'kanji'>('word');
   const [results, setResults] = useState<any[]>([]);
@@ -29,7 +36,7 @@ const Dictionary = () => {
     }
 
     performSearch(debouncedSearchTerm, searchType);
-  }, [debouncedSearchTerm, searchType]);
+  }, [debouncedSearchTerm, searchType, language]);
 
   const performSearch = useCallback(async (term: string, type: 'word' | 'kanji') => {
     // Check cache first
@@ -48,15 +55,27 @@ const Dictionary = () => {
     setResults([]);
 
     try {
-      logger.log('Searching for:', term, 'Type:', type);
+      logger.log('Searching for:', term, 'Type:', type, 'Language:', language);
       
       let data;
       const startTime = performance.now();
       
-      if (type === 'word') {
-        data = await searchWord(term);
+      if (language === 'chinese') {
+        // Chinese dictionary search
+        if (type === 'word') {
+          const chineseResults = await searchChineseWord(term);
+          data = chineseResults.map(formatChineseWordToJishoFormat);
+        } else {
+          const chineseResults = await searchChineseCharacter(term);
+          data = chineseResults.map(formatChineseWordToJishoFormat);
+        }
       } else {
-        data = await searchKanji(term);
+        // Japanese dictionary search (Jisho)
+        if (type === 'word') {
+          data = await searchWord(term);
+        } else {
+          data = await searchKanji(term);
+        }
       }
       
       const endTime = performance.now();
@@ -148,7 +167,8 @@ const Dictionary = () => {
   }, [handleSaveWord]);
 
   return (
-    <div className="container">
+    <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+      <FloatingCharacters language={language} count={18} />
       <Link to="/" className="back-button">
         <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -159,10 +179,12 @@ const Dictionary = () => {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.75rem' }}>
-          🔍 Từ điển Tiếng Nhật
+          🔍 Từ điển {language === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
-          Tra từ vựng và kanji từ Jisho.org
+          {language === 'japanese' 
+            ? 'Tra từ vựng và kanji từ Jisho.org'
+            : 'Tra từ vựng và hán tự tiếng Trung'}
         </p>
       </div>
 
@@ -223,7 +245,7 @@ const Dictionary = () => {
             <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            Kanji
+            {language === 'japanese' ? 'Kanji' : 'Hán tự'}
           </button>
         </div>
 
@@ -244,7 +266,9 @@ const Dictionary = () => {
             </svg>
             <input
               type="text"
-              placeholder={searchType === 'word' ? 'Nhập từ vựng cần tra... (VD: こんにちは, 学生)' : 'Nhập kanji cần tra... (VD: 学, 日)'}
+              placeholder={searchType === 'word' 
+                ? (language === 'japanese' ? 'Nhập từ vựng cần tra... (VD: こんにちは, 学生)' : 'Nhập từ vựng cần tra... (VD: 你好, 谢谢)')
+                : (language === 'japanese' ? 'Nhập kanji cần tra... (VD: 学, 日)' : 'Nhập hán tự cần tra... (VD: 学, 习)')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && !loading && handleSearch()}
@@ -455,7 +479,8 @@ const Dictionary = () => {
             color: 'var(--text-secondary)',
             border: '1px solid var(--border-color)'
           }}>
-            <strong style={{ color: 'var(--text-primary)' }}>Ví dụ:</strong> こんにちは, 学生, 私, 食べる
+            <strong style={{ color: 'var(--text-primary)' }}>Ví dụ:</strong>{' '}
+            {language === 'japanese' ? 'こんにちは, 学生, 私, 食べる' : '你好, 谢谢, 学习, 再见'}
           </div>
         </div>
       )}

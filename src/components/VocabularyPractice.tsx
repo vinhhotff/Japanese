@@ -16,8 +16,12 @@ interface ChineseVocabularyItem {
   meaning: string;
 }
 
-const VocabularyPractice = () => {
-  const [language, setLanguage] = useState<Language>('japanese');
+interface VocabularyPracticeProps {
+  language: Language;
+}
+
+const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps) => {
+  const [language, setLanguage] = useState<Language>(propLanguage);
   const [vocabList, setVocabList] = useState<VocabularyItem[]>([]);
   const [chineseVocabList, setChineseVocabList] = useState<ChineseVocabularyItem[]>([]);
   const [importText, setImportText] = useState('');
@@ -33,6 +37,11 @@ const VocabularyPractice = () => {
   const [skipCountdown, setSkipCountdown] = useState(3);
   const skipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync language prop with state
+  useEffect(() => {
+    setLanguage(propLanguage);
+  }, [propLanguage]);
 
   const parseVocabularyList = (text: string): VocabularyItem[] => {
     const lines = text.split('\n').filter(line => line.trim());

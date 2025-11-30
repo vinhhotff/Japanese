@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { getVocabulary } from '../services/supabaseService';
+import { getVocabulary } from '../services/supabaseService.v2';
 import { speakText } from '../utils/speech';
+import type { Language } from '../services/supabaseService.v2';
 import '../App.css';
 
 interface VocabItem {
   id: string;
   word: string;
   kanji?: string;
-  hiragana: string;
+  character?: string;
+  hiragana?: string;
+  pinyin?: string;
   meaning: string;
 }
 
@@ -18,7 +21,11 @@ interface ReviewItem extends VocabItem {
   repetitions: number;
 }
 
-const SpacedRepetition = () => {
+interface SpacedRepetitionProps {
+  language: Language;
+}
+
+const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [currentItem, setCurrentItem] = useState<ReviewItem | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -26,12 +33,13 @@ const SpacedRepetition = () => {
 
   useEffect(() => {
     loadReviewItems();
-  }, []);
+  }, [language]);
 
   const loadReviewItems = async () => {
     try {
-      const allVocab = await getVocabulary();
-      const stored = localStorage.getItem('spaced_repetition');
+      const result = await getVocabulary(undefined, language, 1, 1000);
+      const allVocab = result.data;
+      const stored = localStorage.getItem(`spaced_repetition_${language}`);
       const savedItems: Record<string, ReviewItem> = stored ? JSON.parse(stored) : {};
 
       const items: ReviewItem[] = allVocab.map((v: any) => {
@@ -42,8 +50,10 @@ const SpacedRepetition = () => {
         return {
           id: v.id,
           word: v.word,
-          kanji: v.kanji,
+          kanji: v.character || v.kanji,
+          character: v.character,
           hiragana: v.hiragana,
+          pinyin: v.pinyin,
           meaning: v.meaning,
           nextReview: Date.now(),
           interval: 0,
@@ -107,10 +117,10 @@ const SpacedRepetition = () => {
     if (!currentItem) return;
 
     const updated = calculateNextReview(quality, currentItem);
-    const stored = localStorage.getItem('spaced_repetition');
+    const stored = localStorage.getItem(`spaced_repetition_${language}`);
     const savedItems: Record<string, ReviewItem> = stored ? JSON.parse(stored) : {};
     savedItems[updated.id] = updated;
-    localStorage.setItem('spaced_repetition', JSON.stringify(savedItems));
+    localStorage.setItem(`spaced_repetition_${language}`, JSON.stringify(savedItems));
 
     // Remove current item and move to next
     const remaining = reviewItems.filter(item => item.id !== currentItem.id);
@@ -121,7 +131,10 @@ const SpacedRepetition = () => {
 
   const handlePlayAudio = async () => {
     if (currentItem) {
-      await speakText(currentItem.hiragana);
+      const textToSpeak = language === 'japanese' 
+        ? (currentItem.hiragana || currentItem.word)
+        : (currentItem.pinyin || currentItem.character || currentItem.word);
+      await speakText(textToSpeak);
     }
   };
 
@@ -182,8 +195,8 @@ const SpacedRepetition = () => {
           {!showAnswer ? (
             <>
               <div className="srs-kanji-display">
-                {currentItem.kanji ? (
-                  <div className="kanji-large">{currentItem.kanji}</div>
+                {(currentItem.character || currentItem.kanji) ? (
+                  <div className="kanji-large">{currentItem.character || currentItem.kanji}</div>
                 ) : (
                   <div className="kanji-large">{currentItem.word}</div>
                 )}
@@ -194,8 +207,12 @@ const SpacedRepetition = () => {
             </>
           ) : (
             <div className="srs-answer">
-              <div className="answer-kanji">{currentItem.kanji || currentItem.word}</div>
-              <div className="answer-hiragana">{currentItem.hiragana}</div>
+              <div className="answer-kanji">{currentItem.character || currentItem.kanji || currentItem.word}</div>
+              {language === 'japanese' ? (
+                <div className="answer-hiragana">{currentItem.hiragana}</div>
+              ) : (
+                <div className="answer-hiragana">{currentItem.pinyin}</div>
+              )}
               <div className="answer-meaning">{currentItem.meaning}</div>
             </div>
           )}

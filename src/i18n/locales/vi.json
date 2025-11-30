@@ -105,6 +105,43 @@
     "network": "Lỗi kết nối mạng",
     "notFound": "Không tìm thấy",
     "unauthorized": "Không có quyền truy cập"
+  },
+  "languages": {
+    "japanese": "Tiếng Nhật",
+    "chinese": "Tiếng Trung",
+    "selectLanguage": "Chọn ngôn ngữ"
+  },
+  "levels": {
+    "japanese": {
+      "N5": "N5 - Sơ cấp",
+      "N4": "N4 - Trung cấp thấp",
+      "N3": "N3 - Trung cấp",
+      "N2": "N2 - Trung cấp cao",
+      "N1": "N1 - Cao cấp"
+    },
+    "chinese": {
+      "HSK1": "HSK 1 - Sơ cấp",
+      "HSK2": "HSK 2 - Sơ cấp cao",
+      "HSK3": "HSK 3 - Trung cấp thấp",
+      "HSK4": "HSK 4 - Trung cấp",
+      "HSK5": "HSK 5 - Trung cấp cao",
+      "HSK6": "HSK 6 - Cao cấp"
+    }
+  },
+  "vocabulary": {
+    "japanese": {
+      "kanji": "Kanji",
+      "hiragana": "Hiragana",
+      "onyomi": "Âm Onyomi",
+      "kunyomi": "Âm Kunyomi"
+    },
+    "chinese": {
+      "hanzi": "Hán tự",
+      "pinyin": "Pinyin",
+      "simplified": "Giản thể",
+      "traditional": "Phồn thể",
+      "radical": "Bộ thủ"
+    }
   }
 }
 

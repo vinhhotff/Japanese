@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Vocabulary } from '../types';
 import { speakTextSafely, isSpeechSynthesisSupported } from '../utils/speech';
+import type { Language } from '../services/supabaseService.v2';
 import '../App.css';
 
 interface VocabularySectionProps {
   vocabulary: Vocabulary[];
+  language: Language;
 }
 
-const VocabularySection = ({ vocabulary }: VocabularySectionProps) => {
+const VocabularySection = ({ vocabulary, language }: VocabularySectionProps) => {
   const [speakingId, setSpeakingId] = useState<string | null>(null);
 
   const getDifficultyClass = (difficulty: Vocabulary['difficulty']) => {
@@ -22,7 +24,10 @@ const VocabularySection = ({ vocabulary }: VocabularySectionProps) => {
 
     setSpeakingId(vocab.id);
     try {
-      await speakTextSafely(vocab.kanji || vocab.word);
+      const textToSpeak = language === 'japanese' 
+        ? (vocab.kanji || vocab.word || vocab.hiragana || '')
+        : (vocab.character || vocab.word || vocab.pinyin || '');
+      await speakTextSafely(textToSpeak);
     } catch (error) {
       console.error('Error speaking:', error);
       alert('Có lỗi xảy ra khi phát âm');
@@ -84,19 +89,42 @@ const VocabularySection = ({ vocabulary }: VocabularySectionProps) => {
                 <div style={{ marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
                     <div style={{ flex: 1 }}>
-                      {vocab.kanji ? (
+                      {language === 'japanese' ? (
+                        vocab.kanji ? (
+                          <>
+                            <h3 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0, lineHeight: '1.2', color: 'var(--text-primary)' }}>
+                              {vocab.kanji}
+                            </h3>
+                            <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+                              {vocab.hiragana}
+                            </p>
+                          </>
+                        ) : (
+                          <h3 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0, lineHeight: '1.2', color: 'var(--text-primary)' }}>
+                            {vocab.word}
+                          </h3>
+                        )
+                      ) : (
                         <>
                           <h3 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0, lineHeight: '1.2', color: 'var(--text-primary)' }}>
-                            {vocab.kanji}
+                            {vocab.character || vocab.word}
                           </h3>
-                          <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
-                            {vocab.hiragana}
-                          </p>
+                          {vocab.pinyin && (
+                            <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+                              {vocab.pinyin}
+                            </p>
+                          )}
+                          {(vocab.simplified || vocab.traditional) && (
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                              {vocab.simplified && vocab.simplified !== vocab.character && (
+                                <span>简: {vocab.simplified}</span>
+                              )}
+                              {vocab.traditional && vocab.traditional !== vocab.character && (
+                                <span>繁: {vocab.traditional}</span>
+                              )}
+                            </div>
+                          )}
                         </>
-                      ) : (
-                        <h3 style={{ fontSize: '2.5rem', fontWeight: '700', margin: 0, lineHeight: '1.2', color: 'var(--text-primary)' }}>
-                          {vocab.word}
-                        </h3>
                       )}
                     </div>
                     <button

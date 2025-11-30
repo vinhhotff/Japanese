@@ -1,36 +1,51 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getCourses, getLessons } from '../services/supabaseService';
+import { getCourses, getLessons } from '../services/supabaseService.v2';
 import { transformCourseFromDB } from '../utils/dataTransform';
+import type { Language } from '../services/supabaseService.v2';
+import FloatingCharacters from './FloatingCharacters';
 import '../App.css';
 
-const CourseList = () => {
+interface CourseListProps {
+  language: Language;
+}
+
+const CourseList = ({ language }: CourseListProps) => {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadCourses();
-  }, []);
+  }, [language]);
 
   const loadCourses = async () => {
     try {
       setLoading(true);
-      const [coursesData, lessonsData] = await Promise.all([
-        getCourses(),
-        getLessons(),
+      const [coursesResult, lessonsResult] = await Promise.all([
+        getCourses(language, 1, 100),
+        getLessons(undefined, language, 1, 100),
       ]);
 
+      const coursesData = coursesResult.data;
+      const lessonsData = lessonsResult.data;
+
       // Load vocabulary, kanji, grammar counts
-      const { getVocabulary, getKanji, getGrammar } = await import('../services/supabaseService');
-      const [allVocab, allKanji, allGrammar] = await Promise.all([
-        getVocabulary(),
-        getKanji(),
-        getGrammar()
+      const { getVocabulary, getKanji, getGrammar } = await import('../services/supabaseService.v2');
+      const [allVocabResult, allKanjiResult, allGrammarResult] = await Promise.all([
+        getVocabulary(undefined, language, 1, 1000),
+        getKanji(undefined, language, 1, 1000),
+        getGrammar(undefined, language, 1, 1000)
       ]);
+
+      const allVocab = allVocabResult.data;
+      const allKanji = allKanjiResult.data;
+      const allGrammar = allGrammarResult.data;
 
       // Group courses by level
       const coursesByLevel: Record<string, any[]> = {};
-      const levelOrder = ['N5', 'N4', 'N3', 'N2', 'N1'];
+      const levelOrder = language === 'japanese' 
+        ? ['N5', 'N4', 'N3', 'N2', 'N1']
+        : ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'];
 
       coursesData.forEach(course => {
         if (!coursesByLevel[course.level]) {
@@ -103,7 +118,8 @@ const CourseList = () => {
   }
 
   return (
-    <div className="container">
+    <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+      <FloatingCharacters language={language} count={15} />
       <Link to="/" className="back-button">
         <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -114,10 +130,12 @@ const CourseList = () => {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.75rem' }}>
-          📖 Khóa học tiếng Nhật
+          {language === 'japanese' ? '📖 Khóa học tiếng Nhật' : '📖 Khóa học tiếng Trung'}
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
-          Chọn cấp độ phù hợp và bắt đầu hành trình học tiếng Nhật của bạn
+          {language === 'japanese' 
+            ? 'Chọn cấp độ phù hợp và bắt đầu hành trình học tiếng Nhật của bạn'
+            : 'Chọn cấp độ phù hợp và bắt đầu hành trình học tiếng Trung của bạn'}
         </p>
       </div>
 
@@ -128,7 +146,7 @@ const CourseList = () => {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
           {courses.map((course, index) => (
-            <Link key={course.level} to={`/courses/${course.level}`} style={{ textDecoration: 'none' }}>
+            <Link key={course.level} to={`/${language}/courses/${course.level}`} style={{ textDecoration: 'none' }}>
               <div style={{ 
                 height: '100%',
                 transition: 'all 0.3s',

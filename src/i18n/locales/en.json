@@ -105,6 +105,43 @@
     "network": "Network error",
     "notFound": "Not found",
     "unauthorized": "Unauthorized"
+  },
+  "languages": {
+    "japanese": "Japanese",
+    "chinese": "Chinese",
+    "selectLanguage": "Select Language"
+  },
+  "levels": {
+    "japanese": {
+      "N5": "N5 - Beginner",
+      "N4": "N4 - Lower Intermediate",
+      "N3": "N3 - Intermediate",
+      "N2": "N2 - Upper Intermediate",
+      "N1": "N1 - Advanced"
+    },
+    "chinese": {
+      "HSK1": "HSK 1 - Beginner",
+      "HSK2": "HSK 2 - Upper Beginner",
+      "HSK3": "HSK 3 - Lower Intermediate",
+      "HSK4": "HSK 4 - Intermediate",
+      "HSK5": "HSK 5 - Upper Intermediate",
+      "HSK6": "HSK 6 - Advanced"
+    }
+  },
+  "vocabulary": {
+    "japanese": {
+      "kanji": "Kanji",
+      "hiragana": "Hiragana",
+      "onyomi": "Onyomi Reading",
+      "kunyomi": "Kunyomi Reading"
+    },
+    "chinese": {
+      "hanzi": "Hanzi",
+      "pinyin": "Pinyin",
+      "simplified": "Simplified",
+      "traditional": "Traditional",
+      "radical": "Radical"
+    }
   }
 }
 

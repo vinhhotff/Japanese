@@ -1,11 +1,13 @@
 import { Kanji } from '../types';
+import type { Language } from '../services/supabaseService.v2';
 import '../App.css';
 
 interface KanjiSectionProps {
   kanji: Kanji[];
+  language: Language;
 }
 
-const KanjiSection = ({ kanji }: KanjiSectionProps) => {
+const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
   return (
     <div className="section-container kanji-section">
       <div className="section-header kanji-header">
@@ -15,8 +17,8 @@ const KanjiSection = ({ kanji }: KanjiSectionProps) => {
           </svg>
         </div>
         <div>
-          <h2>Kanji</h2>
-          <p>Học cách viết và đọc các chữ Kanji</p>
+          <h2>{language === 'japanese' ? 'Kanji' : 'Hán tự'}</h2>
+          <p>{language === 'japanese' ? 'Học cách viết và đọc các chữ Kanji' : 'Học cách viết và đọc các chữ Hán tự'}</p>
         </div>
       </div>
       <div className="section-content">
@@ -31,24 +33,70 @@ const KanjiSection = ({ kanji }: KanjiSectionProps) => {
                 <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                   {k.meaning}
                 </h3>
-                <div className="kanji-readings">
-                  <div className="reading-group">
-                    <div className="reading-label">Âm On (音読み)</div>
-                    <div className="reading-value">
-                      {k.readings.onyomi.map((reading, idx) => (
-                        <span key={idx} className="reading-tag">{reading}</span>
-                      ))}
-                    </div>
+                {language === 'japanese' ? (
+                  <div className="kanji-readings">
+                    {k.readings && (
+                      <>
+                        <div className="reading-group">
+                          <div className="reading-label">Âm On (音読み)</div>
+                          <div className="reading-value">
+                            {k.readings.onyomi && k.readings.onyomi.length > 0 ? (
+                              k.readings.onyomi.map((reading, idx) => (
+                                <span key={idx} className="reading-tag">{reading}</span>
+                              ))
+                            ) : (
+                              <span className="reading-tag">-</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="reading-group">
+                          <div className="reading-label">Âm Kun (訓読み)</div>
+                          <div className="reading-value">
+                            {k.readings.kunyomi && k.readings.kunyomi.length > 0 ? (
+                              k.readings.kunyomi.map((reading, idx) => (
+                                <span key={idx} className="reading-tag">{reading}</span>
+                              ))
+                            ) : (
+                              <span className="reading-tag">-</span>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
-                  <div className="reading-group">
-                    <div className="reading-label">Âm Kun (訓読み)</div>
-                    <div className="reading-value">
-                      {k.readings.kunyomi.map((reading, idx) => (
-                        <span key={idx} className="reading-tag">{reading}</span>
-                      ))}
-                    </div>
+                ) : (
+                  <div className="kanji-readings">
+                    {k.pinyin && (
+                      <div className="reading-group">
+                        <div className="reading-label">Pinyin</div>
+                        <div className="reading-value">
+                          <span className="reading-tag">{k.pinyin}</span>
+                        </div>
+                      </div>
+                    )}
+                    {k.radical && (
+                      <div className="reading-group">
+                        <div className="reading-label">Bộ thủ</div>
+                        <div className="reading-value">
+                          <span className="reading-tag">{k.radical}</span>
+                        </div>
+                      </div>
+                    )}
+                    {(k.simplified || k.traditional) && (
+                      <div className="reading-group">
+                        <div className="reading-label">Dạng chữ</div>
+                        <div className="reading-value">
+                          {k.simplified && k.simplified !== k.character && (
+                            <span className="reading-tag">简: {k.simplified}</span>
+                          )}
+                          {k.traditional && k.traditional !== k.character && (
+                            <span className="reading-tag">繁: {k.traditional}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
                 <div className="kanji-examples">
                   <div className="examples-label">Ví dụ:</div>
                   {k.examples.map((example, idx) => (
@@ -64,7 +112,7 @@ const KanjiSection = ({ kanji }: KanjiSectionProps) => {
           </div>
         ) : (
           <div className="empty-state">
-            <p>Bài này chưa có kanji</p>
+            <p>Bài này chưa có {language === 'japanese' ? 'kanji' : 'hán tự'}</p>
           </div>
         )}
       </div>

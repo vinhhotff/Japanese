@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getLessonById, getSentenceGames, getRoleplayScenarios } from '../services/supabaseService';
+import { getLessonById, getSentenceGames, getRoleplayScenarios } from '../services/supabaseService.v2';
 import { transformLessonFromDB } from '../utils/dataTransform';
 import { Lesson, RoleplayScenario } from '../types';
 import { getLessonProgress, updateLessonProgress } from '../services/progressService';
+import type { Language } from '../services/supabaseService.v2';
 import VocabularySection from './VocabularySection';
 import KanjiSection from './KanjiSection';
 import GrammarSection from './GrammarSection';
@@ -18,7 +19,11 @@ import '../App.css';
 
 type LearningStep = 'learn' | 'practice' | 'test';
 
-const LessonDetail = () => {
+interface LessonDetailProps {
+  language: Language;
+}
+
+const LessonDetail = ({ language }: LessonDetailProps) => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const [currentStep, setCurrentStep] = useState<LearningStep>('learn');
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -49,10 +54,11 @@ const LessonDetail = () => {
         setLesson(transformed);
         setCourseLevel(transformed.level);
 
-        const games = await getSentenceGames(lessonId!);
-        setSentenceGames(games || []);
+        const gamesResult = await getSentenceGames(lessonId!, language, 1, 100);
+        setSentenceGames(gamesResult.data || []);
 
-        const scenarios = await getRoleplayScenarios(lessonId!);
+        const scenariosResult = await getRoleplayScenarios(lessonId!, language, 1, 100);
+        const scenarios = scenariosResult.data;
         if (scenarios) {
           setRoleplayScenarios(scenarios.map((s: any) => ({
             id: s.id,
@@ -117,8 +123,9 @@ const LessonDetail = () => {
   const progress = Math.round((completedSteps.size / 6) * 100); // 6 main activities
 
   return (
-    <div className="container">
-      <Link to={`/courses/${courseLevel}`} className="back-button">
+    <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+      <FloatingCharacters language={language} count={10} />
+      <Link to={`/${language}/courses/${courseLevel}`} className="back-button">
         <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
@@ -133,7 +140,7 @@ const LessonDetail = () => {
             <p style={{ fontSize: '1.125rem', opacity: 0.9, marginBottom: '1rem' }}>{lesson.description}</p>
             <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem' }}>
               <span>📖 {lesson.vocabulary.length} từ vựng</span>
-              <span>㊗️ {lesson.kanji.length} kanji</span>
+              <span>{language === 'japanese' ? '㊗️' : '🈶'} {lesson.kanji.length} {language === 'japanese' ? 'kanji' : 'hán tự'}</span>
               <span>📝 {lesson.grammar.length} ngữ pháp</span>
             </div>
           </div>
@@ -307,7 +314,7 @@ const LessonDetail = () => {
               onClick={() => setLearnTab('kanji')}
               className={learnTab === 'kanji' ? 'btn btn-primary' : 'btn btn-outline'}
             >
-              ㊗️ Kanji ({lesson.kanji.length})
+              {language === 'japanese' ? '㊗️' : '🈶'} {language === 'japanese' ? 'Kanji' : 'Hán tự'} ({lesson.kanji.length})
               {completedSteps.has('learn-kanji') && ' ✓'}
             </button>
             <button
@@ -321,7 +328,7 @@ const LessonDetail = () => {
 
           {learnTab === 'vocab' && (
             <div>
-              <VocabularySection vocabulary={lesson.vocabulary} />
+              <VocabularySection vocabulary={lesson.vocabulary} language={language} />
               {!completedSteps.has('learn-vocab') && (
                 <div style={{ textAlign: 'center', marginTop: '2rem' }}>
                   <button 
@@ -337,7 +344,7 @@ const LessonDetail = () => {
           )}
           {learnTab === 'kanji' && (
             <div>
-              <KanjiSection kanji={lesson.kanji} />
+              <KanjiSection kanji={lesson.kanji} language={language} />
               {!completedSteps.has('learn-kanji') && (
                 <div style={{ textAlign: 'center', marginTop: '2rem' }}>
                   <button 
@@ -345,7 +352,7 @@ const LessonDetail = () => {
                     onClick={() => markStepComplete('learn-kanji')}
                     style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}
                   >
-                    ✓ Đã học xong Kanji
+                    ✓ Đã học xong {language === 'japanese' ? 'Kanji' : 'Hán tự'}
                   </button>
                 </div>
               )}

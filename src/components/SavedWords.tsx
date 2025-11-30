@@ -1,19 +1,30 @@
 import { useState, useEffect } from 'react';
 import { getSavedWords, removeSavedWord, SavedWord, clearSavedWords } from '../utils/savedWords';
 import { speakText } from '../utils/speech';
+import type { Language } from '../services/supabaseService.v2';
 import '../App.css';
 
-const SavedWords = () => {
+interface SavedWordsProps {
+  language: Language;
+}
+
+const SavedWords = ({ language }: SavedWordsProps) => {
   const [savedWords, setSavedWords] = useState<SavedWord[]>([]);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadSavedWords();
-  }, []);
+  }, [language]);
 
   const loadSavedWords = () => {
     const words = getSavedWords();
-    setSavedWords(words);
+    // Filter by language if word has language property
+    const filtered = words.filter(word => {
+      // If word doesn't have language, assume it's Japanese (legacy)
+      if (!word.language) return language === 'japanese';
+      return word.language === language;
+    });
+    setSavedWords(filtered);
   };
 
   const handleRemove = (wordId: string) => {
@@ -86,14 +97,30 @@ const SavedWords = () => {
           <div key={word.id} className="saved-word-card">
             <div className="saved-word-header">
               <div className="saved-word-japanese">
-                {word.kanji && (
-                  <span className="saved-word-kanji">{word.kanji}</span>
-                )}
-                {word.hiragana && (
-                  <span className="saved-word-hiragana">{word.hiragana}</span>
-                )}
-                {word.reading && !word.hiragana && (
-                  <span className="saved-word-hiragana">{word.reading}</span>
+                {language === 'japanese' ? (
+                  <>
+                    {word.kanji && (
+                      <span className="saved-word-kanji">{word.kanji}</span>
+                    )}
+                    {word.hiragana && (
+                      <span className="saved-word-hiragana">{word.hiragana}</span>
+                    )}
+                    {word.reading && !word.hiragana && (
+                      <span className="saved-word-hiragana">{word.reading}</span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {(word as any).hanzi && (
+                      <span className="saved-word-kanji">{(word as any).hanzi}</span>
+                    )}
+                    {(word as any).pinyin && (
+                      <span className="saved-word-hiragana">{(word as any).pinyin}</span>
+                    )}
+                    {word.word && !(word as any).hanzi && (
+                      <span className="saved-word-kanji">{word.word}</span>
+                    )}
+                  </>
                 )}
               </div>
               <button
@@ -115,7 +142,12 @@ const SavedWords = () => {
             <div className="saved-word-actions">
               <button
                 className="btn btn-speak-small"
-                onClick={() => handleSpeak(word.hiragana || word.reading || word.word, word.id)}
+                onClick={() => {
+                  const textToSpeak = language === 'japanese'
+                    ? (word.hiragana || word.reading || word.word)
+                    : ((word as any).pinyin || (word as any).hanzi || word.word);
+                  handleSpeak(textToSpeak, word.id);
+                }}
                 disabled={speakingId === word.id}
               >
                 {speakingId === word.id ? '⏸️' : '🔊'} Phát âm
