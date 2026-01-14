@@ -5,50 +5,56 @@
 }
 
 :root {
-  /* Light Mode Colors - High Contrast */
-  --primary-color: #3b82f6;
-  --primary-dark: #2563eb;
+  /* Natural/Clean Light Mode Colors */
+  --primary-color: #2563eb; /* A standard, professional blue */
+  --primary-dark: #1d4ed8;
   --primary-light: #eff6ff;
-  --secondary-color: #8b5cf6;
-  --secondary-light: #f5f3ff;
-  --success-color: #10b981;
-  --success-light: #d1fae5;
-  --danger-color: #ef4444;
-  --danger-light: #fee2e2;
-  --warning-color: #f59e0b;
-  --warning-light: #fef3c7;
+  
+  --secondary-color: #64748b; /* Slate 500 - more neutral secondary */
+  --secondary-light: #f1f5f9;
+  
+  --success-color: #059669; /* Emerald 600 - more natural green */
+  --success-light: #ecfdf5;
+  
+  --danger-color: #dc2626; /* Red 600 */
+  --danger-light: #fef2f2;
+  
+  --warning-color: #d97706; /* Amber 600 */
+  --warning-light: #fffbeb;
   
   /* Background Colors */
-  --bg-color: #f8fafc;
-  --bg-secondary: #f1f5f9;
+  --bg-color: #fafafa; /* Neutral 50 - very clean light gray */
+  --bg-secondary: #f4f4f5; /* Zinc 100 */
   --card-bg: #ffffff;
   --card-bg-hover: #f9fafb;
   
-  /* Text Colors - High Contrast */
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-tertiary: #6b7280;
+  /* Text Colors */
+  --text-primary: #18181b; /* Zinc 900 - softer than pure black */
+  --text-secondary: #52525b; /* Zinc 600 */
+  --text-tertiary: #a1a1aa; /* Zinc 400 */
   --text-inverse: #ffffff;
   
   /* Border Colors */
-  --border-color: #e5e7eb;
-  --border-light: #f3f4f6;
-  --border-dark: #d1d5db;
+  --border-color: #e4e4e7; /* Zinc 200 */
+  --border-light: #f4f4f5;
+  --border-dark: #d4d4d8;
   
   /* Additional Colors */
   --input-bg: #ffffff;
-  --progress-bg: #e5e7eb;
-  --primary-shadow: rgba(59, 130, 246, 0.1);
-  --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  --secondary-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --progress-bg: #e4e4e7;
+  --primary-shadow: rgba(37, 99, 235, 0.1);
   
-  /* Shadows */
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+  /* Simplified Gradients - effectively solid or very subtle */
+  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --secondary-gradient: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  --success-gradient: linear-gradient(135deg, #059669 0%, #047857 100%);
+  --warning-gradient: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  --danger-gradient: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  
+  /* Shadows - softer and more dissipated */
+  --shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   
   /* Typography */
   --font-weight-normal: 400;

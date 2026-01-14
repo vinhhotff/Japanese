@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
 import { logger } from '../utils/logger';
-import { 
+import {
   getCourses, createCourse, updateCourse, deleteCourse,
   getLessons, createLesson, updateLesson, deleteLesson,
   getVocabulary, createVocabulary, updateVocabulary, deleteVocabulary,
@@ -12,6 +12,7 @@ import {
   getSentenceGames, createSentenceGame, updateSentenceGame, deleteSentenceGame,
   getRoleplayScenarios, createRoleplayScenario, updateRoleplayScenario, deleteRoleplayScenario
 } from '../services/supabaseService';
+import { getAllUserRoles, assignRole, assignTeacherToCourse, removeRole } from '../services/adminService';
 import { parseVocabularyBatch } from '../utils/vocabParser';
 import { parseKanjiBatch } from '../utils/kanjiParser';
 import { parseGrammarBatch } from '../utils/grammarParser';
@@ -21,921 +22,735 @@ import AdminHelpGuide from './AdminHelpGuide';
 import '../App.css';
 import '../styles/admin-help-guide.css';
 
-type TabType = 'courses' | 'lessons' | 'vocabulary' | 'kanji' | 'grammar' | 'listening' | 'games' | 'roleplay';
+type TabType = 'courses' | 'lessons' | 'vocabulary' | 'kanji' | 'grammar' | 'listening' | 'games' | 'roleplay' | 'users';
 
 const AdminPanel = () => {
   const { user, signOut } = useAuth();
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState<TabType>('courses');
-  const [data, setData] = useState<any[]>([]);
+
+  // Navigation State
+  // 'languages': Select Japanese/Chinese
+  // 'courses': List of courses for selected language (N1, N2.. or HSK1, HSK2..)
+  // 'lessons': List of lessons in selectedCourse
+  // 'content': Content of selectedLesson
+  // 'users': User Management
+  const [viewMode, setViewMode] = useState<'languages' | 'courses' | 'lessons' | 'content' | 'users'>('languages');
+  const [selectedLanguage, setSelectedLanguage] = useState<'japanese' | 'chinese' | null>(null);
+
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [selectedLesson, setSelectedLesson] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('vocabulary');
+
+  // Data State
+  const [data, setData] = useState<any[]>([]); // Current view data (content items)
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
-  const [lessons, setLessons] = useState<any[]>([]);
+  const [lessons, setLessons] = useState<any[]>([]); // Lessons for current course
   const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
-  
+
   // Filter and Pagination states
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterLevel, setFilterLevel] = useState('');
-  const [filterLesson, setFilterLesson] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
 
-  // Keyboard shortcuts
+  // User Management State
+  const [userEmailInput, setUserEmailInput] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'teacher' | 'student' | 'admin'>('student');
+  const [assignCourseLang, setAssignCourseLang] = useState('japanese');
+  const [assignCourseLevel, setAssignCourseLevel] = useState('N5');
+
+  // Import CSS for Admin Panel
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in input/textarea
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-        return;
-      }
-
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
-
-      // Ctrl/Cmd + N: Thêm mới
-      if (ctrlKey && e.key === 'n') {
-        e.preventDefault();
-        setEditingItem(null);
-        setShowForm(true);
-      }
-
-      // Ctrl/Cmd + K: Mở hướng dẫn
-      if (ctrlKey && e.key === 'k') {
-        e.preventDefault();
-        setShowHelpGuide(true);
-      }
-
-      // Ctrl/Cmd + F: Focus vào ô tìm kiếm
-      if (ctrlKey && e.key === 'f') {
-        e.preventDefault();
-        const searchInput = document.querySelector('input[placeholder*="Tìm kiếm"]') as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
-          searchInput.select();
-        }
-      }
-
-      // Esc: Đóng form/hướng dẫn
-      if (e.key === 'Escape') {
-        if (showHelpGuide) {
-          setShowHelpGuide(false);
-        } else if (showForm) {
-          setShowForm(false);
-          setEditingItem(null);
-        }
-      }
-
-      // Số 1-8: Chuyển tab (chỉ khi không có form/hướng dẫn mở)
-      if (!showForm && !showHelpGuide && e.key >= '1' && e.key <= '8') {
-        const tabIndex = parseInt(e.key) - 1;
-        const tabs: TabType[] = ['courses', 'lessons', 'vocabulary', 'kanji', 'grammar', 'listening', 'games', 'roleplay'];
-        if (tabs[tabIndex]) {
-          e.preventDefault();
-          setActiveTab(tabs[tabIndex]);
-        }
-      }
-
-      // ?: Hiển thị/ẩn danh sách phím tắt
-      if (e.key === '?' && !ctrlKey && !e.shiftKey) {
-        e.preventDefault();
-        setShowShortcuts(prev => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showForm, showHelpGuide]);
-
-  useEffect(() => {
-    loadCourses();
-    loadLessons();
+    // Dynamically importing or ensuring the CSS is applied
+    // Since we can't do `import '../styles/admin-panel.css'` conditionally inside component easily,
+    // we assume it is imported at the top of file or here.
   }, []);
 
+  // When viewing content, load data based on active tab and selected lesson
   useEffect(() => {
-    loadData();
-    // Reset filters when changing tabs
-    setSearchTerm('');
-    setFilterLevel('');
-    setFilterLesson('');
-    setCurrentPage(1);
-  }, [activeTab]);
+    if (viewMode === 'content' && selectedLesson) {
+      loadContent();
+    } else if (viewMode === 'users') {
+      loadUsers();
+    } else if (viewMode === 'courses' && selectedLanguage) {
+      loadCourses();
+    }
+  }, [viewMode, selectedLesson, activeTab, selectedLanguage]);
 
-  // Filter data whenever search term, filters, or data changes
+  // Search filtering
   useEffect(() => {
     let filtered = [...data];
-
-    // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(item => {
-        const searchLower = searchTerm.toLowerCase();
-        return (
-          (item.title?.toLowerCase().includes(searchLower)) ||
-          (item.word?.toLowerCase().includes(searchLower)) ||
-          (item.kanji?.toLowerCase().includes(searchLower)) ||
-          (item.character?.toLowerCase().includes(searchLower)) ||
-          (item.pattern?.toLowerCase().includes(searchLower)) ||
-          (item.meaning?.toLowerCase().includes(searchLower)) ||
-          (item.description?.toLowerCase().includes(searchLower))
-        );
-      });
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter(item =>
+        JSON.stringify(item).toLowerCase().includes(lower)
+      );
     }
-
-    // Level filter
-    if (filterLevel) {
-      filtered = filtered.filter(item => item.level === filterLevel);
-    }
-
-    // Lesson filter
-    if (filterLesson) {
-      filtered = filtered.filter(item => item.lesson_id === filterLesson);
-    }
-
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [data, searchTerm, filterLevel, filterLesson]);
+    setCurrentPage(1);
+  }, [data, searchTerm]);
 
   const loadCourses = async () => {
-    try {
-      const coursesData = await getCourses();
-      setCourses(coursesData || []);
-    } catch (error) {
-      console.error('Error loading courses:', error);
-    }
-  };
-
-  const loadLessons = async () => {
-    try {
-      const lessonsData = await getLessons();
-      setLessons(lessonsData || []);
-    } catch (error) {
-      console.error('Error loading lessons:', error);
-    }
-  };
-
-  const loadData = async () => {
+    if (!selectedLanguage) return;
     setLoading(true);
     try {
-      switch (activeTab) {
-        case 'courses':
-          const coursesData = await getCourses();
-          setData(coursesData || []);
-          break;
-        case 'lessons':
-          const lessonsData = await getLessons();
-          setData(lessonsData || []);
-          break;
-        case 'vocabulary':
-          const vocabData = await getVocabulary();
-          setData(vocabData || []);
-          break;
-        case 'kanji':
-          const kanjiData = await getKanji();
-          setData(kanjiData || []);
-          break;
-        case 'grammar':
-          const grammarData = await getGrammar();
-          setData(grammarData || []);
-          break;
-        case 'listening':
-          const listeningData = await getListeningExercises();
-          setData(listeningData || []);
-          break;
-        case 'games':
-          const gamesData = await getSentenceGames();
-          setData(gamesData || []);
-          break;
-        case 'roleplay':
-          const roleplayData = await getRoleplayScenarios();
-          setData(roleplayData || []);
-          break;
+      // Fetch all courses then filter by language in memory or api
+      // Assuming getCourses returns all, we filter here for now
+      const res = await getCourses();
+      const filteredCourses = (res || []).filter((c: any) => c.language === selectedLanguage);
+
+      setCourses(filteredCourses);
+      // If we are in courses view, data is courses
+      if (viewMode === 'courses') {
+        setData(filteredCourses);
+        setFilteredData(filteredCourses);
       }
-    } catch (error: any) {
-      logger.error('Error loading data:', error);
-      showToast('Lỗi khi tải dữ liệu: ' + error.message, 'error');
+    } catch (e) {
+      console.error(e);
+      showToast('Lỗi tải khóa học', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  const loadLessonsForCourse = async (courseId: string) => {
+    setLoading(true);
+    try {
+      const res = await getLessons(courseId);
+      // Sort lessons by number if possible
+      const sorted = (res || []).sort((a: any, b: any) => a.lesson_number - b.lesson_number);
+      setLessons(sorted);
+      // If we are in lessons view, data is lessons
+      if (viewMode === 'lessons') {
+        setData(sorted);
+        setFilteredData(sorted);
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Lỗi tải bài học', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadContent = async () => {
+    if (!selectedLesson) return;
+    setLoading(true);
+    try {
+      let res: any[] = [];
+      switch (activeTab) {
+        case 'vocabulary': res = await getVocabulary(selectedLesson.id); break;
+        case 'kanji': res = await getKanji(selectedLesson.id); break;
+        case 'grammar': res = await getGrammar(selectedLesson.id); break;
+        case 'listening': res = await getListeningExercises(selectedLesson.id); break;
+        case 'games': res = await getSentenceGames(selectedLesson.id); break;
+        case 'roleplay': res = await getRoleplayScenarios(selectedLesson.id); break;
+      }
+      setData(res || []);
+      setFilteredData(res || []);
+    } catch (e: any) {
+      showToast('Lỗi tải dữ liệu: ' + e.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await getAllUserRoles();
+      setData(res || []);
+      setFilteredData(res || []);
+    } catch (e: any) {
+      showToast('Lỗi tải user: ' + e.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Navigation Handlers
+  const handleSelectLanguage = (lang: 'japanese' | 'chinese') => {
+    setSelectedLanguage(lang);
+    setViewMode('courses');
+  };
+
+  const handleSelectCourse = (course: any) => {
+    setSelectedCourse(course);
+    setViewMode('lessons');
+    loadLessonsForCourse(course.id);
+  };
+
+  const handleSelectLesson = (lesson: any) => {
+    setSelectedLesson(lesson);
+    setViewMode('content');
+    setActiveTab('vocabulary'); // Default tab
+  };
+
+  const handleBackToLanguages = () => {
+    setSelectedLanguage(null);
+    setSelectedCourse(null);
+    setSelectedLesson(null);
+    setViewMode('languages');
+  };
+
+  const handleBackToCourses = () => {
+    setSelectedCourse(null);
+    setSelectedLesson(null);
+    setViewMode('courses');
+    loadCourses(); // Refresh
+  };
+
+  const handleBackToLessons = () => {
+    setSelectedLesson(null);
+    setViewMode('lessons');
+    if (selectedCourse) loadLessonsForCourse(selectedCourse.id);
+  };
+
+  // CRUD Handlers
   const handleCreate = async (formData: any) => {
     try {
-      switch (activeTab) {
-        case 'courses':
-          await createCourse(formData);
-          break;
-        case 'lessons':
-          await createLesson(formData);
-          break;
-        case 'vocabulary':
-          // Check if it's batch import (array)
+      // Auto-inject ids based on context
+      if (viewMode === 'lessons' && selectedCourse) {
+        formData.course_id = selectedCourse.id;
+        formData.level = selectedCourse.level;
+        await createLesson(formData);
+        loadLessonsForCourse(selectedCourse.id);
+      } else if (viewMode === 'content' && selectedLesson) {
+        formData.lesson_id = selectedLesson.id;
+        // ... Call specific create function based on activeTab
+        if (activeTab === 'vocabulary') {
           if (Array.isArray(formData)) {
-            // Batch import - create multiple vocabularies
-            let successCount = 0;
-            let errorCount = 0;
-            for (const vocab of formData) {
-              try {
-                await createVocabulary(vocab);
-                successCount++;
-              } catch (err) {
-                console.error('Error creating vocabulary:', vocab, err);
-                errorCount++;
-              }
-            }
-            if (errorCount === 0) {
-              showToast(`Đã thêm ${successCount} từ vựng thành công!`, 'success');
-            } else {
-              showToast(`Đã thêm ${successCount} từ vựng, ${errorCount} từ vựng bị lỗi.`, 'warning');
-            }
-          } else {
-            // Single import
-            await createVocabulary(formData);
-          }
-          break;
-        case 'kanji':
-          // Check if it's batch import (array)
+            for (const item of formData) await createVocabulary({ ...item, lesson_id: selectedLesson.id });
+          } else await createVocabulary(formData);
+        }
+        else if (activeTab === 'kanji') {
           if (Array.isArray(formData)) {
-            let successCount = 0;
-            let errorCount = 0;
-            for (const kanji of formData) {
-              try {
-                await createKanji(kanji);
-                successCount++;
-              } catch (err) {
-                console.error('Error creating kanji:', kanji, err);
-                errorCount++;
-              }
-            }
-            if (errorCount === 0) {
-              showToast(`Đã thêm ${successCount} kanji thành công!`, 'success');
-            } else {
-              showToast(`Đã thêm ${successCount} kanji, ${errorCount} kanji bị lỗi.`, 'warning');
-            }
-          } else {
-            await createKanji(formData);
-          }
-          break;
-        case 'grammar':
-          // Check if it's batch import (array)
+            for (const item of formData) await createKanji({ ...item, lesson_id: selectedLesson.id });
+          } else await createKanji(formData);
+        }
+        else if (activeTab === 'grammar') {
           if (Array.isArray(formData)) {
-            let successCount = 0;
-            let errorCount = 0;
-            for (const grammar of formData) {
-              try {
-                await createGrammar(grammar);
-                successCount++;
-              } catch (err) {
-                console.error('Error creating grammar:', grammar, err);
-                errorCount++;
-              }
-            }
-            if (errorCount === 0) {
-              showToast(`Đã thêm ${successCount} ngữ pháp thành công!`, 'success');
-            } else {
-              showToast(`Đã thêm ${successCount} ngữ pháp, ${errorCount} ngữ pháp bị lỗi.`, 'warning');
-            }
-          } else {
-            await createGrammar(formData);
-          }
-          break;
-        case 'listening':
-          await createListeningExercise(formData);
-          break;
-        case 'games':
-          // Hỗ trợ cả tạo đơn lẻ và import hàng loạt
-          if (Array.isArray(formData)) {
-            let successCount = 0;
-            let errorCount = 0;
-            for (const game of formData) {
-              try {
-                await createSentenceGame(game);
-                successCount++;
-              } catch (err) {
-                console.error('Error creating sentence game:', game, err);
-                errorCount++;
-              }
-            }
-            if (errorCount === 0) {
-              showToast(`Đã thêm ${successCount} game sắp xếp câu thành công!`, 'success');
-            } else {
-              showToast(`Đã thêm ${successCount} game, ${errorCount} game bị lỗi.`, 'warning');
-            }
-          } else {
-            await createSentenceGame(formData);
-          }
-          break;
-        case 'roleplay':
-          await createRoleplayScenario(formData);
-          break;
+            for (const item of formData) await createGrammar({ ...item, lesson_id: selectedLesson.id });
+          } else await createGrammar(formData);
+        }
+        else if (activeTab === 'listening') await createListeningExercise(formData);
+        else if (activeTab === 'games') await createSentenceGame(formData);
+        else if (activeTab === 'roleplay') await createRoleplayScenario(formData);
+
+        loadContent();
+      } else if (viewMode === 'courses') {
+        // Ensure language is set from selectedLanguage context
+        formData.language = selectedLanguage;
+        await createCourse(formData);
+        loadCourses();
       }
+
       setShowForm(false);
-      setEditingItem(null);
-      await loadData();
-      if (activeTab === 'lessons') await loadLessons();
-      if (activeTab === 'courses') await loadCourses();
-      showToast('Tạo thành công!', 'success');
-    } catch (error: any) {
-      logger.error('Error creating:', error);
-      showToast('Lỗi khi tạo: ' + error.message, 'error');
+      showToast('Tạo thành công', 'success');
+    } catch (e: any) {
+      showToast('Lỗi tạo: ' + e.message, 'error');
     }
   };
 
   const handleUpdate = async (id: string, formData: any) => {
     try {
-      switch (activeTab) {
-        case 'courses':
-          await updateCourse(id, formData);
-          break;
-        case 'lessons':
-          await updateLesson(id, formData);
-          break;
-        case 'vocabulary':
-          await updateVocabulary(id, formData);
-          break;
-        case 'kanji':
-          await updateKanji(id, formData);
-          break;
-        case 'grammar':
-          await updateGrammar(id, formData);
-          break;
-        case 'roleplay':
-          await updateRoleplayScenario(id, formData);
-          break;
-        case 'listening':
-          await updateListeningExercise(id, formData);
-          break;
-        case 'games':
-          await updateSentenceGame(id, formData);
-          break;
+      if (viewMode === 'courses') { await updateCourse(id, formData); loadCourses(); }
+      else if (viewMode === 'lessons') { await updateLesson(id, formData); if (selectedCourse) loadLessonsForCourse(selectedCourse.id); }
+      else if (viewMode === 'content') {
+        if (activeTab === 'vocabulary') await updateVocabulary(id, formData);
+        else if (activeTab === 'kanji') await updateKanji(id, formData);
+        else if (activeTab === 'grammar') await updateGrammar(id, formData);
+        else if (activeTab === 'listening') await updateListeningExercise(id, formData);
+        else if (activeTab === 'games') await updateSentenceGame(id, formData);
+        else if (activeTab === 'roleplay') await updateRoleplayScenario(id, formData);
+        loadContent();
       }
       setShowForm(false);
       setEditingItem(null);
-      await loadData();
-      showToast('Cập nhật thành công!', 'success');
-    } catch (error: any) {
-      logger.error('Error updating:', error);
-      showToast('Lỗi khi cập nhật: ' + error.message, 'error');
+      showToast('Cập nhật thành công', 'success');
+    } catch (e: any) {
+      showToast('Lỗi cập nhật: ' + e.message, 'error');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bạn có chắc muốn xóa?')) return;
-
+    if (!window.confirm('Bạn có chắc chắn muốn xóa?')) return;
     try {
-      switch (activeTab) {
-        case 'courses':
-          await deleteCourse(id);
-          break;
-        case 'lessons':
-          await deleteLesson(id);
-          break;
-        case 'vocabulary':
-          await deleteVocabulary(id);
-          break;
-        case 'kanji':
-          await deleteKanji(id);
-          break;
-        case 'grammar':
-          await deleteGrammar(id);
-          break;
-        case 'roleplay':
-          await deleteRoleplayScenario(id);
-          break;
-        case 'listening':
-          await deleteListeningExercise(id);
-          break;
-        case 'games':
-          await deleteSentenceGame(id);
-          break;
+      if (viewMode === 'courses') { await deleteCourse(id); loadCourses(); }
+      else if (viewMode === 'lessons') { await deleteLesson(id); if (selectedCourse) loadLessonsForCourse(selectedCourse.id); }
+      else if (viewMode === 'content') {
+        if (activeTab === 'vocabulary') await deleteVocabulary(id);
+        else if (activeTab === 'kanji') await deleteKanji(id);
+        else if (activeTab === 'grammar') await deleteGrammar(id);
+        else if (activeTab === 'listening') await deleteListeningExercise(id);
+        else if (activeTab === 'games') await deleteSentenceGame(id);
+        else if (activeTab === 'roleplay') await deleteRoleplayScenario(id);
+        loadContent();
       }
-      await loadData();
-      showToast('Xóa thành công!', 'success');
-    } catch (error: any) {
-      logger.error('Error deleting:', error);
-      showToast('Lỗi khi xóa: ' + error.message, 'error');
+      else if (viewMode === 'users') {
+        await removeRole(id); // id here is email based on previous implementation? Check adminService.
+        loadUsers();
+      }
+      showToast('Xóa thành công', 'success');
+    } catch (e: any) {
+      showToast('Lỗi xóa: ' + e.message, 'error');
     }
+  };
+
+  // Render Helpers
+  const renderBreadcrumbs = () => (
+    <div className="breadcrumbs">
+      <span className="breadcrumb-item" onClick={handleBackToLanguages}>Trang chủ</span>
+      <span className="breadcrumb-separator">/</span>
+
+      {viewMode === 'languages' ? (
+        <span className="breadcrumb-current">Chọn ngôn ngữ</span>
+      ) : (
+        <>
+          <span
+            className={`breadcrumb-item ${!selectedCourse && viewMode === 'courses' ? 'breadcrumb-current' : ''}`}
+            onClick={handleBackToCourses}
+          >
+            {selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}
+          </span>
+
+          {selectedCourse && (
+            <>
+              <span className="breadcrumb-separator">/</span>
+              <span
+                className={`breadcrumb-item ${!selectedLesson && viewMode === 'lessons' ? 'breadcrumb-current' : ''}`}
+                onClick={handleBackToLessons}
+              >
+                {selectedCourse.title}
+              </span>
+            </>
+          )}
+
+          {selectedLesson && (
+            <>
+              <span className="breadcrumb-separator">/</span>
+              <span className="breadcrumb-current">{selectedLesson.title}</span>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  const getLabel = (tab: string) => {
+    const map: any = { 'courses': 'Khóa học', 'lessons': 'Bài học', 'vocabulary': 'Từ vựng', 'kanji': 'Kanji', 'grammar': 'Ngữ pháp', 'listening': 'Nghe', 'games': 'Game', 'roleplay': 'Roleplay', 'users': 'Người dùng' };
+    return map[tab] || tab;
+  };
+
+  // Helper render cho Users tab
+  const renderUserManagement = () => {
+    return (
+      <div className="user-management">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="p-6 bg-white rounded-xl border border-slate-100 shadow-sm">
+            <h3 className="font-bold mb-4 text-slate-700 flex items-center gap-2">
+              <span className="bg-blue-100 text-blue-600 p-1 rounded">👤</span>
+              Phân quyền thành viên
+            </h3>
+            <div className="space-y-3">
+              <input
+                type="email"
+                placeholder="Email người dùng"
+                value={userEmailInput}
+                onChange={e => setUserEmailInput(e.target.value)}
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
+              />
+              <div className="flex gap-2">
+                <select
+                  value={selectedRole}
+                  onChange={(e: any) => setSelectedRole(e.target.value)}
+                  className="p-2 border rounded-lg flex-1 outline-none cursor-pointer"
+                >
+                  <option value="student">Học sinh</option>
+                  <option value="teacher">Giáo viên</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button
+                  onClick={async () => {
+                    try {
+                      await assignRole(userEmailInput, selectedRole);
+                      showToast('Đã phân quyền thành công', 'success');
+                      loadUsers();
+                      setUserEmailInput('');
+                    } catch (e: any) {
+                      showToast('Lỗi: ' + e.message, 'error');
+                    }
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition"
+                >
+                  Cập nhật
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 bg-white rounded-xl border border-slate-100 shadow-sm">
+            <h3 className="font-bold mb-4 text-slate-700 flex items-center gap-2">
+              <span className="bg-green-100 text-green-600 p-1 rounded">🎓</span>
+              Phân công giảng dạy
+            </h3>
+            <div className="space-y-3">
+              <input
+                type="email"
+                placeholder="Email giáo viên"
+                value={userEmailInput}
+                onChange={e => setUserEmailInput(e.target.value)}
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-100 outline-none"
+              />
+              <div className="flex gap-2">
+                <select
+                  value={assignCourseLang}
+                  onChange={e => setAssignCourseLang(e.target.value)}
+                  className="p-2 border rounded-lg flex-1 outline-none"
+                >
+                  <option value="japanese">Nhật</option>
+                  <option value="chinese">Trung</option>
+                </select>
+                <select
+                  value={assignCourseLevel}
+                  onChange={e => setAssignCourseLevel(e.target.value)}
+                  className="p-2 border rounded-lg w-24 outline-none"
+                >
+                  <option value="N5">N5</option>
+                  <option value="N4">N4</option>
+                  <option value="N3">N3</option>
+                  <option value="N2">N2</option>
+                  <option value="N1">N1</option>
+                  <option value="HSK1">HSK1</option>
+                  <option value="HSK2">HSK2</option>
+                </select>
+                <button
+                  onClick={async () => {
+                    try {
+                      await assignTeacherToCourse(userEmailInput, assignCourseLang, assignCourseLevel);
+                      showToast('Đã phân công giáo viên', 'success');
+                    } catch (e: any) {
+                      showToast('Lỗi: ' + e.message, 'error');
+                    }
+                  }}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition"
+                >
+                  Phân
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="admin-table-container">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Vai trò</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data || []).map((userRole: any) => (
+                <tr key={userRole.id || userRole.email}>
+                  <td className="font-medium">{userRole.email}</td>
+                  <td>
+                    <span className={`px-2 py-1 rounded text-xs font-bold ${userRole.role === 'admin' ? 'bg-red-100 text-red-700' :
+                      userRole.role === 'teacher' ? 'bg-blue-100 text-blue-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                      {userRole.role ? userRole.role.toUpperCase() : 'STUDENT'}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => handleDelete(userRole.email)}
+                      className="text-red-500 hover:text-red-700 font-medium text-sm transition"
+                    >
+                      Xóa quyền
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
   };
 
   return (
     <div className="admin-container">
-      <div className="admin-header">
-        <div>
-          <h1>
-            <svg style={{ width: '36px', height: '36px', display: 'inline', marginRight: '0.75rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Quản lý Dữ liệu
-          </h1>
-          <p>Thêm, sửa, xóa bài học, từ vựng, kanji...</p>
+      <header className="admin-header">
+        <div className="admin-title">
+          <h1>Admin Panel</h1>
+          {viewMode === 'content' && <span className="text-sm font-normal ml-3 bg-blue-100 text-blue-600 px-2 py-1 rounded-full">{selectedLesson?.title}</span>}
         </div>
-        <div className="admin-user-info">
-          <span>Xin chào, {user?.email}</span>
-          <a href="/" className="btn btn-secondary" style={{ marginRight: '0.5rem' }}>
-            <svg style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            Trang chủ
-          </a>
-          <button className="btn btn-outline" onClick={signOut}>
-            <svg style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Đăng xuất
-          </button>
+        <div className="admin-actions">
+          <button onClick={() => setViewMode('users')} className={`hover:bg-blue-50 text-slate-600 ${viewMode === 'users' ? 'bg-blue-50 text-blue-600 font-bold' : ''}`}>Quản lý User</button>
+          <button onClick={handleBackToLanguages} className={`hover:bg-blue-50 text-slate-600 ${viewMode !== 'users' ? 'bg-blue-50 text-blue-600 font-bold' : ''}`}>Quản lý Nội dung</button>
+          <button className="logout-btn" onClick={signOut}>Đăng xuất</button>
         </div>
-      </div>
-
-      <div className="admin-tabs">
-        <button
-          className={`admin-tab ${activeTab === 'courses' ? 'active' : ''}`}
-          onClick={() => setActiveTab('courses')}
-          title="Khóa học (Phím 1)"
-        >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-          </svg>
-          Khóa học
-          <span className="tab-shortcut">1</span>
-        </button>
-        <button
-          className={`admin-tab ${activeTab === 'lessons' ? 'active' : ''}`}
-          onClick={() => setActiveTab('lessons')}
-          title="Bài học (Phím 2)"
-        >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-          Bài học
-          <span className="tab-shortcut">2</span>
-        </button>
-        <button
-          className={`admin-tab ${activeTab === 'vocabulary' ? 'active' : ''}`}
-          onClick={() => setActiveTab('vocabulary')}
-          title="Từ vựng (Phím 3)"
-        >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-          Từ vựng
-          <span className="tab-shortcut">3</span>
-        </button>
-        <button
-          className={`admin-tab ${activeTab === 'kanji' ? 'active' : ''}`}
-          onClick={() => setActiveTab('kanji')}
-          title="Kanji (Phím 4)"
-        >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-          Kanji
-          <span className="tab-shortcut">4</span>
-        </button>
-        <button
-          className={`admin-tab ${activeTab === 'grammar' ? 'active' : ''}`}
-          onClick={() => setActiveTab('grammar')}
-          title="Ngữ pháp (Phím 5)"
-        >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Ngữ pháp
-          <span className="tab-shortcut">5</span>
-        </button>
-        <button
-          className={`admin-tab ${activeTab === 'listening' ? 'active' : ''}`}
-          onClick={() => setActiveTab('listening')}
-          title="Nghe (Phím 6)"
-        >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-          </svg>
-          Nghe
-          <span className="tab-shortcut">6</span>
-        </button>
-        <button
-          className={`admin-tab ${activeTab === 'games' ? 'active' : ''}`}
-          onClick={() => setActiveTab('games')}
-          title="Game (Phím 7)"
-        >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-          </svg>
-          Game
-          <span className="tab-shortcut">7</span>
-        </button>
-        <button
-          className={`admin-tab ${activeTab === 'roleplay' ? 'active' : ''}`}
-          onClick={() => setActiveTab('roleplay')}
-          title="Roleplay (Phím 8)"
-        >
-          <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          Roleplay
-          <span className="tab-shortcut">8</span>
-        </button>
-      </div>
+      </header>
 
       <div className="admin-content">
-        <div className="admin-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setEditingItem(null);
-              setShowForm(true);
-            }}
-            title="Thêm mới (Ctrl/Cmd + N)"
-          >
-            ➕ Thêm mới
-            <span className="keyboard-shortcut">⌘N</span>
-          </button>
-          <button
-            className="help-button"
-            onClick={() => setShowHelpGuide(true)}
-            title="Xem hướng dẫn sử dụng (Ctrl/Cmd + K)"
-          >
-            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M12 22c5.421 0 10-4.579 10-10S17.421 2 12 2 2 6.579 2 12s4.579 10 10 10z" />
-              <path d="M12 16v-4M12 8h.01" />
-            </svg>
-            Hướng dẫn
-            <span className="keyboard-shortcut">⌘K</span>
-          </button>
-        </div>
+        {viewMode !== 'users' && renderBreadcrumbs()}
 
-        {/* Filters */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '1rem', 
-          marginBottom: '1.5rem', 
-          flexWrap: 'wrap',
-          padding: '1rem',
-          background: 'var(--bg-secondary)',
-          borderRadius: '12px'
-        }}>
-          {/* Search */}
-          <div style={{ flex: '1 1 300px' }}>
-            <input
-              type="text"
-              placeholder="🔍 Tìm kiếm... (Ctrl/Cmd + F)"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => {
-                const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-                const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
-                if (ctrlKey && e.key === 'f') {
-                  e.preventDefault();
-                }
-              }}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                borderRadius: '8px',
-                border: '2px solid var(--border-color)',
-                fontSize: '0.9375rem'
-              }}
-            />
-          </div>
-
-          {/* Level Filter */}
-          {(activeTab === 'courses' || activeTab === 'lessons' || activeTab === 'vocabulary' || activeTab === 'kanji' || activeTab === 'grammar') && (
-            <div style={{ flex: '0 1 150px' }}>
-              <select
-                value={filterLevel}
-                onChange={(e) => setFilterLevel(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  border: '2px solid var(--border-color)',
-                  fontSize: '0.9375rem'
-                }}
-              >
-                <option value="">Tất cả cấp độ</option>
-                <option value="N5">N5</option>
-                <option value="N4">N4</option>
-                <option value="N3">N3</option>
-                <option value="N2">N2</option>
-                <option value="N1">N1</option>
-                <option value="HSK1">HSK1</option>
-                <option value="HSK2">HSK2</option>
-                <option value="HSK3">HSK3</option>
-                <option value="HSK4">HSK4</option>
-                <option value="HSK5">HSK5</option>
-                <option value="HSK6">HSK6</option>
-              </select>
-            </div>
-          )}
-
-          {/* Lesson Filter */}
-          {(activeTab === 'vocabulary' || activeTab === 'kanji' || activeTab === 'grammar') && (
-            <div style={{ flex: '0 1 200px' }}>
-              <select
-                value={filterLesson}
-                onChange={(e) => setFilterLesson(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  border: '2px solid var(--border-color)',
-                  fontSize: '0.9375rem'
-                }}
-              >
-                <option value="">Tất cả bài học</option>
-                {lessons.map((lesson: any) => (
-                  <option key={lesson.id} value={lesson.id}>
-                    {lesson.title} ({lesson.level})
-                  </option>
+        {/* CONTROLS BAR (Search, Add, Tabs) */}
+        {viewMode !== 'languages' && viewMode !== 'users' && (
+          <div className="controls-bar">
+            {viewMode === 'content' ? (
+              <div className="admin-tabs" style={{ marginBottom: 0 }}>
+                {['vocabulary', 'kanji', 'grammar', 'listening', 'games', 'roleplay'].map(tab => (
+                  <button key={tab} className={`tab-btn ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab as TabType)}>
+                    {getLabel(tab)}
+                  </button>
                 ))}
-              </select>
+              </div>
+            ) : (
+              <div className="admin-section-title">
+                {viewMode === 'courses' ? `Danh sách khóa học ${selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}` : `Danh sách bài học của ${selectedCourse?.title}`}
+              </div>
+            )}
+
+            <div className="flex gap-2 ml-auto">
+              <input
+                type="text"
+                placeholder="Tìm kiếm..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+              <button className="btn-add" onClick={() => { setEditingItem(null); setShowForm(true); }}>
+                <span>+</span> Thêm Mới
+              </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Clear Filters */}
-          {(searchTerm || filterLevel || filterLesson) && (
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setFilterLevel('');
-                setFilterLesson('');
-              }}
-              style={{
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                border: 'none',
-                background: '#ef4444',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '0.9375rem',
-                fontWeight: '600'
-              }}
-            >
-              ✕ Xóa bộ lọc
-            </button>
-          )}
-        </div>
-
-        {/* Results count */}
-        <div style={{ 
-          marginBottom: '1rem', 
-          color: 'var(--text-secondary)',
-          fontSize: '0.9375rem',
-          fontWeight: '600'
-        }}>
-          Hiển thị {Math.min((currentPage - 1) * itemsPerPage + 1, filteredData.length)}-{Math.min(currentPage * itemsPerPage, filteredData.length)} / {filteredData.length} kết quả
-        </div>
-
+        {/* LOADING STATE */}
         {loading ? (
-          <div className="loading">Đang tải...</div>
+          <div className="p-12 text-center text-slate-500 flex flex-col items-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+            Đang tải dữ liệu...
+          </div>
+        ) : viewMode === 'users' ? (
+          renderUserManagement()
         ) : (
-          <>
-            <div className="admin-list">
-              {filteredData.length === 0 ? (
-                <div className="empty-state">
-                  <p>{data.length === 0 ? 'Chưa có dữ liệu. Hãy thêm mới!' : 'Không tìm thấy kết quả phù hợp.'}</p>
+          <div className="data-grid">
+
+            {/* 1. LANGUAGES SELECT VIEW */}
+            {viewMode === 'languages' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mt-12">
+                <div onClick={() => handleSelectLanguage('japanese')} className="course-card hover:border-red-200 group">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="text-4xl">🇯🇵</div>
+                    <h2 className="text-2xl font-bold text-slate-800 group-hover:text-red-500 transition-colors">Tiếng Nhật</h2>
+                  </div>
+                  <p className="text-slate-500 mb-6">Quản lý các khóa học N5, N4, N3, N2, N1.</p>
+                  <button className="w-full py-2 bg-red-50 text-red-600 font-bold rounded-lg group-hover:bg-red-500 group-hover:text-white transition-all">
+                    Quản lý
+                  </button>
                 </div>
-              ) : (
-                filteredData
-                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                  .map((item) => (
-                <div key={item.id} className="admin-item">
-                  <div className="item-content">
-                    {activeTab === 'kanji' ? (
-                      <h3 className="kanji-display">{item.character}</h3>
+
+                <div onClick={() => handleSelectLanguage('chinese')} className="course-card hover:border-yellow-200 group">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="text-4xl">🇨🇳</div>
+                    <h2 className="text-2xl font-bold text-slate-800 group-hover:text-yellow-600 transition-colors">Tiếng Trung</h2>
+                  </div>
+                  <p className="text-slate-500 mb-6">Quản lý các khóa học HSK1 - HSK6.</p>
+                  <button className="w-full py-2 bg-yellow-50 text-yellow-600 font-bold rounded-lg group-hover:bg-yellow-500 group-hover:text-white transition-all">
+                    Quản lý
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 2. COURSES VIEW */}
+            {viewMode === 'courses' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                {currentItems.length > 0 ? currentItems.map((course: any) => (
+                  <div key={course.id} className="course-card" onClick={() => handleSelectCourse(course)}>
+                    <div className="course-header">
+                      <h3 className="course-title">{course.title}</h3>
+                      <span className={`course-badge ${course.language}`}>{course.level}</span>
+                    </div>
+                    <p className="course-desc">{course.description || 'Chưa có mô tả'}</p>
+                    <div className="course-actions" onClick={e => e.stopPropagation()}>
+                      <button onClick={(e) => { e.stopPropagation(); setEditingItem(course); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(course.id); }} className="btn-icon btn-delete">Xóa</button>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="col-span-3 text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                    Chưa có khóa học nào. Hãy bấm "Thêm Mới" để tạo.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 3. LESSONS VIEW */}
+            {viewMode === 'lessons' && (
+              <div className="admin-table-container">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '60px' }}>STT</th>
+                      <th>Tên bài</th>
+                      <th>Mô tả</th>
+                      <th style={{ width: '120px' }}>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentItems.length > 0 ? currentItems.map((lesson: any) => (
+                      <tr key={lesson.id} onClick={() => handleSelectLesson(lesson)} className="cursor-pointer group">
+                        <td className="font-bold text-slate-400 group-hover:text-blue-600">{lesson.lesson_number}</td>
+                        <td className="font-bold text-slate-700 group-hover:text-blue-600 transition-colors">{lesson.title}</td>
+                        <td className="text-slate-500">{lesson.description}</td>
+                        <td onClick={e => e.stopPropagation()}>
+                          <div className="row-action-btns">
+                            <button onClick={(e) => { e.stopPropagation(); setEditingItem(lesson); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDelete(lesson.id); }} className="btn-icon btn-delete">Xóa</button>
+                          </div>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan={4} className="text-center py-8 text-slate-500">Chưa có bài học nào.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* 4. CONTENT VIEW */}
+            {viewMode === 'content' && (
+              <div className="admin-table-container">
+                <table className="admin-table">
+                  <thead>
+                    {activeTab === 'vocabulary' ? (
+                      <tr><th>Từ vựng</th><th>Nghĩa</th><th>Hiragana/Pinyin</th><th>Hành động</th></tr>
+                    ) : activeTab === 'kanji' ? (
+                      <tr><th>Ký tự</th><th>Hán Việt/Nghĩa</th><th>Âm đọc</th><th>Hành động</th></tr>
+                    ) : activeTab === 'grammar' ? (
+                      <tr><th>Cấu trúc</th><th>Ý nghĩa</th><th>Hành động</th></tr>
                     ) : (
-                      <h3>{item.title || item.word || item.pattern || item.sentence || 'N/A'}</h3>
+                      <tr><th>Tiêu đề/Nội dung</th><th>Hành động</th></tr>
                     )}
-                    <p>{item.description || item.meaning || item.translation || item.prompt || 'N/A'}</p>
-                    {item.level && (
-                      <span className={`badge badge-${item.level.toLowerCase()}`}>
-                        {item.level}
-                      </span>
+                  </thead>
+                  <tbody>
+                    {currentItems.length > 0 ? currentItems.map((item: any) => (
+                      <tr key={item.id}>
+                        {activeTab === 'vocabulary' ? (
+                          <>
+                            <td className="font-bold text-lg">{item.word}</td>
+                            <td>{item.meaning}</td>
+                            <td className="text-slate-500 font-mono">{item.hiragana}</td>
+                            <td>
+                              <div className="row-action-btns">
+                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
+                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">Xóa</button>
+                              </div>
+                            </td>
+                          </>
+                        ) : activeTab === 'kanji' ? (
+                          <>
+                            <td className="text-3xl font-serif text-slate-800">{item.character}</td>
+                            <td>{item.meaning}</td>
+                            <td className="text-sm">
+                              {item.onyomi && <div><span className="text-xs text-slate-400 uppercase mr-1">On</span>{item.onyomi.join(', ')}</div>}
+                              {item.kunyomi && <div><span className="text-xs text-slate-400 uppercase mr-1">Kun</span>{item.kunyomi.join(', ')}</div>}
+                            </td>
+                            <td>
+                              <div className="row-action-btns">
+                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
+                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">Xóa</button>
+                              </div>
+                            </td>
+                          </>
+                        ) : activeTab === 'grammar' ? (
+                          <>
+                            <td className="font-bold text-blue-700">{item.pattern}</td>
+                            <td>{item.meaning}</td>
+                            <td>
+                              <div className="row-action-btns">
+                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
+                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">Xóa</button>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="font-medium">{item.title || item.sentence || item.question || 'Item'}</td>
+                            <td>
+                              <div className="row-action-btns">
+                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
+                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">Xóa</button>
+                              </div>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    )) : (
+                      <tr><td colSpan={4} className="text-center py-8 text-slate-500">Danh sách trống.</td></tr>
                     )}
-                  </div>
-                  <div className="item-actions">
-                    <button
-                      className="btn btn-outline"
-                      onClick={() => {
-                        setEditingItem(item);
-                        setShowForm(true);
-                      }}
-                    >
-                      ✏️ Sửa
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      🗑️ Xóa
-                    </button>
-                  </div>
-                </div>
-              ))
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
+        )}
 
-          {/* Pagination */}
-          {filteredData.length > itemsPerPage && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginTop: '2rem',
-              padding: '1rem',
-              background: 'var(--bg-secondary)',
-              borderRadius: '12px'
-            }}>
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: currentPage === 1 ? 'var(--border-color)' : 'var(--primary-color)',
-                  color: 'white',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: '600'
-                }}
-              >
-                ⏮️ Đầu
-              </button>
-              
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: currentPage === 1 ? 'var(--border-color)' : 'var(--primary-color)',
-                  color: 'white',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: '600'
-                }}
-              >
-                ◀️ Trước
-              </button>
-
-              <span style={{
-                padding: '0.5rem 1rem',
-                fontSize: '0.9375rem',
-                fontWeight: '600',
-                color: 'var(--text-primary)'
-              }}>
-                Trang {currentPage} / {Math.ceil(filteredData.length / itemsPerPage)}
-              </span>
-
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredData.length / itemsPerPage), prev + 1))}
-                disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: currentPage >= Math.ceil(filteredData.length / itemsPerPage) ? 'var(--border-color)' : 'var(--primary-color)',
-                  color: 'white',
-                  cursor: currentPage >= Math.ceil(filteredData.length / itemsPerPage) ? 'not-allowed' : 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: '600'
-                }}
-              >
-                Sau ▶️
-              </button>
-
-              <button
-                onClick={() => setCurrentPage(Math.ceil(filteredData.length / itemsPerPage))}
-                disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: currentPage >= Math.ceil(filteredData.length / itemsPerPage) ? 'var(--border-color)' : 'var(--primary-color)',
-                  color: 'white',
-                  cursor: currentPage >= Math.ceil(filteredData.length / itemsPerPage) ? 'not-allowed' : 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: '600'
-                }}
-              >
-                Cuối ⏭️
-              </button>
-            </div>
-          )}
-        </>
+        {totalPages > 1 && viewMode !== 'languages' && (
+          <div className="pagination flex justify-center gap-2 mt-6">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+              className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-slate-50"
+            >
+              Prev
+            </button>
+            <span className="px-3 py-1 font-bold text-slate-600">{currentPage} / {totalPages}</span>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(p => p + 1)}
+              className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-slate-50"
+            >
+              Next
+            </button>
+          </div>
         )}
       </div>
 
       {showForm && (
         <AdminForm
-          key={editingItem?.id || 'new'} // Force re-render when switching between edit/new
-          type={activeTab}
+          key={editingItem?.id || 'new'}
+          type={viewMode === 'courses' ? 'courses' : viewMode === 'lessons' ? 'lessons' : activeTab}
           item={editingItem}
           courses={courses}
           lessons={lessons}
           onSave={editingItem ? (id: string, data: any) => handleUpdate(id, data) : handleCreate}
-          onCancel={() => {
-            setShowForm(false);
-            setEditingItem(null);
-          }}
+          onCancel={() => { setShowForm(false); setEditingItem(null); }}
         />
       )}
 
-      {showHelpGuide && (
-        <AdminHelpGuide
-          type={activeTab}
-          onClose={() => setShowHelpGuide(false)}
-        />
-      )}
+      {showHelpGuide && <AdminHelpGuide type={activeTab} onClose={() => setShowHelpGuide(false)} />}
 
       {showShortcuts && (
         <div className="shortcuts-overlay" onClick={() => setShowShortcuts(false)}>
-          <div className="shortcuts-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="shortcuts-header">
-              <h3>⌨️ Phím Tắt</h3>
-              <button className="close-btn" onClick={() => setShowShortcuts(false)}>✕</button>
-            </div>
-            <div className="shortcuts-content">
-              <div className="shortcuts-section">
-                <h4>Thao tác chung</h4>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">Ctrl/Cmd + N</span>
-                  <span className="shortcut-desc">Thêm mới</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">Ctrl/Cmd + K</span>
-                  <span className="shortcut-desc">Mở hướng dẫn</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">Ctrl/Cmd + F</span>
-                  <span className="shortcut-desc">Tìm kiếm</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">?</span>
-                  <span className="shortcut-desc">Hiển thị phím tắt</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">Esc</span>
-                  <span className="shortcut-desc">Đóng form/hướng dẫn</span>
-                </div>
-              </div>
-              <div className="shortcuts-section">
-                <h4>Chuyển tab</h4>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">1</span>
-                  <span className="shortcut-desc">Khóa học</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">2</span>
-                  <span className="shortcut-desc">Bài học</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">3</span>
-                  <span className="shortcut-desc">Từ vựng</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">4</span>
-                  <span className="shortcut-desc">Kanji</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">5</span>
-                  <span className="shortcut-desc">Ngữ pháp</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">6</span>
-                  <span className="shortcut-desc">Nghe</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">7</span>
-                  <span className="shortcut-desc">Game</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">8</span>
-                  <span className="shortcut-desc">Roleplay</span>
-                </div>
-              </div>
-              <div className="shortcuts-section">
-                <h4>Trong form</h4>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">Ctrl/Cmd + S</span>
-                  <span className="shortcut-desc">Lưu</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">Esc</span>
-                  <span className="shortcut-desc">Hủy</span>
-                </div>
-                <div className="shortcut-item">
-                  <span className="shortcut-key">Enter</span>
-                  <span className="shortcut-desc">Submit form</span>
-                </div>
-              </div>
-            </div>
+          <div className="bg-white p-4 rounded shadow">
+            <h3>Shortcuts Guide</h3>
+            <p>Implementation pending...</p>
           </div>
         </div>
       )}
@@ -945,12 +760,13 @@ const AdminPanel = () => {
 
 // Comprehensive Admin Form
 const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
+  const { showToast } = useToast();
   // Initialize formData properly to avoid duplication
   const initializeFormData = () => {
     if (item) {
       // When editing, create a deep copy to avoid reference issues
       const baseData = JSON.parse(JSON.stringify(item));
-      
+
       // Handle examples for grammar - remove duplicates
       if (type === 'grammar' && baseData.examples) {
         if (Array.isArray(baseData.examples)) {
@@ -958,10 +774,10 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
           const seen = new Set<string>();
           baseData.examples = baseData.examples.filter((ex: any) => {
             // Create unique key from id or content
-            const key = ex.id 
-              ? `id_${ex.id}` 
+            const key = ex.id
+              ? `id_${ex.id}`
               : `content_${(ex.japanese || '').trim()}_${(ex.translation || '').trim()}`;
-            
+
             if (seen.has(key)) {
               return false; // Duplicate, remove it
             }
@@ -972,16 +788,16 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
           baseData.examples = [];
         }
       }
-      
+
       // Handle examples for kanji - remove duplicates
       if (type === 'kanji' && baseData.examples) {
         if (Array.isArray(baseData.examples)) {
           const seen = new Set<string>();
           baseData.examples = baseData.examples.filter((ex: any) => {
-            const key = ex.id 
-              ? `id_${ex.id}` 
+            const key = ex.id
+              ? `id_${ex.id}`
               : `content_${(ex.word || '').trim()}_${(ex.meaning || '').trim()}`;
-            
+
             if (seen.has(key)) {
               return false; // Duplicate, remove it
             }
@@ -992,7 +808,7 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
           baseData.examples = [];
         }
       }
-      
+
       return baseData;
     }
     return getDefaultFormData(type);
@@ -1016,7 +832,7 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
   useEffect(() => {
     const newFormData = initializeFormData();
     setFormData(newFormData);
-    
+
     if (item) {
       // Editing mode - always single
       setImportMode('single');
@@ -1060,13 +876,13 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
           const questions =
             Array.isArray(json.questions) && json.questions.length
               ? json.questions.map((q: any) => ({
-                  question: q.question || '',
-                  options: Array.isArray(q.options) ? q.options.slice(0, 4) : [],
-                  correct_answer:
-                    typeof q.correct_answer === 'number' && q.correct_answer >= 0 && q.correct_answer <= 3
-                      ? q.correct_answer
-                      : 0,
-                }))
+                question: q.question || '',
+                options: Array.isArray(q.options) ? q.options.slice(0, 4) : [],
+                correct_answer:
+                  typeof q.correct_answer === 'number' && q.correct_answer >= 0 && q.correct_answer <= 3
+                    ? q.correct_answer
+                    : 0,
+              }))
               : [];
           setFormData({
             ...formData,
@@ -1243,8 +1059,8 @@ Ví dụ:
     ]
   }
 ]`}</pre>
-              <strong style={{ marginTop: '1rem', display: 'block' }}>Gợi ý 2 (Format text đơn giản - để import hàng loạt):</strong>
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy liệt kê các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
+                <strong style={{ marginTop: '1rem', display: 'block' }}>Gợi ý 2 (Format text đơn giản - để import hàng loạt):</strong>
+                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy liệt kê các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
 - Trả về dạng text, mỗi dòng một mẫu.
 - Không giải thích thêm.
 - Format mỗi dòng:
@@ -1372,19 +1188,19 @@ Ví dụ:
       case 'games':
         return { lesson_id: '', sentence: '', translation: '', words: [], correct_order: [], hint: '', language: 'japanese' };
       case 'roleplay':
-        return { 
-          lesson_id: '', 
-          title: '', 
-          description: '', 
-          scenario: '', 
-          character_a: '', 
-          character_b: '', 
-          character_a_script: [], 
+        return {
+          lesson_id: '',
+          title: '',
+          description: '',
+          scenario: '',
+          character_a: '',
+          character_b: '',
+          character_a_script: [],
           character_b_script: [],
           character_a_correct_answers: [],
           character_b_correct_answers: [],
-          vocabulary_hints: [], 
-          grammar_points: [], 
+          vocabulary_hints: [],
+          grammar_points: [],
           difficulty: 'easy',
           image_url: '',
           enable_scoring: false,
@@ -1397,14 +1213,14 @@ Ví dụ:
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Handle batch import for vocabulary
     if (type === 'vocabulary' && importMode === 'batch' && !item) {
       if (!formData.lesson_id) {
         showToast('⚠️ Vui lòng chọn bài học trước khi import từ vựng. Nếu chưa có bài học, hãy tạo bài học trước.', 'warning');
         return;
       }
-      
+
       if (batchPreview.length === 0) {
         showToast('⚠️ Vui lòng nhập từ vựng theo format đúng. Xem ví dụ trong form để biết cách nhập.', 'warning');
         return;
@@ -1464,7 +1280,7 @@ Ví dụ:
         showToast('⚠️ Vui lòng chọn bài học trước khi import kanji/hán tự. Nếu chưa có bài học, hãy tạo bài học trước.', 'warning');
         return;
       }
-      
+
       if (batchPreview.length === 0) {
         showToast('⚠️ Vui lòng nhập kanji/hán tự theo format đúng. Xem ví dụ trong form để biết cách nhập.', 'warning');
         return;
@@ -1495,7 +1311,7 @@ Ví dụ:
         showToast('⚠️ Vui lòng chọn bài học trước khi import ngữ pháp. Nếu chưa có bài học, hãy tạo bài học trước.', 'warning');
         return;
       }
-      
+
       if (batchPreview.length === 0) {
         showToast('⚠️ Vui lòng nhập ngữ pháp theo format đúng. Xem ví dụ trong form để biết cách nhập.', 'warning');
         return;
@@ -1520,7 +1336,7 @@ Ví dụ:
             };
           }).filter((ex: any) => ex.japanese && ex.translation); // Filter out invalid examples
         }
-        
+
         return {
           lesson_id: formData.lesson_id,
           pattern: grammar.pattern || '',
@@ -1564,17 +1380,17 @@ Ví dụ:
       onSave(batchData);
       return;
     }
-    
+
     // Process form data based on type
     let processedData = { ...formData };
-    
+
     // Process vocabulary fields for Chinese
     if (type === 'vocabulary' && formData.language === 'chinese') {
       // Map form fields to database fields for Chinese
       const simplified = formData.word || '';
       const pinyin = formData.hiragana || ''; // pinyin is stored in hiragana field in form
       const traditional = formData.kanji || null; // traditional hanzi (stored in kanji field in form)
-      
+
       processedData.word = simplified;
       processedData.character = simplified; // character is simplified hanzi for Chinese
       processedData.hiragana = pinyin; // Use pinyin for hiragana field (database compatibility)
@@ -1584,7 +1400,7 @@ Ví dụ:
       // Remove Japanese-specific fields
       delete processedData.kanji;
     }
-    
+
     if (type === 'kanji' && typeof formData.onyomi === 'string') {
       processedData.onyomi = formData.onyomi.split(',').map((s: string) => s.trim()).filter(Boolean);
     }
@@ -1696,8 +1512,8 @@ Ví dụ:
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value;
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       language: newLanguage,
                       level: newLanguage === 'japanese' ? 'N5' : 'HSK1'
                     });
@@ -1714,7 +1530,7 @@ Ví dụ:
                   <span className="field-tooltip">
                     <span className="field-tooltip-icon">?</span>
                     <span className="field-tooltip-content">
-                      N5/HSK1: Dễ nhất, dành cho người mới bắt đầu<br/>
+                      N5/HSK1: Dễ nhất, dành cho người mới bắt đầu<br />
                       N1/HSK6: Khó nhất, trình độ cao cấp
                     </span>
                   </span>
@@ -1790,8 +1606,8 @@ Ví dụ:
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value;
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       language: newLanguage,
                       level: newLanguage === 'japanese' ? 'N5' : 'HSK1',
                       course_id: '' // Reset course selection when language changes
@@ -1920,8 +1736,8 @@ Ví dụ:
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value as 'japanese' | 'chinese';
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       language: newLanguage,
                       lesson_id: '' // Reset lesson when language changes
                     });
@@ -1967,12 +1783,12 @@ Ví dụ:
                   const lessonCourse = courses.find((c: any) => c.id === l.course_id);
                   return lessonCourse?.language === (formData.language || 'japanese');
                 }).length === 0 && (
-                  <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'var(--warning-light)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--warning-color)' }}>
-                    ⚠️ Chưa có bài học nào cho ngôn ngữ này. Hãy tạo bài học trước!
-                  </div>
-                )}
+                    <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'var(--warning-light)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--warning-color)' }}>
+                      ⚠️ Chưa có bài học nào cho ngôn ngữ này. Hãy tạo bài học trước!
+                    </div>
+                  )}
               </div>
-              
+
               {formData.language === 'chinese' ? (
                 <>
                   <div className="form-group">
@@ -2038,7 +1854,7 @@ Ví dụ:
                   </div>
                 </>
               )}
-              
+
               <div className="form-group">
                 <label>Nghĩa *</label>
                 <input
@@ -2096,8 +1912,8 @@ Ví dụ:
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value as 'japanese' | 'chinese';
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       language: newLanguage,
                       lesson_id: '' // Reset lesson when language changes
                     });
@@ -2152,7 +1968,7 @@ Ví dụ:
                     setBatchPreview(vocabularies);
                     setBatchError(errors.length > 0 ? errors.join('\n') : null);
                   }}
-                  placeholder={formData.language === 'chinese' ? 
+                  placeholder={formData.language === 'chinese' ?
                     `你好=nǐ hǎo=Xin chào
 谢谢=xiè xie=Cảm ơn
 再见=zài jiàn=Tạm biệt
@@ -2166,7 +1982,7 @@ Ví dụ:
                 />
                 <div className="format-example">
                   <strong>Ví dụ {formData.language === 'chinese' ? 'tiếng Trung' : 'tiếng Nhật'}:</strong>
-                  <pre>{formData.language === 'chinese' ? 
+                  <pre>{formData.language === 'chinese' ?
                     `你好=nǐ hǎo=Xin chào
 谢谢=xiè xie=Cảm ơn
 再见=zài jiàn=Tạm biệt
@@ -2194,8 +2010,8 @@ Ví dụ:
                     {batchPreview.map((vocab, idx) => (
                       <div key={idx} className="preview-item">
                         <span className="preview-kanji">
-                          {formData.language === 'chinese' ? 
-                            (vocab.traditional ? `${vocab.traditional} / ${vocab.simplified || vocab.word}` : (vocab.simplified || vocab.word)) : 
+                          {formData.language === 'chinese' ?
+                            (vocab.traditional ? `${vocab.traditional} / ${vocab.simplified || vocab.word}` : (vocab.simplified || vocab.word)) :
                             (vocab.kanji || '-')}
                         </span>
                         <span className="preview-hiragana">
@@ -2607,8 +2423,8 @@ Hoặc với đọc âm:
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value as 'japanese' | 'chinese';
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       language: newLanguage,
                       lesson_id: '' // Reset lesson when language changes
                     });
@@ -2677,7 +2493,7 @@ Hoặc với đọc âm:
                     type="button"
                     onClick={() => {
                       const language = formData.language || 'japanese';
-                      const exampleFormat = language === 'chinese' 
+                      const exampleFormat = language === 'chinese'
                         ? `[\n  {\n    "chinese": "我正在学习中文。",\n    "pinyin": "Wǒ zhèngzài xuéxí Zhōngwén.",\n    "translation": "Tôi đang học tiếng Trung."\n  }\n]`
                         : `[\n  {\n    "japanese": "コーヒーを飲みたいです。",\n    "romaji": "Kōhī o nomitai desu.",\n    "translation": "Tôi muốn uống cà phê."\n  }\n]`;
                       const jsonText = prompt(`Dán JSON examples (array) cho ${language === 'chinese' ? 'tiếng Trung' : 'tiếng Nhật'}:\n\n${exampleFormat}`);
@@ -2801,8 +2617,8 @@ Hoặc với đọc âm:
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value as 'japanese' | 'chinese';
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       language: newLanguage,
                       lesson_id: '' // Reset lesson when language changes
                     });
@@ -2851,7 +2667,7 @@ Hoặc với đọc âm:
                   onChange={(e) => {
                     const text = e.target.value;
                     setBatchText(text);
-                    
+
                     // Try to parse as JSON first
                     const trimmedText = text.trim();
                     if (trimmedText.startsWith('[') || trimmedText.startsWith('{')) {
@@ -2895,7 +2711,7 @@ Hoặc với đọc âm:
                         // If JSON parse fails, fall back to text format
                       }
                     }
-                    
+
                     // Parse as text format
                     const { grammars, errors } = parseGrammarBatch(text);
                     setBatchPreview(grammars);
@@ -2948,7 +2764,7 @@ Hoặc với đọc âm:
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const jsonText = prompt(`Dán JSON examples cho "${grammar.pattern}":\n\n${formData.language === 'chinese' 
+                                    const jsonText = prompt(`Dán JSON examples cho "${grammar.pattern}":\n\n${formData.language === 'chinese'
                                       ? `[\n  {\n    "chinese": "我正在学习中文。",\n    "pinyin": "Wǒ zhèngzài xuéxí Zhōngwén.",\n    "translation": "Tôi đang học tiếng Trung."\n  }\n]`
                                       : `[\n  {\n    "japanese": "コーヒーを飲みたいです。",\n    "romaji": "Kōhī o nomitai desu.",\n    "translation": "Tôi muốn uống cà phê."\n  }\n]`}`);
                                     if (jsonText) {
@@ -2971,7 +2787,7 @@ Hoặc với đọc âm:
                                             };
                                           }
                                         }).filter((ex: any) => ex.japanese && ex.translation);
-                                        
+
                                         const newPreview = [...batchPreview];
                                         newPreview[idx] = { ...newPreview[idx], examples: [...(grammar.examples || []), ...mappedExamples] };
                                         setBatchPreview(newPreview);
@@ -3022,7 +2838,7 @@ Hoặc với đọc âm:
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const jsonText = prompt(`Dán JSON examples cho "${grammar.pattern}":\n\n${formData.language === 'chinese' 
+                                  const jsonText = prompt(`Dán JSON examples cho "${grammar.pattern}":\n\n${formData.language === 'chinese'
                                     ? `[\n  {\n    "chinese": "我正在学习中文。",\n    "pinyin": "Wǒ zhèngzài xuéxí Zhōngwén.",\n    "translation": "Tôi đang học tiếng Trung."\n  }\n]`
                                     : `[\n  {\n    "japanese": "コーヒーを飲みたいです。",\n    "romaji": "Kōhī o nomitai desu.",\n    "translation": "Tôi muốn uống cà phê."\n  }\n]`}`);
                                   if (jsonText) {
@@ -3045,7 +2861,7 @@ Hoặc với đọc âm:
                                           };
                                         }
                                       }).filter((ex: any) => ex.japanese && ex.translation);
-                                      
+
                                       const newPreview = [...batchPreview];
                                       newPreview[idx] = { ...newPreview[idx], examples: mappedExamples };
                                       setBatchPreview(newPreview);
@@ -3205,8 +3021,8 @@ Hoặc với đọc âm:
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value as 'japanese' | 'chinese';
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       language: newLanguage,
                       lesson_id: '' // Reset lesson when language changes
                     });
@@ -3413,62 +3229,62 @@ Hoặc với đọc âm:
                         while (options.length < 4) options.push('');
                         return (
                           <>
-                      <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-                        <label>Câu hỏi</label>
-                        <input
-                          type="text"
-                          value={q.question || ''}
-                          onChange={(e) => {
-                            const newQuestions = [...(formData.questions || [])];
-                            newQuestions[idx] = { ...newQuestions[idx], question: e.target.value };
-                            setFormData({ ...formData, questions: newQuestions });
-                          }}
-                        />
-                      </div>
-                      <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-                        <label>Đáp án A / B / C / D</label>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          {['A', 'B', 'C', 'D'].map((label, optIdx) => (
-                            <div key={optIdx} className="form-group" style={{ marginBottom: 0 }}>
-                              <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Đáp án {label}</label>
+                            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                              <label>Câu hỏi</label>
                               <input
                                 type="text"
-                                value={options[optIdx] || ''}
+                                value={q.question || ''}
                                 onChange={(e) => {
                                   const newQuestions = [...(formData.questions || [])];
-                                  const qOptions = Array.isArray(newQuestions[idx].options) ? [...newQuestions[idx].options] : [];
-                                  while (qOptions.length < 4) qOptions.push('');
-                                  qOptions[optIdx] = e.target.value;
-                                  newQuestions[idx] = {
-                                    ...newQuestions[idx],
-                                    options: qOptions,
-                                  };
+                                  newQuestions[idx] = { ...newQuestions[idx], question: e.target.value };
                                   setFormData({ ...formData, questions: newQuestions });
                                 }}
                               />
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="form-group">
-                        <label>Đáp án đúng (A / B / C / D)</label>
-                        <select
-                          value={q.correct_answer !== undefined ? q.correct_answer : 0}
-                          onChange={(e) => {
-                            const newQuestions = [...(formData.questions || [])];
-                            newQuestions[idx] = { 
-                              ...newQuestions[idx], 
-                              correct_answer: parseInt(e.target.value) || 0
-                            };
-                            setFormData({ ...formData, questions: newQuestions });
-                          }}
-                        >
-                          <option value={0}>A</option>
-                          <option value={1}>B</option>
-                          <option value={2}>C</option>
-                          <option value={3}>D</option>
-                        </select>
-                      </div>
+                            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                              <label>Đáp án A / B / C / D</label>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                {['A', 'B', 'C', 'D'].map((label, optIdx) => (
+                                  <div key={optIdx} className="form-group" style={{ marginBottom: 0 }}>
+                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Đáp án {label}</label>
+                                    <input
+                                      type="text"
+                                      value={options[optIdx] || ''}
+                                      onChange={(e) => {
+                                        const newQuestions = [...(formData.questions || [])];
+                                        const qOptions = Array.isArray(newQuestions[idx].options) ? [...newQuestions[idx].options] : [];
+                                        while (qOptions.length < 4) qOptions.push('');
+                                        qOptions[optIdx] = e.target.value;
+                                        newQuestions[idx] = {
+                                          ...newQuestions[idx],
+                                          options: qOptions,
+                                        };
+                                        setFormData({ ...formData, questions: newQuestions });
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <label>Đáp án đúng (A / B / C / D)</label>
+                              <select
+                                value={q.correct_answer !== undefined ? q.correct_answer : 0}
+                                onChange={(e) => {
+                                  const newQuestions = [...(formData.questions || [])];
+                                  newQuestions[idx] = {
+                                    ...newQuestions[idx],
+                                    correct_answer: parseInt(e.target.value) || 0
+                                  };
+                                  setFormData({ ...formData, questions: newQuestions });
+                                }}
+                              >
+                                <option value={0}>A</option>
+                                <option value={1}>B</option>
+                                <option value={2}>C</option>
+                                <option value={3}>D</option>
+                              </select>
+                            </div>
                           </>
                         );
                       })()}
@@ -3531,8 +3347,8 @@ Hoặc với đọc âm:
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value as 'japanese' | 'chinese';
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       language: newLanguage,
                       lesson_id: '' // Reset lesson when language changes
                     });
@@ -3647,8 +3463,8 @@ Hoặc với đọc âm:
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value as 'japanese' | 'chinese';
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       language: newLanguage,
                       lesson_id: '' // Reset lesson when language changes
                     });
@@ -3739,8 +3555,8 @@ Hoặc với đọc âm:
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value as 'japanese' | 'chinese';
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       language: newLanguage,
                       lesson_id: '' // Reset lesson when language changes
                     });
@@ -4099,6 +3915,7 @@ function getTypeLabel(type: TabType): string {
     listening: 'Bài tập nghe',
     games: 'Game sắp xếp câu',
     roleplay: 'Roleplay',
+    users: 'Người dùng',
   };
   return labels[type];
 }

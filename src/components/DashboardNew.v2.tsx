@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { getCourses } from '../services/supabaseService.v2';
-import { getProgressStats } from '../services/progressService';
+import { getCourses, getLessons, PaginatedResponse } from '../services/supabaseService.v2';
+import { getProgressStats, getUserProgress } from '../services/progressService';
+import { useAuth } from '../contexts/AuthContext';
+import { getStudentClasses, joinClass, createClass } from '../services/classService';
 import '../styles/dashboard-v2.css';
 
 type Language = 'japanese' | 'chinese';
@@ -14,49 +16,321 @@ interface LevelInfo {
   icon: string;
 }
 
+const groupCoursesByLevel = (courses: any[], levels: string[]) => {
+  const grouped: Record<string, any[]> = {};
+  levels.forEach(level => {
+    grouped[level] = courses.filter(c => c.level === level);
+  });
+  return levels.map(level => ({
+    level,
+    courses: grouped[level] || [],
+    count: grouped[level]?.length || 0,
+  }));
+};
+
 const DashboardNew = () => {
   const { t } = useTranslation();
+  const { user, loading: authLoading, isTeacher, isStudent } = useAuth();
+  const navigate = useNavigate();
+
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('japanese');
   const [japaneseCourses, setJapaneseCourses] = useState<any[]>([]);
   const [chineseCourses, setChineseCourses] = useState<any[]>([]);
+  const [progressByLevel, setProgressByLevel] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
+  // Enrollment State
+  const [enrolledLevels, setEnrolledLevels] = useState<Set<string>>(new Set());
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [enrollCode, setEnrollCode] = useState('');
+  const [joinError, setJoinError] = useState('');
+  const [myClasses, setMyClasses] = useState<any[]>([]);
+
+  // Teacher State
+  const [showCreateClassModal, setShowCreateClassModal] = useState(false);
+  const [newClassLevel, setNewClassLevel] = useState('N5');
+  const [newClassName, setNewClassName] = useState('');
+  const [createdCode, setCreatedCode] = useState('');
+
+  // Practice Modal State
+  const [showPracticeModal, setShowPracticeModal] = useState(false);
+  const [practiceType, setPracticeType] = useState<'vocabulary' | 'writing'>('vocabulary');
+
+  const [error, setError] = useState<string | null>(null);
+
+  // Ref to prevent double-firing
+  const isLoadingRef = useRef(false);
+
   useEffect(() => {
-    loadData();
-  }, []);
+    // Only load if auth is finished loading
+    if (!authLoading) {
+      loadData();
+    }
+  }, [authLoading, user?.id]); // Re-run if auth completes or user changes (e.g. login/logout)
 
   const loadData = async () => {
+    // Prevent duplicate calls
+    if (isLoadingRef.current) {
+      console.log('Skipping duplicate loadData call');
+      return;
+    }
+    isLoadingRef.current = true;
+
+    let timeoutId: any;
     try {
       setLoading(true);
-      const [japaneseData, chineseData] = await Promise.all([
-        getCourses('japanese', 1, 100),
-        getCourses('chinese', 1, 100),
-      ]);
+      setError(null); // Clear any previous errors
+      console.log('Starting loadData...');
 
-      // Group by level
+      // Timeout safety - 30 seconds should be enough for most cases
+      timeoutId = setTimeout(() => {
+        console.error('⏰ TIMEOUT! loadData took more than 30 seconds');
+        console.error('Current loading state:', loading);
+        setError('Không thể kết nối đến database. Vui lòng kiểm tra kết nối mạng.');
+        setLoading(false);
+        isLoadingRef.current = false; // Release lock
+      }, 30000); // Increased to 30 seconds
+
+      // 1. Load critical data (Courses) first
+      let japaneseData: PaginatedResponse<any> = { data: [], total: 0, page: 1, pageSize: 100, totalPages: 0 };
+      let chineseData: PaginatedResponse<any> = { data: [], total: 0, page: 1, pageSize: 100, totalPages: 0 };
+
+      try {
+        console.log('Fetching Japanese courses...');
+        const jpPromise = getCourses('japanese', 1, 100);
+
+        console.log('Fetching Chinese courses...');
+        const cnPromise = getCourses('chinese', 1, 100);
+
+        // Use allSettled to allow partial success
+        const results = await Promise.allSettled([jpPromise, cnPromise]);
+
+        if (results[0].status === 'fulfilled') {
+          japaneseData = results[0].value;
+          console.log('Japanese courses loaded:', japaneseData.data.length);
+        } else {
+          console.error('Failed to load Japanese courses:', results[0].reason);
+        }
+
+        if (results[1].status === 'fulfilled') {
+          chineseData = results[1].value;
+          console.log('Chinese courses loaded:', chineseData.data.length);
+        } else {
+          console.error('Failed to load Chinese courses:', results[1].reason);
+        }
+
+      } catch (e) {
+        console.error('Unexpected error in loadData main block:', e);
+      }
+
+      // Group by level and update state immediately so user sees content
       const groupJapanese = groupCoursesByLevel(japaneseData.data, ['N5', 'N4', 'N3', 'N2', 'N1']);
       const groupChinese = groupCoursesByLevel(chineseData.data, ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6']);
 
+      console.log('Grouped Japanese:', groupJapanese);
+      console.log('Grouped Chinese:', groupChinese);
+
       setJapaneseCourses(groupJapanese);
       setChineseCourses(groupChinese);
-    } catch (err) {
-      console.error('Error loading data:', err);
-    } finally {
+
+      console.log('State updated - Japanese courses:', groupJapanese.length, 'groups');
+      console.log('State updated - Chinese courses:', groupChinese.length, 'groups');
+
+      // Stop loading spinner here so user can interact
       setLoading(false);
+      if (timeoutId) clearTimeout(timeoutId);
+
+      // 2. Load Enrollments (Non-blocking)
+      if (user) {
+        getStudentClasses(user.id).then((enrollments) => {
+          const authorizedLevels = new Set<string>();
+          enrollments.forEach((e: any) => {
+            if (e.classes?.language === selectedLanguage && e.classes?.level) {
+              authorizedLevels.add(e.classes.level);
+            }
+          });
+          setEnrolledLevels(authorizedLevels);
+          setMyClasses(enrollments.map((e: any) => e.classes).filter(Boolean));
+        }).catch(e => console.error("Error loading enrollments", e));
+      }
+
+      // 3. Load Progress (Heavy operation - Background)
+      // fetch lessons with pagination optimization or summary if available
+      // For now, keep logic but ensure it doesn't block UI
+      (async () => {
+        try {
+          const fetchLessonsSafe = async (lang: string) => {
+            try {
+              // Fetch max 1000 lessons - potential optimization needed on backend later
+              return await getLessons(undefined, lang as any, undefined, 1, 1000);
+            } catch (e) {
+              console.error(`Error fetching ${lang} lessons:`, e);
+              return { data: [], total: 0, page: 1, pageSize: 1000, totalPages: 0 } as PaginatedResponse<any>;
+            }
+          };
+
+          const [jpLessons, cnLessons] = await Promise.all([
+            fetchLessonsSafe('japanese'),
+            fetchLessonsSafe('chinese')
+          ]);
+
+          const allLessons = [...(jpLessons.data || []), ...(cnLessons.data || [])];
+
+          // Calculate stats
+          const totalByLevel: Record<string, number> = {};
+          const lessonLevelMap: Record<string, string> = {};
+
+          allLessons.forEach((l: any) => {
+            if (l.level) {
+              if (!totalByLevel[l.level]) totalByLevel[l.level] = 0;
+              totalByLevel[l.level]++;
+              lessonLevelMap[l.id] = l.level;
+            }
+          });
+
+          const userProgress = getUserProgress();
+          const completedByLevel: Record<string, number> = {};
+
+          if (userProgress && userProgress.lessons) {
+            Object.values(userProgress.lessons).forEach((p: any) => {
+              if (p.completedAt) {
+                const level = lessonLevelMap[p.lessonId];
+                if (level) {
+                  if (!completedByLevel[level]) completedByLevel[level] = 0;
+                  completedByLevel[level]++;
+                }
+              }
+            });
+          }
+
+          const newProgress: Record<string, number> = {};
+          const allLevels = [
+            'N5', 'N4', 'N3', 'N2', 'N1',
+            'HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'
+          ];
+
+          allLevels.forEach(level => {
+            const total = totalByLevel[level] || 0;
+            const completed = completedByLevel[level] || 0;
+            newProgress[level] = total > 0 ? Math.round((completed / total) * 100) : 0;
+          });
+
+          setProgressByLevel(newProgress);
+        } catch (err) {
+          console.warn('Background progress calculation failed', err);
+        }
+      })();
+
+    } catch (err: any) {
+      console.error('❌ Error loading data:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
+      // Only set error if we haven't stopped loading yet
+      setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu.');
+      setLoading(false);
+    } finally {
+      if (timeoutId) {
+        console.log('✅ Clearing timeout');
+        clearTimeout(timeoutId);
+      }
+      isLoadingRef.current = false;
+      console.log('✅ loadData completed');
     }
   };
 
-  const groupCoursesByLevel = (courses: any[], levels: string[]) => {
-    const grouped: Record<string, any[]> = {};
-    levels.forEach(level => {
-      grouped[level] = courses.filter(c => c.level === level);
-    });
-    return levels.map(level => ({
-      level,
-      courses: grouped[level] || [],
-      count: grouped[level]?.length || 0,
-    }));
+  const handleJoinClass = async () => {
+    if (!user) return;
+    try {
+      setJoinError('');
+      // Arg signature: userId, classCode
+      await joinClass(user.id, enrollCode);
+      alert('Tham gia lớp học thành công!');
+      setShowEnrollModal(false);
+      setEnrollCode('');
+      loadData(); // Refresh to update access
+    } catch (err: any) {
+      setJoinError(err.message || 'Lỗi khi tham gia lớp');
+    }
   };
+
+  const handleCreateClass = async () => {
+    if (!user) return;
+    try {
+      const result = await createClass({
+        name: newClassName,
+        level: newClassLevel,
+        language: selectedLanguage,
+        teacher_id: user.id
+      });
+      setCreatedCode(result.code);
+      alert(`Tạo lớp thành công! Mã lớp: ${result.code}`);
+    } catch (err) {
+      alert('Lỗi tạo lớp');
+    }
+  };
+
+  const handlePracticeClick = (e: React.MouseEvent, type: 'vocabulary' | 'writing') => {
+    e.preventDefault();
+    setPracticeType(type);
+    setShowPracticeModal(true);
+  };
+
+
+  const handleAuthRequired = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    if (!user) {
+      if (window.confirm('Vui lòng đăng nhập để sử dụng tính năng này!')) {
+        navigate('/login');
+      }
+    } else {
+      navigate(path);
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="dashboard-v2-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', maxWidth: '500px', textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1e293b' }}>Không thể tải dữ liệu</h2>
+          <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>{error}</p>
+
+          <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', textAlign: 'left', fontSize: '0.9rem', color: '#475569' }}>
+            <strong>Gợi ý khắc phục:</strong>
+            <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
+              <li>Kiểm tra kết nối mạng của bạn.</li>
+              <li>Đảm bảo Supabase URL và Key trong file <code>.env</code> là chính xác.</li>
+              <li>Nếu bạn mới cài đặt database, hãy chạy nội dung file <code>supabase_content_tables.sql</code> trong Supabase SQL Editor để tạo các bảng dữ liệu.</li>
+            </ul>
+            <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem' }}>
+              <p>Debug Info:</p>
+              <p>Status: {error}</p>
+              <p>URL Config: {((import.meta as any).env.VITE_SUPABASE_URL ? '✅ Configured' : '❌ MISSING')}</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => loadData()}
+            style={{
+              background: '#3b82f6',
+              color: 'white',
+              padding: '0.8rem 2rem',
+              borderRadius: '9999px',
+              fontWeight: 'bold',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.5)'
+            }}
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -70,7 +344,15 @@ const DashboardNew = () => {
   }
 
   const currentCourses = selectedLanguage === 'japanese' ? japaneseCourses : chineseCourses;
-  
+
+  console.log('Rendering with:', {
+    selectedLanguage,
+    japaneseCoursesLength: japaneseCourses.length,
+    chineseCoursesLength: chineseCourses.length,
+    currentCoursesLength: currentCourses.length,
+    loading
+  });
+
   const levelInfo: Record<string, LevelInfo> = {
     'N5': { level: 'N5', name: 'Sơ cấp', description: 'Nền tảng cơ bản', icon: '🌸' },
     'N4': { level: 'N4', name: 'Tiền trung cấp', description: 'Giao tiếp hàng ngày', icon: '🎋' },
@@ -91,7 +373,7 @@ const DashboardNew = () => {
   };
 
   return (
-    <div 
+    <div
       className="dashboard-v2-container"
       data-language={selectedLanguage}
     >
@@ -101,32 +383,32 @@ const DashboardNew = () => {
           {selectedLanguage === 'japanese' ? (
             <>
               <pattern id="sakura-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
-                <circle cx="50" cy="50" r="3" fill="#ffc0cb" opacity="0.15"/>
-                <circle cx="150" cy="100" r="2" fill="#ffb6c1" opacity="0.12"/>
-                <circle cx="100" cy="150" r="2.5" fill="#ffc0cb" opacity="0.1"/>
-                <path d="M 30 30 Q 35 25 40 30 T 50 30" stroke="#c41e3a" strokeWidth="0.5" fill="none" opacity="0.08"/>
+                <circle cx="50" cy="50" r="3" fill="#ffc0cb" opacity="0.15" />
+                <circle cx="150" cy="100" r="2" fill="#ffb6c1" opacity="0.12" />
+                <circle cx="100" cy="150" r="2.5" fill="#ffc0cb" opacity="0.1" />
+                <path d="M 30 30 Q 35 25 40 30 T 50 30" stroke="#c41e3a" strokeWidth="0.5" fill="none" opacity="0.08" />
               </pattern>
               <radialGradient id="jp-glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#c41e3a" stopOpacity="0.05"/>
-                <stop offset="100%" stopColor="transparent" stopOpacity="0"/>
+                <stop offset="0%" stopColor="#c41e3a" stopOpacity="0.05" />
+                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
               </radialGradient>
             </>
           ) : (
             <>
               <pattern id="chinese-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
-                <circle cx="50" cy="50" r="3" fill="#dc143c" opacity="0.12"/>
-                <circle cx="150" cy="100" r="2" fill="#ffd700" opacity="0.1"/>
-                <rect x="80" y="80" width="40" height="40" fill="none" stroke="#dc143c" strokeWidth="0.5" opacity="0.08"/>
+                <circle cx="50" cy="50" r="3" fill="#dc143c" opacity="0.12" />
+                <circle cx="150" cy="100" r="2" fill="#ffd700" opacity="0.1" />
+                <rect x="80" y="80" width="40" height="40" fill="none" stroke="#dc143c" strokeWidth="0.5" opacity="0.08" />
               </pattern>
               <radialGradient id="cn-glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#dc143c" stopOpacity="0.05"/>
-                <stop offset="100%" stopColor="transparent" stopOpacity="0"/>
+                <stop offset="0%" stopColor="#dc143c" stopOpacity="0.05" />
+                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
               </radialGradient>
             </>
           )}
         </defs>
-        <rect width="100%" height="100%" fill={`url(#${selectedLanguage === 'japanese' ? 'sakura' : 'chinese'}-pattern)`}/>
-        <rect width="100%" height="100%" fill={`url(#${selectedLanguage === 'japanese' ? 'jp' : 'cn'}-glow)`}/>
+        <rect width="100%" height="100%" fill={`url(#${selectedLanguage === 'japanese' ? 'sakura' : 'chinese'}-pattern)`} />
+        <rect width="100%" height="100%" fill={`url(#${selectedLanguage === 'japanese' ? 'jp' : 'cn'}-glow)`} />
       </svg>
 
       {/* Floating Characters Background */}
@@ -190,13 +472,17 @@ const DashboardNew = () => {
             )}
           </h1>
           <p className="hero-description">
-            {selectedLanguage === 'japanese' 
+            {selectedLanguage === 'japanese'
               ? 'Khám phá vẻ đẹp của tiếng Nhật qua hệ thống học tập thông minh với AI'
               : '通过智能AI系统探索中文之美 - Khám phá vẻ đẹp tiếng Trung với AI thông minh'
             }
           </p>
+
+          {/* Action Buttons based on Role */}
+          <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+          </div>
         </div>
-        
+
         {/* Language Switcher */}
         <div className="language-switcher">
           <button
@@ -224,6 +510,53 @@ const DashboardNew = () => {
         </div>
       </div>
 
+      {/* My Classes Section */}
+      {myClasses.length > 0 && (
+        <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
+            📝 Lớp học của tôi
+          </h2>
+          <div className="classes-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+            {myClasses.map((cls, idx) => (
+              <div key={idx} className="class-card" style={{
+                background: 'rgba(255,255,255,0.9)',
+                backdropFilter: 'blur(10px)',
+                padding: '1.5rem',
+                borderRadius: '16px',
+                border: '1px solid rgba(255,255,255,0.5)',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <span style={{
+                    background: cls.language === 'japanese' ? '#fce7f3' : '#ffedd5',
+                    color: cls.language === 'japanese' ? '#be185d' : '#c2410c',
+                    padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 'bold'
+                  }}>
+                    {cls.language === 'japanese' ? '🇯🇵' : '🇨🇳'} {cls.level}
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Code: {cls.code}</span>
+                </div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1e293b' }}>{cls.name}</h3>
+                <button style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  background: 'var(--primary-color)',
+                  color: 'white',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+                  onClick={() => alert(`Sắp ra mắt: Xem bài tập cho lớp ${cls.name}`)}
+                >
+                  Vào lớp học (Xem bài tập)
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Courses Section */}
       <div className="courses-section">
         <div className="section-title">
@@ -232,76 +565,226 @@ const DashboardNew = () => {
         </div>
 
         <div className="levels-grid">
-          {currentCourses.map((group, index) => {
-            const info = levelInfo[group.level];
-            return (
-              <Link
-                key={group.level}
-                to={`/${selectedLanguage}/courses/${group.level}`}
-                className={`level-card ${selectedLanguage === 'japanese' ? 'jp-style' : 'cn-style'}`}
-                style={{
-                  '--card-color': levelColors[group.level],
-                  '--delay': `${index * 0.1}s`,
-                } as React.CSSProperties}
-              >
-                <div className="card-header">
-                  <div className="card-flag">{selectedLanguage === 'japanese' ? '🇯🇵' : '🇨🇳'}</div>
-                  <div className="level-badge" style={{ background: levelColors[group.level] }}>
-                    <span className="badge-level">{group.level}</span>
-                  </div>
-                </div>
-                
-                <div className="card-body">
-                  <h3 className="level-name">{info?.name || group.level}</h3>
-                  <p className="level-desc">{info?.description || 'Khóa học'}</p>
-                  
-                  <div className="level-stats">
-                    <div className="stat-item">
-                      <svg className="stat-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                      </svg>
-                      <div className="stat-info">
-                        <span className="stat-value">{group.count}</span>
-                        <span className="stat-label">khóa học</span>
-                      </div>
-                    </div>
-                    <div className="stat-item">
-                      <svg className="stat-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                      </svg>
-                      <div className="stat-info">
-                        <span className="stat-value">{group.count * 8}</span>
-                        <span className="stat-label">giờ</span>
-                      </div>
+          {currentCourses.length === 0 ? (
+            <div style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              padding: '3rem',
+              background: 'rgba(255,255,255,0.9)',
+              borderRadius: '20px',
+              border: '2px dashed rgba(0,0,0,0.1)'
+            }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📚</div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1e293b' }}>
+                Chưa có khóa học
+              </h3>
+              <p style={{ color: '#64748b' }}>
+                Hiện tại chưa có khóa học {selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'} nào.
+              </p>
+              <p style={{ color: '#64748b', marginTop: '0.5rem' }}>
+                Debug: japaneseCourses={japaneseCourses.length}, chineseCourses={chineseCourses.length}
+              </p>
+            </div>
+          ) : (
+            currentCourses.map((group, index) => {
+              const info = levelInfo[group.level];
+              const isEnrolled = enrolledLevels.has(group.level) || isTeacher;
+
+              return (
+                <div
+                  key={group.level}
+                  className={`level-card ${selectedLanguage === 'japanese' ? 'jp-style' : 'cn-style'}`}
+                  style={{
+                    '--card-color': levelColors[group.level],
+                    '--delay': `${index * 0.1}s`,
+                    cursor: 'pointer'
+                  } as React.CSSProperties}
+                  onClick={(e) => {
+                    // Prevent navigation if not enrolled, open modal instead
+                    if (!isEnrolled) {
+                      e.preventDefault();
+                      setShowEnrollModal(true);
+                    } else {
+                      navigate(`/${selectedLanguage}/courses/${group.level}`);
+                    }
+                  }}
+                >
+                  <div className="card-header">
+                    <div className="card-flag">{selectedLanguage === 'japanese' ? '🇯🇵' : '🇨🇳'}</div>
+                    <div className="level-badge" style={{ background: levelColors[group.level] }}>
+                      <span className="badge-level">{group.level}</span>
                     </div>
                   </div>
 
+                  <div className="card-body">
+                    <h3 className="level-name">{info?.name || group.level}</h3>
+                    <p className="level-desc">{info?.description || 'Khóa học'}</p>
+
+                    {/* Stats Removed as per Step Id 239 */}
+
+                    {/* Stats Removed as per Step Id 239 */}
+
+                    {/* 
                   <div className="level-progress">
                     <div className="progress-info">
                       <span className="progress-label">Tiến độ</span>
-                      <span className="progress-percent">0%</span>
+                      <span className="progress-percent">{progressByLevel[group.level] || 0}%</span>
                     </div>
                     <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: '0%', background: levelColors[group.level] }}></div>
+                      <div className="progress-fill" style={{ width: `${progressByLevel[group.level] || 0}%`, background: levelColors[group.level] }}></div>
                     </div>
+                  </div> 
+                  */}
+                  </div>
+
+                  <div className="card-footer">
+                    <span className="start-btn" style={!isEnrolled ? { filter: 'grayscale(1)', opacity: 0.8 } : {}}>
+                      {isEnrolled ? 'Bắt đầu học' : '🔒 Tham gia lớp'}
+                      {isEnrolled && (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                      )}
+                    </span>
                   </div>
                 </div>
-
-                <div className="card-footer">
-                  <span className="start-btn">
-                    Bắt đầu học
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
+
+      {/* Enroll Modal */}
+      {showEnrollModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+        }}>
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: '#1e293b' }}>🔑 Tham gia lớp học</h3>
+            <p style={{ marginBottom: '1.5rem', color: '#64748b' }}>Nhập mã lớp do giáo viên cung cấp để mở khóa.</p>
+            <input
+              type="text"
+              value={enrollCode}
+              onChange={e => setEnrollCode(e.target.value)}
+              placeholder="Nhập mã 6 ký tự"
+              style={{ width: '100%', padding: '0.8rem', fontSize: '1.2rem', marginBottom: '0.5rem', borderRadius: '8px', border: '1px solid #ccc', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
+            />
+            {joinError && <p style={{ color: 'red', marginBottom: '1rem', fontSize: '0.9rem' }}>{joinError}</p>}
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button onClick={() => setShowEnrollModal(false)} style={{ flex: 1, padding: '0.8rem', background: '#f1f5f9', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', color: '#64748b' }}>Hủy</button>
+              <button onClick={handleJoinClass} style={{ flex: 1, padding: '0.8rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Tham gia</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Create Class Modal */}
+      {showCreateClassModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+        }}>
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: '#1e293b' }}>+ Tạo lớp học mới</h3>
+            {createdCode ? (
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ color: '#64748b' }}>Mã lớp của bạn là:</p>
+                <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#3b82f6', margin: '1rem 0', letterSpacing: '4px' }}>{createdCode}</div>
+                <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>Hãy gửi mã này cho học sinh để họ có thể tham gia lớp học.</p>
+                <button onClick={() => { setShowCreateClassModal(false); setCreatedCode(''); }} style={{ width: '100%', padding: '0.8rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Đóng</button>
+              </div>
+            ) : (
+              <>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#475569' }}>Tên lớp:</label>
+                <input
+                  type="text"
+                  value={newClassName}
+                  onChange={e => setNewClassName(e.target.value)}
+                  placeholder="Ví dụ: Lớp N5 Sáng T2-T4"
+                  style={{ width: '100%', padding: '0.8rem', marginBottom: '1rem', borderRadius: '8px', border: '1px solid #ccc' }}
+                />
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#475569' }}>Cấp độ:</label>
+                <select
+                  value={newClassLevel}
+                  onChange={e => setNewClassLevel(e.target.value)}
+                  style={{ width: '100%', padding: '0.8rem', marginBottom: '1.5rem', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: 'white' }}
+                >
+                  {selectedLanguage === 'japanese' ? (
+                    ['N5', 'N4', 'N3', 'N2', 'N1'].map(l => <option key={l} value={l}>{l}</option>)
+                  ) : (
+                    ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'].map(l => <option key={l} value={l}>{l}</option>)
+                  )}
+                </select>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button onClick={() => setShowCreateClassModal(false)} style={{ flex: 1, padding: '0.8rem', background: '#f1f5f9', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', color: '#64748b' }}>Hủy</button>
+                  <button onClick={handleCreateClass} style={{ flex: 1, padding: '0.8rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Tạo lớp</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Practice Selection Modal */}
+      {showPracticeModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+        }}>
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: '#1e293b' }}>
+              {practiceType === 'vocabulary' ? '🧠 Luyện từ vựng' : '✍️ Luyện viết chữ'}
+            </h3>
+            <p style={{ marginBottom: '1.5rem', color: '#64748b' }}>Chọn cấp độ bạn muốn luyện tập:</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '1.5rem' }}>
+              {(selectedLanguage === 'japanese'
+                ? ['N5', 'N4', 'N3', 'N2', 'N1']
+                : ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6']
+              ).map(level => (
+                <button
+                  key={level}
+                  onClick={() => {
+                    const baseUrl = practiceType === 'vocabulary'
+                      ? `/${selectedLanguage}/vocabulary-practice/${level}`
+                      : `/${selectedLanguage}/${selectedLanguage === 'japanese' ? 'kanji' : 'hanzi'}-writing?level=${level}`; // Writing might need params too, but logic similar
+
+                    // Note: Just navigating for now. Writing practice might not support params yet, but Vocab does.
+                    if (practiceType === 'vocabulary') {
+                      navigate(baseUrl);
+                    } else {
+                      // For writing, just go to the page, maybe param later
+                      navigate(`/${selectedLanguage}/${selectedLanguage === 'japanese' ? 'kanji' : 'hanzi'}-writing`);
+                      alert('Tính năng chọn level cho Luyện viết đang được cập nhật. Chuyển đến trang luyện viết chung.');
+                    }
+                    setShowPracticeModal(false);
+                  }}
+                  style={{
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    border: '2px solid ' + (levelColors[level] || '#ccc'),
+                    background: 'white',
+                    color: levelColors[level] || '#333',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    fontSize: '1.1rem'
+                  }}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowPracticeModal(false)}
+              style={{ width: '100%', padding: '0.8rem', background: '#f1f5f9', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', color: '#64748b' }}
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* AI Features Section */}
       <div className="ai-features-section">
@@ -309,60 +792,76 @@ const DashboardNew = () => {
           <h2>🤖 Tính năng AI độc quyền</h2>
           <p>Học thông minh hơn với công nghệ AI tiên tiến</p>
         </div>
-        
+
         <div className="features-grid">
           <Link to={`/${selectedLanguage}/dictionary`} className="feature-card">
             <svg className="feature-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
             <h3 className="feature-title">Từ điển thông minh</h3>
             <p className="feature-desc">Tra cứu nhanh với AI phân tích ngữ cảnh</p>
           </Link>
-          
-          <Link to={`/${selectedLanguage}/vocabulary-practice`} className="feature-card">
+
+          <Link
+            to="#"
+            className="feature-card"
+            onClick={(e) => handlePracticeClick(e, 'vocabulary')}
+          >
             <svg className="feature-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <circle cx="12" cy="12" r="6"/>
-              <circle cx="12" cy="12" r="2"/>
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="6" />
+              <circle cx="12" cy="12" r="2" />
             </svg>
             <h3 className="feature-title">Luyện từ vựng</h3>
             <p className="feature-desc">Hệ thống ôn tập thông minh SRS</p>
           </Link>
-          
-          <Link to={`/${selectedLanguage}/${selectedLanguage === 'japanese' ? 'kanji' : 'hanzi'}-writing`} className="feature-card">
+
+          <Link
+            to="#"
+            className="feature-card"
+            onClick={(e) => handlePracticeClick(e, 'writing')}
+          >
             <svg className="feature-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
             </svg>
             <h3 className="feature-title">Luyện viết chữ</h3>
             <p className="feature-desc">Nhận diện nét viết bằng AI</p>
           </Link>
-          
-          <Link to="/ai-conversation" className="feature-card feature-highlight">
+
+          <Link
+            to="/ai-conversation"
+            className="feature-card feature-highlight"
+            onClick={(e) => handleAuthRequired(e, '/ai-conversation')}
+          >
             <svg className="feature-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
             <h3 className="feature-title">Chat với AI</h3>
             <p className="feature-desc">Trò chuyện tự nhiên, học thực tế</p>
             <span className="feature-badge">HOT</span>
           </Link>
-          
-          <Link to="/ai-roleplay" className="feature-card feature-highlight">
+
+          <Link
+            to="/ai-roleplay"
+            className="feature-card feature-highlight"
+            onClick={(e) => handleAuthRequired(e, '/ai-roleplay')}
+          >
             <svg className="feature-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-              <line x1="12" y1="19" x2="12" y2="22"/>
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="22" />
             </svg>
             <h3 className="feature-title">Roleplay AI</h3>
             <p className="feature-desc">Tình huống thực tế, phản hồi tức thì</p>
             <span className="feature-badge">NEW</span>
           </Link>
-          
+
           <Link to="/study-progress" className="feature-card">
             <svg className="feature-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"/>
-              <line x1="12" y1="20" x2="12" y2="4"/>
-              <line x1="6" y1="20" x2="6" y2="14"/>
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
             </svg>
             <h3 className="feature-title">Theo dõi tiến độ</h3>
             <p className="feature-desc">Phân tích chi tiết quá trình học</p>

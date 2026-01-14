@@ -13,6 +13,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -24,6 +25,7 @@
     opacity: 0;
     transform: translateX(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -35,6 +37,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -45,6 +48,7 @@
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
@@ -82,12 +86,11 @@
 .card {
   background: var(--card-bg);
   color: var(--text-primary);
-  border-radius: 16px;
-  padding: 1.75rem;
+  border-radius: 12px;
+  padding: 1.5rem;
   box-shadow: var(--shadow);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   border: 1px solid var(--border-color);
-  animation: scaleIn 0.4s ease;
 }
 
 .card:hover {
@@ -271,45 +274,45 @@
 }
 
 .tab.active {
-  background: #3b82f6;
+  background: var(--primary-color);
   color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .tab-vocab.active {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: var(--primary-color);
 }
 
 .tab-kanji.active {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: var(--secondary-color);
 }
 
 .tab-grammar.active {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--success-color);
 }
 
 .tab-listening.active {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: var(--warning-color);
 }
 
 .tab-speaking.active {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: var(--danger-color);
 }
 
 .tab-game.active {
-  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  background: #db2777;
 }
 
 .tab-flashcard.active {
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  background: #0891b2;
 }
 
 .tab-quiz.active {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: #4f46e5;
 }
 
 .tab-roleplay.active {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: var(--secondary-color);
 }
 
 /* ===== VOCABULARY CARDS ===== */
@@ -1303,6 +1306,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -1401,9 +1405,12 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -1570,7 +1577,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--bg-secondary);
   padding: 2rem;
 }
 
@@ -2377,6 +2384,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -4026,6 +4034,7 @@
     transform: translateY(-100vh) rotate(0deg);
     opacity: 1;
   }
+
   100% {
     transform: translateY(100vh) rotate(720deg);
     opacity: 0;
@@ -4033,9 +4042,12 @@
 }
 
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-20px);
   }
@@ -4828,10 +4840,12 @@
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.45);
   }
+
   70% {
     transform: scale(1.05);
     box-shadow: 0 0 0 12px rgba(167, 139, 250, 0);
   }
+
   100% {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(167, 139, 250, 0);
@@ -7465,10 +7479,14 @@
 }
 
 @keyframes typing {
-  0%, 60%, 100% {
+
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
     opacity: 0.7;
   }
+
   30% {
     transform: translateY(-10px);
     opacity: 1;
@@ -7477,9 +7495,12 @@
 
 /* Pulse animation for recording */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -7491,9 +7512,11 @@
     transform: scale(0.8) rotate(-5deg);
     opacity: 0;
   }
+
   50% {
     transform: scale(1.1) rotate(5deg);
   }
+
   100% {
     transform: scale(1) rotate(0deg);
     opacity: 1;
@@ -7509,27 +7532,29 @@
   0% {
     background-position: -200% center;
   }
+
   100% {
     background-position: 200% center;
   }
 }
 
 .rank-shine {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.8) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.8) 50%,
+      rgba(255, 255, 255, 0) 100%);
   background-size: 200% 100%;
   animation: shine 3s infinite;
 }
 
 /* Streak fire animation */
 @keyframes fire {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1) rotate(-2deg);
   }
+
   50% {
     transform: scale(1.1) rotate(2deg);
   }
@@ -7551,9 +7576,12 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 10px currentColor;
   }
+
   50% {
     box-shadow: 0 0 25px currentColor;
   }
@@ -7561,9 +7589,12 @@
 
 /* Voice recorder waveform */
 @keyframes waveform {
-  0%, 100% {
+
+  0%,
+  100% {
     height: 20%;
   }
+
   50% {
     height: 100%;
   }
@@ -7609,9 +7640,12 @@
 }
 
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-4px);
   }
@@ -7623,6 +7657,7 @@
     transform: translateY(-100vh) rotate(0deg);
     opacity: 1;
   }
+
   100% {
     transform: translateY(100vh) rotate(720deg);
     opacity: 0;
@@ -7643,18 +7678,17 @@
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
 }
 
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    #f3f4f6 25%,
-    #e5e7eb 50%,
-    #f3f4f6 75%
-  );
+  background: linear-gradient(90deg,
+      #f3f4f6 25%,
+      #e5e7eb 50%,
+      #f3f4f6 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: 8px;
@@ -7756,6 +7790,7 @@
     transform: translateX(400px);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -7861,6 +7896,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -7887,7 +7923,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Hero Section */
@@ -7908,6 +7946,7 @@
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -8053,9 +8092,12 @@
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20px) rotate(5deg);
   }
@@ -8132,13 +8174,20 @@
   right: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
   animation: shimmer 3s ease-in-out infinite;
 }
 
 @keyframes shimmer {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  50% { transform: translate(-20px, -20px) rotate(180deg); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate(-20px, -20px) rotate(180deg);
+  }
 }
 
 .course-level {
@@ -8277,8 +8326,15 @@
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .tool-title {
@@ -8530,6 +8586,7 @@
     display: none;
   }
 }
+
 /* ===== CHAT TOOLTIP ===== */
 .chat-tooltip {
   position: absolute;
@@ -8569,6 +8626,7 @@
     opacity: 0;
     transform: translateX(-50%) translateY(4px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -8609,6 +8667,7 @@
 .chat-message-bubble.has-translation:hover::before {
   opacity: 1;
 }
+
 /* ==
 === FIX IMAGE BORDERS ===== */
 /* Remove borders from all images */

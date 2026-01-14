@@ -1,0 +1,873 @@
+/* Spaced Repetition - White Background with Colorful Elements */
+
+/* Container with white background */
+.container {
+  min-height: 100vh;
+  background: #ffffff;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Dark mode container */
+[data-theme="dark"] .container {
+  background: #1a202c;
+}
+
+/* Subtle background pattern */
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Floating Characters Background - Kanji & Hanzi */
+.floating-characters {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.float-char {
+  position: absolute;
+  font-size: 4rem;
+  font-weight: 300;
+  opacity: 0.04;
+  font-family: 'Noto Sans JP', 'Noto Sans SC', serif;
+  animation: floatAnimation 20s infinite ease-in-out;
+  color: #667eea;
+}
+
+/* Dark mode floating characters */
+[data-theme="dark"] .float-char {
+  color: #667eea;
+  opacity: 0.08;
+}
+
+/* Japanese characters */
+.jp-char.char-1 { top: 10%; left: 5%; animation-delay: 0s; animation-duration: 25s; }
+.jp-char.char-2 { top: 20%; left: 85%; animation-delay: 2s; animation-duration: 30s; }
+.jp-char.char-3 { top: 40%; left: 10%; animation-delay: 4s; animation-duration: 28s; }
+.jp-char.char-4 { top: 60%; left: 80%; animation-delay: 6s; animation-duration: 26s; }
+.jp-char.char-5 { top: 80%; left: 15%; animation-delay: 8s; animation-duration: 32s; }
+.jp-char.char-6 { top: 30%; left: 90%; animation-delay: 10s; animation-duration: 27s; }
+.jp-char.char-7 { top: 70%; left: 5%; animation-delay: 12s; animation-duration: 29s; }
+.jp-char.char-8 { top: 50%; left: 50%; animation-delay: 14s; animation-duration: 31s; }
+.jp-char.char-9 { top: 15%; left: 60%; animation-delay: 16s; animation-duration: 24s; }
+.jp-char.char-10 { top: 85%; left: 70%; animation-delay: 18s; animation-duration: 33s; }
+.jp-char.char-11 { top: 25%; left: 30%; animation-delay: 20s; animation-duration: 26s; font-size: 5rem; }
+.jp-char.char-12 { top: 65%; left: 40%; animation-delay: 22s; animation-duration: 28s; font-size: 5rem; }
+
+/* Chinese characters */
+.cn-char.char-1 { top: 12%; left: 8%; animation-delay: 1s; animation-duration: 27s; }
+.cn-char.char-2 { top: 25%; left: 88%; animation-delay: 3s; animation-duration: 29s; }
+.cn-char.char-3 { top: 45%; left: 12%; animation-delay: 5s; animation-duration: 31s; }
+.cn-char.char-4 { top: 65%; left: 82%; animation-delay: 7s; animation-duration: 25s; }
+.cn-char.char-5 { top: 82%; left: 18%; animation-delay: 9s; animation-duration: 30s; }
+.cn-char.char-6 { top: 35%; left: 92%; animation-delay: 11s; animation-duration: 28s; }
+.cn-char.char-7 { top: 72%; left: 8%; animation-delay: 13s; animation-duration: 32s; }
+.cn-char.char-8 { top: 55%; left: 55%; animation-delay: 15s; animation-duration: 26s; }
+.cn-char.char-9 { top: 18%; left: 65%; animation-delay: 17s; animation-duration: 29s; }
+.cn-char.char-10 { top: 88%; left: 75%; animation-delay: 19s; animation-duration: 27s; }
+.cn-char.char-11 { top: 28%; left: 35%; animation-delay: 21s; animation-duration: 31s; font-size: 5rem; }
+.cn-char.char-12 { top: 68%; left: 45%; animation-delay: 23s; animation-duration: 25s; font-size: 5rem; }
+
+@keyframes floatAnimation {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0.04;
+  }
+  25% {
+    transform: translateY(-30px) translateX(20px) rotate(5deg);
+    opacity: 0.06;
+  }
+  50% {
+    transform: translateY(-15px) translateX(-15px) rotate(-3deg);
+    opacity: 0.03;
+  }
+  75% {
+    transform: translateY(-40px) translateX(10px) rotate(7deg);
+    opacity: 0.05;
+  }
+}
+
+/* Dark mode float animation */
+[data-theme="dark"] .float-char {
+  animation: floatAnimationDark 20s infinite ease-in-out;
+}
+
+@keyframes floatAnimationDark {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0.08;
+  }
+  25% {
+    transform: translateY(-30px) translateX(20px) rotate(5deg);
+    opacity: 0.12;
+  }
+  50% {
+    transform: translateY(-15px) translateX(-15px) rotate(-3deg);
+    opacity: 0.06;
+  }
+  75% {
+    transform: translateY(-40px) translateX(10px) rotate(7deg);
+    opacity: 0.10;
+  }
+}
+
+/* Header - matching home style with gradient */
+.header {
+  text-align: center;
+  color: #1a202c;
+  margin-bottom: 3rem;
+  animation: fadeInDown 0.6s ease-out;
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="dark"] .header {
+  color: white;
+}
+
+.header h1 {
+  font-size: 3.5rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  animation: titleSlideIn 0.8s ease-out;
+  flex-wrap: wrap;
+}
+
+.header h1 .title-text {
+  color: var(--text-primary);
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+[data-theme="dark"] .header h1 .title-text {
+  color: var(--text-primary);
+  opacity: 1;
+  font-weight: 800;
+}
+
+.header h1 .title-highlight {
+  font-weight: 900;
+  position: relative;
+  display: inline-block;
+}
+
+/* Japanese Language Title Colors */
+[data-language="japanese"] .header h1 .title-highlight {
+  color: #c41e3a;
+  background: linear-gradient(135deg, #c41e3a 0%, #ff69b4 50%, #c41e3a 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(196, 30, 58, 0.3));
+  animation: highlightPulse 3s ease-in-out infinite, gradientFlow 5s ease 1s infinite;
+}
+
+[data-theme="dark"][data-language="japanese"] .header h1 .title-highlight,
+[data-theme="dark"] [data-language="japanese"] .header h1 .title-highlight {
+  color: #ff8fa3;
+  background: linear-gradient(135deg, #ff8fa3 0%, #ffc0cb 50%, #ff8fa3 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(255, 143, 163, 0.3));
+  animation: highlightPulse 3s ease-in-out infinite, gradientFlow 5s ease 1s infinite;
+}
+
+/* Chinese Language Title Colors */
+[data-language="chinese"] .header h1 .title-highlight {
+  color: #dc143c;
+  background: linear-gradient(135deg, #dc143c 0%, #ffd700 50%, #dc143c 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(220, 20, 60, 0.3));
+  animation: highlightPulse 3s ease-in-out infinite, gradientFlow 5s ease 1s infinite;
+}
+
+[data-theme="dark"][data-language="chinese"] .header h1 .title-highlight,
+[data-theme="dark"] [data-language="chinese"] .header h1 .title-highlight {
+  color: #ff6b6b;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffd700 50%, #ff6b6b 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(255, 107, 107, 0.3));
+  animation: highlightPulse 3s ease-in-out infinite, gradientFlow 5s ease 1s infinite;
+}
+
+/* Default gradient for language selection page */
+[data-language="both"] .header h1 .title-highlight {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: highlightPulse 3s ease-in-out infinite, gradientShift 8s ease infinite;
+  filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
+}
+
+[data-theme="dark"][data-language="both"] .header h1 .title-highlight,
+[data-theme="dark"] [data-language="both"] .header h1 .title-highlight {
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #f0abfc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  filter: drop-shadow(0 4px 12px rgba(129, 140, 248, 0.4));
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes titleSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.header h1 svg {
+  filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+[data-language="japanese"] .header h1 svg {
+  color: #c41e3a;
+  filter: drop-shadow(0 2px 8px rgba(196, 30, 58, 0.3));
+}
+
+[data-theme="dark"][data-language="japanese"] .header h1 svg,
+[data-theme="dark"] [data-language="japanese"] .header h1 svg {
+  color: #ff8fa3;
+  filter: drop-shadow(0 4px 12px rgba(255, 143, 163, 0.4));
+}
+
+[data-language="chinese"] .header h1 svg {
+  color: #dc143c;
+  filter: drop-shadow(0 2px 8px rgba(220, 20, 60, 0.3));
+}
+
+[data-theme="dark"][data-language="chinese"] .header h1 svg,
+[data-theme="dark"] [data-language="chinese"] .header h1 svg {
+  color: #ff6b6b;
+  filter: drop-shadow(0 4px 12px rgba(255, 107, 107, 0.4));
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.header p {
+  font-size: 1.2rem;
+  opacity: 0.8;
+  text-shadow: none;
+  color: #64748b;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .header p {
+  opacity: 0.95;
+  color: #cbd5e1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Language Selection - matching home cards */
+.lang-selection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 3rem 2rem;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: cardSlideUp 0.6s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.feature-card:hover::before {
+  left: 100%;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+}
+
+.feature-card h3 {
+  font-size: 1.5rem;
+  color: #1a202c;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Japanese Card Colors */
+.feature-card-japanese {
+  border: 2px solid rgba(196, 30, 58, 0.3);
+  background: linear-gradient(135deg, rgba(196, 30, 58, 0.05) 0%, rgba(255, 105, 180, 0.05) 100%);
+}
+
+.feature-card-japanese:hover {
+  border-color: #c41e3a;
+  box-shadow: 0 30px 60px rgba(196, 30, 58, 0.25);
+  background: linear-gradient(135deg, rgba(196, 30, 58, 0.08) 0%, rgba(255, 105, 180, 0.08) 100%);
+}
+
+.feature-card-japanese h3 {
+  background: linear-gradient(135deg, #c41e3a 0%, #ff69b4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .feature-card-japanese {
+  border: 2px solid rgba(255, 143, 163, 0.3);
+  background: linear-gradient(135deg, rgba(255, 143, 163, 0.08) 0%, rgba(255, 192, 203, 0.08) 100%);
+}
+
+[data-theme="dark"] .feature-card-japanese:hover {
+  border-color: #ff8fa3;
+  box-shadow: 0 30px 60px rgba(255, 143, 163, 0.3);
+  background: linear-gradient(135deg, rgba(255, 143, 163, 0.12) 0%, rgba(255, 192, 203, 0.12) 100%);
+}
+
+[data-theme="dark"] .feature-card-japanese h3 {
+  background: linear-gradient(135deg, #ff8fa3 0%, #ffc0cb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Chinese Card Colors */
+.feature-card-chinese {
+  border: 2px solid rgba(220, 20, 60, 0.3);
+  background: linear-gradient(135deg, rgba(220, 20, 60, 0.05) 0%, rgba(255, 215, 0, 0.05) 100%);
+}
+
+.feature-card-chinese:hover {
+  border-color: #dc143c;
+  box-shadow: 0 30px 60px rgba(220, 20, 60, 0.25);
+  background: linear-gradient(135deg, rgba(220, 20, 60, 0.08) 0%, rgba(255, 215, 0, 0.08) 100%);
+}
+
+.feature-card-chinese h3 {
+  background: linear-gradient(135deg, #dc143c 0%, #ffd700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .feature-card-chinese {
+  border: 2px solid rgba(255, 107, 107, 0.3);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.08) 0%, rgba(255, 215, 0, 0.08) 100%);
+}
+
+[data-theme="dark"] .feature-card-chinese:hover {
+  border-color: #ff6b6b;
+  box-shadow: 0 30px 60px rgba(255, 107, 107, 0.3);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.12) 0%, rgba(255, 215, 0, 0.12) 100%);
+}
+
+[data-theme="dark"] .feature-card-chinese h3 {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffd700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Level Grid - matching home */
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-level {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 2rem 1rem;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #667eea;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  animation: levelPop 0.5s ease-out backwards;
+}
+
+.btn-level:nth-child(1) { animation-delay: 0.1s; }
+.btn-level:nth-child(2) { animation-delay: 0.2s; }
+.btn-level:nth-child(3) { animation-delay: 0.3s; }
+.btn-level:nth-child(4) { animation-delay: 0.4s; }
+.btn-level:nth-child(5) { animation-delay: 0.5s; }
+.btn-level:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes levelPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.btn-level:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+  background: rgba(255, 255, 255, 1);
+  color: #764ba2;
+}
+
+/* SRS Card - matching home card style */
+.srs-card {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: 32px;
+  padding: 3rem;
+  max-width: 700px;
+  margin: 0 auto;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  animation: cardFlipIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes cardFlipIn {
+  0% {
+    opacity: 0;
+    transform: perspective(1000px) rotateY(-90deg) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1000px) rotateY(0deg) scale(1);
+  }
+}
+
+/* Progress Bar */
+.srs-progress {
+  margin-bottom: 2rem;
+}
+
+.progress-bar {
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.srs-progress span {
+  display: block;
+  text-align: center;
+  font-weight: 700;
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+/* Question Display */
+.srs-question {
+  text-align: center;
+  margin: 3rem 0;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.kanji-large {
+  font-size: 8rem;
+  font-weight: 900;
+  color: #1a202c;
+  margin: 2rem 0;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  animation: floatKanji 3s ease-in-out infinite;
+  font-family: 'Noto Sans JP', 'Noto Sans SC', serif;
+}
+
+@keyframes floatKanji {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Answer Display */
+.srs-answer {
+  animation: revealAnswer 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes revealAnswer {
+  0% {
+    opacity: 0;
+    transform: rotateX(-90deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateX(0deg);
+  }
+}
+
+.answer-kanji {
+  font-size: 5rem;
+  font-weight: 900;
+  color: #667eea;
+  margin-bottom: 1rem;
+  font-family: 'Noto Sans JP', 'Noto Sans SC', serif;
+}
+
+.answer-hiragana {
+  font-size: 2rem;
+  color: #764ba2;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.answer-meaning {
+  font-size: 1.8rem;
+  color: #1a202c;
+  font-weight: 700;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Buttons */
+.btn {
+  padding: 1rem 2.5rem;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+  background: #667eea;
+  color: white;
+}
+
+.btn-play {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  margin-top: 2rem;
+}
+
+/* Quality Buttons */
+.srs-quality-buttons {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.description-text {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #64748b;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.quality-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.srs-btn {
+  padding: 1.5rem 2rem;
+  border-radius: 20px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.srs-btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.srs-btn-danger:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(239, 68, 68, 0.4);
+}
+
+.srs-btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.srs-btn-success:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
+}
+
+/* Stats Card */
+.stats-card {
+  animation: scaleIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 4rem;
+  color: #1a202c;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .loading {
+  color: white;
+}
+
+/* Back Button */
+.back-button {
+  background: rgba(102, 126, 234, 0.1);
+  backdrop-filter: blur(10px);
+  color: #667eea;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: rgba(102, 126, 234, 0.2);
+  transform: translateX(-5px);
+}
+
+[data-theme="dark"] .back-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .kanji-large {
+    font-size: 5rem;
+  }
+
+  .answer-kanji {
+    font-size: 3.5rem;
+  }
+
+  .srs-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .float-char {
+    font-size: 3rem;
+  }
+}

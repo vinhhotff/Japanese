@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { speakText, getAvailableVoices } from '../utils/speech';
+import { getVocabularyByLevel } from '../services/supabaseService.v2';
 import '../App.css';
 
 type Language = 'japanese' | 'chinese';
@@ -21,7 +23,14 @@ interface VocabularyPracticeProps {
 }
 
 const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps) => {
+  const { level } = useParams<{ level: string }>();
+  const navigate = useNavigate();
   const [language, setLanguage] = useState<Language>(propLanguage);
+
+  // DB Mode state
+  const [isLoading, setIsLoading] = useState(false);
+  const [dbMode, setDbMode] = useState(false);
+
   const [vocabList, setVocabList] = useState<VocabularyItem[]>([]);
   const [chineseVocabList, setChineseVocabList] = useState<ChineseVocabularyItem[]>([]);
   const [importText, setImportText] = useState('');
@@ -53,7 +62,7 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
         const kanji = parts[0].trim();
         const hiragana = parts[1].trim();
         const meaning = parts[2]?.trim() || '';
-        
+
         if (kanji && hiragana) {
           vocab.push({ kanji, hiragana, meaning });
         }
@@ -73,7 +82,7 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
         const hanzi = parts[0].trim();
         const pinyin = parts[1].trim();
         const meaning = parts[2]?.trim() || '';
-        
+
         if (hanzi && pinyin) {
           vocab.push({ hanzi, pinyin, meaning });
         }
@@ -212,7 +221,7 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
     }
 
     const totalWords = language === 'japanese' ? vocabList.length : chineseVocabList.length;
-    
+
     if (currentIndex < totalWords - 1) {
       setCurrentIndex(currentIndex + 1);
       setUserInput('');
@@ -235,6 +244,10 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
     setCompleted(false);
     setStarted(true);
     setSkipping(false);
+
+    // If we are in DB mode, re-shuffling or re-fetching isn't strictly necessary unless we want to shuffle
+    // For now just reset index
+
     if (skipTimeoutRef.current) {
       clearTimeout(skipTimeoutRef.current);
     }
@@ -244,7 +257,7 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
     try {
       if (language === 'japanese' && vocabList[currentIndex]) {
         const text = vocabList[currentIndex].hiragana;
-        await speakText(text, { 
+        await speakText(text, {
           lang: 'ja-JP',
           rate: 0.75,
           pitch: 1.0,
@@ -252,7 +265,7 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
         });
       } else if (language === 'chinese' && chineseVocabList[currentIndex]) {
         const text = chineseVocabList[currentIndex].hanzi;
-        
+
         // Đảm bảo voices đã được load
         if (window.speechSynthesis.getVoices().length === 0) {
           await new Promise(resolve => {
@@ -261,8 +274,8 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
             };
           });
         }
-        
-        await speakText(text, { 
+
+        await speakText(text, {
           lang: 'zh-CN',
           rate: 0.7,
           pitch: 1.0,
@@ -303,6 +316,47 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
     };
   }, []);
 
+  // Fetch words if level is provided
+  useEffect(() => {
+    if (level) {
+      setDbMode(true);
+      setLanguage(propLanguage); // ensure lang matches route
+      loadWordsFromRef(level);
+    }
+  }, [level, propLanguage]);
+
+  const loadWordsFromRef = async (lvl: string) => {
+    try {
+      setIsLoading(true);
+      const data = await getVocabularyByLevel(lvl, propLanguage);
+
+      console.log(`Loaded ${data.length} words for ${lvl} (${propLanguage})`);
+
+      if (propLanguage === 'japanese') {
+        const items: VocabularyItem[] = data.map(item => ({
+          kanji: item.character || item.word, // fallback
+          hiragana: item.hiragana || item.word,
+          meaning: item.meaning
+        }));
+        setVocabList(items);
+        if (items.length > 0) setStarted(true);
+      } else {
+        const items: ChineseVocabularyItem[] = data.map(item => ({
+          hanzi: item.word || item.character,
+          pinyin: item.pinyin || '',
+          meaning: item.meaning
+        }));
+        setChineseVocabList(items);
+        if (items.length > 0) setStarted(true);
+      }
+    } catch (error) {
+      console.error('Error loading vocab:', error);
+      alert('Lỗi tải từ vựng: ' + (error as any).message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const totalWords = language === 'japanese' ? vocabList.length : chineseVocabList.length;
   const progress = totalWords > 0 ? ((currentIndex + 1) / totalWords) * 100 : 0;
   const currentWord = language === 'japanese' ? vocabList[currentIndex] : null;
@@ -318,6 +372,7 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
             </svg>
             Hoàn thành!
           </h1>
+          {dbMode && <p>Bạn đã hoàn thành danh sách từ vựng cấp độ {level}</p>}
         </div>
 
         <div className="practice-result-card">
@@ -356,13 +411,17 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
               🔄 Làm lại
             </button>
             <button className="btn btn-secondary" onClick={() => {
-              setVocabList([]);
-              setImportText('');
-              setCompleted(false);
-              setStarted(false);
-              setIncorrectWords([]);
+              if (dbMode) {
+                window.location.href = '/'; // Go back to dashboard to select new level
+              } else {
+                setVocabList([]);
+                setImportText('');
+                setCompleted(false);
+                setStarted(false);
+                setIncorrectWords([]);
+              }
             }}>
-              📝 Nhập danh sách mới
+              {dbMode ? '🏠 Về trang chủ' : '📝 Nhập danh sách mới'}
             </button>
           </div>
         </div>
@@ -407,9 +466,11 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
           </button>
         </div>
 
+
+
         <div className="practice-import-card">
           <div className="import-instructions">
-            <h3>📝 Hướng dẫn nhập từ vựng</h3>
+            <h3>📝 Hoặc nhập danh sách của bạn</h3>
             {language === 'japanese' ? (
               <>
                 <p>Format: <code>kanji=hiragana=tiếng việt</code></p>
@@ -441,7 +502,7 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
               className="import-textarea"
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
-              placeholder={language === 'japanese' 
+              placeholder={language === 'japanese'
                 ? "学生=がくせい=sinh viên&#10;私=わたし=tôi&#10;本=ほん=sách"
                 : "你好=nǐ hǎo=xin chào&#10;谢谢=xiè xie=cảm ơn&#10;再见=zài jiàn=tạm biệt"
               }
@@ -451,13 +512,13 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
               <button className="btn btn-primary" onClick={handleImport}>
                 Bắt đầu luyện tập
               </button>
-              <button 
-                className="btn btn-secondary" 
+              <button
+                className="btn btn-secondary"
                 onClick={async () => {
                   try {
                     const testText = language === 'japanese' ? 'こんにちは' : '你好';
                     const testLang = language === 'japanese' ? 'ja-JP' : 'zh-CN';
-                    await speakText(testText, { 
+                    await speakText(testText, {
                       lang: testLang,
                       rate: language === 'japanese' ? 0.75 : 0.7,
                       pitch: 1.0,
@@ -488,8 +549,8 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
             Từ {currentIndex + 1} / {totalWords}
           </div>
           <div className="progress-bar-container">
-            <div 
-              className="progress-bar-fill" 
+            <div
+              className="progress-bar-fill"
               style={{ width: `${progress}%` }}
             ></div>
           </div>

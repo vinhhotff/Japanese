@@ -19,7 +19,7 @@ const Login = () => {
 
     try {
       const result = await signIn(email, password);
-      
+
       if (result.error) {
         setError(result.error.message || 'Đăng nhập thất bại');
         setLoading(false);
@@ -29,7 +29,6 @@ const Login = () => {
       // Wait a bit for user state to update
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Check admin status from the signed in user
       const user = result.data?.user;
       if (!user) {
         setError('Không thể lấy thông tin user');
@@ -37,21 +36,27 @@ const Login = () => {
         return;
       }
 
-      // Check if user is admin
-      const userIsAdmin = 
-        user.email?.toLowerCase().includes('admin') || 
-        user.user_metadata?.role === 'admin' ||
-        user.email?.toLowerCase() === 'admin@japanese-learning.com';
+      // Check role from metadata or email pattern (consistent with AuthContext)
+      const role = user.user_metadata?.role ||
+        (user.email?.toLowerCase().includes('admin') ? 'admin' :
+          (user.email?.toLowerCase().includes('teacher') ? 'teacher' : 'student'));
 
-      logger.log('User email:', user.email);
-      logger.log('User metadata:', user.user_metadata);
-      logger.log('Is admin:', userIsAdmin);
+      logger.log('User signed in:', { email: user.email, role });
 
-      if (userIsAdmin) {
-        navigate('/admin');
-      } else {
-        setError(`Bạn không có quyền truy cập trang admin. Email: ${user.email}`);
+      // Redirect based on role
+      switch (role) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'teacher':
+          navigate('/teacher-dashboard'); // Assuming this route exists or will exist
+          break;
+        case 'student':
+        default:
+          navigate('/');
+          break;
       }
+
     } catch (err: any) {
       setError(err.message || 'Có lỗi xảy ra');
     } finally {
@@ -66,8 +71,8 @@ const Login = () => {
           <svg style={{ width: '64px', height: '64px', margin: '0 auto 1rem', color: '#3b82f6' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <h1>Đăng nhập Admin</h1>
-          <p>Vui lòng đăng nhập để truy cập trang quản lý</p>
+          <h1>Đăng nhập</h1>
+          <p>Chào mừng bạn quay trở lại</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -92,7 +97,7 @@ const Login = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@japanese-learning.com"
+              placeholder="name@example.com"
               required
               disabled={loading}
             />
@@ -141,7 +146,7 @@ const Login = () => {
         </form>
 
         <div className="login-footer">
-          <p>Chỉ dành cho quản trị viên</p>
+          <p>Chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
           <a href="/" className="back-link">
             <svg style={{ width: '16px', height: '16px', display: 'inline', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />

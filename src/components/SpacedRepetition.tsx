@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
-import { getVocabulary } from '../services/supabaseService.v2';
+import { useNavigate } from 'react-router-dom';
+
+import { getVocabularyByLevel } from '../services/supabaseService.v2';
 import { speakText } from '../utils/speech';
 import type { Language } from '../services/supabaseService.v2';
+import { JapanFlag, ChinaFlag, VolumeIcon, CheckIcon, XIcon, CelebrationIcon } from './icons/Icons';
 import '../App.css';
+import '../styles/spaced-repetition.css';
 
 interface VocabItem {
   id: string;
@@ -22,24 +26,36 @@ interface ReviewItem extends VocabItem {
 }
 
 interface SpacedRepetitionProps {
-  language: Language;
+  language?: Language;
 }
 
 const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
+  const navigate = useNavigate();
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [currentItem, setCurrentItem] = useState<ReviewItem | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+
+  // New state for statistics
+  const [sessionStats, setSessionStats] = useState({
+    correct: 0,
+    incorrect: 0,
+    total: 0
+  });
 
   useEffect(() => {
-    loadReviewItems();
-  }, [language]);
+    if (selectedLevel) {
+      loadReviewItems(selectedLevel);
+    }
+  }, [selectedLevel, language]);
 
-  const loadReviewItems = async () => {
+  const loadReviewItems = async (level: string) => {
+    setLoading(true);
+    setSessionStats({ correct: 0, incorrect: 0, total: 0 }); // Reset stats
     try {
-      const result = await getVocabulary(undefined, language, 1, 1000);
-      const allVocab = result.data;
-      const stored = localStorage.getItem(`spaced_repetition_${language}`);
+      const allVocab = await getVocabularyByLevel(level, language as Language);
+      const stored = localStorage.getItem(`spaced_repetition_${language}_${level}`);
       const savedItems: Record<string, ReviewItem> = stored ? JSON.parse(stored) : {};
 
       const items: ReviewItem[] = allVocab.map((v: any) => {
@@ -67,8 +83,8 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
       if (dueItems.length > 0) {
         setReviewItems(dueItems);
         setCurrentItem(dueItems[0]);
+        setSessionStats(prev => ({ ...prev, total: dueItems.length }));
       } else {
-        // All items reviewed, show next scheduled reviews
         const upcoming = items
           .filter(item => item.nextReview > Date.now())
           .sort((a, b) => a.nextReview - b.nextReview);
@@ -116,11 +132,19 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
   const handleReview = (quality: number) => {
     if (!currentItem) return;
 
+    // Update Stats
+    if (quality >= 3) {
+      setSessionStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+    } else {
+      setSessionStats(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
+    }
+
     const updated = calculateNextReview(quality, currentItem);
-    const stored = localStorage.getItem(`spaced_repetition_${language}`);
+
+    const stored = localStorage.getItem(`spaced_repetition_${language}_${selectedLevel}`);
     const savedItems: Record<string, ReviewItem> = stored ? JSON.parse(stored) : {};
     savedItems[updated.id] = updated;
-    localStorage.setItem(`spaced_repetition_${language}`, JSON.stringify(savedItems));
+    localStorage.setItem(`spaced_repetition_${language}_${selectedLevel}`, JSON.stringify(savedItems));
 
     // Remove current item and move to next
     const remaining = reviewItems.filter(item => item.id !== currentItem.id);
@@ -131,17 +155,158 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
 
   const handlePlayAudio = async () => {
     if (currentItem) {
-      const textToSpeak = language === 'japanese' 
+      // Ensure voices are loaded
+      if (window.speechSynthesis.getVoices().length === 0) {
+        await new Promise<void>(resolve => {
+          const id = setTimeout(() => resolve(), 2000); // Timeout fallback
+          window.speechSynthesis.onvoiceschanged = () => {
+            clearTimeout(id);
+            resolve();
+          };
+        });
+      }
+
+      const textToSpeak = language === 'japanese'
         ? (currentItem.hiragana || currentItem.word)
         : (currentItem.pinyin || currentItem.character || currentItem.word);
       await speakText(textToSpeak);
     }
   };
 
+  if (!language) {
+    return (
+      <div className="container" data-language="both">
+        {/* Floating Characters Background */}
+        <div className="floating-characters">
+          <span className="float-char jp-char char-1">あ</span>
+          <span className="float-char jp-char char-2">か</span>
+          <span className="float-char jp-char char-3">さ</span>
+          <span className="float-char jp-char char-4">た</span>
+          <span className="float-char jp-char char-5">な</span>
+          <span className="float-char jp-char char-6">は</span>
+          <span className="float-char jp-char char-7">ま</span>
+          <span className="float-char jp-char char-8">や</span>
+          <span className="float-char jp-char char-9">ら</span>
+          <span className="float-char jp-char char-10">わ</span>
+          <span className="float-char jp-char char-11">学</span>
+          <span className="float-char jp-char char-12">日</span>
+          <span className="float-char cn-char char-1">你</span>
+          <span className="float-char cn-char char-2">好</span>
+          <span className="float-char cn-char char-3">学</span>
+          <span className="float-char cn-char char-4">习</span>
+          <span className="float-char cn-char char-5">中</span>
+          <span className="float-char cn-char char-6">文</span>
+          <span className="float-char cn-char char-7">汉</span>
+          <span className="float-char cn-char char-8">字</span>
+          <span className="float-char cn-char char-9">语</span>
+          <span className="float-char cn-char char-10">言</span>
+          <span className="float-char cn-char char-11">书</span>
+          <span className="float-char cn-char char-12">写</span>
+        </div>
+
+        <div className="header">
+          <h1>
+            <span className="title-text">Ôn Tập</span>
+            <span className="title-highlight">Spaced Repetition</span>
+          </h1>
+          <p>Chọn ngôn ngữ bạn muốn ôn tập</p>
+        </div>
+        <div className="lang-selection">
+          <button
+            onClick={() => navigate('/japanese/spaced-repetition')}
+            className="feature-card feature-card-japanese"
+          >
+            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
+              <JapanFlag size={64} />
+            </div>
+            <h3>Tiếng Nhật (JLPT)</h3>
+          </button>
+          <button
+            onClick={() => navigate('/chinese/spaced-repetition')}
+            className="feature-card feature-card-chinese"
+          >
+            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
+              <ChinaFlag size={64} />
+            </div>
+            <h3>Tiếng Trung (HSK)</h3>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedLevel) {
+    return (
+      <div className="container" data-language={language}>
+        {/* Floating Characters for selected language */}
+        <div className="floating-characters">
+          {language === 'japanese' ? (
+            <>
+              <span className="float-char jp-char char-1">あ</span>
+              <span className="float-char jp-char char-2">か</span>
+              <span className="float-char jp-char char-3">さ</span>
+              <span className="float-char jp-char char-4">た</span>
+              <span className="float-char jp-char char-5">な</span>
+              <span className="float-char jp-char char-6">は</span>
+              <span className="float-char jp-char char-7">ま</span>
+              <span className="float-char jp-char char-8">や</span>
+              <span className="float-char jp-char char-9">ら</span>
+              <span className="float-char jp-char char-10">わ</span>
+              <span className="float-char jp-char char-11">学</span>
+              <span className="float-char jp-char char-12">日</span>
+            </>
+          ) : (
+            <>
+              <span className="float-char cn-char char-1">你</span>
+              <span className="float-char cn-char char-2">好</span>
+              <span className="float-char cn-char char-3">学</span>
+              <span className="float-char cn-char char-4">习</span>
+              <span className="float-char cn-char char-5">中</span>
+              <span className="float-char cn-char char-6">文</span>
+              <span className="float-char cn-char char-7">汉</span>
+              <span className="float-char cn-char char-8">字</span>
+              <span className="float-char cn-char char-9">语</span>
+              <span className="float-char cn-char char-10">言</span>
+              <span className="float-char cn-char char-11">书</span>
+              <span className="float-char cn-char char-12">写</span>
+            </>
+          )}
+        </div>
+
+        <div className="header">
+          <h1>
+            <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <span className="title-text">Ôn Tập</span>
+            <span className="title-highlight">Spaced Repetition</span>
+          </h1>
+          <p>Chọn cấp độ để bắt đầu ôn tập</p>
+          <button className="back-button" onClick={() => navigate('/spaced-repetition')}>← Chọn ngôn ngữ khác</button>
+        </div>
+
+        <div className="level-grid">
+          {(language === 'japanese'
+            ? ['N5', 'N4', 'N3', 'N2', 'N1']
+            : ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6']
+          ).map(lvl => (
+            <button
+              key={lvl}
+              className="btn-level"
+              onClick={() => setSelectedLevel(lvl)}
+            >
+              {lvl}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="container">
-        <div className="loading">Đang tải...</div>
+        <div className="loading">Đang tải dữ liệu {selectedLevel}...</div>
       </div>
     );
   }
@@ -150,11 +315,55 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
     return (
       <div className="container">
         <div className="header">
-          <h1>🎉 Tuyệt vời!</h1>
-          <p>Bạn đã hoàn thành tất cả từ cần ôn tập hôm nay</p>
+          <h1>
+            <CelebrationIcon size={40} /> Hoàn thành xuất sắc!
+          </h1>
+          <p>Bạn đã hoàn thành phiên ôn tập {selectedLevel}</p>
         </div>
-        <div className="empty-state">
-          <p>Hãy quay lại vào ngày mai để tiếp tục ôn tập</p>
+
+        {/* Session Stats Summary */}
+        <div className="stats-card" style={{
+          background: 'white',
+          padding: '2rem',
+          borderRadius: '16px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          maxWidth: '500px',
+          margin: '2rem auto',
+          textAlign: 'center'
+        }}>
+          <h3>Thống kê phiên học</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
+            <div style={{ padding: '1rem', background: '#ecfdf5', borderRadius: '12px', color: '#059669' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{sessionStats.correct}</div>
+              <div>Đã thuộc</div>
+            </div>
+            <div style={{ padding: '1rem', background: '#fef2f2', borderRadius: '12px', color: '#dc2626' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{sessionStats.incorrect}</div>
+              <div>Chưa thuộc</div>
+            </div>
+          </div>
+          <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
+            <p style={{ color: '#64748b' }}>Tổng số từ ôn tập: {sessionStats.correct + sessionStats.incorrect}</p>
+          </div>
+        </div>
+
+        <div className="action-buttons" style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setSelectedLevel(null)}
+          >
+            Chọn cấp độ khác
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setReviewItems([]);
+              setCurrentItem(null);
+              loadReviewItems(selectedLevel!);
+            }}
+          >
+            Ôn tập tiếp
+          </button>
         </div>
       </div>
     );
@@ -169,22 +378,65 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
   }
 
   return (
-    <div className="container">
+    <div className="container" data-language={language}>
+      {/* Floating Characters for selected language */}
+      <div className="floating-characters">
+        {language === 'japanese' ? (
+          <>
+            <span className="float-char jp-char char-1">あ</span>
+            <span className="float-char jp-char char-2">か</span>
+            <span className="float-char jp-char char-3">さ</span>
+            <span className="float-char jp-char char-4">た</span>
+            <span className="float-char jp-char char-5">な</span>
+            <span className="float-char jp-char char-6">は</span>
+            <span className="float-char jp-char char-7">ま</span>
+            <span className="float-char jp-char char-8">や</span>
+            <span className="float-char jp-char char-9">ら</span>
+            <span className="float-char jp-char char-10">わ</span>
+            <span className="float-char jp-char char-11">学</span>
+            <span className="float-char jp-char char-12">日</span>
+          </>
+        ) : (
+          <>
+            <span className="float-char cn-char char-1">你</span>
+            <span className="float-char cn-char char-2">好</span>
+            <span className="float-char cn-char char-3">学</span>
+            <span className="float-char cn-char char-4">习</span>
+            <span className="float-char cn-char char-5">中</span>
+            <span className="float-char cn-char char-6">文</span>
+            <span className="float-char cn-char char-7">汉</span>
+            <span className="float-char cn-char char-8">字</span>
+            <span className="float-char cn-char char-9">语</span>
+            <span className="float-char cn-char char-10">言</span>
+            <span className="float-char cn-char char-11">书</span>
+            <span className="float-char cn-char char-12">写</span>
+          </>
+        )}
+      </div>
+
       <div className="header">
         <h1>
           <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
-          Ôn Tập Spaced Repetition
+          <span className="title-text">Ôn Tập</span>
+          <span className="title-highlight">Spaced Repetition</span>
+          <span className="title-text">({selectedLevel})</span>
         </h1>
         <p>Còn {reviewItems.length} từ cần ôn tập</p>
+        <button
+          onClick={() => setSelectedLevel(null)}
+          className="back-button"
+        >
+          ← Chọn cấp độ khác
+        </button>
       </div>
 
       <div className="srs-card">
         <div className="srs-progress">
           <div className="progress-bar">
-            <div 
-              className="progress-fill" 
+            <div
+              className="progress-fill"
               style={{ width: `${((reviewItems.length - reviewItems.indexOf(currentItem) - 1) / reviewItems.length) * 100}%` }}
             ></div>
           </div>
@@ -202,7 +454,7 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
                 )}
               </div>
               <button className="btn btn-play" onClick={handlePlayAudio}>
-                🔊 Nghe phát âm
+                <VolumeIcon size={20} /> Nghe phát âm
               </button>
             </>
           ) : (
@@ -224,31 +476,19 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
           </button>
         ) : (
           <div className="srs-quality-buttons">
-            <p>Bạn nhớ từ này như thế nào?</p>
-            <div className="quality-grid">
+            <p className="description-text">Bạn có thuộc từ này không?</p>
+            <div className="quality-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               <button
-                className="btn btn-quality again"
-                onClick={() => handleReview(0)}
+                className="srs-btn srs-btn-danger"
+                onClick={() => handleReview(0)} // 0 = Again
               >
-                ❌ Quên<br />1 phút
+                <XIcon size={24} /> Không thuộc<br /><span style={{ fontSize: '0.9rem', opacity: 0.8 }}>(Ôn lại ngay)</span>
               </button>
               <button
-                className="btn btn-quality hard"
-                onClick={() => handleReview(1)}
+                className="srs-btn srs-btn-success"
+                onClick={() => handleReview(5)} // 5 = Easy
               >
-                ⚠️ Khó<br />10 phút
-              </button>
-              <button
-                className="btn btn-quality good"
-                onClick={() => handleReview(3)}
-              >
-                ✅ Tốt<br />1 ngày
-              </button>
-              <button
-                className="btn btn-quality easy"
-                onClick={() => handleReview(5)}
-              >
-                🎉 Dễ<br />4 ngày
+                <CheckIcon size={24} /> Đã thuộc<br /><span style={{ fontSize: '0.9rem', opacity: 0.8 }}>(Qua từ tiếp)</span>
               </button>
             </div>
           </div>

@@ -17,6 +17,8 @@ import StudyProgress from './components/StudyProgress';
 import KanjiWritingPractice from './components/KanjiWritingPractice';
 import SpacedRepetition from './components/SpacedRepetition';
 import Login from './components/Login';
+import Register from './components/Register';
+import TeacherDashboard from './components/TeacherDashboard';
 import AdminPanel from './components/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import AIConversation from './components/AIConversation';
@@ -47,7 +49,7 @@ function App() {
                 <Routes>
                   {/* Home */}
                   <Route path="/" element={<DashboardNew />} />
-                  
+
                   {/* Japanese Learning Routes */}
                   <Route path="/japanese/courses" element={<CourseList language="japanese" />} />
                   <Route path="/japanese/courses/:level" element={<LessonListNew language="japanese" />} />
@@ -55,9 +57,10 @@ function App() {
                   <Route path="/japanese/dictionary" element={<Dictionary language="japanese" />} />
                   <Route path="/japanese/saved-words" element={<SavedWords language="japanese" />} />
                   <Route path="/japanese/vocabulary-practice" element={<VocabularyPractice language="japanese" />} />
+                  <Route path="/japanese/vocabulary-practice/:level" element={<VocabularyPractice language="japanese" />} />
                   <Route path="/japanese/kanji-writing" element={<KanjiWritingPractice language="japanese" />} />
                   <Route path="/japanese/spaced-repetition" element={<SpacedRepetition language="japanese" />} />
-                  
+
                   {/* Chinese Learning Routes */}
                   <Route path="/chinese/courses" element={<CourseList language="chinese" />} />
                   <Route path="/chinese/courses/:level" element={<LessonListNew language="chinese" />} />
@@ -65,22 +68,26 @@ function App() {
                   <Route path="/chinese/dictionary" element={<Dictionary language="chinese" />} />
                   <Route path="/chinese/saved-words" element={<SavedWords language="chinese" />} />
                   <Route path="/chinese/vocabulary-practice" element={<VocabularyPractice language="chinese" />} />
+                  <Route path="/chinese/vocabulary-practice/:level" element={<VocabularyPractice language="chinese" />} />
                   <Route path="/chinese/hanzi-writing" element={<KanjiWritingPractice language="chinese" />} />
                   <Route path="/chinese/spaced-repetition" element={<SpacedRepetition language="chinese" />} />
-                  
+
                   {/* Shared Routes */}
                   <Route path="/study-progress" element={<StudyProgress />} />
                   <Route path="/ai-conversation" element={<AIConversation />} />
                   <Route path="/ai-roleplay" element={<AIRoleplayCSSOnly />} />
                   <Route path="/voice-recorder" element={<VoiceRecorder />} />
-                  
+
                   {/* Assignment Routes */}
                   <Route path="/assignments" element={<AssignmentList />} />
                   <Route path="/assignments/:assignmentId" element={<AssignmentDetail />} />
                   <Route path="/my-assignments" element={<AssignmentList />} />
                   <Route path="/admin/grading/:submissionId" element={<GradingInterface />} />
-                  
+
+                  <Route path="/admin/grading/:submissionId" element={<GradingInterface />} />
+
                   <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
                   <Route
                     path="/admin"
                     element={
@@ -89,7 +96,15 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  
+                  <Route
+                    path="/teacher-dashboard"
+                    element={
+                      <ProtectedRoute requireTeacher>
+                        <TeacherDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+
                   {/* Legacy redirects for backward compatibility */}
                   <Route path="/courses" element={<AllCourses />} />
                   <Route path="/courses/:level" element={<LessonListNew language="japanese" />} />
@@ -98,7 +113,7 @@ function App() {
                   <Route path="/saved-words" element={<SavedWords language="japanese" />} />
                   <Route path="/vocabulary-practice" element={<VocabularyPractice language="japanese" />} />
                   <Route path="/kanji-writing" element={<KanjiWritingPractice language="japanese" />} />
-                  <Route path="/spaced-repetition" element={<SpacedRepetition language="japanese" />} />
+                  <Route path="/spaced-repetition" element={<SpacedRepetition />} />
                 </Routes>
               </Layout>
             </Router>

@@ -152,141 +152,123 @@ const CourseList = ({ language }: CourseListProps) => {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
-          {courses.map((course, index) => (
-            <Link key={course.level} to={`/${language}/courses/${course.level}`} style={{ textDecoration: 'none' }}>
-              <div 
-                className={cardClass}
-                style={{ 
-                height: '100%',
-                transition: 'all 0.3s',
-                cursor: 'pointer',
-                borderRadius: '20px',
-                overflow: 'hidden',
-                position: 'relative'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-8px)';
-                e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.15)';
-                e.currentTarget.style.borderColor = index === 0 ? '#10b981' :
-                  index === 1 ? '#3b82f6' :
-                  index === 2 ? '#f59e0b' :
-                  index === 3 ? '#ef4444' : '#8b5cf6';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)';
-                e.currentTarget.style.borderColor = 'transparent';
-              }}>
-                {/* Gradient Header */}
-                <div style={{
-                  background: `linear-gradient(135deg, ${
-                    index === 0 ? '#10b981, #059669' :
-                    index === 1 ? '#3b82f6, #2563eb' :
-                    index === 2 ? '#f59e0b, #d97706' :
-                    index === 3 ? '#ef4444, #dc2626' :
-                    '#8b5cf6, #7c3aed'
-                  })`,
-                  padding: '2rem',
-                  color: 'white',
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '3.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
-                    {course.level}
-                  </div>
-                  <div style={{ 
-                    background: 'rgba(255,255,255,0.2)',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '50px',
-                    display: 'inline-block',
-                    backdropFilter: 'blur(10px)',
-                    fontSize: '0.875rem',
-                    fontWeight: '600'
-                  }}>
-                    {course.lessons.length} bài học
-                  </div>
-                </div>
+          {courses.map((course, index) => {
+            const getLevelColor = (idx: number) => {
+               const colors = [
+                 'var(--success-color)', 
+                 'var(--primary-color)', 
+                 'var(--warning-color)', 
+                 'var(--danger-color)', 
+                 'var(--secondary-color)'
+               ];
+               return colors[idx % colors.length];
+            };
 
-                {/* Content */}
-                <div style={{ padding: '2rem', position: 'relative' }}>
-                  {/* Japan/China Map Icon */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '1rem',
-                    right: '1rem',
-                    opacity: 0.15,
-                    pointerEvents: 'none'
-                  }}>
-                    {language === 'japanese' ? (
-                      // Japan Map
-                      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M75 25C75 25 70 20 65 22C60 24 58 28 55 30C52 32 48 30 45 32C42 34 40 38 38 40C36 42 32 42 30 45C28 48 28 52 30 55C32 58 35 58 38 60C41 62 42 65 45 67C48 69 52 68 55 70C58 72 60 75 63 77C66 79 70 78 73 75C76 72 78 68 80 65C82 62 82 58 80 55C78 52 75 50 75 47C75 44 77 40 75 37C73 34 70 32 70 29C70 26 72 23 70 20C68 17 65 18 63 20C61 22 60 25 58 27C56 29 52 28 50 30C48 32 48 35 50 37C52 39 55 38 57 40C59 42 58 45 60 47C62 49 65 48 67 50C69 52 68 55 70 57C72 59 75 58 75 55C75 52 73 50 73 47C73 44 75 42 75 39C75 36 73 34 73 31C73 28 75 26 75 25Z" 
-                          fill={index === 0 ? '#10b981' :
-                            index === 1 ? '#3b82f6' :
-                            index === 2 ? '#f59e0b' :
-                            index === 3 ? '#ef4444' : '#8b5cf6'}
-                        />
-                      </svg>
-                    ) : (
-                      // China Map
-                      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 30L25 25L30 20L35 22L40 25L45 23L50 20L55 22L60 25L65 28L70 30L75 35L78 40L80 45L82 50L80 55L78 60L75 65L70 68L65 70L60 72L55 70L50 68L45 70L40 72L35 70L30 68L25 65L22 60L20 55L18 50L20 45L22 40L20 35L20 30Z" 
-                          fill={index === 0 ? '#10b981' :
-                            index === 1 ? '#3b82f6' :
-                            index === 2 ? '#f59e0b' :
-                            index === 3 ? '#ef4444' : '#8b5cf6'}
-                        />
-                      </svg>
-                    )}
-                  </div>
-                  
-                  <h3 style={{ 
-                    fontSize: '1.5rem', 
-                    fontWeight: '700', 
-                    color: 'var(--text-primary)',
-                    marginBottom: '1rem'
-                  }}>
-                    {course.title}
-                  </h3>
-                  <p style={{ 
-                    color: 'var(--text-secondary)', 
-                    fontSize: '1rem', 
-                    lineHeight: '1.6', 
-                    marginBottom: '1.5rem',
-                    minHeight: '3rem'
-                  }}>
-                    {course.description}
-                  </p>
-                  <button style={{
-                    width: '100%',
-                    padding: '1rem',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: `linear-gradient(135deg, ${
-                      index === 0 ? '#10b981, #059669' :
-                      index === 1 ? '#3b82f6, #2563eb' :
-                      index === 2 ? '#f59e0b, #d97706' :
-                      index === 3 ? '#ef4444, #dc2626' :
-                      '#8b5cf6, #7c3aed'
-                    })`,
-                    color: 'white',
-                    fontSize: '1.125rem',
-                    fontWeight: '700',
+            const levelColor = getLevelColor(index);
+
+            return (
+              <Link key={course.level} to={`/${language}/courses/${course.level}`} style={{ textDecoration: 'none' }}>
+                <div 
+                  className={cardClass}
+                  style={{ 
+                    height: '100%',
+                    transition: 'all 0.2s',
                     cursor: 'pointer',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    border: '1px solid var(--border-color)',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    transition: 'all 0.2s'
+                    flexDirection: 'column'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                    e.currentTarget.style.borderColor = levelColor;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow)';
+                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                  }}
+                >
+                  {/* Clean Header */}
+                  <div style={{
+                    backgroundColor: levelColor,
+                    padding: '1.5rem',
+                    color: 'white',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
                   }}>
-                    Bắt đầu học
-                    <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <path d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </button>
+                    <div style={{ fontSize: '2rem', fontWeight: '800' }}>
+                      {course.level}
+                    </div>
+                    <div style={{ 
+                      backgroundColor: 'rgba(255,255,255,0.2)',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '20px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600'
+                    }}>
+                      {course.lessons.length} bài học
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <h3 style={{ 
+                      fontSize: '1.25rem', 
+                      fontWeight: '700', 
+                      color: 'var(--text-primary)',
+                      marginBottom: '0.75rem'
+                    }}>
+                      {course.title}
+                    </h3>
+                    <p style={{ 
+                      color: 'var(--text-secondary)', 
+                      fontSize: '0.9375rem', 
+                      lineHeight: '1.5', 
+                      marginBottom: '1.5rem',
+                      flex: 1
+                    }}>
+                      {course.description}
+                    </p>
+                    <button style={{
+                      width: '100%',
+                      padding: '0.875rem',
+                      borderRadius: '8px',
+                      border: `1px solid ${levelColor}`,
+                      background: 'transparent',
+                      color: levelColor,
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = levelColor;
+                      e.currentTarget.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = levelColor;
+                    }}
+                    >
+                      Bắt đầu học
+                      <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

@@ -9,42 +9,81 @@ const AllCourses = () => {
   const [japaneseCourses, setJapaneseCourses] = useState<any[]>([]);
   const [chineseCourses, setChineseCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadAllCourses();
   }, []);
 
   const loadAllCourses = async () => {
+    setLoading(true);
+    setError(null);
+
+    // Japanese Data
+    let jpCoursesData: any[] = [];
+    let jpLessonsData: any[] = [];
+
     try {
-      setLoading(true);
-      
-      // Load Japanese courses
-      const [japaneseCoursesResult, japaneseLessonsResult] = await Promise.all([
+      console.log('Fetching Japanese data...');
+      const [coursesResult, lessonsResult] = await Promise.all([
         getCourses('japanese', 1, 100),
-        getLessons(undefined, 'japanese', 1, 100),
+        getLessons(undefined, 'japanese', undefined, 1, 100),
       ]);
 
-      // Load Chinese courses
-      const [chineseCoursesResult, chineseLessonsResult] = await Promise.all([
+      jpCoursesData = coursesResult.data || [];
+      jpLessonsData = lessonsResult.data || [];
+      console.log('Japanese data loaded successfully');
+    } catch (e: any) {
+      console.error('Failed to load Japanese data:', e);
+      if (e.message?.includes('timed out')) {
+        setError('Kết nối Database bị quá tải hoặc gián đoạn. Vui lòng kiểm tra kết nối mạng.');
+      }
+    }
+
+    // Chinese Data
+    let cnCoursesData: any[] = [];
+    let cnLessonsData: any[] = [];
+
+    try {
+      console.log('Fetching Chinese data...');
+      const [coursesResult, lessonsResult] = await Promise.all([
         getCourses('chinese', 1, 100),
-        getLessons(undefined, 'chinese', 1, 100),
+        getLessons(undefined, 'chinese', undefined, 1, 100),
       ]);
 
+      cnCoursesData = coursesResult.data || [];
+      cnLessonsData = lessonsResult.data || [];
+      console.log('Chinese data loaded successfully');
+    } catch (e: any) {
+      console.error('Failed to load Chinese data:', e);
+    }
+
+    try {
       // Process Japanese courses
-      const japaneseGrouped = groupCoursesByLevel(
-        japaneseCoursesResult.data,
-        japaneseLessonsResult.data,
+      let japaneseGrouped = groupCoursesByLevel(
+        jpCoursesData,
+        jpLessonsData,
         ['N5', 'N4', 'N3', 'N2', 'N1']
       );
 
+      // If no Japanese courses found/loaded, create placeholder courses
+      if (japaneseGrouped.length === 0) {
+        japaneseGrouped = ['N5', 'N4', 'N3', 'N2', 'N1'].map(level => ({
+          level,
+          title: level,
+          lessons: [],
+          totalLessons: 0,
+        }));
+      }
+
       // Process Chinese courses
       let chineseGrouped = groupCoursesByLevel(
-        chineseCoursesResult.data,
-        chineseLessonsResult.data,
+        cnCoursesData,
+        cnLessonsData,
         ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6']
       );
 
-      // If no Chinese courses in database, create placeholder courses
+      // If no Chinese courses found/loaded, create placeholder courses
       if (chineseGrouped.length === 0) {
         chineseGrouped = ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'].map(level => ({
           level,
@@ -57,14 +96,21 @@ const AllCourses = () => {
       setJapaneseCourses(japaneseGrouped);
       setChineseCourses(chineseGrouped);
     } catch (err: any) {
-      console.error('Error loading courses:', err);
-      // Even on error, show placeholder Chinese courses
+      console.error('Error processing courses:', err);
+      // Fallback placeholders if processing fails completely
+      const japanesePlaceholder = ['N5', 'N4', 'N3', 'N2', 'N1'].map(level => ({
+        level,
+        title: level,
+        lessons: [],
+        totalLessons: 0,
+      }));
       const chinesePlaceholder = ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'].map(level => ({
         level,
         title: level,
         lessons: [],
         totalLessons: 0,
       }));
+      setJapaneseCourses(japanesePlaceholder);
       setChineseCourses(chinesePlaceholder);
     } finally {
       setLoading(false);
@@ -101,70 +147,73 @@ const AllCourses = () => {
   };
 
   const renderCourseCard = (course: any, index: number, language: Language) => {
+    // Solid colors map
     const colors = [
-      { gradient: '#10b981, #059669', border: '#10b981' },
-      { gradient: '#3b82f6, #2563eb', border: '#3b82f6' },
-      { gradient: '#f59e0b, #d97706', border: '#f59e0b' },
-      { gradient: '#ef4444, #dc2626', border: '#ef4444' },
-      { gradient: '#8b5cf6, #7c3aed', border: '#8b5cf6' },
-      { gradient: '#ec4899, #db2777', border: '#ec4899' },
+      'var(--success-color)',
+      'var(--primary-color)',
+      'var(--warning-color)',
+      'var(--danger-color)',
+      'var(--secondary-color)',
+      '#db2777' // extra one
     ];
 
     const color = colors[index % colors.length];
     const hasLessons = course.totalLessons > 0;
 
-    const CardWrapper = hasLessons ? Link : 'div';
-    const wrapperProps = hasLessons 
+    const CardWrapper = (hasLessons ? Link : 'div') as any;
+    const wrapperProps = hasLessons
       ? { to: `/${language}/courses/${course.level}`, style: { textDecoration: 'none' } }
       : { style: { textDecoration: 'none' } };
 
     return (
-      <CardWrapper 
-        key={course.level} 
+      <CardWrapper
+        key={course.level}
         {...wrapperProps}
       >
-        <div style={{ 
+        <div style={{
           height: '100%',
-          transition: 'all 0.3s',
+          transition: 'all 0.2s',
           cursor: hasLessons ? 'pointer' : 'not-allowed',
-          borderRadius: '20px',
+          borderRadius: '12px',
           overflow: 'hidden',
-          boxShadow: 'var(--shadow-md)',
+          boxShadow: 'var(--shadow)',
           background: 'var(--card-bg)',
-          border: '3px solid transparent',
+          border: '1px solid var(--border-color)',
           position: 'relative',
-          opacity: hasLessons ? 1 : 0.7
+          opacity: hasLessons ? 1 : 0.7,
+          display: 'flex',
+          flexDirection: 'column'
         }}
-        onMouseEnter={(e) => {
-          if (hasLessons) {
-            e.currentTarget.style.transform = 'translateY(-8px)';
-            e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.15)';
-            e.currentTarget.style.borderColor = color.border;
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (hasLessons) {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)';
-            e.currentTarget.style.borderColor = 'transparent';
-          }
-        }}>
-          {/* Gradient Header */}
-          <div style={{
-            background: `linear-gradient(135deg, ${color.gradient})`,
-            padding: '2rem',
-            color: 'white',
-            textAlign: 'center'
+          onMouseEnter={(e) => {
+            if (hasLessons) {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+              e.currentTarget.style.borderColor = color;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (hasLessons) {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'var(--shadow)';
+              e.currentTarget.style.borderColor = 'var(--border-color)';
+            }
           }}>
-            <div style={{ fontSize: '3.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+          {/* Header */}
+          <div style={{
+            backgroundColor: color,
+            padding: '1.5rem',
+            color: 'white',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div style={{ fontSize: '2rem', fontWeight: '800' }}>
               {course.level}
             </div>
-            <div style={{ 
-              background: 'rgba(255,255,255,0.2)',
-              padding: '0.5rem 1rem',
-              borderRadius: '50px',
-              display: 'inline-block',
-              backdropFilter: 'blur(10px)',
+            <div style={{
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '20px',
               fontSize: '0.875rem',
               fontWeight: '600'
             }}>
@@ -173,70 +222,55 @@ const AllCourses = () => {
           </div>
 
           {/* Content */}
-          <div style={{ padding: '2rem', position: 'relative' }}>
-            {/* Map Icon */}
-            <div style={{
-              position: 'absolute',
-              bottom: '1rem',
-              right: '1rem',
-              opacity: 0.15,
-              pointerEvents: 'none'
-            }}>
-              {language === 'japanese' ? (
-                // Japan Map
-                <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M75 25C75 25 70 20 65 22C60 24 58 28 55 30C52 32 48 30 45 32C42 34 40 38 38 40C36 42 32 42 30 45C28 48 28 52 30 55C32 58 35 58 38 60C41 62 42 65 45 67C48 69 52 68 55 70C58 72 60 75 63 77C66 79 70 78 73 75C76 72 78 68 80 65C82 62 82 58 80 55C78 52 75 50 75 47C75 44 77 40 75 37C73 34 70 32 70 29C70 26 72 23 70 20C68 17 65 18 63 20C61 22 60 25 58 27C56 29 52 28 50 30C48 32 48 35 50 37C52 39 55 38 57 40C59 42 58 45 60 47C62 49 65 48 67 50C69 52 68 55 70 57C72 59 75 58 75 55C75 52 73 50 73 47C73 44 75 42 75 39C75 36 73 34 73 31C73 28 75 26 75 25Z" 
-                    fill={color.border}
-                  />
-                </svg>
-              ) : (
-                // China Map
-                <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M20 30L25 25L30 20L35 22L40 25L45 23L50 20L55 22L60 25L65 28L70 30L75 35L78 40L80 45L82 50L80 55L78 60L75 65L70 68L65 70L60 72L55 70L50 68L45 70L40 72L35 70L30 68L25 65L22 60L20 55L18 50L20 45L22 40L20 35L20 30Z" 
-                    fill={color.border}
-                  />
-                </svg>
-              )}
-            </div>
-            
-            <h3 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: '700', 
+          <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <h3 style={{
+              fontSize: '1.25rem',
+              fontWeight: '700',
               color: 'var(--text-primary)',
-              marginBottom: '1rem'
+              marginBottom: '0.75rem'
             }}>
               {course.title}
             </h3>
-            <p style={{ 
-              color: 'var(--text-secondary)', 
-              fontSize: '1rem', 
-              lineHeight: '1.6', 
+            <p style={{
+              color: 'var(--text-secondary)',
+              fontSize: '0.9375rem',
+              lineHeight: '1.5',
               marginBottom: '1.5rem',
-              minHeight: '3rem'
+              flex: 1
             }}>
               {course.totalLessons > 0 ? `${course.totalLessons} bài học` : 'Sắp ra mắt'}
             </p>
             <button style={{
               width: '100%',
-              padding: '1rem',
-              borderRadius: '12px',
-              border: 'none',
-              background: course.totalLessons > 0 
-                ? `linear-gradient(135deg, ${color.gradient})`
-                : 'linear-gradient(135deg, #6b7280, #4b5563)',
-              color: 'white',
-              fontSize: '1.125rem',
-              fontWeight: '700',
-              cursor: course.totalLessons > 0 ? 'pointer' : 'not-allowed',
+              padding: '0.875rem',
+              borderRadius: '8px',
+              border: `1px solid ${hasLessons ? color : 'var(--text-secondary)'}`,
+              background: 'transparent',
+              color: hasLessons ? color : 'var(--text-secondary)',
+              fontSize: '1rem',
+              fontWeight: '600',
+              cursor: hasLessons ? 'pointer' : 'not-allowed',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem',
-              transition: 'all 0.2s',
-              opacity: course.totalLessons > 0 ? 1 : 0.6
-            }}>
+              transition: 'all 0.2s'
+            }}
+              onMouseEnter={(e) => {
+                if (hasLessons) {
+                  e.currentTarget.style.background = color;
+                  e.currentTarget.style.color = 'white';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (hasLessons) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = color;
+                }
+              }}
+            >
               {course.totalLessons > 0 ? 'Bắt đầu học' : 'Sắp ra mắt'}
-              <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </button>
@@ -308,10 +342,19 @@ const AllCourses = () => {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State / Error State */}
       {japaneseCourses.length === 0 && chineseCourses.length === 0 && (
         <div className="empty-state">
-          <p>Chưa có khóa học nào.</p>
+          {error ? (
+            <div style={{ color: '#ef4444', textAlign: 'center' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⚠️</div>
+              <p style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Không thể tải dữ liệu</p>
+              <p style={{ marginBottom: '1rem' }}>{error}</p>
+              <button onClick={() => loadAllCourses()} style={{ padding: '0.5rem 1rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Thử lại</button>
+            </div>
+          ) : (
+            <p>Chưa có khóa học nào.</p>
+          )}
         </div>
       )}
     </div>

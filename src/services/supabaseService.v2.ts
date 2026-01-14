@@ -112,12 +112,14 @@ export const deleteCourse = async (id: string) => {
 export const getLessons = async (
   courseId?: string,
   language?: Language,
+  level?: Level,
   page: number = 1,
   pageSize: number = 10
 ): Promise<PaginatedResponse<any>> => {
   const filters: Record<string, any> = {};
   if (courseId) filters.course_id = courseId;
   if (language) filters.language = language;
+  if (level) filters.level = level;
 
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -240,6 +242,32 @@ export const getVocabulary = async (
     column: 'created_at',
     ascending: true,
   });
+};
+
+export const getVocabularyByLevel = async (
+  level: string,
+  language: Language
+): Promise<any[]> => {
+  // 1. Get lesson IDs
+  const { data: lessons, error: lessonError } = await supabase
+    .from('lessons')
+    .select('id')
+    .eq('level', level)
+    .eq('language', language);
+
+  if (lessonError) throw lessonError;
+  if (!lessons || lessons.length === 0) return [];
+
+  const lessonIds = lessons.map(l => l.id);
+
+  // 2. Get Vocabulary
+  const { data: vocab, error: vocabError } = await supabase
+    .from('vocabulary')
+    .select('*')
+    .in('lesson_id', lessonIds);
+
+  if (vocabError) throw vocabError;
+  return vocab || [];
 };
 
 export const createVocabulary = async (vocab: {
