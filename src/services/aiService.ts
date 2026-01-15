@@ -14,11 +14,11 @@ interface AIResponse {
 // OpenAI GPT Integration
 async function callOpenAI(messages: Message[]): Promise<AIResponse> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  
+
   if (!apiKey) {
-    return { 
-      content: '', 
-      error: 'OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file.' 
+    return {
+      content: '',
+      error: 'OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file.'
     };
   }
 
@@ -46,9 +46,9 @@ async function callOpenAI(messages: Message[]): Promise<AIResponse> {
     return { content: data.choices[0].message.content };
   } catch (error: any) {
     console.error('OpenAI Error:', error);
-    return { 
-      content: '', 
-      error: error.message || 'Failed to get response from OpenAI' 
+    return {
+      content: '',
+      error: error.message || 'Failed to get response from OpenAI'
     };
   }
 }
@@ -56,11 +56,11 @@ async function callOpenAI(messages: Message[]): Promise<AIResponse> {
 // DeepSeek AI Integration
 async function callDeepSeek(messages: Message[]): Promise<AIResponse> {
   const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
-  
+
   if (!apiKey) {
-    return { 
-      content: '', 
-      error: 'Chưa cấu hình DeepSeek API key. Vui lòng thêm VITE_DEEPSEEK_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://platform.deepseek.com/api_keys để lấy key miễn phí.' 
+    return {
+      content: '',
+      error: 'Chưa cấu hình DeepSeek API key. Vui lòng thêm VITE_DEEPSEEK_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://platform.deepseek.com/api_keys để lấy key miễn phí.'
     };
   }
 
@@ -84,27 +84,27 @@ async function callDeepSeek(messages: Message[]): Promise<AIResponse> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('DeepSeek API Error Response:', errorText);
-      
+
       let errorData;
       try {
         errorData = JSON.parse(errorText);
       } catch {
         throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
-      
+
       const errorMessage = errorData.error?.message || 'DeepSeek API error';
-      
+
       if (errorMessage.includes('API key') || errorMessage.includes('authentication')) {
         throw new Error('API key không hợp lệ. Vui lòng tạo key mới tại: https://platform.deepseek.com/api_keys');
       }
-      
+
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
 
     const content = data.choices?.[0]?.message?.content || '';
-    
+
     if (!content) {
       return {
         content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
@@ -115,9 +115,9 @@ async function callDeepSeek(messages: Message[]): Promise<AIResponse> {
     return { content };
   } catch (error: any) {
     console.error('DeepSeek Error:', error);
-    return { 
-      content: '', 
-      error: error.message || 'Không thể kết nối với DeepSeek AI' 
+    return {
+      content: '',
+      error: error.message || 'Không thể kết nối với DeepSeek AI'
     };
   }
 }
@@ -125,27 +125,27 @@ async function callDeepSeek(messages: Message[]): Promise<AIResponse> {
 // Hugging Face Integration (Miễn phí)
 async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
   const apiKey = import.meta.env.VITE_HUGGINGFACE_API_KEY;
-  
+
   if (!apiKey) {
-    return { 
-      content: '', 
-      error: 'Chưa cấu hình Hugging Face API key. Vui lòng thêm VITE_HUGGINGFACE_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://huggingface.co/settings/tokens để lấy token miễn phí.' 
+    return {
+      content: '',
+      error: 'Chưa cấu hình Hugging Face API key. Vui lòng thêm VITE_HUGGINGFACE_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://huggingface.co/settings/tokens để lấy token miễn phí.'
     };
   }
 
   try {
     // Dùng Qwen - model tốt cho tiếng Nhật
     const model = 'Qwen/Qwen2.5-Coder-32B-Instruct';
-    
+
     // Build conversation prompt
     const systemMsg = messages.find(m => m.role === 'system');
     const conversationMsgs = messages.filter(m => m.role !== 'system');
-    
+
     let prompt = '';
     if (systemMsg) {
       prompt = `${systemMsg.content}\n\n`;
     }
-    
+
     conversationMsgs.forEach(msg => {
       if (msg.role === 'user') {
         prompt += `User: ${msg.content}\n`;
@@ -176,7 +176,7 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Hugging Face API Error:', errorText);
-      
+
       return {
         content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
         error: undefined,
@@ -184,14 +184,14 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
     }
 
     const data = await response.json();
-    
+
     let content = '';
     if (Array.isArray(data) && data[0]?.generated_text) {
       content = data[0].generated_text.trim();
     } else if (data.generated_text) {
       content = data.generated_text.trim();
     }
-    
+
     if (!content) {
       content = 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)'
     }
@@ -199,7 +199,7 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
     return { content };
   } catch (error: any) {
     console.error('Hugging Face Error:', error);
-    return { 
+    return {
       content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại không?)',
       error: undefined
     };
@@ -209,11 +209,11 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
 // Qwen API Integration (Alibaba Cloud)
 async function callQwen(messages: Message[]): Promise<AIResponse> {
   const apiKey = import.meta.env.VITE_QWEN_API_KEY;
-  
+
   if (!apiKey) {
-    return { 
-      content: '', 
-      error: 'Chưa cấu hình Qwen API key. Vui lòng thêm VITE_QWEN_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://dashscope.aliyun.com/ để lấy key miễn phí.' 
+    return {
+      content: '',
+      error: 'Chưa cấu hình Qwen API key. Vui lòng thêm VITE_QWEN_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://dashscope.aliyun.com/ để lấy key miễn phí.'
     };
   }
 
@@ -246,24 +246,24 @@ async function callQwen(messages: Message[]): Promise<AIResponse> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Qwen API Error Response:', errorText);
-      
+
       let errorData;
       try {
         errorData = JSON.parse(errorText);
       } catch {
         throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
-      
+
       const errorMessage = errorData.message || errorData.error?.message || 'Qwen API error';
-      
+
       if (errorMessage.includes('Invalid API key') || errorMessage.includes('authentication')) {
         throw new Error('API key không hợp lệ. Vui lòng tạo key mới tại: https://dashscope.aliyun.com/');
       }
-      
+
       if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
         throw new Error('Đã vượt quá hạn mức sử dụng. Vui lòng đợi hoặc nâng cấp tài khoản.');
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -271,13 +271,13 @@ async function callQwen(messages: Message[]): Promise<AIResponse> {
 
     // Parse Qwen response format
     const content = data.output?.text || data.output?.choices?.[0]?.message?.content || '';
-    
+
     if (!content) {
       const finishReason = data.output?.finish_reason;
       const fallbackMessage = finishReason === 'content_filter'
         ? 'すみません、もう少し簡単な言葉で話してください。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
         : 'こんにちは！どうぞよろしくお願いします。\n(Xin chào! Rất vui được gặp bạn.)';
-      
+
       return {
         content: fallbackMessage,
         error: undefined,
@@ -287,9 +287,9 @@ async function callQwen(messages: Message[]): Promise<AIResponse> {
     return { content };
   } catch (error: any) {
     console.error('Qwen Error:', error);
-    return { 
-      content: '', 
-      error: error.message || 'Không thể kết nối với Qwen AI' 
+    return {
+      content: '',
+      error: error.message || 'Không thể kết nối với Qwen AI'
     };
   }
 }
@@ -297,11 +297,11 @@ async function callQwen(messages: Message[]): Promise<AIResponse> {
 // OpenRouter Integration (Truy cập nhiều AI models miễn phí)
 async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
   const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-  
+
   if (!apiKey) {
-    return { 
-      content: '', 
-      error: 'Chưa cấu hình OpenRouter API key. Vui lòng thêm VITE_OPENROUTER_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://openrouter.ai/keys để lấy key miễn phí.' 
+    return {
+      content: '',
+      error: 'Chưa cấu hình OpenRouter API key. Vui lòng thêm VITE_OPENROUTER_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://openrouter.ai/keys để lấy key miễn phí.'
     };
   }
 
@@ -329,24 +329,24 @@ async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenRouter API Error Response:', errorText);
-      
+
       let errorData;
       try {
         errorData = JSON.parse(errorText);
       } catch {
         throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
-      
+
       const errorMessage = errorData.error?.message || 'OpenRouter API error';
-      
+
       if (errorMessage.includes('Invalid API key') || errorMessage.includes('authentication')) {
         throw new Error('API key không hợp lệ. Vui lòng tạo key mới tại: https://openrouter.ai/keys');
       }
-      
+
       if (errorMessage.includes('quota') || errorMessage.includes('limit') || errorMessage.includes('credits')) {
         throw new Error('Đã vượt quá hạn mức sử dụng. Vui lòng đợi hoặc nạp thêm credits.');
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -354,13 +354,13 @@ async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
 
     // Parse OpenRouter response (tương tự OpenAI format)
     const content = data.choices?.[0]?.message?.content || '';
-    
+
     if (!content) {
       const finishReason = data.choices?.[0]?.finish_reason;
       const fallbackMessage = finishReason === 'content_filter'
         ? 'すみません、もう少し簡単な言葉で話してください。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
         : 'こんにちは！どうぞよろしくお願いします。\n(Xin chào! Rất vui được gặp bạn.)';
-      
+
       return {
         content: fallbackMessage,
         error: undefined,
@@ -370,9 +370,9 @@ async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
     return { content };
   } catch (error: any) {
     console.error('OpenRouter Error:', error);
-    return { 
-      content: '', 
-      error: error.message || 'Không thể kết nối với OpenRouter AI' 
+    return {
+      content: '',
+      error: error.message || 'Không thể kết nối với OpenRouter AI'
     };
   }
 }
@@ -381,7 +381,7 @@ async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
 async function callCloudflare(messages: Message[]): Promise<AIResponse> {
   // Ưu tiên dùng Worker proxy (không bị CORS)
   const workerUrl = import.meta.env.VITE_CLOUDFLARE_WORKER_URL;
-  
+
   if (workerUrl) {
     // Gọi qua Worker proxy - Không cần API token, không bị CORS
     try {
@@ -404,7 +404,7 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
 
       const data = await response.json();
       const content = data.result?.response || data.result?.content || '';
-      
+
       if (!content) {
         return {
           content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
@@ -415,28 +415,28 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
       return { content };
     } catch (error: any) {
       console.error('Cloudflare Worker Error:', error);
-      return { 
-        content: '', 
-        error: error.message || 'Không thể kết nối với Cloudflare Worker' 
+      return {
+        content: '',
+        error: error.message || 'Không thể kết nối với Cloudflare Worker'
       };
     }
   }
-  
+
   // Fallback: Gọi trực tiếp API (có thể bị CORS ở localhost)
   const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
   const apiToken = import.meta.env.VITE_CLOUDFLARE_API_TOKEN;
-  
+
   if (!accountId || !apiToken) {
-    return { 
-      content: '', 
-      error: 'Chưa cấu hình Cloudflare Workers AI.\n\nCách 1 (Khuyến nghị): Deploy Worker proxy\n- Xem hướng dẫn: cloudflare-worker/README.md\n- Thêm VITE_CLOUDFLARE_WORKER_URL vào .env.local\n\nCách 2: Dùng trực tiếp API (có thể bị CORS)\n- Thêm VITE_CLOUDFLARE_ACCOUNT_ID và VITE_CLOUDFLARE_API_TOKEN' 
+    return {
+      content: '',
+      error: 'Chưa cấu hình Cloudflare Workers AI.\n\nCách 1 (Khuyến nghị): Deploy Worker proxy\n- Xem hướng dẫn: cloudflare-worker/README.md\n- Thêm VITE_CLOUDFLARE_WORKER_URL vào .env.local\n\nCách 2: Dùng trực tiếp API (có thể bị CORS)\n- Thêm VITE_CLOUDFLARE_ACCOUNT_ID và VITE_CLOUDFLARE_API_TOKEN'
     };
   }
 
   try {
     // Sử dụng model miễn phí của Cloudflare (Llama 3.1 hoặc Qwen)
     const model = '@cf/meta/llama-3.1-8b-instruct'; // Hoặc '@cf/qwen/qwen1.5-14b-chat'
-    
+
     const response = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
       {
@@ -460,24 +460,24 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Cloudflare Workers AI Error Response:', errorText);
-      
+
       let errorData;
       try {
         errorData = JSON.parse(errorText);
       } catch {
         throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
-      
+
       const errorMessage = errorData.errors?.[0]?.message || errorData.error?.message || 'Cloudflare Workers AI error';
-      
+
       if (errorMessage.includes('authentication') || errorMessage.includes('token')) {
         throw new Error('API token không hợp lệ. Vui lòng kiểm tra lại VITE_CLOUDFLARE_API_TOKEN');
       }
-      
+
       if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
         throw new Error('Đã vượt quá hạn mức sử dụng. Vui lòng đợi hoặc nâng cấp tài khoản.');
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -485,7 +485,7 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
 
     // Parse Cloudflare Workers AI response
     const content = data.result?.response || data.result?.content || '';
-    
+
     if (!content) {
       return {
         content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
@@ -496,9 +496,9 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
     return { content };
   } catch (error: any) {
     console.error('Cloudflare Workers AI Error:', error);
-    return { 
-      content: '', 
-      error: error.message || 'Không thể kết nối với Cloudflare Workers AI' 
+    return {
+      content: '',
+      error: error.message || 'Không thể kết nối với Cloudflare Workers AI'
     };
   }
 }
@@ -506,11 +506,11 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
 // Google Gemini Integration
 async function callGemini(messages: Message[]): Promise<AIResponse> {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  
+
   if (!apiKey || apiKey === 'YOUR_NEW_API_KEY_HERE') {
-    return { 
-      content: '', 
-      error: 'Chưa cấu hình Gemini API key. Vui lòng thêm VITE_GEMINI_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://aistudio.google.com/app/apikey để lấy key miễn phí.' 
+    return {
+      content: '',
+      error: 'Chưa cấu hình Gemini API key. Vui lòng thêm VITE_GEMINI_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://aistudio.google.com/app/apikey để lấy key miễn phí.'
     };
   }
 
@@ -524,7 +524,7 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
         parts: [{ text: m.content }]
       }));
 
-    const prompt = systemMessage 
+    const prompt = systemMessage
       ? `${systemMessage.content}\n\n${conversationHistory[conversationHistory.length - 1].parts[0].text}`
       : conversationHistory[conversationHistory.length - 1].parts[0].text;
 
@@ -576,27 +576,27 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Gemini API Error Response:', errorText);
-      
+
       let errorData;
       try {
         errorData = JSON.parse(errorText);
       } catch {
         throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
-      
+
       const errorMessage = errorData.error?.message || 'Gemini API error';
-      
+
       if (errorMessage.includes('API key not valid')) {
         throw new Error('API key không hợp lệ. Vui lòng tạo key mới tại: https://aistudio.google.com/app/apikey');
       }
-      
+
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
-    
+
     // 🔍 DEBUG: Log Gemini response
-    console.log('🤖 Gemini API Response:', JSON.stringify(data, null, 2));
+    console.log(' Gemini API Response:', JSON.stringify(data, null, 2));
 
     // Extract content in a more robust way to handle different Gemini response shapes
     let content = '';
@@ -605,7 +605,7 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
       const candidate = Array.isArray(data.candidates) && data.candidates.length > 0
         ? data.candidates[0]
         : null;
-      
+
       console.log('📝 Candidate:', candidate);
 
       if (candidate) {
@@ -656,9 +656,9 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
     return { content };
   } catch (error: any) {
     console.error('Gemini Error:', error);
-    return { 
-      content: '', 
-      error: error.message || 'Không thể kết nối với Gemini AI' 
+    return {
+      content: '',
+      error: error.message || 'Không thể kết nối với Gemini AI'
     };
   }
 }
@@ -669,10 +669,10 @@ export async function getAIResponse(
   provider?: 'openai' | 'gemini' | 'deepseek' | 'huggingface' | 'qwen' | 'openrouter' | 'cloudflare'
 ): Promise<AIResponse> {
   const selectedProvider = provider || import.meta.env.VITE_AI_PROVIDER || 'cloudflare';
-  
+
   // Thử provider được chọn trước
   let response: AIResponse;
-  
+
   if (selectedProvider === 'cloudflare') {
     response = await callCloudflare(messages);
     // Nếu Cloudflare lỗi, fallback sang Gemini
@@ -704,7 +704,7 @@ export async function getAIResponse(
   } else {
     response = await callOpenAI(messages);
   }
-  
+
   return response;
 }
 

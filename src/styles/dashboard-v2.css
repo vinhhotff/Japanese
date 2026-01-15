@@ -1567,6 +1567,17 @@
   box-shadow: 0 16px 48px rgba(220, 20, 60, 0.2);
 }
 
+[data-theme="dark"] .feature-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+[data-theme="dark"] .feature-card:hover {
+  background: rgba(30, 41, 59, 0.8);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
 .feature-highlight {
   position: relative;
   border-width: 3px;
@@ -1621,6 +1632,14 @@
   line-height: 1.6;
   margin: 0;
   font-weight: 500;
+}
+
+[data-theme="dark"] .feature-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .feature-desc {
+  color: #94a3b8;
 }
 
 .feature-badge {

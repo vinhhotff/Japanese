@@ -3,17 +3,20 @@ import { Link } from 'react-router-dom';
 import Dictionary from './Dictionary';
 import type { Language } from '../services/supabaseService.v2';
 import '../App.css';
+import '../styles/spaced-repetition.css';
 
 const AllDictionary = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('japanese');
 
   return (
-    <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+    <div className="container" data-language={selectedLanguage} style={{ position: 'relative', zIndex: 1 }}>
       {/* Language Selector */}
       <div style={{
         display: 'flex',
         justifyContent: 'center',
-        marginBottom: '2rem'
+        marginBottom: '2rem',
+        position: 'relative',
+        zIndex: 10
       }}>
         <div style={{
           display: 'inline-flex',
@@ -31,7 +34,7 @@ const AllDictionary = () => {
               borderRadius: '12px',
               border: 'none',
               background: selectedLanguage === 'japanese' 
-                ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' 
+                ? 'linear-gradient(135deg, #c41e3a 0%, #ff69b4 100%)' 
                 : 'transparent',
               color: selectedLanguage === 'japanese' ? 'white' : 'var(--text-secondary)',
               fontSize: '1rem',
@@ -42,7 +45,7 @@ const AllDictionary = () => {
               alignItems: 'center',
               gap: '0.75rem',
               boxShadow: selectedLanguage === 'japanese' 
-                ? '0 4px 12px rgba(139, 92, 246, 0.3)' 
+                ? '0 4px 12px rgba(196, 30, 58, 0.3)' 
                 : 'none'
             }}
           >
@@ -57,7 +60,7 @@ const AllDictionary = () => {
               borderRadius: '12px',
               border: 'none',
               background: selectedLanguage === 'chinese' 
-                ? 'linear-gradient(135deg, #ef4444, #dc2626)' 
+                ? 'linear-gradient(135deg, #dc143c 0%, #ffd700 100%)' 
                 : 'transparent',
               color: selectedLanguage === 'chinese' ? 'white' : 'var(--text-secondary)',
               fontSize: '1rem',
@@ -68,7 +71,7 @@ const AllDictionary = () => {
               alignItems: 'center',
               gap: '0.75rem',
               boxShadow: selectedLanguage === 'chinese' 
-                ? '0 4px 12px rgba(239, 68, 68, 0.3)' 
+                ? '0 4px 12px rgba(220, 20, 60, 0.3)' 
                 : 'none'
             }}
           >

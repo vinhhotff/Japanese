@@ -21,7 +21,7 @@ const StudentDashboard: React.FC = () => {
 
   const loadData = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const [classesData, homeworkData, hasClassData] = await Promise.all([
@@ -202,9 +202,7 @@ const StudentDashboard: React.FC = () => {
       {/* AI Features Section */}
       <div className="dashboard-card">
         <div className="dashboard-card-header">
-          <div className="dashboard-card-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
-            🤖
-          </div>
+
           <div className="dashboard-card-title">
             <h3>Tính năng AI</h3>
             <p>Học tập thông minh với AI</p>

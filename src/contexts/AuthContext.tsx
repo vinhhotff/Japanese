@@ -156,27 +156,44 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = async () => {
     try {
-      // Try to sign out from Supabase with 5-second timeout
+      setLoading(true);
+
+      // Clear local state first
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setRole('student');
+      localStorage.removeItem('user_role');
+
+      // Force clear Supabase tokens from localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-') || key.includes('supabase')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      logger.log('Local session cleared');
+
+      // Try to sign out from Supabase with 3-second timeout
       await Promise.race([
         supabase.auth.signOut(),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Supabase signOut timeout')), 5000)
+          setTimeout(() => reject(new Error('Supabase signOut timeout')), 3000)
         )
       ]);
       logger.log('Successfully signed out from Supabase');
     } catch (error) {
-      // If Supabase signOut fails (timeout or network error), continue anyway
-      logger.warn('Supabase signOut failed, clearing local state:', error);
+      // If Supabase signOut fails (timeout or network error), it's okay
+      // We already cleared local state
+      logger.warn('Supabase signOut failed (continuing anyway):', error);
+    } finally {
+      // Add a small delay and reload to ensure clean state
+      setTimeout(() => {
+        setLoading(false);
+        // Optional: Force reload if routing doesn't clear everything
+        // window.location.href = '/'; 
+      }, 100);
     }
-
-    // Always clear local state regardless of Supabase response
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    setRole('student');
-    localStorage.removeItem('user_role');
-
-    logger.log('Local session cleared');
   };
 
   const value = {

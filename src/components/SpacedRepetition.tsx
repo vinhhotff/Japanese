@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getVocabularyByLevel } from '../services/supabaseService.v2';
 import { speakText } from '../utils/speech';
 import type { Language } from '../services/supabaseService.v2';
-import { JapanFlag, ChinaFlag, VolumeIcon, CheckIcon, XIcon, CelebrationIcon } from './icons/Icons';
+import { VolumeIcon, CheckIcon, XIcon, CelebrationIcon } from './icons/Icons';
 import '../App.css';
 import '../styles/spaced-repetition.css';
 
@@ -206,8 +206,7 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
 
         <div className="header">
           <h1>
-            <span className="title-text">Ôn Tập</span>
-            <span className="title-highlight">Spaced Repetition</span>
+            <span className="title-highlight">Ôn Tập Spaced Repetition</span>
           </h1>
           <p>Chọn ngôn ngữ bạn muốn ôn tập</p>
         </div>
@@ -216,8 +215,8 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
             onClick={() => navigate('/japanese/spaced-repetition')}
             className="feature-card feature-card-japanese"
           >
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
-              <JapanFlag size={64} />
+            <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: '800' }}>
+              JP
             </div>
             <h3>Tiếng Nhật (JLPT)</h3>
           </button>
@@ -225,8 +224,8 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
             onClick={() => navigate('/chinese/spaced-repetition')}
             className="feature-card feature-card-chinese"
           >
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
-              <ChinaFlag size={64} />
+            <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: '800' }}>
+              CN
             </div>
             <h3>Tiếng Trung (HSK)</h3>
           </button>
@@ -275,11 +274,8 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
 
         <div className="header">
           <h1>
-            <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-            <span className="title-text">Ôn Tập</span>
-            <span className="title-highlight">Spaced Repetition</span>
+
+            <span className="title-highlight">Ôn Tập Spaced Repetition</span>
           </h1>
           <p>Chọn cấp độ để bắt đầu ôn tập</p>
           <button className="back-button" onClick={() => navigate('/spaced-repetition')}>← Chọn ngôn ngữ khác</button>
@@ -416,12 +412,8 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
 
       <div className="header">
         <h1>
-          <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          <span className="title-text">Ôn Tập</span>
-          <span className="title-highlight">Spaced Repetition</span>
-          <span className="title-text">({selectedLevel})</span>
+
+          <span className="title-highlight">Ôn Tập Spaced Repetition</span>
         </h1>
         <p>Còn {reviewItems.length} từ cần ôn tập</p>
         <button
@@ -482,13 +474,21 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
                 className="srs-btn srs-btn-danger"
                 onClick={() => handleReview(0)} // 0 = Again
               >
-                <XIcon size={24} /> Không thuộc<br /><span style={{ fontSize: '0.9rem', opacity: 0.8 }}>(Ôn lại ngay)</span>
+                <div className="srs-btn-content">
+                  <XIcon size={24} />
+                  <span>Không thuộc</span>
+                </div>
+                <span className="srs-btn-subtitle">(Ôn lại ngay)</span>
               </button>
               <button
                 className="srs-btn srs-btn-success"
                 onClick={() => handleReview(5)} // 5 = Easy
               >
-                <CheckIcon size={24} /> Đã thuộc<br /><span style={{ fontSize: '0.9rem', opacity: 0.8 }}>(Qua từ tiếp)</span>
+                <div className="srs-btn-content">
+                  <CheckIcon size={24} />
+                  <span>Đã thuộc</span>
+                </div>
+                <span className="srs-btn-subtitle">(Qua từ tiếp)</span>
               </button>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getCourses, getLessons, PaginatedResponse } from '../services/supabaseService.v2';
 import { getProgressStats, getUserProgress } from '../services/progressService';
 import { useAuth } from '../contexts/AuthContext';
-import { getStudentClasses, joinClass, createClass } from '../services/classService';
+import { getStudentClasses, joinClass, createClass, getAllClasses } from '../services/classService';
 import '../styles/dashboard-v2.css';
 
 type Language = 'japanese' | 'chinese';
@@ -30,7 +30,7 @@ const groupCoursesByLevel = (courses: any[], levels: string[]) => {
 
 const DashboardNew = () => {
   const { t } = useTranslation();
-  const { user, loading: authLoading, isTeacher, isStudent } = useAuth();
+  const { user, loading: authLoading, isTeacher, isStudent, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('japanese');
@@ -66,6 +66,11 @@ const DashboardNew = () => {
     if (!authLoading) {
       loadData();
     }
+
+    // Cleanup function to reset loading ref when component unmounts
+    return () => {
+      isLoadingRef.current = false;
+    };
   }, [authLoading, user?.id]); // Re-run if auth completes or user changes (e.g. login/logout)
 
   const loadData = async () => {
@@ -74,6 +79,14 @@ const DashboardNew = () => {
       console.log('Skipping duplicate loadData call');
       return;
     }
+
+    // Don't load if we're on login/register page
+    if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+      console.log('Skipping loadData on auth pages');
+      setLoading(false);
+      return;
+    }
+
     isLoadingRef.current = true;
 
     let timeoutId: any;
@@ -82,14 +95,14 @@ const DashboardNew = () => {
       setError(null); // Clear any previous errors
       console.log('Starting loadData...');
 
-      // Timeout safety - 30 seconds should be enough for most cases
+      // Timeout safety - 15 seconds (reduced from 30)
       timeoutId = setTimeout(() => {
-        console.error('⏰ TIMEOUT! loadData took more than 30 seconds');
+        console.error('⏰ TIMEOUT! loadData took more than 15 seconds');
         console.error('Current loading state:', loading);
         setError('Không thể kết nối đến database. Vui lòng kiểm tra kết nối mạng.');
         setLoading(false);
         isLoadingRef.current = false; // Release lock
-      }, 30000); // Increased to 30 seconds
+      }, 15000); // Reduced to 15 seconds
 
       // 1. Load critical data (Courses) first
       let japaneseData: PaginatedResponse<any> = { data: [], total: 0, page: 1, pageSize: 100, totalPages: 0 };
@@ -141,17 +154,24 @@ const DashboardNew = () => {
       if (timeoutId) clearTimeout(timeoutId);
 
       // 2. Load Enrollments (Non-blocking)
+      // 2. Load Enrollments (Non-blocking)
       if (user) {
-        getStudentClasses(user.id).then((enrollments) => {
-          const authorizedLevels = new Set<string>();
-          enrollments.forEach((e: any) => {
-            if (e.classes?.language === selectedLanguage && e.classes?.level) {
-              authorizedLevels.add(e.classes.level);
-            }
-          });
-          setEnrolledLevels(authorizedLevels);
-          setMyClasses(enrollments.map((e: any) => e.classes).filter(Boolean));
-        }).catch(e => console.error("Error loading enrollments", e));
+        if (isAdmin) {
+          getAllClasses().then((classes) => {
+            setMyClasses(classes);
+          }).catch(e => console.error("Error loading all classes", e));
+        } else {
+          getStudentClasses(user.id).then((enrollments) => {
+            const authorizedLevels = new Set<string>();
+            enrollments.forEach((e: any) => {
+              if (e.classes?.language === selectedLanguage && e.classes?.level) {
+                authorizedLevels.add(e.classes.level);
+              }
+            });
+            setEnrolledLevels(authorizedLevels);
+            setMyClasses(enrollments.map((e: any) => e.classes).filter(Boolean));
+          }).catch(e => console.error("Error loading enrollments", e));
+        }
       }
 
       // 3. Load Progress (Heavy operation - Background)
@@ -480,6 +500,49 @@ const DashboardNew = () => {
 
           {/* Action Buttons based on Role */}
           <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+            {!isAdmin && (
+              <button
+                onClick={() => setShowEnrollModal(true)}
+                className="join-class-btn"
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.4)',
+                  padding: '0.8rem 1.5rem',
+                  borderRadius: '99px',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '4px', borderRadius: '50%' }}>🔑</div>
+                Nhập mã Code
+              </button>
+            )}
+            {isTeacher && (
+              <button
+                onClick={() => setShowCreateClassModal(true)}
+                className="create-class-btn"
+                style={{
+                  background: 'white',
+                  color: 'var(--primary-color)',
+                  padding: '0.8rem 1.5rem',
+                  borderRadius: '99px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                }}
+              >
+                <span>+</span> Tạo lớp học
+              </button>
+            )}
           </div>
         </div>
 
@@ -514,7 +577,7 @@ const DashboardNew = () => {
       {myClasses.length > 0 && (
         <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', marginBottom: '2rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
-            📝 Lớp học của tôi
+            {isAdmin ? '📋 Tất cả lớp học (Admin)' : '📝 Lớp học của tôi'}
           </h2>
           <div className="classes-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
             {myClasses.map((cls, idx) => (
@@ -565,7 +628,8 @@ const DashboardNew = () => {
         </div>
 
         <div className="levels-grid">
-          {currentCourses.length === 0 ? (
+
+          {((isAdmin || !user) ? currentCourses : currentCourses.filter(g => enrolledLevels.has(g.level))).length === 0 ? (
             <div style={{
               gridColumn: '1 / -1',
               textAlign: 'center',
@@ -576,19 +640,38 @@ const DashboardNew = () => {
             }}>
               <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📚</div>
               <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1e293b' }}>
-                Chưa có khóa học
+                {(isAdmin || !user) ? 'Chưa có dữ liệu khóa học' : 'Chưa đăng ký khóa học nào'}
               </h3>
               <p style={{ color: '#64748b' }}>
-                Hiện tại chưa có khóa học {selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'} nào.
+                {(isAdmin || !user)
+                  ? `Hiện tại chưa có khóa học ${selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'} nào.`
+                  : 'Vui lòng nhập mã code từ giáo viên để mở khóa nội dung học tập.'
+                }
               </p>
-              <p style={{ color: '#64748b', marginTop: '0.5rem' }}>
-                Debug: japaneseCourses={japaneseCourses.length}, chineseCourses={chineseCourses.length}
-              </p>
+              {user && !isAdmin && (
+                <button
+                  onClick={() => setShowEnrollModal(true)}
+                  style={{
+                    marginTop: '1.5rem',
+                    padding: '0.8rem 2rem',
+                    background: '#3b82f6',
+                    color: 'white',
+                    borderRadius: '99px',
+                    fontWeight: 'bold',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)'
+                  }}
+                >
+                  Nhập mã Code ngay
+                </button>
+              )}
             </div>
           ) : (
-            currentCourses.map((group, index) => {
+            ((isAdmin || !user) ? currentCourses : currentCourses.filter(g => enrolledLevels.has(g.level))).map((group, index) => {
               const info = levelInfo[group.level];
-              const isEnrolled = enrolledLevels.has(group.level) || isTeacher;
+              // Homepage shows all courses - no enrollment needed
+              const isEnrolled = true;
 
               return (
                 <div
@@ -599,14 +682,16 @@ const DashboardNew = () => {
                     '--delay': `${index * 0.1}s`,
                     cursor: 'pointer'
                   } as React.CSSProperties}
-                  onClick={(e) => {
-                    // Prevent navigation if not enrolled, open modal instead
-                    if (!isEnrolled) {
-                      e.preventDefault();
-                      setShowEnrollModal(true);
-                    } else {
-                      navigate(`/${selectedLanguage}/courses/${group.level}`);
+                  onClick={() => {
+                    // Check if guest
+                    if (!user) {
+                      if (window.confirm('Vui lòng đăng nhập để tham gia khóa học!')) {
+                        navigate('/login');
+                      }
+                      return;
                     }
+                    // Direct navigation - all courses accessible from homepage
+                    navigate(`/${selectedLanguage}/courses/${group.level}`);
                   }}
                 >
                   <div className="card-header">
@@ -638,13 +723,11 @@ const DashboardNew = () => {
                   </div>
 
                   <div className="card-footer">
-                    <span className="start-btn" style={!isEnrolled ? { filter: 'grayscale(1)', opacity: 0.8 } : {}}>
-                      {isEnrolled ? 'Bắt đầu học' : '🔒 Tham gia lớp'}
-                      {isEnrolled && (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="9 18 15 12 9 6" />
-                        </svg>
-                      )}
+                    <span className="start-btn">
+                      Bắt đầu học
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
                     </span>
                   </div>
                 </div>

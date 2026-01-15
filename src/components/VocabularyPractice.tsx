@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { speakText, getAvailableVoices } from '../utils/speech';
 import { getVocabularyByLevel } from '../services/supabaseService.v2';
 import '../App.css';
+import '../styles/spaced-repetition.css';
 
 type Language = 'japanese' | 'chinese';
 
@@ -431,13 +432,38 @@ const VocabularyPractice = ({ language: propLanguage }: VocabularyPracticeProps)
 
   if (!started) {
     return (
-      <div className="container">
+      <div className="container" data-language="both">
+        {/* Floating Characters Background */}
+        <div className="floating-characters">
+          <span className="float-char jp-char char-1">あ</span>
+          <span className="float-char jp-char char-2">か</span>
+          <span className="float-char jp-char char-3">さ</span>
+          <span className="float-char jp-char char-4">た</span>
+          <span className="float-char jp-char char-5">な</span>
+          <span className="float-char jp-char char-6">は</span>
+          <span className="float-char jp-char char-7">ま</span>
+          <span className="float-char jp-char char-8">や</span>
+          <span className="float-char jp-char char-9">ら</span>
+          <span className="float-char jp-char char-10">わ</span>
+          <span className="float-char jp-char char-11">学</span>
+          <span className="float-char jp-char char-12">日</span>
+          <span className="float-char cn-char char-1">你</span>
+          <span className="float-char cn-char char-2">好</span>
+          <span className="float-char cn-char char-3">学</span>
+          <span className="float-char cn-char char-4">习</span>
+          <span className="float-char cn-char char-5">中</span>
+          <span className="float-char cn-char char-6">文</span>
+          <span className="float-char cn-char char-7">汉</span>
+          <span className="float-char cn-char char-8">字</span>
+          <span className="float-char cn-char char-9">语</span>
+          <span className="float-char cn-char char-10">言</span>
+          <span className="float-char cn-char char-11">书</span>
+          <span className="float-char cn-char char-12">写</span>
+        </div>
+
         <div className="header">
           <h1>
-            <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            Luyện Từ Vựng
+            <span className="title-highlight">Luyện Từ Vựng</span>
           </h1>
           <p>Chọn ngôn ngữ và nhập danh sách từ vựng để luyện tập</p>
         </div>

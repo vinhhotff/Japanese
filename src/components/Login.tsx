@@ -46,7 +46,7 @@ const Login = () => {
       // Redirect based on role
       switch (role) {
         case 'admin':
-          navigate('/admin');
+          navigate('/');
           break;
         case 'teacher':
           navigate('/teacher-dashboard'); // Assuming this route exists or will exist

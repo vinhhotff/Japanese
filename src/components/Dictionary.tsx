@@ -11,6 +11,7 @@ import type { Language } from '../services/supabaseService.v2';
 import FloatingCharacters from './FloatingCharacters';
 import DictionaryResult from './DictionaryResult';
 import '../App.css';
+import '../styles/spaced-repetition.css';
 
 interface DictionaryProps {
   language: Language;
@@ -176,15 +177,16 @@ const Dictionary = ({ language }: DictionaryProps) => {
   }, [handleSaveWord]);
 
   return (
-    <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+    <div className="container" data-language={language} style={{ position: 'relative', zIndex: 1 }}>
       <FloatingCharacters language={language} count={18} />
 
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.75rem' }}>
-          🔍 Từ điển {language === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}
+      <div className="header">
+        <h1>
+        
+          <span className="title-highlight">Từ điển {language === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}</span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
+        <p>
           {language === 'japanese' 
             ? 'Tra từ vựng và kanji từ Jisho.org'
             : 'Tra từ vựng và hán tự tiếng Trung'}

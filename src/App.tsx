@@ -21,6 +21,7 @@ import Register from './components/Register';
 import TeacherDashboard from './components/TeacherDashboard';
 import AdminPanel from './components/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
 import AIConversation from './components/AIConversation';
 import VoiceRecorder from './components/VoiceRecorder';
 import AIRoleplayCSSOnly from './components/AIRoleplayCSSOnly';
@@ -86,8 +87,22 @@ function App() {
 
                   <Route path="/admin/grading/:submissionId" element={<GradingInterface />} />
 
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+                  <Route
+                    path="/login"
+                    element={
+                      <PublicRoute>
+                        <Login />
+                      </PublicRoute>
+                    }
+                  />
+                  <Route
+                    path="/register"
+                    element={
+                      <PublicRoute>
+                        <Register />
+                      </PublicRoute>
+                    }
+                  />
                   <Route
                     path="/admin"
                     element={
@@ -112,7 +127,7 @@ function App() {
                   <Route path="/dictionary" element={<AllDictionary />} />
                   <Route path="/saved-words" element={<SavedWords language="japanese" />} />
                   <Route path="/vocabulary-practice" element={<VocabularyPractice language="japanese" />} />
-                  <Route path="/kanji-writing" element={<KanjiWritingPractice language="japanese" />} />
+                  <Route path="/kanji-writing" element={<KanjiWritingPractice />} />
                   <Route path="/spaced-repetition" element={<SpacedRepetition />} />
                 </Routes>
               </Layout>

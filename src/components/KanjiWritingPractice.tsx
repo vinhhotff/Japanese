@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { getKanji } from '../services/supabaseService.v2';
-import type { Language } from '../services/supabaseService.v2';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../config/supabase';
+import { getLessons, type Language } from '../services/supabaseService.v2';
+import { JapanFlag, ChinaFlag } from './icons/Icons';
 import '../App.css';
+import '../styles/spaced-repetition.css';
 
 interface KanjiItem {
   id: string;
@@ -14,35 +17,92 @@ interface KanjiItem {
   simplified?: string;
   traditional?: string;
   strokeCount?: number;
+  level?: string;
 }
 
 interface KanjiWritingPracticeProps {
-  language: Language;
+  language?: Language;
 }
 
 const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
+  const navigate = useNavigate();
   const [kanjiList, setKanjiList] = useState<KanjiItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [practiceMode, setPracticeMode] = useState<'stroke' | 'meaning' | 'reading'>('meaning');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [validationResult, setValidationResult] = useState<'correct' | 'incorrect' | null>(null);
+  const [score, setScore] = useState(0);
+
+  // Helper wrapper for timeout
+  const withTimeout = <T,>(promise: Promise<T> | PromiseLike<T>, ms = 5000): Promise<T> => {
+    const timeoutPromise = new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out after 5 seconds')), ms)
+    );
+    return Promise.race([Promise.resolve(promise), timeoutPromise]);
+  };
 
   useEffect(() => {
-    loadKanji();
-  }, [language]);
+    if (selectedLevel && language) {
+      loadKanji(selectedLevel);
+    }
+  }, [language, selectedLevel]);
 
-  const loadKanji = async () => {
+  const loadKanji = async (level: string) => {
+    console.log('Starting loadKanji for level:', level);
+    console.log('Language:', language);
     try {
       setLoading(true);
       setError(null);
-      const result = await getKanji(undefined, language, 1, 1000);
-      const allKanji = result.data;
-      
+
+      // 1. Get lessons for this level
+      console.log('Fetching lessons for level:', level);
+      console.time('getLessons');
+
+      const lessonsResponse = await getLessons(undefined, language, level as any, 1, 100);
+      console.timeEnd('getLessons');
+
+      const lessons = lessonsResponse.data;
+      console.log('Lessons response:', {
+        found: lessons?.length,
+        total: lessonsResponse.total,
+        page: lessonsResponse.page
+      });
+
+      if (!lessons || lessons.length === 0) {
+        setError(`Không có bài học nào cho cấp độ ${level}. Vui lòng thêm bài học trong Admin Panel.`);
+        setLoading(false);
+        return;
+      }
+
+      const lessonIds = lessons.map(l => l.id);
+      console.log('Lesson IDs:', lessonIds);
+
+      // 2. Get kanji for these lessons
+      console.log('Fetching kanji for', lessonIds.length, 'lessons');
+      console.time('getKanji');
+
+      const { data: allKanji, error: queryError } = await supabase
+        .from('kanji')
+        .select('*')
+        .in('lesson_id', lessonIds)
+        .order('created_at', { ascending: true });
+
+      console.timeEnd('getKanji');
+
+      if (queryError) {
+        console.error('Kanji query error:', queryError);
+        throw queryError;
+      }
+
+      console.log('Kanji found:', allKanji?.length);
+
       if (!allKanji || allKanji.length === 0) {
-        setError(`Không có ${language === 'japanese' ? 'kanji' : 'hán tự'} nào. Vui lòng thêm trong Admin Panel.`);
+        setError(`Không có ${language === 'japanese' ? 'kanji' : 'hán tự'} nào cho cấp độ ${level}. Vui lòng thêm trong Admin Panel.`);
         setLoading(false);
         return;
       }
@@ -58,7 +118,8 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
         radical: k.radical || undefined,
         simplified: k.simplified || undefined,
         traditional: k.traditional || undefined,
-        strokeCount: k.stroke_count || undefined
+        strokeCount: k.stroke_count || undefined,
+        level: k.level || level
       })).filter((k: KanjiItem) => k.character && k.meaning);
 
       if (mappedKanji.length === 0) {
@@ -83,6 +144,8 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
     if (currentIndex < kanjiList.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setShowAnswer(false);
+      setValidationResult(null);
+      setScore(0);
       clearCanvas();
     }
   };
@@ -91,6 +154,8 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
       setShowAnswer(false);
+      setValidationResult(null);
+      setScore(0);
       clearCanvas();
     }
   };
@@ -102,6 +167,8 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
+      setValidationResult(null);
+      setScore(0);
     }
   };
 
@@ -109,7 +176,7 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    
+
     if ('touches' in e) {
       return {
         x: e.touches[0].clientX - rect.left,
@@ -157,24 +224,295 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
     setIsDrawing(false);
   };
 
+  const getBoundingBox = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    const data = ctx.getImageData(0, 0, width, height).data;
+    let minX = width, minY = height, maxX = 0, maxY = 0;
+    let found = false;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const alpha = data[(y * width + x) * 4 + 3];
+        if (alpha > 20) { // Threshold for "drawn"
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+          found = true;
+        }
+      }
+    }
+
+    return found ? { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 } : null;
+  };
+
+  const checkWriting = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !currentKanji) return;
+
+    // 1. Get User Drawing
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+
+    const userBox = getBoundingBox(ctx, canvas.width, canvas.height);
+    if (!userBox) {
+      alert("Bạn chưa viết gì cả!");
+      return;
+    }
+
+    // 2. Normalize User Input (Resize to 100x100)
+    const normalizedSize = 100;
+    const userCanvas = document.createElement('canvas');
+    userCanvas.width = normalizedSize;
+    userCanvas.height = normalizedSize;
+    const userCtx = userCanvas.getContext('2d');
+    if (!userCtx) return;
+
+    // Draw trimmed user image scaled to 100x100
+    userCtx.drawImage(
+      canvas,
+      userBox.x, userBox.y, userBox.w, userBox.h,
+      0, 0, normalizedSize, normalizedSize
+    );
+    const updatedUserData = userCtx.getImageData(0, 0, normalizedSize, normalizedSize).data;
+
+    // 3. Generate Reference (Correct Kanji)
+    const refCanvas = document.createElement('canvas');
+    refCanvas.width = canvas.width;
+    refCanvas.height = canvas.height;
+    const refCtx = refCanvas.getContext('2d');
+    if (!refCtx) return;
+
+    // Draw centered text
+    refCtx.font = `bold ${canvas.width * 0.8}px "Noto Sans JP", sans-serif`;
+    refCtx.fillStyle = 'black';
+    refCtx.textAlign = 'center';
+    refCtx.textBaseline = 'middle';
+    refCtx.fillText(currentKanji.character, canvas.width / 2, canvas.height / 2);
+
+    const refBox = getBoundingBox(refCtx, canvas.width, canvas.height);
+    if (!refBox) return; // Should not happen
+
+    // Normalize Reference (Resize to 100x100)
+    const normRefCanvas = document.createElement('canvas');
+    normRefCanvas.width = normalizedSize;
+    normRefCanvas.height = normalizedSize;
+    const normRefCtx = normRefCanvas.getContext('2d');
+    if (!normRefCtx) return;
+
+    normRefCtx.drawImage(
+      refCanvas,
+      refBox.x, refBox.y, refBox.w, refBox.h,
+      0, 0, normalizedSize, normalizedSize
+    );
+    const updatedRefData = normRefCtx.getImageData(0, 0, normalizedSize, normalizedSize).data;
+
+    // 4. Compare Pixel by Pixel
+    let intersection = 0; // Both filled
+    let union = 0;        // Either filled
+    let targetArea = 0;   // Reference filled
+
+    for (let i = 0; i < updatedUserData.length; i += 4) {
+      const userAlpha = updatedUserData[i + 3];
+      const refAlpha = updatedRefData[i + 3];
+
+      const userFilled = userAlpha > 50; // Threshold
+      const refFilled = refAlpha > 50;
+
+      if (userFilled || refFilled) {
+        union++;
+      }
+      if (userFilled && refFilled) {
+        intersection++;
+      }
+      if (refFilled) {
+        targetArea++;
+      }
+    }
+
+    // 5. Calculate Score
+    // IoU is strict. Precision/Recall combination is better for handwriting.
+    // Precision: How much of user's ink is correct?
+    // Recall: How much of the character did they write?
+    const precision = intersection / (union - (targetArea - intersection) + 1); // Approx User Area in denom
+
+    // Simplification:
+    // Let's use specific overlap.
+    // We want generous matching.
+
+    const overlapScore = (intersection / targetArea) * 100; // Coverage
+    const accuracyScore = (intersection / union) * 100; // Loosely IoU
+
+    // Combo score
+    const finalScore = Math.round((overlapScore * 0.6) + (accuracyScore * 0.4));
+
+    // Debug
+    console.log('Validation:', { intersection, union, targetArea, overlapScore, accuracyScore, finalScore });
+
+    setScore(finalScore);
+    if (finalScore >= 50) { // Tolerant threshold
+      setValidationResult('correct');
+    } else {
+      setValidationResult('incorrect');
+    }
+  };
+
   if (loading) {
     return (
-      <div className="container">
-        <div className="loading">Đang tải kanji...</div>
+      <div className="container" data-language={language}>
+        <div className="loading">Đang tải {language === 'japanese' ? 'kanji' : 'hán tự'}...</div>
+      </div>
+    );
+  }
+
+  // Language selection screen
+  if (!language) {
+    return (
+      <div className="container" data-language="both">
+        {/* Floating Characters Background */}
+        <div className="floating-characters">
+          <span className="float-char jp-char char-1">あ</span>
+          <span className="float-char jp-char char-2">か</span>
+          <span className="float-char jp-char char-3">さ</span>
+          <span className="float-char jp-char char-4">た</span>
+          <span className="float-char jp-char char-5">な</span>
+          <span className="float-char jp-char char-6">は</span>
+          <span className="float-char jp-char char-7">ま</span>
+          <span className="float-char jp-char char-8">や</span>
+          <span className="float-char jp-char char-9">ら</span>
+          <span className="float-char jp-char char-10">わ</span>
+          <span className="float-char jp-char char-11">学</span>
+          <span className="float-char jp-char char-12">日</span>
+          <span className="float-char cn-char char-1">你</span>
+          <span className="float-char cn-char char-2">好</span>
+          <span className="float-char cn-char char-3">学</span>
+          <span className="float-char cn-char char-4">习</span>
+          <span className="float-char cn-char char-5">中</span>
+          <span className="float-char cn-char char-6">文</span>
+          <span className="float-char cn-char char-7">汉</span>
+          <span className="float-char cn-char char-8">字</span>
+          <span className="float-char cn-char char-9">语</span>
+          <span className="float-char cn-char char-10">言</span>
+          <span className="float-char cn-char char-11">书</span>
+          <span className="float-char cn-char char-12">写</span>
+        </div>
+
+        <div className="header">
+          <h1>
+
+            <span className="title-highlight">Kanji & Hán Tự</span>
+          </h1>
+          <p>Chọn ngôn ngữ bạn muốn luyện viết</p>
+        </div>
+        <div className="lang-selection">
+          <button
+            onClick={() => navigate('/japanese/kanji-writing')}
+            className="feature-card feature-card-japanese"
+          >
+            <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: '800' }}>
+              JP
+            </div>
+
+            <h3>Luyện Viết Kanji (JLPT)</h3>
+          </button>
+          <button
+            onClick={() => navigate('/chinese/hanzi-writing')}
+            className="feature-card feature-card-chinese"
+          >
+            <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: '800' }}>
+              CN
+            </div>
+            <h3>Luyện Viết Hán Tự (HSK)</h3>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Level selection screen
+  if (!selectedLevel) {
+    return (
+      <div className="container" data-language={language}>
+        {/* Floating Characters for selected language */}
+        <div className="floating-characters">
+          {language === 'japanese' ? (
+            <>
+              <span className="float-char jp-char char-1">あ</span>
+              <span className="float-char jp-char char-2">か</span>
+              <span className="float-char jp-char char-3">さ</span>
+              <span className="float-char jp-char char-4">た</span>
+              <span className="float-char jp-char char-5">な</span>
+              <span className="float-char jp-char char-6">は</span>
+              <span className="float-char jp-char char-7">ま</span>
+              <span className="float-char jp-char char-8">や</span>
+              <span className="float-char jp-char char-9">ら</span>
+              <span className="float-char jp-char char-10">わ</span>
+              <span className="float-char jp-char char-11">学</span>
+              <span className="float-char jp-char char-12">日</span>
+            </>
+          ) : (
+            <>
+              <span className="float-char cn-char char-1">你</span>
+              <span className="float-char cn-char char-2">好</span>
+              <span className="float-char cn-char char-3">学</span>
+              <span className="float-char cn-char char-4">习</span>
+              <span className="float-char cn-char char-5">中</span>
+              <span className="float-char cn-char char-6">文</span>
+              <span className="float-char cn-char char-7">汉</span>
+              <span className="float-char cn-char char-8">字</span>
+              <span className="float-char cn-char char-9">语</span>
+              <span className="float-char cn-char char-10">言</span>
+              <span className="float-char cn-char char-11">书</span>
+              <span className="float-char cn-char char-12">写</span>
+            </>
+          )}
+        </div>
+
+        <div className="header">
+          <h1>
+            <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            <span className="title-text">Luyện Viết</span>
+            <span className="title-highlight">{language === 'japanese' ? 'Kanji' : 'Hán Tự'}</span>
+          </h1>
+          <p>Chọn cấp độ để bắt đầu luyện viết</p>
+          <button className="back-button" onClick={() => navigate('/kanji-writing')}>← Chọn ngôn ngữ khác</button>
+        </div>
+
+        <div className="level-grid">
+          {(language === 'japanese'
+            ? ['N5', 'N4', 'N3', 'N2', 'N1']
+            : ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6']
+          ).map(lvl => (
+            <button
+              key={lvl}
+              className="btn-level"
+              onClick={() => setSelectedLevel(lvl)}
+            >
+              {lvl}
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container">
+      <div className="container" data-language={language}>
         <div className="header">
-          <h1>Luyện Viết Kanji</h1>
+          <h1>
+            <span className="title-text">Luyện Viết</span>
+            <span className="title-highlight">{language === 'japanese' ? 'Kanji' : 'Hán Tự'}</span>
+          </h1>
         </div>
         <div className="error-message" style={{ padding: '2rem', textAlign: 'center' }}>
           <p>{error}</p>
-          <button className="btn btn-primary" onClick={loadKanji} style={{ marginTop: '1rem' }}>
+          <button className="btn btn-primary" onClick={() => loadKanji(selectedLevel!)} style={{ marginTop: '1rem' }}>
             Thử lại
+          </button>
+          <button className="btn btn-secondary" onClick={() => setSelectedLevel(null)} style={{ marginTop: '1rem', marginLeft: '1rem' }}>
+            Chọn cấp độ khác
           </button>
         </div>
       </div>
@@ -183,13 +521,16 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
 
   if (kanjiList.length === 0) {
     return (
-      <div className="container">
+      <div className="container" data-language={language}>
         <div className="header">
-          <h1>Luyện Viết Kanji</h1>
+          <h1>
+            <span className="title-text">Luyện Viết</span>
+            <span className="title-highlight">{language === 'japanese' ? 'Kanji' : 'Hán Tự'}</span>
+          </h1>
         </div>
         <div className="empty-state">
-          <p>Không có kanji để luyện tập</p>
-          <button className="btn btn-primary" onClick={loadKanji} style={{ marginTop: '1rem' }}>
+          <p>Không có {language === 'japanese' ? 'kanji' : 'hán tự'} để luyện tập</p>
+          <button className="btn btn-primary" onClick={() => loadKanji(selectedLevel!)} style={{ marginTop: '1rem' }}>
             Tải lại
           </button>
         </div>
@@ -199,22 +540,27 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
 
   if (!currentKanji) {
     return (
-      <div className="container">
+      <div className="container" data-language={language}>
         <div className="loading">Đang tải...</div>
       </div>
     );
   }
 
   return (
-    <div className="container">
+    <div className="container" data-language={language}>
       <div className="header">
         <h1>
-          <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-          Luyện Viết {language === 'japanese' ? 'Kanji' : 'Hán tự'}
+
+          <span className="title-highlight">Luyện Viết {language === 'japanese' ? 'Kanji' : 'Hán Tự'}</span>
+          <span className="title-text">({selectedLevel})</span>
         </h1>
         <p>Luyện tập viết và nhớ {language === 'japanese' ? 'kanji' : 'hán tự'}</p>
+        <button
+          onClick={() => setSelectedLevel(null)}
+          className="back-button"
+        >
+          ← Chọn cấp độ khác
+        </button>
       </div>
 
       <div className="kanji-practice-mode">
@@ -275,14 +621,14 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
                         <strong>Kunyomi (訓読み):</strong> {currentKanji.kunyomi.join(', ')}
                       </div>
                     )}
-                    {(!currentKanji.onyomi || currentKanji.onyomi.length === 0) && 
-                     (!currentKanji.kunyomi || currentKanji.kunyomi.length === 0) && (
-                      <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
-                        <strong>Nghĩa:</strong> {currentKanji.meaning}
-                        <br />
-                        <span style={{ fontSize: '0.875rem' }}>(Chưa có thông tin đọc âm)</span>
-                      </div>
-                    )}
+                    {(!currentKanji.onyomi || currentKanji.onyomi.length === 0) &&
+                      (!currentKanji.kunyomi || currentKanji.kunyomi.length === 0) && (
+                        <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                          <strong>Nghĩa:</strong> {currentKanji.meaning}
+                          <br />
+                          <span style={{ fontSize: '0.875rem' }}>(Chưa có thông tin đọc âm)</span>
+                        </div>
+                      )}
                   </>
                 ) : (
                   <>
@@ -328,22 +674,94 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
               )}
             </div>
             <div className="kanji-writing-area">
-              <canvas
-                ref={canvasRef}
-                width={300}
-                height={300}
-                className="kanji-canvas"
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-              />
-              <button className="btn btn-secondary" onClick={clearCanvas}>
-                Xóa
-              </button>
+              <div
+                style={{
+                  position: 'relative',
+                  width: '300px',
+                  height: '300px',
+                  border: validationResult === 'correct' ? '4px solid #10b981' : validationResult === 'incorrect' ? '4px solid #ef4444' : '4px solid #e5e7eb',
+                  borderRadius: '16px',
+                  transition: 'border-color 0.3s'
+                }}
+              >
+                <canvas
+                  ref={canvasRef}
+                  width={300}
+                  height={300}
+                  className="kanji-canvas"
+                  style={{ borderRadius: '12px' }}
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
+                />
+
+                {/* Result Overlay */}
+                {validationResult && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    pointerEvents: 'none',
+                    animation: 'scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                  }}>
+                    {validationResult === 'correct' ? (
+                      <div style={{
+                        background: 'rgba(16, 185, 129, 0.9)',
+                        color: 'white',
+                        padding: '1rem 2rem',
+                        borderRadius: '99px',
+                        fontWeight: 'bold',
+                        fontSize: '1.5rem',
+                        boxShadow: '0 10px 25px rgba(16, 185, 129, 0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}>
+                        <span>🎉</span> Chính xác ({score}%)
+                      </div>
+                    ) : (
+                      <div style={{
+                        background: 'rgba(239, 68, 68, 0.9)',
+                        color: 'white',
+                        padding: '1rem 2rem',
+                        borderRadius: '99px',
+                        fontWeight: 'bold',
+                        fontSize: '1.5rem',
+                        boxShadow: '0 10px 25px rgba(239, 68, 68, 0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}>
+                        <span>❌</span> Sai rồi ({score}%)
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    clearCanvas();
+                    setValidationResult(null);
+                  }}
+                >
+                  Xóa
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={checkWriting}
+                  style={{ minWidth: '120px' }}
+                >
+                  Kiểm tra
+                </button>
+              </div>
             </div>
           </div>
         )}

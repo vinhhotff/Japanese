@@ -69,16 +69,16 @@ export const UsersIcon: React.FC<IconProps> = ({ size = 24, color = 'currentColo
   </svg>
 );
 
-// AI & Tech Icons
-export const RobotIcon: React.FC<IconProps> = ({ size = 24, color = 'currentColor', className }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="3" y="11" width="18" height="10" rx="2" />
-    <circle cx="12" cy="5" r="2" />
-    <path d="M12 7v4" />
-    <line x1="8" y1="16" x2="8" y2="16" />
-    <line x1="16" y1="16" x2="16" y2="16" />
-  </svg>
-);
+// // AI & Tech Icons
+// export const RobotIcon: React.FC<IconProps> = ({ size = 24, color = 'currentColor', className }) => (
+//   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+//     <rect x="3" y="11" width="18" height="10" rx="2" />
+//     <circle cx="12" cy="5" r="2" />
+//     <path d="M12 7v4" />
+//     <line x1="8" y1="16" x2="8" y2="16" />
+//     <line x1="16" y1="16" x2="16" y2="16" />
+//   </svg>
+// );
 
 export const MessageIcon: React.FC<IconProps> = ({ size = 24, color = 'currentColor', className }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -195,7 +195,6 @@ export default {
   GraduationIcon,
   SchoolIcon,
   UsersIcon,
-  RobotIcon,
   MessageIcon,
   TheaterIcon,
   CheckIcon,

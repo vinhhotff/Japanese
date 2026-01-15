@@ -23,7 +23,8 @@ const AIConversation = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState<ConversationScenario | null>(null);
-  const [showTranslation, setShowTranslation] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(false); // Global toggle
+  const [suggestionStates, setSuggestionStates] = useState<Record<string, boolean>>({}); // Individual toggle
   const [showContinueDialog, setShowContinueDialog] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [savedConversation, setSavedConversation] = useState<{
@@ -39,7 +40,7 @@ const AIConversation = () => {
       description: 'Luyện giao tiếp khi đi ăn nhà hàng',
       level: 'N5-N4',
       icon: '🍜',
-      systemPrompt: 'Bạn là nhân viên nhà hàng Nhật. QUAN TRỌNG:\n- CHỈ trả lời bằng tiếng Nhật N5-N4\n- KHÔNG suy nghĩ, KHÔNG dùng <think>\n- BẮT BUỘC phải có dịch tiếng Việt\n- Format: [Câu tiếng Nhật]\n(Dịch tiếng Việt)\n- Ví dụ: いらっしゃいませ！\n(Xin chào!)'
+      systemPrompt: 'Bạn là nhân viên nhà hàng Nhật. QUAN TRỌNG:\n- Trả lời bằng tiếng Nhật N5-N4\n- Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý tiếng Nhật 1] (Dịch)\n2. [Gợi ý tiếng Nhật 2] (Dịch)\n3. [Gợi ý tiếng Nhật 3] (Dịch)\n\nVí dụ:\n[JP] いらっしゃいませ！何名様ですか？\n[VI] Xin chào! Quý khách đi mấy người ạ?\n[OP]\n1. ひとりです (Tôi đi một mình)\n2. 二人です (Tôi đi 2 người)\n3. 予約しています (Tôi đã đặt bàn)'
     },
     {
       id: 'shopping',
@@ -47,7 +48,7 @@ const AIConversation = () => {
       description: 'Hỏi giá, thử đồ, thanh toán',
       level: 'N5-N4',
       icon: '🛍️',
-      systemPrompt: 'Bạn là nhân viên cửa hàng quần áo Nhật Bản nhiệt tình. QUAN TRỌNG:\n- TUYỆT ĐỐI KHÔNG dùng <think>, KHÔNG suy nghĩ, KHÔNG giải thích\n- CHỈ trả lời TRỰC TIẾP bằng tiếng Nhật N5-N4\n- BẮT BUỘC phải có dịch tiếng Việt trong ngoặc đơn\n- Format: [Câu tiếng Nhật]\n(Dịch tiếng Việt)\n\nSau đó đưa ra 3 gợi ý trả lời:\nOPTIONS:\n1. [Câu dễ] (Dịch)\n2. [Câu trung bình] (Dịch)\n3. [Câu khó] (Dịch)\n\nVí dụ:\nいらっしゃいませ！何かお探しですか？\n(Xin chào! Bạn đang tìm gì ạ?)\n\nOPTIONS:\n1. [はい、シャツを探しています。] (Vâng, tôi đang tìm áo sơ mi.)\n2. [このセーター、試着できますか？] (Cái áo len này, tôi có thể thử được không?)\n3. [このデザイン、オリジナルですか？] (Thiết kế này có phải là độc quyền không?)'
+      systemPrompt: 'Bạn là nhân viên cửa hàng. Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)'
     },
     {
       id: 'hotel',
@@ -55,7 +56,7 @@ const AIConversation = () => {
       description: 'Check-in, yêu cầu dịch vụ',
       level: 'N4-N3',
       icon: '🏨',
-      systemPrompt: 'Bạn là lễ tân khách sạn Nhật. QUAN TRỌNG:\n- CHỈ trả lời bằng tiếng Nhật N4-N3\n- KHÔNG suy nghĩ, KHÔNG dùng <think>\n- BẮT BUỘC phải có dịch tiếng Việt\n- Format: [Câu tiếng Nhật]\n(Dịch tiếng Việt)\n- Ví dụ: チェックインでしょうか？\n(Quý khách check-in phải không ạ?)'
+      systemPrompt: 'Bạn là lễ tân khách sạn. Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)'
     },
     {
       id: 'friend',
@@ -63,7 +64,7 @@ const AIConversation = () => {
       description: 'Trò chuyện thân mật với bạn',
       level: 'N5-N3',
       icon: '👥',
-      systemPrompt: 'Bạn là bạn thân người Nhật. QUAN TRỌNG:\n- CHỈ trả lời bằng tiếng Nhật N5-N3\n- KHÔNG suy nghĩ, KHÔNG dùng <think>\n- BẮT BUỘC phải có dịch tiếng Việt\n- Format: [Câu tiếng Nhật]\n(Dịch tiếng Việt)\n- Ví dụ: やあ！元気？\n(Chào bạn! Khỏe không?)'
+      systemPrompt: 'Bạn là bạn thân người Nhật. Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)'
     },
     {
       id: 'interview',
@@ -71,7 +72,7 @@ const AIConversation = () => {
       description: 'Phỏng vấn xin việc',
       level: 'N3-N2',
       icon: '💼',
-      systemPrompt: 'Bạn là nhà tuyển dụng công ty Nhật. QUAN TRỌNG:\n- CHỈ trả lời bằng tiếng Nhật N3-N2\n- KHÔNG suy nghĩ, KHÔNG dùng <think>\n- BẮT BUỘC phải có dịch tiếng Việt\n- Format: [Câu tiếng Nhật]\n(Dịch tiếng Việt)\n- Ví dụ: 自己紹介をお願いします。\n(Xin hãy tự giới thiệu.)'
+      systemPrompt: 'Bạn là nhà tuyển dụng. Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)'
     },
     {
       id: 'doctor',
@@ -79,7 +80,7 @@ const AIConversation = () => {
       description: 'Khám bệnh, mô tả triệu chứng',
       level: 'N4-N3',
       icon: '⚕️',
-      systemPrompt: 'Bạn là bác sĩ phòng khám Nhật. QUAN TRỌNG:\n- CHỈ trả lời bằng tiếng Nhật N4-N3\n- KHÔNG suy nghĩ, KHÔNG dùng <think>\n- BẮT BUỘC phải có dịch tiếng Việt\n- Format: [Câu tiếng Nhật]\n(Dịch tiếng Việt)\n- Ví dụ: どうされましたか？\n(Bạn thấy không khỏe chỗ nào?)'
+      systemPrompt: 'Bạn là bác sĩ. Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)'
     }
   ];
 
@@ -143,6 +144,7 @@ const AIConversation = () => {
     setShowContinueDialog(false);
     setMessages([]);
     setSelectedScenario(null);
+    setSuggestionStates({});
   };
 
   const resetConversation = () => {
@@ -150,23 +152,24 @@ const AIConversation = () => {
     setMessages([]);
     setSelectedScenario(null);
     setSavedConversation(null);
+    setSuggestionStates({});
   };
 
   const startConversation = (scenario: ConversationScenario) => {
     setSelectedScenario(scenario);
     const greetings: Record<string, string> = {
-      restaurant: 'いらっしゃいませ！何名様ですか？\n(Xin chào! Quý khách mấy người ạ?)',
-      shopping: 'いらっしゃいませ！何かお探しですか？\n(Xin chào! Quý khách đang tìm gì ạ?)',
-      hotel: 'チェックインでしょうか？\n(Quý khách check-in phải không ạ?)',
-      friend: 'やあ！元気？最近どう？\n(Chào bạn! Khỏe không? Dạo này thế nào?)',
-      interview: 'こんにちは。本日はお越しいただきありがとうございます。\n(Xin chào. Cảm ơn bạn đã đến hôm nay.)',
-      doctor: 'こんにちは。今日はどうされましたか？\n(Xin chào. Hôm nay bạn thấy không khỏe chỗ nào?)'
+      restaurant: '[JP] いらっしゃいませ！何名様ですか？\n[VI] Xin chào! Quý khách đi mấy người ạ?\n[OP]\n1. ひとりです (Tôi đi một mình)\n2. 二人です (Tôi đi 2 người)\n3. 予約しています (Tôi đã đặt bàn)',
+      shopping: '[JP] いらっしゃいませ！何かお探しですか？\n[VI] Xin chào! Quý khách đang tìm gì ạ?\n[OP]\n1. 見ているだけです (Tôi chỉ xem thôi)\n2. Tシャツを探しています (Tôi tìm áo phông)\n3. 試着してもいいですか (Tôi thử đồ được không)',
+      hotel: '[JP] いらっしゃいませ。チェックインでしょうか？\n[VI] Xin chào. Quý khách check-in phải không ạ?\n[OP]\n1. はい、チェックインお願いします (Vâng, cho tôi check-in)\n2. 予約しています (Tôi đã đặt phòng)\n3. 荷物を預かってもらえますか (Giữ hành lý giúp tôi được không)',
+      friend: '[JP] やあ！元気？\n[VI] Chào! Khỏe không?\n[OP]\n1. 元気だよ (Khỏe)\n2. まあまあかな (Bình thường)\n3. 忙しいよ (Bận lắm)',
+      interview: '[JP] こんにちは。自己紹介をお願いします。\n[VI] Xin chào. Hãy tự giới thiệu bản thân.\n[OP]\n1. はじめまして、〜と申します (Xin chào, tôi tên là...)\n2. よろしくお願いします (Rất mong được giúp đỡ)\n3. 経験について話します (Tôi sẽ nói về kinh nghiệm)',
+      doctor: '[JP] こんにちは。今日はどうされましたか？\n[VI] Xin chào. Hôm nay bạn thấy thế nào?\n[OP]\n1. 頭が痛いです (Tôi đau đầu)\n2. 熱があります (Tôi bị sốt)\n3. 喉が痛いです (Tôi đau họng)'
     };
-    
+
     setMessages([{
       id: Date.now().toString(),
       role: 'assistant',
-      content: greetings[scenario.id] || 'こんにちは！\n(Xin chào!)',
+      content: greetings[scenario.id] || '[JP] こんにちは！\n[VI] Xin chào!',
       timestamp: new Date()
     }]);
   };
@@ -193,108 +196,87 @@ const AIConversation = () => {
       const hasHuggingFace = import.meta.env.VITE_HUGGINGFACE_API_KEY;
       const hasQwen = import.meta.env.VITE_QWEN_API_KEY;
       const hasOpenRouter = import.meta.env.VITE_OPENROUTER_API_KEY;
-      
-      let aiContent: string;
+
+      let aiContent = '';
 
       if (hasOpenAI || hasGemini || hasDeepSeek || hasHuggingFace || hasQwen || hasOpenRouter) {
         const conversationMessages = [
           createSystemPrompt(selectedScenario.systemPrompt),
           ...messages.map(m => ({
             role: m.role as 'user' | 'assistant' | 'system',
-            content: m.content.split('\n')[0]
+            content: m.content
           })),
           { role: 'user' as const, content: userInput }
         ];
 
         const response = await getAIResponse(conversationMessages);
-        
+
         if (response.error) {
           console.error('AI Error:', response.error);
           aiContent = getMockResponse(userInput, selectedScenario.id);
         } else {
-          // Aggressive cleaning: Remove ALL thinking process and tags
           aiContent = response.content
-            // Remove <think> tags with any content (greedy and non-greedy)
             .replace(/<think>[\s\S]*?<\/think>/gi, '')
             .replace(/<think[\s\S]*?>/gi, '')
             .replace(/<\/think>/gi, '')
-            // Remove common thinking patterns at the start
-            .replace(/^(Okay|Alright|Let me|Let's|So|Well|Now|First|Hmm)[,\s].*?(?=\n\n|AI_JA:|AI_VI:|EXPLAIN:|OPTIONS:|[ぁ-んァ-ヶー一-龯])/is, '')
-            // Remove any remaining leading/trailing whitespace
-            .replace(/^\s+/gm, '')
             .trim();
-          
-          // If AI didn't provide translation, add placeholder
-          if (aiContent && !aiContent.match(/[\(（][^)）]+[\)）]/)) {
-            aiContent = `${aiContent}\n(Vui lòng hover để xem nghĩa)`;
-          }
-          
-          if (!aiContent) {
-            aiContent = getMockResponse(userInput, selectedScenario.id);
-          }
         }
+
+        // Fallback for missing tags
+        if (!aiContent.includes('[JP]')) {
+          aiContent = `[JP] ${aiContent}\n[VI] (Bản dịch đang cập nhật)\n[OP]`;
+        }
+
       } else {
-        aiContent = getMockResponse(userInput, selectedScenario.id);
+        // Fallback or Mock
+        aiContent = '[JP] すみません、エラーが発生しました。\n[VI] Xin lỗi, đã có lỗi xảy ra.\n[OP]';
       }
 
-      const aiResponse: Message = {
+      setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: aiContent,
         timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, aiResponse]);
+      }]);
+
     } catch (error) {
-      console.error('Error sending message:', error);
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: getMockResponse(userInput, selectedScenario.id),
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiResponse]);
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleSuggestion = (msgId: string) => {
+    setSuggestionStates(prev => ({
+      ...prev,
+      [msgId]: !prev[msgId]
+    }));
+  };
+
+  const parseMessageContent = (content: string) => {
+    const jpMatch = content.match(/\[JP\]([\s\S]*?)(?=\[VI\]|$)/);
+    const viMatch = content.match(/\[VI\]([\s\S]*?)(?=\[OP\]|$)/);
+    const opMatch = content.match(/\[OP\]([\s\S]*)/);
+
+    return {
+      jp: jpMatch ? jpMatch[1].trim() : content,
+      vi: viMatch ? viMatch[1].trim() : '',
+      op: opMatch ? opMatch[1].trim().split('\n').filter(l => l.trim()) : []
+    };
   };
 
   // Continue dialog
   if (showContinueDialog && savedConversation) {
     return (
       <div className="container">
-        <div className="card" style={{ 
-          maxWidth: '500px', 
-          margin: '2rem auto', 
-          padding: '2rem',
-          textAlign: 'center'
-        }}>
-          <h2 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>
-            💬 Tiếp tục cuộc trò chuyện?
-          </h2>
-          <p style={{ 
-            marginBottom: '2rem', 
-            color: 'var(--text-secondary)',
-            lineHeight: 1.6
-          }}>
-            Bạn có một cuộc trò chuyện đang dở với tình huống "{savedConversation.scenario.title}". 
-            Bạn có muốn tiếp tục không?
+        <div className="card" style={{ maxWidth: '500px', margin: '2rem auto', padding: '2rem', textAlign: 'center' }}>
+          <h2 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>💬 Tiếp tục cuộc trò chuyện?</h2>
+          <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)' }}>
+            Bạn có một cuộc trò chuyện đang dở với tình huống "{savedConversation.scenario.title}".
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-            <button
-              onClick={continueConversation}
-              className="btn btn-primary"
-              style={{ minWidth: '120px' }}
-            >
-              Tiếp tục
-            </button>
-            <button
-              onClick={startNewConversation}
-              className="btn btn-outline"
-              style={{ minWidth: '120px' }}
-            >
-              Bắt đầu mới
-            </button>
+            <button onClick={continueConversation} className="btn btn-primary">Tiếp tục</button>
+            <button onClick={startNewConversation} className="btn btn-outline">Bắt đầu mới</button>
           </div>
         </div>
       </div>
@@ -303,30 +285,20 @@ const AIConversation = () => {
 
   if (!selectedScenario) {
     return (
-      <div className="container">
+      <div className="container" data-language="both">
         <div className="header">
           <h1>
-            <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-            Trò chuyện với AI
+            <span className="title-highlight">Trò chuyện với AI</span>
           </h1>
           <p>Luyện giao tiếp tiếng Nhật với AI trong các tình huống thực tế</p>
         </div>
-
         <div className="card-grid">
           {scenarios.map(scenario => (
             <div key={scenario.id} className="card" style={{ cursor: 'pointer' }} onClick={() => startConversation(scenario)}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{scenario.icon}</div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-                {scenario.title}
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', marginBottom: '0.75rem' }}>
-                {scenario.description}
-              </p>
-              <span className={`badge badge-${scenario.level.toLowerCase().replace('-', '')}`}>
-                {scenario.level}
-              </span>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>{scenario.title}</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', marginBottom: '0.75rem' }}>{scenario.description}</p>
+              <span className={`badge badge-${scenario.level.toLowerCase().replace('-', '')}`}>{scenario.level}</span>
             </div>
           ))}
         </div>
@@ -343,154 +315,171 @@ const AIConversation = () => {
           </svg>
           Quay lại
         </button>
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <h2 style={{
+            fontSize: '2.5rem',
+            fontWeight: '900',
+            marginBottom: '0.5rem',
+            background: (() => {
+              switch (selectedScenario.id) {
+                case 'restaurant': return 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)';
+                case 'shopping': return 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)';
+                case 'hotel': return 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)';
+                case 'friend': return 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)';
+                case 'interview': return 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+                case 'doctor': return 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
+                default: return 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+              }
+            })(),
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            display: 'inline-block'
+          }}>
             {selectedScenario.icon} {selectedScenario.title}
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-            {selectedScenario.description}
-          </p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: '500' }}>{selectedScenario.description}</p>
         </div>
-        <button 
-          className="btn btn-outline"
-          onClick={() => setShowTranslation(!showTranslation)}
-          style={{
-            transition: 'all 0.3s ease',
-            transform: showTranslation ? 'scale(1.05)' : 'scale(1)'
-          }}
-        >
-          <svg style={{ width: '18px', height: '18px', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            {showTranslation ? (
-              <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-            ) : (
-              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            )}
-          </svg>
-          {showTranslation ? 'Ẩn dịch' : 'Hiện dịch'}
-        </button>
       </div>
 
-      <div className="card" style={{ height: '500px', display: 'flex', flexDirection: 'column' }}>
+      <div className="card" style={{ height: '600px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', marginBottom: '1rem' }}>
           {messages.map(message => {
-            // Parse Japanese and Vietnamese text
-            let japaneseText = message.content;
-            let vietnameseText = '';
-            
-            // Check for both regular () and full-width （） parentheses
-            const match = message.content.match(/^(.*?)\s*[\n\(（]+([^)）]+)[\)）]?$/s);
-            if (match) {
-              japaneseText = match[1].trim();
-              vietnameseText = match[2].trim();
-            }
+            const isAI = message.role === 'assistant';
+            const { jp, vi, op } = isAI ? parseMessageContent(message.content) : { jp: message.content, vi: '', op: [] };
+            const isExpanded = suggestionStates[message.id];
 
             return (
-              <div
-                key={message.id}
-                style={{
-                  display: 'flex',
-                  justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                  marginBottom: '1rem',
-                  position: 'relative'
-                }}
-              >
-                <div
-                  style={{
-                    maxWidth: '70%',
-                    padding: '0.75rem 1rem',
-                    borderRadius: '12px',
-                    background: message.role === 'user' 
-                      ? 'var(--primary-gradient)'
-                      : 'var(--card-bg-hover)',
-                    color: message.role === 'user' ? 'white' : 'var(--text-primary)',
-                    border: message.role === 'assistant' ? '1px solid var(--border-color)' : 'none',
-                    cursor: message.role === 'assistant' && vietnameseText ? 'help' : 'default',
-                    position: 'relative'
-                  }}
-                  onMouseEnter={() => message.role === 'assistant' && vietnameseText && setHoveredMessageId(message.id)}
-                  onMouseLeave={() => setHoveredMessageId(null)}
-                  title={message.role === 'assistant' && vietnameseText ? vietnameseText : undefined}
-                >
-                  <div style={{ whiteSpace: 'pre-line', lineHeight: '1.6' }}>
-                    {japaneseText}
-                  </div>
-                  {/* Show translation below when toggle is ON - ONLY for AI messages */}
-                  {showTranslation && message.role === 'assistant' && vietnameseText && (
-                    <div style={{
-                      marginTop: '0.5rem',
-                      paddingTop: '0.5rem',
-                      borderTop: '1px solid var(--border-light)',
-                      fontSize: '0.875rem',
-                      fontStyle: 'italic',
-                      color: 'var(--text-secondary)',
-                      opacity: 0.9
-                    }}>
-                      {vietnameseText}
-                    </div>
-                  )}
-                  <div style={{ 
-                    fontSize: '0.75rem', 
-                    marginTop: '0.5rem',
-                    opacity: 0.7
-                  }}>
-                    {message.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
+              <div key={message.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isAI ? 'flex-start' : 'flex-end', marginBottom: '1.5rem' }}>
+                <div style={{
+                  maxWidth: '70%',
+                  padding: '1rem',
+                  borderRadius: '16px',
+                  background: isAI ? 'var(--card-bg-hover)' : 'var(--primary-gradient)',
+                  color: isAI ? 'var(--text-primary)' : 'white',
+                  border: isAI ? '1px solid var(--border-color)' : 'none',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}>
+                  <div style={{ fontSize: '1.1rem', lineHeight: '1.6', whiteSpace: 'pre-line' }}>{jp}</div>
+                </div>
 
-                  {/* Hover Tooltip */}
-                  {hoveredMessageId === message.id && message.role === 'assistant' && vietnameseText && !showTranslation && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        bottom: '100%',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        marginBottom: '0.5rem',
-                        padding: '0.75rem 1rem',
-                        background: 'var(--card-bg)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '8px',
-                        boxShadow: 'var(--shadow-lg)',
-                        color: 'var(--text-primary)',
-                        fontSize: '0.875rem',
-                        whiteSpace: 'nowrap',
-                        zIndex: 1000,
-                        maxWidth: '300px',
-                        textAlign: 'center'
-                      }}
-                    >
-                      <div style={{ 
-                        fontStyle: 'italic',
-                        color: 'var(--text-secondary)'
-                      }}>
-                        {vietnameseText}
-                      </div>
-                      <div
+                {/* Suggestions Section (Translation + Options) */}
+                {isAI && (
+                  <div style={{ marginTop: '0.5rem', maxWidth: '70%', width: '100%' }}>
+                    {!isExpanded ? (
+                      <button
+                        onClick={() => toggleSuggestion(message.id)}
+                        className="btn-suggestion"
                         style={{
-                          position: 'absolute',
-                          top: '100%',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          width: 0,
-                          height: 0,
-                          borderLeft: '6px solid transparent',
-                          borderRight: '6px solid transparent',
-                          borderTop: '6px solid var(--card-bg)'
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--primary-color)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          fontSize: '0.9rem',
+                          padding: '0.5rem',
+                          fontWeight: '600'
                         }}
-                      />
-                    </div>
-                  )}
+                      >
+                        💡 Gợi ý câu trả lời & Dịch
+                      </button>
+                    ) : (
+                      <div style={{
+                        marginTop: '0.5rem',
+                        background: 'var(--bg-secondary)',
+                        borderRadius: '12px',
+                        padding: '1rem',
+                        border: '1px solid var(--border-color)',
+                        animation: 'fadeIn 0.3s ease'
+                      }}>
+                        {/* Translation */}
+                        {vi && (
+                          <div style={{
+                            marginBottom: '1rem',
+                            paddingBottom: '0.5rem',
+                            borderBottom: '1px solid var(--border-color)',
+                            color: 'var(--text-secondary)',
+                            fontStyle: 'italic',
+                            fontWeight: '500'
+                          }}>
+                            🇻🇳 {vi}
+                          </div>
+                        )}
+
+                        {/* Options */}
+                        {op.length > 0 && (
+                          <div className="suggestion-options">
+                            <div style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
+                              💬 Gợi ý trả lời:
+                            </div>
+                            {op.map((opt, idx) => {
+                              const cleanOpt = opt.replace(/^\d+\.\s*/, '').split('(')[0].trim();
+                              return (
+                                <button
+                                  key={idx}
+                                  onClick={() => setInput(cleanOpt)}
+                                  style={{
+                                    display: 'block',
+                                    width: '100%',
+                                    textAlign: 'left',
+                                    padding: '0.75rem',
+                                    background: 'white',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '8px',
+                                    marginBottom: '0.5rem',
+                                    cursor: 'pointer',
+                                    fontSize: '0.95rem',
+                                    color: 'var(--text-primary)',
+                                    transition: 'all 0.2s',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                  }}
+                                  onMouseOver={(e) => {
+                                    e.currentTarget.style.borderColor = 'var(--primary-color)';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                  }}
+                                  onMouseOut={(e) => {
+                                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                  }}
+                                >
+                                  {opt}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => toggleSuggestion(message.id)}
+                          style={{
+                            fontSize: '0.85rem',
+                            color: 'var(--text-secondary)',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            marginTop: '0.75rem',
+                            width: '100%',
+                            textAlign: 'center',
+                            fontWeight: '500'
+                          }}
+                        >
+                          Thu gọn 🔼
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.6 }}>
+                  {message.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             );
           })}
           {loading && (
             <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '1rem' }}>
-              <div style={{ 
-                padding: '0.75rem 1rem',
-                borderRadius: '12px',
-                background: 'var(--card-bg-hover)',
-                border: '1px solid var(--border-color)',
-              }}>
+              <div style={{ padding: '0.75rem 1rem', borderRadius: '12px', background: 'var(--card-bg-hover)', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <div className="typing-dot"></div>
                   <div className="typing-dot" style={{ animationDelay: '0.2s' }}></div>
@@ -518,21 +507,12 @@ const AIConversation = () => {
                 fontSize: '1rem',
                 fontFamily: 'inherit',
                 background: 'var(--card-bg)',
-                color: 'var(--text-primary)',
-                transition: 'border-color 0.2s ease'
+                color: 'var(--text-primary)'
               }}
               disabled={loading}
-              onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary-color)'}
-              onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+              autoFocus
             />
-            <button 
-              className="btn btn-primary"
-              onClick={sendMessage}
-              disabled={loading || !input.trim()}
-            >
-              <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
+            <button className="btn btn-primary" onClick={sendMessage} disabled={loading || !input.trim()}>
               Gửi
             </button>
           </div>
