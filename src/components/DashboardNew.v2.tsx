@@ -65,6 +65,15 @@ const DashboardNew = () => {
     // Only load if auth is finished loading
     if (!authLoading) {
       loadData();
+    } else {
+      // Failsafe: If Auth is taking too long (>3s), proceed as guest
+      const timer = setTimeout(() => {
+        if (loading) {
+          console.warn("Auth taking too long, forcing loadData as guest...");
+          loadData();
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
     }
 
     // Cleanup function to reset loading ref when component unmounts
@@ -75,10 +84,10 @@ const DashboardNew = () => {
 
   const loadData = async () => {
     // Prevent duplicate calls
-    if (isLoadingRef.current) {
-      console.log('Skipping duplicate loadData call');
-      return;
-    }
+    // if (isLoadingRef.current) {
+    //   console.log('Skipping duplicate loadData call');
+    //   return;
+    // }
 
     // Don't load if we're on login/register page
     if (window.location.pathname === '/login' || window.location.pathname === '/register') {
@@ -95,25 +104,39 @@ const DashboardNew = () => {
       setError(null); // Clear any previous errors
       console.log('Starting loadData...');
 
-      // Timeout safety - 15 seconds (reduced from 30)
+
+      // Timeout safety
       timeoutId = setTimeout(() => {
-        console.error('⏰ TIMEOUT! loadData took more than 15 seconds');
+        if (!isLoadingRef.current) return; // Already finished
+
+        console.error('⏰ TIMEOUT! loadData took more than 10 seconds');
         console.error('Current loading state:', loading);
-        setError('Không thể kết nối đến database. Vui lòng kiểm tra kết nối mạng.');
+
+        let debugMsg = 'Connection timed out (10s).';
+        if (!Object.keys(progressByLevel).length) debugMsg += ' No progress data loaded.';
+
+        setError(`Mất quá nhiều thời gian để kết nối. Vui lòng thử lại. (${debugMsg})`);
         setLoading(false);
         isLoadingRef.current = false; // Release lock
-      }, 15000); // Reduced to 15 seconds
+      }, 10000); // Increased to 10 seconds
+
 
       // 1. Load critical data (Courses) first
       let japaneseData: PaginatedResponse<any> = { data: [], total: 0, page: 1, pageSize: 100, totalPages: 0 };
       let chineseData: PaginatedResponse<any> = { data: [], total: 0, page: 1, pageSize: 100, totalPages: 0 };
 
       try {
-        console.log('Fetching Japanese courses...');
-        const jpPromise = getCourses('japanese', 1, 100);
+        console.log('Fetching Japanese courses... (Auth:', !!user, ')');
+        const jpPromise = getCourses('japanese', 1, 100).catch(e => {
+          console.error("JP Courses Fetch Failed:", e);
+          throw e;
+        });
 
-        console.log('Fetching Chinese courses...');
-        const cnPromise = getCourses('chinese', 1, 100);
+        console.log('Fetching Chinese courses... (Auth:', !!user, ')');
+        const cnPromise = getCourses('chinese', 1, 100).catch(e => {
+          console.error("CN Courses Fetch Failed:", e);
+          throw e;
+        });
 
         // Use allSettled to allow partial success
         const results = await Promise.allSettled([jpPromise, cnPromise]);
@@ -132,8 +155,9 @@ const DashboardNew = () => {
           console.error('Failed to load Chinese courses:', results[1].reason);
         }
 
-      } catch (e) {
+      } catch (e: any) {
         console.error('Unexpected error in loadData main block:', e);
+        setError(`Lỗi không mong muốn: ${e.message || JSON.stringify(e)}`);
       }
 
       // Group by level and update state immediately so user sees content
@@ -347,6 +371,37 @@ const DashboardNew = () => {
           >
             Thử lại
           </button>
+
+          <button
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = '/';
+            }}
+            style={{
+              background: '#ef4444',
+              color: 'white',
+              padding: '0.8rem 2rem',
+              borderRadius: '9999px',
+              fontWeight: 'bold',
+              border: 'none',
+              cursor: 'pointer',
+              marginLeft: '1rem',
+              boxShadow: '0 4px 6px -1px rgba(239, 68, 68, 0.5)'
+            }}
+          >
+            Đăng xuất & Reset
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (authLoading) {
+    return (
+      <div className="dashboard-v2-container">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Đang kiểm tra đăng nhập...</p>
         </div>
       </div>
     );
@@ -357,7 +412,7 @@ const DashboardNew = () => {
       <div className="dashboard-v2-container">
         <div className="loading-spinner">
           <div className="spinner"></div>
-          <p>Đang tải...</p>
+          <p>Đang tải dữ liệu khóa học...</p>
         </div>
       </div>
     );
@@ -500,29 +555,7 @@ const DashboardNew = () => {
 
           {/* Action Buttons based on Role */}
           <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-            {!isAdmin && (
-              <button
-                onClick={() => setShowEnrollModal(true)}
-                className="join-class-btn"
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.4)',
-                  padding: '0.8rem 1.5rem',
-                  borderRadius: '99px',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '4px', borderRadius: '50%' }}>🔑</div>
-                Nhập mã Code
-              </button>
-            )}
+
             {isTeacher && (
               <button
                 onClick={() => setShowCreateClassModal(true)}

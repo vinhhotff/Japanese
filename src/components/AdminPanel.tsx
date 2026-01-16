@@ -20,6 +20,7 @@ import { parseSentenceGameBatch } from '../utils/sentenceGameParser';
 import { uploadAudio, uploadImage, validateFileType, validateFileSize } from '../utils/fileUpload';
 import AdminHelpGuide from './AdminHelpGuide';
 import '../App.css';
+import '../styles/admin-panel-complete.css';
 import '../styles/admin-help-guide.css';
 
 type TabType = 'courses' | 'lessons' | 'vocabulary' | 'kanji' | 'grammar' | 'listening' | 'games' | 'roleplay' | 'users';
@@ -551,28 +552,63 @@ const AdminPanel = () => {
           <div className="data-grid">
 
             {/* 1. LANGUAGES SELECT VIEW */}
+
             {viewMode === 'languages' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mt-12">
-                <div onClick={() => handleSelectLanguage('japanese')} className="course-card hover:border-red-200 group">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="text-4xl">🇯🇵</div>
-                    <h2 className="text-2xl font-bold text-slate-800 group-hover:text-red-500 transition-colors">Tiếng Nhật</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mt-12 pb-12">
+                {/* Japanese Card */}
+                <div
+                  onClick={() => handleSelectLanguage('japanese')}
+                  className="group relative overflow-hidden bg-white rounded-2xl shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span className="text-9xl">JP</span>
                   </div>
-                  <p className="text-slate-500 mb-6">Quản lý các khóa học N5, N4, N3, N2, N1.</p>
-                  <button className="w-full py-2 bg-red-50 text-red-600 font-bold rounded-lg group-hover:bg-red-500 group-hover:text-white transition-all">
-                    Quản lý
-                  </button>
+
+                  <div className="p-8 relative z-10">
+                    <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-4xl">🇯🇵</span>
+                    </div>
+
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2 group-hover:text-red-600 transition-colors">Tiếng Nhật</h2>
+                    <p className="text-slate-500 mb-8">Quản lý các khóa học N5 - N1 và tài liệu học tập.</p>
+
+                    <button className="flex items-center gap-2 text-red-600 font-bold group-hover:gap-3 transition-all">
+                      <span>Quản lý hệ thống</span>
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="h-2 bg-gradient-to-r from-red-500 to-pink-500 w-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                 </div>
 
-                <div onClick={() => handleSelectLanguage('chinese')} className="course-card hover:border-yellow-200 group">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="text-4xl">🇨🇳</div>
-                    <h2 className="text-2xl font-bold text-slate-800 group-hover:text-yellow-600 transition-colors">Tiếng Trung</h2>
+                {/* Chinese Card */}
+                <div
+                  onClick={() => handleSelectLanguage('chinese')}
+                  className="group relative overflow-hidden bg-white rounded-2xl shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span className="text-9xl">CN</span>
                   </div>
-                  <p className="text-slate-500 mb-6">Quản lý các khóa học HSK1 - HSK6.</p>
-                  <button className="w-full py-2 bg-yellow-50 text-yellow-600 font-bold rounded-lg group-hover:bg-yellow-500 group-hover:text-white transition-all">
-                    Quản lý
-                  </button>
+
+                  <div className="p-8 relative z-10">
+                    <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-4xl">🇨🇳</span>
+                    </div>
+
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2 group-hover:text-orange-600 transition-colors">Tiếng Trung</h2>
+                    <p className="text-slate-500 mb-8">Quản lý các khóa học HSK1 - HSK6 và tài liệu học tập.</p>
+
+                    <button className="flex items-center gap-2 text-orange-600 font-bold group-hover:gap-3 transition-all">
+                      <span>Quản lý hệ thống</span>
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="h-2 bg-gradient-to-r from-orange-500 to-yellow-500 w-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                 </div>
               </div>
             )}

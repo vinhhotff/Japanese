@@ -25,6 +25,8 @@ async function getPaginated<T>(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  console.log(`[getPaginated] Building query for table: ${tableName}`);
+
   let query = supabase.from(tableName).select('*', { count: 'exact' });
 
   // Apply filters
@@ -44,9 +46,19 @@ async function getPaginated<T>(
   // Apply pagination
   query = query.range(from, to);
 
+  console.log(`[getPaginated] Executing query on ${tableName}...`);
+  const queryStart = Date.now();
+
   const { data, error, count } = await query;
 
-  if (error) throw error;
+  console.log(`[getPaginated] Query completed in ${Date.now() - queryStart}ms`);
+
+  if (error) {
+    console.error(`[getPaginated] Query error:`, error);
+    throw error;
+  }
+
+  console.log(`[getPaginated] Got ${data?.length || 0} rows from ${tableName}`);
 
   return {
     data: (data as T[]) || [],
@@ -63,13 +75,23 @@ export const getCourses = async (
   page: number = 1,
   pageSize: number = 10
 ): Promise<PaginatedResponse<any>> => {
-  return getPaginated(
-    'courses',
-    page,
-    pageSize,
-    language ? { language } : undefined,
-    { column: 'level', ascending: true }
-  );
+  const startTime = Date.now();
+  console.log(`[getCourses] Starting request for ${language || 'all'}...`);
+
+  try {
+    const result = await getPaginated(
+      'courses',
+      page,
+      pageSize,
+      language ? { language } : undefined,
+      { column: 'level', ascending: true }
+    );
+    console.log(`[getCourses] Success in ${Date.now() - startTime}ms, got ${result.data.length} courses`);
+    return result;
+  } catch (error: any) {
+    console.error(`[getCourses] Failed after ${Date.now() - startTime}ms:`, error.message || error);
+    throw error;
+  }
 };
 
 export const createCourse = async (course: {

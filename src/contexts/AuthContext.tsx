@@ -90,26 +90,42 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      const r = await determineRole(currentUser);
-      updateUserRole(r);
-      if (currentUser) {
-        getProfile(currentUser.id).then(setProfile);
-      } else {
+    // Get initial session with timeout protection
+    const getSessionWithTimeout = async () => {
+      try {
+        // Race between getSession and a 15-second timeout (increased for slow connections)
+        const result = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Session restore timeout')), 15000)
+          )
+        ]);
+
+        const session = result.data.session;
+        setSession(session);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        const r = await determineRole(currentUser);
+        updateUserRole(r);
+        if (currentUser) {
+          getProfile(currentUser.id).then(setProfile).catch(() => setProfile(null));
+        } else {
+          setProfile(null);
+        }
+      } catch (err) {
+        console.warn('Auth session check failed or timed out:', err);
+        // DON'T clear tokens - just proceed with current state
+        // User might still have a valid session, just slow to verify
+        setSession(null);
+        setUser(null);
+        setRole('student');
         setProfile(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }).catch(err => {
-      console.warn('Auth session check failed, defaulting to guest:', err);
-      setSession(null);
-      setUser(null);
-      setRole('student');
-      setLoading(false);
-    });
+    };
+
+    getSessionWithTimeout();
 
     // Listen for auth changes
     const {
