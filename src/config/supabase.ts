@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
-// Thay thế các giá trị này bằng thông tin Supabase project của bạn
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
 
@@ -25,10 +24,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
 }
 
+// Create Supabase client - use localStorage (works reliably)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    detectSessionInUrl: false,
   },
 });
 

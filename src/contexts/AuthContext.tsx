@@ -47,17 +47,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchUserRole = async (email: string | undefined): Promise<UserRole | null> => {
     if (!email) return null;
     try {
-      const { data, error } = await supabase
+      // Timeout protection - 3 seconds max using Promise.race
+      const queryPromise = supabase
         .from('user_roles')
         .select('role')
         .eq('email', email)
         .single();
 
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout')), 3000)
+      );
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+
       if (data && !error) {
         return data.role as UserRole;
       }
     } catch (e) {
-      // console.warn('Error fetching remote role', e);
+      // Timeout or network error - just skip
     }
     return null;
   };
@@ -65,78 +72,66 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const determineRole = async (user: User | null): Promise<UserRole> => {
     if (!user) return 'student';
 
-    // 1. Check remote table (Priority)
-    const remoteRole = await fetchUserRole(user.email);
-    if (remoteRole) return remoteRole;
+    // 1. Check localStorage first (instant) - use as fallback if remote fails
+    const savedRole = localStorage.getItem('user_role') as UserRole;
 
-    // 2. Check metadata
-    const metaRole = user.user_metadata?.role;
-    if (metaRole === 'admin') return 'admin';
-    if (metaRole === 'teacher') return 'teacher';
-
-    // 3. Check email patterns (fallback/override)
+    // 2. Check email patterns (instant, reliable)
     const email = user.email?.toLowerCase();
     if (email?.includes('admin')) return 'admin';
     if (email?.includes('teacher') || email?.includes('giao-vien')) return 'teacher';
 
-    return 'student'; // Default
+    // 3. Check metadata (instant)
+    const metaRole = user.user_metadata?.role;
+    if (metaRole === 'admin') return 'admin';
+    if (metaRole === 'teacher') return 'teacher';
+
+    // 4. Try remote table (may be slow/fail) - skip if we have cached role
+    if (!savedRole || savedRole === 'student') {
+      const remoteRole = await fetchUserRole(user.email);
+      if (remoteRole) return remoteRole;
+    }
+
+    return savedRole || 'student';
   };
 
   // Helper to update role state and storage
   const updateUserRole = (newRole: UserRole) => {
     setRole(newRole);
     localStorage.setItem('user_role', newRole);
-    console.log('User role updated and saved:', newRole);
   };
 
   useEffect(() => {
-    // Get initial session with timeout protection
-    const getSessionWithTimeout = async () => {
+    // Get session from localStorage via Supabase
+    const initSession = async () => {
       try {
-        // Race between getSession and a 15-second timeout (increased for slow connections)
-        const result = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Session restore timeout')), 15000)
-          )
-        ]);
+        const { data: { session } } = await supabase.auth.getSession();
 
-        const session = result.data.session;
         setSession(session);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        const r = await determineRole(currentUser);
-        updateUserRole(r);
+
         if (currentUser) {
-          getProfile(currentUser.id).then(setProfile).catch(() => setProfile(null));
-        } else {
-          setProfile(null);
+          const r = await determineRole(currentUser);
+          updateUserRole(r);
+          getProfile(currentUser.id).then(setProfile).catch(() => { });
         }
       } catch (err) {
-        console.warn('Auth session check failed or timed out:', err);
-        // DON'T clear tokens - just proceed with current state
-        // User might still have a valid session, just slow to verify
-        setSession(null);
-        setUser(null);
-        setRole('student');
-        setProfile(null);
+        console.error('Auth init error:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    getSessionWithTimeout();
+    initSession();
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      const r = await determineRole(currentUser);
-      updateUserRole(r);
       if (currentUser) {
+        const r = await determineRole(currentUser);
+        updateUserRole(r);
         getProfile(currentUser.id).then(setProfile);
       } else {
         setProfile(null);
@@ -181,34 +176,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setRole('student');
       localStorage.removeItem('user_role');
 
-      // Force clear Supabase tokens from localStorage
+      // Clear auth cookies
+      document.cookie.split(';').forEach(cookie => {
+        const name = cookie.split('=')[0].trim();
+        if (name.startsWith('sb-') || name.includes('supabase') || name.includes('auth')) {
+          document.cookie = `${name}=; path=/; max-age=0`;
+        }
+      });
+
+      // Also clear localStorage for legacy
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith('sb-') || key.includes('supabase')) {
           localStorage.removeItem(key);
         }
       });
 
-      logger.log('Local session cleared');
-
-      // Try to sign out from Supabase with 3-second timeout
-      await Promise.race([
-        supabase.auth.signOut(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Supabase signOut timeout')), 3000)
-        )
-      ]);
-      logger.log('Successfully signed out from Supabase');
+      // Sign out from Supabase
+      await supabase.auth.signOut();
     } catch (error) {
-      // If Supabase signOut fails (timeout or network error), it's okay
-      // We already cleared local state
-      logger.warn('Supabase signOut failed (continuing anyway):', error);
+      console.error('SignOut error:', error);
     } finally {
-      // Add a small delay and reload to ensure clean state
-      setTimeout(() => {
-        setLoading(false);
-        // Optional: Force reload if routing doesn't clear everything
-        // window.location.href = '/'; 
-      }, 100);
+      setLoading(false);
+      // Force reload to ensure clean state
+      window.location.href = '/';
     }
   };
 

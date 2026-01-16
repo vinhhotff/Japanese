@@ -30,7 +30,7 @@ const groupCoursesByLevel = (courses: any[], levels: string[]) => {
 
 const DashboardNew = () => {
   const { t } = useTranslation();
-  const { user, loading: authLoading, isTeacher, isStudent, isAdmin } = useAuth();
+  const { user, session, loading: authLoading, isTeacher, isStudent, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('japanese');
@@ -62,120 +62,57 @@ const DashboardNew = () => {
   const isLoadingRef = useRef(false);
 
   useEffect(() => {
-    // Only load if auth is finished loading
     if (!authLoading) {
       loadData();
-    } else {
-      // Failsafe: If Auth is taking too long (>3s), proceed as guest
-      const timer = setTimeout(() => {
-        if (loading) {
-          console.warn("Auth taking too long, forcing loadData as guest...");
-          loadData();
-        }
-      }, 3000);
-      return () => clearTimeout(timer);
     }
-
-    // Cleanup function to reset loading ref when component unmounts
-    return () => {
-      isLoadingRef.current = false;
-    };
-  }, [authLoading, user?.id]); // Re-run if auth completes or user changes (e.g. login/logout)
+  }, [authLoading]);
 
   const loadData = async () => {
     // Prevent duplicate calls
-    // if (isLoadingRef.current) {
-    //   console.log('Skipping duplicate loadData call');
-    //   return;
-    // }
+    if (isLoadingRef.current) return;
 
     // Don't load if we're on login/register page
     if (window.location.pathname === '/login' || window.location.pathname === '/register') {
-      console.log('Skipping loadData on auth pages');
       setLoading(false);
       return;
     }
 
     isLoadingRef.current = true;
 
-    let timeoutId: any;
     try {
       setLoading(true);
-      setError(null); // Clear any previous errors
-      console.log('Starting loadData...');
-
-
-      // Timeout safety
-      timeoutId = setTimeout(() => {
-        if (!isLoadingRef.current) return; // Already finished
-
-        console.error('⏰ TIMEOUT! loadData took more than 10 seconds');
-        console.error('Current loading state:', loading);
-
-        let debugMsg = 'Connection timed out (10s).';
-        if (!Object.keys(progressByLevel).length) debugMsg += ' No progress data loaded.';
-
-        setError(`Mất quá nhiều thời gian để kết nối. Vui lòng thử lại. (${debugMsg})`);
-        setLoading(false);
-        isLoadingRef.current = false; // Release lock
-      }, 10000); // Increased to 10 seconds
-
+      setError(null);
 
       // 1. Load critical data (Courses) first
       let japaneseData: PaginatedResponse<any> = { data: [], total: 0, page: 1, pageSize: 100, totalPages: 0 };
       let chineseData: PaginatedResponse<any> = { data: [], total: 0, page: 1, pageSize: 100, totalPages: 0 };
 
       try {
-        console.log('Fetching Japanese courses... (Auth:', !!user, ')');
-        const jpPromise = getCourses('japanese', 1, 100).catch(e => {
-          console.error("JP Courses Fetch Failed:", e);
-          throw e;
-        });
+        const [jpResult, cnResult] = await Promise.allSettled([
+          getCourses('japanese', 1, 100),
+          getCourses('chinese', 1, 100)
+        ]);
 
-        console.log('Fetching Chinese courses... (Auth:', !!user, ')');
-        const cnPromise = getCourses('chinese', 1, 100).catch(e => {
-          console.error("CN Courses Fetch Failed:", e);
-          throw e;
-        });
-
-        // Use allSettled to allow partial success
-        const results = await Promise.allSettled([jpPromise, cnPromise]);
-
-        if (results[0].status === 'fulfilled') {
-          japaneseData = results[0].value;
-          console.log('Japanese courses loaded:', japaneseData.data.length);
-        } else {
-          console.error('Failed to load Japanese courses:', results[0].reason);
+        if (jpResult.status === 'fulfilled') {
+          japaneseData = jpResult.value;
         }
 
-        if (results[1].status === 'fulfilled') {
-          chineseData = results[1].value;
-          console.log('Chinese courses loaded:', chineseData.data.length);
-        } else {
-          console.error('Failed to load Chinese courses:', results[1].reason);
+        if (cnResult.status === 'fulfilled') {
+          chineseData = cnResult.value;
         }
-
       } catch (e: any) {
-        console.error('Unexpected error in loadData main block:', e);
         setError(`Lỗi không mong muốn: ${e.message || JSON.stringify(e)}`);
       }
 
-      // Group by level and update state immediately so user sees content
+      // Group by level and update state immediately
       const groupJapanese = groupCoursesByLevel(japaneseData.data, ['N5', 'N4', 'N3', 'N2', 'N1']);
       const groupChinese = groupCoursesByLevel(chineseData.data, ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6']);
-
-      console.log('Grouped Japanese:', groupJapanese);
-      console.log('Grouped Chinese:', groupChinese);
 
       setJapaneseCourses(groupJapanese);
       setChineseCourses(groupChinese);
 
-      console.log('State updated - Japanese courses:', groupJapanese.length, 'groups');
-      console.log('State updated - Chinese courses:', groupChinese.length, 'groups');
-
-      // Stop loading spinner here so user can interact
+      // Stop loading spinner so user can interact
       setLoading(false);
-      if (timeoutId) clearTimeout(timeoutId);
 
       // 2. Load Enrollments (Non-blocking)
       // 2. Load Enrollments (Non-blocking)
@@ -198,9 +135,10 @@ const DashboardNew = () => {
         }
       }
 
-      // 3. Load Progress (Heavy operation - Background)
-      // fetch lessons with pagination optimization or summary if available
-      // For now, keep logic but ensure it doesn't block UI
+      // 3. Progress calculation DISABLED for performance
+      // This was fetching 1000+ lessons and is very slow
+      // Progress display is already removed from UI, so this is not needed
+      /*
       (async () => {
         try {
           const fetchLessonsSafe = async (lang: string) => {
@@ -264,6 +202,8 @@ const DashboardNew = () => {
           console.warn('Background progress calculation failed', err);
         }
       })();
+      */
+      console.log('✅ Skipping progress calculation for performance');
 
     } catch (err: any) {
       console.error('❌ Error loading data:', err);
@@ -276,12 +216,7 @@ const DashboardNew = () => {
       setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu.');
       setLoading(false);
     } finally {
-      if (timeoutId) {
-        console.log('✅ Clearing timeout');
-        clearTimeout(timeoutId);
-      }
       isLoadingRef.current = false;
-      console.log('✅ loadData completed');
     }
   };
 
