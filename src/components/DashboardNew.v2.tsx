@@ -369,12 +369,12 @@ const DashboardNew = () => {
     'N3': { level: 'N3', name: 'Trung cấp', description: 'Văn bản thông thường', icon: '🏯' },
     'N2': { level: 'N2', name: 'Trung cao cấp', description: 'Báo chí & công việc', icon: '⛩️' },
     'N1': { level: 'N1', name: 'Cao cấp', description: 'Chuyên môn & học thuật', icon: '🗾' },
-    'HSK1': { level: 'HSK1', name: '初级', description: '基础汉语', icon: '🏮' },
-    'HSK2': { level: 'HSK2', name: '初中级', description: '日常交流', icon: '🎐' },
-    'HSK3': { level: 'HSK3', name: '中级', description: '生活应用', icon: '🐉' },
-    'HSK4': { level: 'HSK4', name: '中高级', description: '广泛话题', icon: '🏛️' },
-    'HSK5': { level: 'HSK5', name: '高级', description: '报刊阅读', icon: '📜' },
-    'HSK6': { level: 'HSK6', name: '精通', description: '专业表达', icon: '🎎' },
+    'HSK1': { level: 'HSK1', name: 'Sơ cấp', description: 'Tiếng Trung cơ bản', icon: '🏮' },
+    'HSK2': { level: 'HSK2', name: 'Sơ-Trung cấp', description: 'Giao tiếp hàng ngày', icon: '🎐' },
+    'HSK3': { level: 'HSK3', name: 'Trung cấp', description: 'Ứng dụng thực tế', icon: '🐉' },
+    'HSK4': { level: 'HSK4', name: 'Trung-Cao cấp', description: 'Chủ đề đa dạng', icon: '🏛️' },
+    'HSK5': { level: 'HSK5', name: 'Cao cấp', description: 'Đọc báo & sách', icon: '📜' },
+    'HSK6': { level: 'HSK6', name: 'Thành thạo', description: 'Diễn đạt chuyên nghiệp', icon: '🎎' },
   };
 
   const levelColors: Record<string, string> = {

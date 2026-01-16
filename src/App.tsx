@@ -51,27 +51,83 @@ function App() {
                   {/* Home */}
                   <Route path="/" element={<DashboardNew />} />
 
-                  {/* Japanese Learning Routes */}
-                  <Route path="/japanese/courses" element={<CourseList language="japanese" />} />
-                  <Route path="/japanese/courses/:level" element={<LessonListNew language="japanese" />} />
-                  <Route path="/japanese/lessons/:lessonId" element={<LessonDetail language="japanese" />} />
+                  {/* Japanese Learning Routes - Protected with Enrollment */}
+                  <Route path="/japanese/courses" element={
+                    <ProtectedRoute requireEnrollment>
+                      <CourseList language="japanese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/japanese/courses/:level" element={
+                    <ProtectedRoute requireEnrollment>
+                      <LessonListNew language="japanese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/japanese/lessons/:lessonId" element={
+                    <ProtectedRoute requireEnrollment>
+                      <LessonDetail language="japanese" />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/japanese/dictionary" element={<Dictionary language="japanese" />} />
                   <Route path="/japanese/saved-words" element={<SavedWords language="japanese" />} />
-                  <Route path="/japanese/vocabulary-practice" element={<VocabularyPractice language="japanese" />} />
-                  <Route path="/japanese/vocabulary-practice/:level" element={<VocabularyPractice language="japanese" />} />
-                  <Route path="/japanese/kanji-writing" element={<KanjiWritingPractice language="japanese" />} />
-                  <Route path="/japanese/spaced-repetition" element={<SpacedRepetition language="japanese" />} />
+                  <Route path="/japanese/vocabulary-practice" element={
+                    <ProtectedRoute requireEnrollment>
+                      <VocabularyPractice language="japanese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/japanese/vocabulary-practice/:level" element={
+                    <ProtectedRoute requireEnrollment>
+                      <VocabularyPractice language="japanese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/japanese/kanji-writing" element={
+                    <ProtectedRoute requireEnrollment>
+                      <KanjiWritingPractice language="japanese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/japanese/spaced-repetition" element={
+                    <ProtectedRoute requireEnrollment>
+                      <SpacedRepetition language="japanese" />
+                    </ProtectedRoute>
+                  } />
 
-                  {/* Chinese Learning Routes */}
-                  <Route path="/chinese/courses" element={<CourseList language="chinese" />} />
-                  <Route path="/chinese/courses/:level" element={<LessonListNew language="chinese" />} />
-                  <Route path="/chinese/lessons/:lessonId" element={<LessonDetail language="chinese" />} />
+                  {/* Chinese Learning Routes - Protected with Enrollment */}
+                  <Route path="/chinese/courses" element={
+                    <ProtectedRoute requireEnrollment>
+                      <CourseList language="chinese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/chinese/courses/:level" element={
+                    <ProtectedRoute requireEnrollment>
+                      <LessonListNew language="chinese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/chinese/lessons/:lessonId" element={
+                    <ProtectedRoute requireEnrollment>
+                      <LessonDetail language="chinese" />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/chinese/dictionary" element={<Dictionary language="chinese" />} />
                   <Route path="/chinese/saved-words" element={<SavedWords language="chinese" />} />
-                  <Route path="/chinese/vocabulary-practice" element={<VocabularyPractice language="chinese" />} />
-                  <Route path="/chinese/vocabulary-practice/:level" element={<VocabularyPractice language="chinese" />} />
-                  <Route path="/chinese/hanzi-writing" element={<KanjiWritingPractice language="chinese" />} />
-                  <Route path="/chinese/spaced-repetition" element={<SpacedRepetition language="chinese" />} />
+                  <Route path="/chinese/vocabulary-practice" element={
+                    <ProtectedRoute requireEnrollment>
+                      <VocabularyPractice language="chinese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/chinese/vocabulary-practice/:level" element={
+                    <ProtectedRoute requireEnrollment>
+                      <VocabularyPractice language="chinese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/chinese/hanzi-writing" element={
+                    <ProtectedRoute requireEnrollment>
+                      <KanjiWritingPractice language="chinese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/chinese/spaced-repetition" element={
+                    <ProtectedRoute requireEnrollment>
+                      <SpacedRepetition language="chinese" />
+                    </ProtectedRoute>
+                  } />
 
                   {/* Shared Routes */}
                   <Route path="/study-progress" element={<StudyProgress />} />
@@ -120,15 +176,39 @@ function App() {
                     }
                   />
 
-                  {/* Legacy redirects for backward compatibility */}
-                  <Route path="/courses" element={<AllCourses />} />
-                  <Route path="/courses/:level" element={<LessonListNew language="japanese" />} />
-                  <Route path="/lessons/:lessonId" element={<LessonDetail language="japanese" />} />
+                  {/* Legacy redirects for backward compatibility - Also protected */}
+                  <Route path="/courses" element={
+                    <ProtectedRoute requireEnrollment>
+                      <AllCourses />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/courses/:level" element={
+                    <ProtectedRoute requireEnrollment>
+                      <LessonListNew language="japanese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/lessons/:lessonId" element={
+                    <ProtectedRoute requireEnrollment>
+                      <LessonDetail language="japanese" />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/dictionary" element={<AllDictionary />} />
                   <Route path="/saved-words" element={<SavedWords language="japanese" />} />
-                  <Route path="/vocabulary-practice" element={<VocabularyPractice language="japanese" />} />
-                  <Route path="/kanji-writing" element={<KanjiWritingPractice />} />
-                  <Route path="/spaced-repetition" element={<SpacedRepetition />} />
+                  <Route path="/vocabulary-practice" element={
+                    <ProtectedRoute requireEnrollment>
+                      <VocabularyPractice language="japanese" />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/kanji-writing" element={
+                    <ProtectedRoute requireEnrollment>
+                      <KanjiWritingPractice />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/spaced-repetition" element={
+                    <ProtectedRoute requireEnrollment>
+                      <SpacedRepetition />
+                    </ProtectedRoute>
+                  } />
                 </Routes>
               </Layout>
             </Router>

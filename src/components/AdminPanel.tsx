@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
 import { logger } from '../utils/logger';
@@ -305,7 +306,9 @@ const AdminPanel = () => {
   // Render Helpers
   const renderBreadcrumbs = () => (
     <div className="breadcrumbs">
-      <span className="breadcrumb-item" onClick={handleBackToLanguages}>Trang chủ</span>
+      <Link to="/" className="breadcrumb-item" style={{ textDecoration: 'none', color: 'inherit' }}>🏠 Trang chủ</Link>
+      <span className="breadcrumb-separator">/</span>
+      <span className="breadcrumb-item" onClick={handleBackToLanguages}>Admin</span>
       <span className="breadcrumb-separator">/</span>
 
       {viewMode === 'languages' ? (
@@ -551,64 +554,238 @@ const AdminPanel = () => {
         ) : (
           <div className="data-grid">
 
-            {/* 1. LANGUAGES SELECT VIEW */}
+            {/* 1. LANGUAGES SELECT VIEW - Modern Design */}
 
             {viewMode === 'languages' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mt-12 pb-12">
-                {/* Japanese Card */}
-                <div
-                  onClick={() => handleSelectLanguage('japanese')}
-                  className="group relative overflow-hidden bg-white rounded-2xl shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
-                >
-                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <span className="text-9xl">JP</span>
-                  </div>
-
-                  <div className="p-8 relative z-10">
-                    <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-4xl">🇯🇵</span>
-                    </div>
-
-                    <h2 className="text-2xl font-bold text-slate-800 mb-2 group-hover:text-red-600 transition-colors">Tiếng Nhật</h2>
-                    <p className="text-slate-500 mb-8">Quản lý các khóa học N5 - N1 và tài liệu học tập.</p>
-
-                    <button className="flex items-center gap-2 text-red-600 font-bold group-hover:gap-3 transition-all">
-                      <span>Quản lý hệ thống</span>
-                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <div className="h-2 bg-gradient-to-r from-red-500 to-pink-500 w-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '60vh',
+                padding: '2rem'
+              }}>
+                {/* Header */}
+                <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                  <h2 style={{
+                    fontSize: '4.5rem',
+                    fontWeight: '800',
+                    color: '#1e293b',
+                    marginBottom: '0.5rem'
+                  }}> Chọn ngôn ngữ</h2>
+                  <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Chọn ngôn ngữ bạn muốn quản lý nội dung</p>
                 </div>
 
-                {/* Chinese Card */}
-                <div
-                  onClick={() => handleSelectLanguage('chinese')}
-                  className="group relative overflow-hidden bg-white rounded-2xl shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
-                >
-                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <span className="text-9xl">CN</span>
-                  </div>
+                {/* Cards Container */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '2rem',
+                  width: '100%'
+                }}>
+                  {/* Japanese Card */}
+                  <div
+                    onClick={() => handleSelectLanguage('japanese')}
+                    style={{
+                      position: 'relative',
+                      background: 'linear-gradient(135deg, #fff5f5 0%, #ffffff 100%)',
+                      borderRadius: '24px',
+                      padding: '2.5rem',
+                      cursor: 'pointer',
+                      border: '2px solid #fecaca',
+                      boxShadow: '0 10px 40px -10px rgba(239, 68, 68, 0.2)',
+                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                      overflow: 'hidden'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                      e.currentTarget.style.boxShadow = '0 25px 60px -15px rgba(239, 68, 68, 0.35)';
+                      e.currentTarget.style.borderColor = '#ef4444';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 10px 40px -10px rgba(239, 68, 68, 0.2)';
+                      e.currentTarget.style.borderColor = '#fecaca';
+                    }}
+                  >
+                    {/* Background decoration */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '-20px',
+                      right: '-20px',
+                      fontSize: '120px',
+                      opacity: '0.05',
+                      fontWeight: '900',
+                      color: '#ef4444'
+                    }}>日本</div>
 
-                  <div className="p-8 relative z-10">
-                    <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-4xl">🇨🇳</span>
+                    {/* Icon with glow */}
+                    <div style={{
+                      width: '80px',
+                      height: '80px',
+                      background: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
+                      borderRadius: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '1.5rem',
+                      boxShadow: '0 10px 30px -5px rgba(239, 68, 68, 0.4)',
+                      transition: 'transform 0.3s ease'
+                    }}>
+                      <span style={{ fontSize: '2.5rem' }}>🇯🇵</span>
                     </div>
 
-                    <h2 className="text-2xl font-bold text-slate-800 mb-2 group-hover:text-orange-600 transition-colors">Tiếng Trung</h2>
-                    <p className="text-slate-500 mb-8">Quản lý các khóa học HSK1 - HSK6 và tài liệu học tập.</p>
+                    <h3 style={{
+                      fontSize: '1.75rem',
+                      fontWeight: '800',
+                      color: '#1e293b',
+                      marginBottom: '0.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      Tiếng Nhật
+                      <span style={{
+                        fontSize: '0.75rem',
+                        background: 'linear-gradient(135deg, #ef4444, #f97316)',
+                        color: 'white',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '20px',
+                        fontWeight: '600'
+                      }}>JLPT</span>
+                    </h3>
 
-                    <button className="flex items-center gap-2 text-orange-600 font-bold group-hover:gap-3 transition-all">
-                      <span>Quản lý hệ thống</span>
-                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    <p style={{ color: '#64748b', marginBottom: '2rem', lineHeight: '1.6' }}>
+                      Quản lý khóa học <strong>N5 → N1</strong> và tài liệu học tập tiếng Nhật.
+                    </p>
+
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      color: '#ef4444',
+                      fontWeight: '700',
+                      fontSize: '1rem'
+                    }}>
+                      <span>Bắt đầu quản lý</span>
+                      <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>
-                    </button>
+                    </div>
+
+                    {/* Bottom accent bar */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '4px',
+                      background: 'linear-gradient(90deg, #ef4444, #f97316, #fb923c)',
+                      borderRadius: '0 0 24px 24px'
+                    }}></div>
                   </div>
 
-                  <div className="h-2 bg-gradient-to-r from-orange-500 to-yellow-500 w-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                  {/* Chinese Card */}
+                  <div
+                    onClick={() => handleSelectLanguage('chinese')}
+                    style={{
+                      position: 'relative',
+                      background: 'linear-gradient(135deg, #fef3c7 0%, #ffffff 100%)',
+                      borderRadius: '24px',
+                      padding: '2.5rem',
+                      cursor: 'pointer',
+                      border: '2px solid #fed7aa',
+                      boxShadow: '0 10px 40px -10px rgba(234, 88, 12, 0.2)',
+                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                      overflow: 'hidden'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                      e.currentTarget.style.boxShadow = '0 25px 60px -15px rgba(234, 88, 12, 0.35)';
+                      e.currentTarget.style.borderColor = '#ea580c';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 10px 40px -10px rgba(234, 88, 12, 0.2)';
+                      e.currentTarget.style.borderColor = '#fed7aa';
+                    }}
+                  >
+                    {/* Background decoration */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '-20px',
+                      right: '-20px',
+                      fontSize: '120px',
+                      opacity: '0.05',
+                      fontWeight: '900',
+                      color: '#ea580c'
+                    }}>中文</div>
+
+                    {/* Icon with glow */}
+                    <div style={{
+                      width: '80px',
+                      height: '80px',
+                      background: 'linear-gradient(135deg, #ea580c 0%, #eab308 100%)',
+                      borderRadius: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '1.5rem',
+                      boxShadow: '0 10px 30px -5px rgba(234, 88, 12, 0.4)',
+                      transition: 'transform 0.3s ease'
+                    }}>
+                      <span style={{ fontSize: '2.5rem' }}>🇨🇳</span>
+                    </div>
+
+                    <h3 style={{
+                      fontSize: '1.75rem',
+                      fontWeight: '800',
+                      color: '#1e293b',
+                      marginBottom: '0.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      Tiếng Trung
+                      <span style={{
+                        fontSize: '0.75rem',
+                        background: 'linear-gradient(135deg, #ea580c, #eab308)',
+                        color: 'white',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '20px',
+                        fontWeight: '600'
+                      }}>HSK</span>
+                    </h3>
+
+                    <p style={{ color: '#64748b', marginBottom: '2rem', lineHeight: '1.6' }}>
+                      Quản lý khóa học <strong>HSK1 → HSK6</strong> và tài liệu học tập tiếng Trung.
+                    </p>
+
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      color: '#ea580c',
+                      fontWeight: '700',
+                      fontSize: '1rem'
+                    }}>
+                      <span>Bắt đầu quản lý</span>
+                      <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </div>
+
+                    {/* Bottom accent bar */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '4px',
+                      background: 'linear-gradient(90deg, #ea580c, #eab308, #facc15)',
+                      borderRadius: '0 0 24px 24px'
+                    }}></div>
+                  </div>
                 </div>
               </div>
             )}
