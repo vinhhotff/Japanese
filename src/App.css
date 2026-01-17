@@ -111,6 +111,116 @@
   margin-top: 2rem;
 }
 
+/* ===== PREMIUM LANGUAGE CARDS ===== */
+.lang-card-premium {
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 24px;
+  padding: 1.5rem 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  min-width: 320px;
+  position: relative;
+  overflow: hidden;
+}
+
+.lang-card-premium:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+.lang-box {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: white;
+  background: var(--border-color);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.lang-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.lang-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.lang-native {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.lang-desc {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  margin-top: 0.25rem;
+}
+
+.lang-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  transition: all 0.3s;
+}
+
+/* JP Styling */
+.lang-card-premium.jp-style:hover {
+  border-color: #fce7f3;
+  background: linear-gradient(135deg, rgba(219, 39, 119, 0.05), #ffffff 100%);
+}
+
+[data-theme="dark"] .lang-card-premium.jp-style:hover {
+  background: linear-gradient(135deg, rgba(219, 39, 119, 0.1), var(--card-bg) 100%);
+}
+
+.lang-card-premium.jp-style .lang-box {
+  background: linear-gradient(135deg, #db2777, #f472b6);
+  box-shadow: 0 8px 20px rgba(219, 39, 119, 0.3);
+}
+
+.lang-card-premium.jp-style .lang-indicator {
+  background: #db2777;
+}
+
+/* CN Styling */
+.lang-card-premium.cn-style:hover {
+  border-color: #fed7aa;
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.05), #ffffff 100%);
+}
+
+[data-theme="dark"] .lang-card-premium.cn-style:hover {
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.1), var(--card-bg) 100%);
+}
+
+.lang-card-premium.cn-style .lang-box {
+  background: linear-gradient(135deg, #ea580c, #fbbf24);
+  box-shadow: 0 8px 20px rgba(234, 88, 12, 0.3);
+}
+
+.lang-card-premium.cn-style .lang-indicator {
+  background: #ea580c;
+}
+
 /* ===== BUTTONS ===== */
 .btn {
   padding: 0.75rem 1.5rem;

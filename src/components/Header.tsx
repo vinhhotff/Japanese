@@ -15,6 +15,7 @@ const Header = () => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [aiLangTab, setAiLangTab] = useState<'japanese' | 'chinese'>('japanese');
   const practiceMenuRef = useRef<HTMLDivElement>(null);
   const aiMenuRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
@@ -117,7 +118,7 @@ const Header = () => {
                   <span>Ôn tập SRS</span>
                 </Link>
                 <Link to="/kanji-writing" className="dropdown-item" onClick={() => setShowPracticeMenu(false)}>
-                <svg className="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <svg className="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                   <span>Luyện viết Kanji</span>
@@ -145,27 +146,75 @@ const Header = () => {
               </svg>
             </button>
             {showAIMenu && (
-              <div className="nav-dropdown-menu">
-                <Link to="/ai-conversation" className="dropdown-item" onClick={() => setShowAIMenu(false)}>
-                  <svg className="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  <span>Hội thoại AI</span>
-                </Link>
-                <Link to="/ai-roleplay" className="dropdown-item" onClick={() => setShowAIMenu(false)}>
-                  <svg className="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <span>Nhập vai AI</span>
-                </Link>
-                <Link to="/voice-recorder" className="dropdown-item" onClick={() => setShowAIMenu(false)}>
-                  <svg className="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                  </svg>
-                  <span>Ghi âm luyện nói</span>
-                </Link>
+              <div className="nav-dropdown-menu ai-dropdown-premium">
+                {/* Language Tabs */}
+                <div className="ai-tabs-switcher">
+                  <button
+                    className={`ai-tab-btn jp ${aiLangTab === 'japanese' ? 'active' : ''}`}
+                    onClick={(e) => { e.stopPropagation(); setAiLangTab('japanese'); }}
+                  >
+                    <span>JP</span>
+                    <span>Tiếng Nhật</span>
+                  </button>
+                  <button
+                    className={`ai-tab-btn cn ${aiLangTab === 'chinese' ? 'active' : ''}`}
+                    onClick={(e) => { e.stopPropagation(); setAiLangTab('chinese'); }}
+                  >
+                    <span>CN</span>
+                    <span>Tiếng Trung</span>
+                  </button>
+                </div>
+
+                {/* Tab Content */}
+                <div className="ai-tab-content">
+                  {aiLangTab === 'japanese' ? (
+                    <>
+                      <Link to={`/ai-roleplay?lang=${aiLangTab}`} className="dropdown-item" onClick={() => setShowAIMenu(false)}>
+                        <svg className="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <div className="dropdown-item-info">
+                          <span className="item-title">Nhập vai cùng AI</span>
+                          <span className="item-desc">Luyện giao tiếp JLPT N5-N2</span>
+                        </div>
+                      </Link>
+                      <Link to={`/voice-recorder?lang=${aiLangTab}`} className="dropdown-item" onClick={() => setShowAIMenu(false)}>
+                        <svg className="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                        <div className="dropdown-item-info">
+                          <span className="item-title">Ghi âm luyện nói</span>
+                          <span className="item-desc">Phát âm chuẩn cùng AI</span>
+                        </div>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link to={`/ai-roleplay?lang=${aiLangTab}`} className="dropdown-item" onClick={() => setShowAIMenu(false)}>
+                        <svg className="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <div className="dropdown-item-info">
+                          <span className="item-title">Nhập vai (中文)</span>
+                          <span className="item-desc">Giao tiếp HSK 1-6</span>
+                        </div>
+                      </Link>
+                      <Link to={`/voice-recorder?lang=${aiLangTab}`} className="dropdown-item" onClick={() => setShowAIMenu(false)}>
+                        <svg className="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                        <div className="dropdown-item-info">
+                          <span className="item-title">Ghi âm (中文)</span>
+                          <span className="item-desc">Luyện nói tiếng Trung</span>
+                        </div>
+                      </Link>
+                    </>
+
+                  )}
+                </div>
               </div>
             )}
+
           </div>
 
           {/* More Dropdown */}
@@ -347,17 +396,11 @@ const Header = () => {
 
             <div className="mobile-menu-section">
               <div className="mobile-menu-label">AI Tools</div>
-              <Link to="/ai-conversation" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <span>Hội thoại AI</span>
-              </Link>
               <Link to="/ai-roleplay" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                <span>Nhập vai AI</span>
+                <span>Nhập vai cùng AI</span>
               </Link>
               <Link to="/voice-recorder" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

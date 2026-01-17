@@ -1508,15 +1508,18 @@
 .ai-features-section {
   position: relative;
   z-index: 1;
-  padding: 3rem 2rem;
-  max-width: 1400px;
+  padding: 4rem 2rem;
+  max-width: 1200px;
+  /* Reduced from 1400px for better density */
   margin: 0 auto;
 }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  /* Fixed 3 columns for perfect 2-row layout */
+  gap: 2rem;
+  /* Increased gap slightly for premium look */
 }
 
 .feature-card {
@@ -1706,6 +1709,10 @@
   .levels-grid {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
+
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -1742,6 +1749,10 @@
 
   .features-grid {
     grid-template-columns: 1fr;
+  }
+
+  .feature-highlight {
+    grid-column: span 1 !important;
   }
 
   .float-char {

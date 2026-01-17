@@ -36,8 +36,9 @@ const AdminPanel = () => {
   // 'lessons': List of lessons in selectedCourse
   // 'content': Content of selectedLesson
   // 'users': User Management
-  const [viewMode, setViewMode] = useState<'languages' | 'courses' | 'lessons' | 'content' | 'users'>('languages');
+  const [viewMode, setViewMode] = useState<'languages' | 'levels' | 'courses' | 'lessons' | 'content' | 'users'>('languages');
   const [selectedLanguage, setSelectedLanguage] = useState<'japanese' | 'chinese' | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
 
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
@@ -78,10 +79,12 @@ const AdminPanel = () => {
       loadContent();
     } else if (viewMode === 'users') {
       loadUsers();
-    } else if (viewMode === 'courses' && selectedLanguage) {
+    } else if (viewMode === 'courses' && selectedLanguage && selectedLevel) {
       loadCourses();
+    } else if (viewMode === 'lessons' && selectedCourse) {
+      loadLessonsForCourse(selectedCourse.id);
     }
-  }, [viewMode, selectedLesson, activeTab, selectedLanguage]);
+  }, [viewMode, selectedLesson, activeTab, selectedLanguage, selectedLevel, selectedCourse]);
 
   // Search filtering
   useEffect(() => {
@@ -103,7 +106,9 @@ const AdminPanel = () => {
       // Fetch all courses then filter by language in memory or api
       // Assuming getCourses returns all, we filter here for now
       const res = await getCourses();
-      const filteredCourses = (res || []).filter((c: any) => c.language === selectedLanguage);
+      const filteredCourses = (res || []).filter((c: any) =>
+        c.language === selectedLanguage && c.level === selectedLevel
+      );
 
       setCourses(filteredCourses);
       // If we are in courses view, data is courses
@@ -126,11 +131,8 @@ const AdminPanel = () => {
       // Sort lessons by number if possible
       const sorted = (res || []).sort((a: any, b: any) => a.lesson_number - b.lesson_number);
       setLessons(sorted);
-      // If we are in lessons view, data is lessons
-      if (viewMode === 'lessons') {
-        setData(sorted);
-        setFilteredData(sorted);
-      }
+      setData(sorted);
+      setFilteredData(sorted);
     } catch (e) {
       console.error(e);
       showToast('Lỗi tải bài học', 'error');
@@ -177,6 +179,11 @@ const AdminPanel = () => {
   // Navigation Handlers
   const handleSelectLanguage = (lang: 'japanese' | 'chinese') => {
     setSelectedLanguage(lang);
+    setViewMode('levels');
+  };
+
+  const handleSelectLevel = (level: string) => {
+    setSelectedLevel(level);
     setViewMode('courses');
   };
 
@@ -194,22 +201,30 @@ const AdminPanel = () => {
 
   const handleBackToLanguages = () => {
     setSelectedLanguage(null);
+    setSelectedLevel(null);
     setSelectedCourse(null);
     setSelectedLesson(null);
     setViewMode('languages');
+  };
+
+  const handleBackToLevels = () => {
+    setSelectedLevel(null);
+    setSelectedCourse(null);
+    setSelectedLesson(null);
+    setViewMode('levels');
   };
 
   const handleBackToCourses = () => {
     setSelectedCourse(null);
     setSelectedLesson(null);
     setViewMode('courses');
-    loadCourses(); // Refresh
+    // loadCourses() will be called by useEffect
   };
 
   const handleBackToLessons = () => {
     setSelectedLesson(null);
     setViewMode('lessons');
-    if (selectedCourse) loadLessonsForCourse(selectedCourse.id);
+    // loadLessonsForCourse() will be called by useEffect
   };
 
   // CRUD Handlers
@@ -245,8 +260,9 @@ const AdminPanel = () => {
 
         loadContent();
       } else if (viewMode === 'courses') {
-        // Ensure language is set from selectedLanguage context
+        // Ensure language and level is set from context
         formData.language = selectedLanguage;
+        formData.level = selectedLevel;
         await createCourse(formData);
         loadCourses();
       }
@@ -316,11 +332,23 @@ const AdminPanel = () => {
       ) : (
         <>
           <span
-            className={`breadcrumb-item ${!selectedCourse && viewMode === 'courses' ? 'breadcrumb-current' : ''}`}
-            onClick={handleBackToCourses}
+            className={`breadcrumb-item ${viewMode === 'levels' ? 'breadcrumb-current' : ''}`}
+            onClick={handleBackToLevels}
           >
             {selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}
           </span>
+
+          {selectedLevel && (
+            <>
+              <span className="breadcrumb-separator">/</span>
+              <span
+                className={`breadcrumb-item ${viewMode === 'courses' ? 'breadcrumb-current' : ''}`}
+                onClick={handleBackToCourses}
+              >
+                Cấp độ {selectedLevel}
+              </span>
+            </>
+          )}
 
           {selectedCourse && (
             <>
@@ -524,7 +552,9 @@ const AdminPanel = () => {
               </div>
             ) : (
               <div className="admin-section-title">
-                {viewMode === 'courses' ? `Danh sách khóa học ${selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}` : `Danh sách bài học của ${selectedCourse?.title}`}
+                {viewMode === 'levels' && "Chọn cấp độ hệ thống"}
+                {viewMode === 'courses' && `Khóa học ${selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'} - Cấp độ ${selectedLevel}`}
+                {viewMode === 'lessons' && `Bài học trong: ${selectedCourse?.title}`}
               </div>
             )}
 
@@ -536,9 +566,11 @@ const AdminPanel = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-input"
               />
-              <button className="btn-add" onClick={() => { setEditingItem(null); setShowForm(true); }}>
-                <span>+</span> Thêm Mới
-              </button>
+              {(viewMode === 'courses' || viewMode === 'lessons' || viewMode === 'content') && (
+                <button className="btn-add" onClick={() => { setEditingItem(null); setShowForm(true); }}>
+                  <span>+</span> Thêm Mới
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -555,7 +587,6 @@ const AdminPanel = () => {
           <div className="data-grid">
 
             {/* 1. LANGUAGES SELECT VIEW - Modern Design */}
-
             {viewMode === 'languages' && (
               <div style={{
                 display: 'flex',
@@ -567,8 +598,7 @@ const AdminPanel = () => {
               }}>
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                  <h2 style={{
-                    fontSize: '4.5rem',
+                  <h2 className="responsive-title" style={{
                     fontWeight: '800',
                     color: '#1e293b',
                     marginBottom: '0.5rem'
@@ -577,11 +607,11 @@ const AdminPanel = () => {
                 </div>
 
                 {/* Cards Container */}
-                <div style={{
-                  display: 'grid',
+                <div className="admin-grid" style={{
+                  width: '100%',
+                  maxWidth: '1000px',
                   gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '2rem',
-                  width: '100%'
+                  gap: '2rem'
                 }}>
                   {/* Japanese Card */}
                   <div
@@ -790,24 +820,178 @@ const AdminPanel = () => {
               </div>
             )}
 
-            {/* 2. COURSES VIEW */}
-            {viewMode === 'courses' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-                {currentItems.length > 0 ? currentItems.map((course: any) => (
-                  <div key={course.id} className="course-card" onClick={() => handleSelectCourse(course)}>
-                    <div className="course-header">
-                      <h3 className="course-title">{course.title}</h3>
-                      <span className={`course-badge ${course.language}`}>{course.level}</span>
+            {viewMode === 'levels' && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '2rem'
+              }}>
+                <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                  <h2 style={{ fontSize: '2rem', fontWeight: '800', color: '#1e293b' }}>
+                    {selectedLanguage === 'japanese' ? '🇯🇵 Chọn cấp độ JLPT' : '🇨🇳 Chọn cấp độ HSK'}
+                  </h2>
+                  <p style={{ color: '#64748b' }}>Chọn cấp độ để quản lý các khóa học tương ứng</p>
+                </div>
+
+                <div className="admin-grid" style={{
+                  gap: '1.5rem',
+                  width: '100%',
+                  marginTop: '1rem'
+                }}>
+                  {(selectedLanguage === 'japanese'
+                    ? ['N5', 'N4', 'N3', 'N2', 'N1']
+                    : ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6']
+                  ).map((level) => (
+                    <div
+                      key={level}
+                      onClick={() => handleSelectLevel(level)}
+                      style={{
+                        background: 'white',
+                        padding: '2rem 1.5rem',
+                        borderRadius: '20px',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        border: '2px solid #e2e8f0',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-5px)';
+                        e.currentTarget.style.borderColor = selectedLanguage === 'japanese' ? '#ef4444' : '#ea580c';
+                        e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.borderColor = '#e2e8f0';
+                        e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
+                      }}
+                    >
+                      <div style={{
+                        fontSize: '2.5rem',
+                        fontWeight: '900',
+                        color: selectedLanguage === 'japanese' ? '#ef4444' : '#ea580c',
+                        marginBottom: '0.5rem'
+                      }}>{level}</div>
+                      <div style={{
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#64748b',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px'
+                      }}>
+                        {selectedLanguage === 'japanese' ? 'Level' : 'Grade'}
+                      </div>
                     </div>
-                    <p className="course-desc">{course.description || 'Chưa có mô tả'}</p>
-                    <div className="course-actions" onClick={e => e.stopPropagation()}>
-                      <button onClick={(e) => { e.stopPropagation(); setEditingItem(course); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
-                      <button onClick={(e) => { e.stopPropagation(); handleDelete(course.id); }} className="btn-icon btn-delete">Xóa</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 2. COURSES VIEW - Modern Grid */}
+            {viewMode === 'courses' && (
+              <div className="admin-grid" style={{
+                width: '100%',
+                marginTop: '1rem'
+              }}>
+                {currentItems.length > 0 ? currentItems.map((course: any) => (
+                  <div
+                    key={course.id}
+                    onClick={() => handleSelectCourse(course)}
+                    style={{
+                      background: 'white',
+                      borderRadius: '20px',
+                      padding: '1.5rem',
+                      border: '1px solid #e2e8f0',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '1rem',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 12px 20px -5px rgba(0,0,0,0.1)';
+                      e.currentTarget.style.borderColor = selectedLanguage === 'japanese' ? '#fecaca' : '#fed7aa';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.borderColor = '#e2e8f0';
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', flex: 1 }}>{course.title}</h3>
+                      <span style={{
+                        background: selectedLanguage === 'japanese' ? '#fee2e2' : '#ffedd5',
+                        color: selectedLanguage === 'japanese' ? '#ef4444' : '#ea580c',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '12px',
+                        fontSize: '0.75rem',
+                        fontWeight: '800'
+                      }}>{course.level}</span>
+                    </div>
+
+                    <p style={{
+                      color: '#64748b',
+                      fontSize: '0.9rem',
+                      lineHeight: '1.5',
+                      display: '-webkit-box',
+                      WebkitLineClamp: '2',
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      height: '2.7rem'
+                    }}>{course.description || 'Chưa có mô tả cho khóa học này.'}</p>
+
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: 'auto',
+                      paddingTop: '1rem',
+                      borderTop: '1px solid #f1f5f9'
+                    }}>
+                      <button
+                        className="manage-content-btn"
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
+                      >
+                        📚 Xem bài học
+                      </button>
+                      <div className="course-actions" onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '0.4rem' }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingItem(course); setShowForm(true); }}
+                          className="btn-icon btn-edit"
+                          style={{ padding: '0.4rem 0.7rem', fontSize: '0.75rem' }}
+                        >✏️</button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDelete(course.id); }}
+                          className="btn-icon btn-delete"
+                          style={{ padding: '0.4rem 0.7rem', fontSize: '0.75rem' }}
+                        >🗑️</button>
+                      </div>
                     </div>
                   </div>
                 )) : (
-                  <div className="col-span-3 text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                    Chưa có khóa học nào. Hãy bấm "Thêm Mới" để tạo.
+                  <div style={{
+                    gridColumn: '1 / -1',
+                    textAlign: 'center',
+                    padding: '4rem 2rem',
+                    background: '#f8fafc',
+                    borderRadius: '24px',
+                    border: '2px dashed #e2e8f0'
+                  }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#475569' }}>Chưa có khóa học nào</h3>
+                    <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>Hãy tạo khóa học đầu tiên cho cấp độ này</p>
+                    <button
+                      className="btn-add"
+                      onClick={() => { setEditingItem(null); setShowForm(true); }}
+                      style={{ margin: '0 auto' }}
+                    >
+                      <span>+</span> Thêm Khóa Học
+                    </button>
                   </div>
                 )}
               </div>
@@ -819,27 +1003,46 @@ const AdminPanel = () => {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th style={{ width: '60px' }}>STT</th>
-                      <th>Tên bài</th>
+                      <th style={{ width: '80px' }}>Bài số</th>
+                      <th>Tên bài học</th>
                       <th>Mô tả</th>
-                      <th style={{ width: '120px' }}>Hành động</th>
+                      <th style={{ width: '220px', textAlign: 'center' }}>Quản lý nội dung</th>
+                      <th style={{ width: '150px', textAlign: 'right' }}>Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
                     {currentItems.length > 0 ? currentItems.map((lesson: any) => (
-                      <tr key={lesson.id} onClick={() => handleSelectLesson(lesson)} className="cursor-pointer group">
-                        <td className="font-bold text-slate-400 group-hover:text-blue-600">{lesson.lesson_number}</td>
-                        <td className="font-bold text-slate-700 group-hover:text-blue-600 transition-colors">{lesson.title}</td>
-                        <td className="text-slate-500">{lesson.description}</td>
-                        <td onClick={e => e.stopPropagation()}>
-                          <div className="row-action-btns">
-                            <button onClick={(e) => { e.stopPropagation(); setEditingItem(lesson); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDelete(lesson.id); }} className="btn-icon btn-delete">Xóa</button>
+                      <tr key={lesson.id} className="admin-row-hover group">
+                        <td data-label="Bài số" className="font-bold text-slate-400 group-hover:text-red-600 transition-colors">#{lesson.lesson_number}</td>
+                        <td data-label="Tên bài học">
+                          <div className="font-bold text-slate-700 group-hover:text-red-600 transition-colors text-lg">{lesson.title}</div>
+                          <div className="text-xs text-slate-400 md:hidden">{lesson.description}</div>
+                        </td>
+                        <td data-label="Mô tả" className="text-slate-500 italic text-sm">{lesson.description || 'Chưa có mô tả'}</td>
+                        <td data-label="Quản lý" style={{ textAlign: 'center' }}>
+                          <button
+                            onClick={() => handleSelectLesson(lesson)}
+                            className="manage-content-btn"
+                          >
+                            📝 Quản lý
+                          </button>
+                        </td>
+                        <td data-label="Hành động">
+                          <div className="row-action-btns" style={{ justifyContent: 'flex-end' }}>
+                            <button onClick={(e) => { e.stopPropagation(); setEditingItem(lesson); setShowForm(true); }} className="btn-icon btn-edit" title="Chỉnh sửa">
+                              <span>✏️</span> Sửa
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDelete(lesson.id); }} className="btn-icon btn-delete" title="Xóa">
+                              <span>🗑️</span> Xóa
+                            </button>
                           </div>
                         </td>
                       </tr>
                     )) : (
-                      <tr><td colSpan={4} className="text-center py-8 text-slate-500">Chưa có bài học nào.</td></tr>
+                      <tr><td colSpan={5} className="text-center py-12 text-slate-500">
+                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
+                        Chưa có bài học nào được tạo cho khóa học này.
+                      </td></tr>
                     )}
                   </tbody>
                 </table>
@@ -848,74 +1051,123 @@ const AdminPanel = () => {
 
             {/* 4. CONTENT VIEW */}
             {viewMode === 'content' && (
-              <div className="admin-table-container">
+              <div className="admin-table-container shadow-lg border-t-4 border-red-600">
                 <table className="admin-table">
                   <thead>
                     {activeTab === 'vocabulary' ? (
-                      <tr><th>Từ vựng</th><th>Nghĩa</th><th>Hiragana/Pinyin</th><th>Hành động</th></tr>
+                      <tr>
+                        <th style={{ width: '25%' }}>🔤 Từ vựng / Pinyin</th>
+                        <th style={{ width: '40%' }}>💡 Nghĩa / Ví dụ</th>
+                        <th style={{ width: '15%', textAlign: 'center' }}>⚡️ Độ khó</th>
+                        <th style={{ width: '20%', textAlign: 'right' }}>Hành động</th>
+                      </tr>
                     ) : activeTab === 'kanji' ? (
-                      <tr><th>Ký tự</th><th>Hán Việt/Nghĩa</th><th>Âm đọc</th><th>Hành động</th></tr>
+                      <tr>
+                        <th style={{ width: '15%' }}>🈯️ Ký tự</th>
+                        <th style={{ width: '40%' }}>📖 Nghĩa / Âm đọc</th>
+                        <th style={{ width: '20%', textAlign: 'center' }}>✍️ Số nét</th>
+                        <th style={{ width: '25%', textAlign: 'right' }}>Hành động</th>
+                      </tr>
                     ) : activeTab === 'grammar' ? (
-                      <tr><th>Cấu trúc</th><th>Ý nghĩa</th><th>Hành động</th></tr>
+                      <tr>
+                        <th style={{ width: '30%' }}>📑 Cấu trúc</th>
+                        <th style={{ width: '50%' }}>💬 Giải thích / Ví dụ</th>
+                        <th style={{ width: '20%', textAlign: 'right' }}>Hành động</th>
+                      </tr>
                     ) : (
-                      <tr><th>Tiêu đề/Nội dung</th><th>Hành động</th></tr>
+                      <tr>
+                        <th>Nội dung</th>
+                        <th style={{ textAlign: 'right' }}>Hành động</th>
+                      </tr>
                     )}
                   </thead>
                   <tbody>
                     {currentItems.length > 0 ? currentItems.map((item: any) => (
-                      <tr key={item.id}>
+                      <tr key={item.id} className="admin-row-hover">
                         {activeTab === 'vocabulary' ? (
                           <>
-                            <td className="font-bold text-lg">{item.word}</td>
-                            <td>{item.meaning}</td>
-                            <td className="text-slate-500 font-mono">{item.hiragana}</td>
-                            <td>
-                              <div className="row-action-btns">
-                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
-                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">Xóa</button>
+                            <td data-label="Từ vựng">
+                              <div className="font-bold text-xl text-slate-800">{item.word}</div>
+                              {item.kanji && <div className="text-sm text-slate-400">Kanji: {item.kanji}</div>}
+                              <div className="text-xs font-mono text-red-500 bg-red-50 inline-block px-1 rounded mt-1">{item.hiragana}</div>
+                            </td>
+                            <td data-label="Nghĩa">
+                              <div className="font-semibold text-slate-700">{item.meaning}</div>
+                              {item.example && (
+                                <div className="text-xs text-slate-400 mt-1 italic">
+                                  Ví dụ: {item.example}
+                                </div>
+                              )}
+                            </td>
+                            <td data-label="Độ khó" style={{ textAlign: 'center' }}>
+                              <span className={`badge-difficulty ${item.difficulty || 'easy'}`}>
+                                {item.difficulty === 'easy' ? 'Dễ' : item.difficulty === 'hard' ? 'Khó' : 'Thường'}
+                              </span>
+                            </td>
+                            <td data-label="Hành động">
+                              <div className="row-action-btns" style={{ justifyContent: 'flex-end' }}>
+                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">✏️ Sửa</button>
+                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">🗑️ Xóa</button>
                               </div>
                             </td>
                           </>
                         ) : activeTab === 'kanji' ? (
                           <>
-                            <td className="text-3xl font-serif text-slate-800">{item.character}</td>
-                            <td>{item.meaning}</td>
-                            <td className="text-sm">
-                              {item.onyomi && <div><span className="text-xs text-slate-400 uppercase mr-1">On</span>{item.onyomi.join(', ')}</div>}
-                              {item.kunyomi && <div><span className="text-xs text-slate-400 uppercase mr-1">Kun</span>{item.kunyomi.join(', ')}</div>}
+                            <td data-label="Ký tự">
+                              <div className="text-4xl font-bold bg-slate-50 w-16 h-16 flex items-center justify-center rounded-xl border border-slate-100">{item.character}</div>
                             </td>
-                            <td>
-                              <div className="row-action-btns">
-                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
-                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">Xóa</button>
+                            <td data-label="Ý nghĩa">
+                              <div className="font-bold text-slate-700 text-lg">{item.meaning}</div>
+                              <div className="text-sm text-red-500">On: {Array.isArray(item.onyomi) ? item.onyomi.join(', ') : item.onyomi}</div>
+                              <div className="text-sm text-blue-500">Kun: {Array.isArray(item.kunyomi) ? item.kunyomi.join(', ') : item.kunyomi}</div>
+                            </td>
+                            <td data-label="Số nét" style={{ textAlign: 'center' }}>
+                              <div className="text-2xl font-bold text-slate-400">{item.stroke_count}</div>
+                              <div className="text-xs text-slate-300">nét</div>
+                            </td>
+                            <td data-label="Hành động">
+                              <div className="row-action-btns" style={{ justifyContent: 'flex-end' }}>
+                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">✏️ Sửa</button>
+                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">🗑️ Xóa</button>
                               </div>
                             </td>
                           </>
                         ) : activeTab === 'grammar' ? (
                           <>
-                            <td className="font-bold text-blue-700">{item.pattern}</td>
-                            <td>{item.meaning}</td>
-                            <td>
-                              <div className="row-action-btns">
-                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
-                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">Xóa</button>
+                            <td data-label="Cấu trúc">
+                              <div className="font-bold text-lg text-red-600 bg-red-50 px-3 py-1 rounded inline-block">{item.pattern}</div>
+                              <div className="text-sm text-slate-700 font-semibold mt-1">{item.meaning}</div>
+                            </td>
+                            <td data-label="Giải thích">
+                              <div className="text-sm text-slate-500 line-clamp-2">{item.explanation}</div>
+                              {item.examples && item.examples.length > 0 && (
+                                <div className="text-xs text-blue-400 mt-1">({item.examples.length} ví dụ)</div>
+                              )}
+                            </td>
+                            <td data-label="Hành động">
+                              <div className="row-action-btns" style={{ justifyContent: 'flex-end' }}>
+                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">✏️ Sửa</button>
+                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">🗑️ Xóa</button>
                               </div>
                             </td>
                           </>
                         ) : (
                           <>
-                            <td className="font-medium">{item.title || item.sentence || item.question || 'Item'}</td>
-                            <td>
-                              <div className="row-action-btns">
-                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">Sửa</button>
-                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">Xóa</button>
+                            <td data-label="Nội dung" className="font-medium text-slate-700">{item.title || item.sentence || item.question || 'Nội dung bài học'}</td>
+                            <td data-label="Hành động">
+                              <div className="row-action-btns" style={{ justifyContent: 'flex-end' }}>
+                                <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">✏️ Sửa</button>
+                                <button onClick={() => handleDelete(item.id)} className="btn-icon btn-delete">🗑️ Xóa</button>
                               </div>
                             </td>
                           </>
                         )}
                       </tr>
                     )) : (
-                      <tr><td colSpan={4} className="text-center py-8 text-slate-500">Danh sách trống.</td></tr>
+                      <tr><td colSpan={5} className="text-center py-12 text-slate-500">
+                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📦</div>
+                        Danh mục này chưa có dữ liệu. Hãy bấm "Thêm Mới" để bắt đầu.
+                      </td></tr>
                     )}
                   </tbody>
                 </table>
@@ -952,6 +1204,10 @@ const AdminPanel = () => {
           item={editingItem}
           courses={courses}
           lessons={lessons}
+          currentLanguage={selectedLanguage}
+          currentCourse={selectedCourse}
+          currentLevel={selectedLevel}
+          currentLesson={selectedLesson}
           onSave={editingItem ? (id: string, data: any) => handleUpdate(id, data) : handleCreate}
           onCancel={() => { setShowForm(false); setEditingItem(null); }}
         />
@@ -972,7 +1228,7 @@ const AdminPanel = () => {
 };
 
 // Comprehensive Admin Form
-const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
+const AdminForm = ({ type, item, courses, lessons, currentLanguage, currentCourse, currentLevel, currentLesson, onSave, onCancel }: any) => {
   const { showToast } = useToast();
   // Initialize formData properly to avoid duplication
   const initializeFormData = () => {
@@ -1162,12 +1418,23 @@ const AdminForm = ({ type, item, courses, lessons, onSave, onCancel }: any) => {
 
     switch (type as TabType) {
       case 'vocabulary':
+        const showVocabJSON = showJSONHint['vocabulary'] ?? false;
         return (
           <div className="form-group">
-            <label>Hướng dẫn JSON/format cho AI (Từ vựng)</label>
-            <div className="format-hint" style={{ lineHeight: 1.6 }}>
-              Gợi ý có thể gửi cho AI:
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy tạo một danh sách từ vựng tiếng Nhật trình độ N5.
+            <label>
+              Hướng dẫn JSON/format cho AI (Từ vựng)
+              <button
+                type="button"
+                className="btn-toggle-hint"
+                onClick={() => setShowJSONHint({ ...showJSONHint, vocabulary: !showVocabJSON })}
+              >
+                {showVocabJSON ? '▼ Thu gọn' : '▶ Mở rộng'}
+              </button>
+            </label>
+            {showVocabJSON && (
+              <div className="format-hint" style={{ lineHeight: 1.6 }}>
+                Gợi ý có thể gửi cho AI:
+                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy tạo một danh sách từ vựng tiếng Nhật trình độ N5.
 - Trả về dạng text, mỗi dòng một từ.
 - Không giải thích thêm.
 - Format mỗi dòng:
@@ -1178,17 +1445,29 @@ Ví dụ:
 学生=がくせい=sinh viên
 先生=せんせい=giáo viên
 ありがとう=ありがとう=cảm ơn`}</pre>
-              Sau đó copy toàn bộ và dán vào ô import hàng loạt từ vựng.
-            </div>
+                Sau đó copy toàn bộ và dán vào ô import hàng loạt từ vựng.
+              </div>
+            )}
           </div>
         );
       case 'kanji':
+        const showKanjiJSON = showJSONHint['kanji'] ?? false;
         return (
           <div className="form-group">
-            <label>Hướng dẫn JSON/format cho AI (Kanji)</label>
-            <div className="format-hint" style={{ lineHeight: 1.6 }}>
-              Gợi ý:
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy liệt kê một số kanji trình độ N5 liên quan tới chủ đề tôi đưa.
+            <label>
+              Hướng dẫn JSON/format cho AI (Kanji)
+              <button
+                type="button"
+                className="btn-toggle-hint"
+                onClick={() => setShowJSONHint({ ...showJSONHint, kanji: !showKanjiJSON })}
+              >
+                {showKanjiJSON ? '▼ Thu gọn' : '▶ Mở rộng'}
+              </button>
+            </label>
+            {showKanjiJSON && (
+              <div className="format-hint" style={{ lineHeight: 1.6 }}>
+                Gợi ý:
+                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy liệt kê một số kanji trình độ N5 liên quan tới chủ đề tôi đưa.
 - Trả về dạng text, mỗi dòng một kanji.
 - Không giải thích thêm.
 - Format mỗi dòng:
@@ -1200,8 +1479,9 @@ Ví dụ:
 学=Học
 校=Trường học
 先=Trước, đầu tiên=セン|=さき=6`}</pre>
-              Copy kết quả và dán vào ô import hàng loạt Kanji.
-            </div>
+                Copy kết quả và dán vào ô import hàng loạt Kanji.
+              </div>
+            )}
           </div>
         );
       case 'grammar':
@@ -1212,18 +1492,8 @@ Ví dụ:
               Hướng dẫn JSON/format cho AI (Ngữ pháp)
               <button
                 type="button"
+                className="btn-toggle-hint"
                 onClick={() => setShowJSONHint({ ...showJSONHint, grammar: !showGrammarJSON })}
-                style={{
-                  marginLeft: '0.5rem',
-                  padding: '0.25rem 0.75rem',
-                  fontSize: '0.75rem',
-                  background: 'var(--primary-color)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: '600'
-                }}
               >
                 {showGrammarJSON ? '▼ Thu gọn' : '▶ Mở rộng'}
               </button>
@@ -1387,22 +1657,33 @@ Ví dụ:
   function getDefaultFormData(type: TabType) {
     switch (type) {
       case 'courses':
-        return { level: 'N5', title: '', description: '' };
+        return { level: currentLevel || 'N5', title: '', description: '', language: currentLanguage || 'japanese' };
       case 'lessons':
-        return { course_id: '', title: '', lesson_number: 1, description: '', level: 'N5' };
+        const currentCourseLessons = lessons.filter((l: any) => l.course_id === currentCourse?.id);
+        const maxNumber = currentCourseLessons.length > 0
+          ? Math.max(...currentCourseLessons.map((l: any) => l.lesson_number || 0))
+          : 0;
+        return {
+          course_id: currentCourse?.id || '',
+          title: '',
+          lesson_number: maxNumber + 1,
+          description: '',
+          level: currentLevel || currentCourse?.level || 'N5',
+          language: currentLanguage || currentCourse?.language || 'japanese'
+        };
       case 'vocabulary':
-        return { lesson_id: '', word: '', kanji: '', hiragana: '', meaning: '', example: '', example_translation: '', difficulty: 'easy', is_difficult: false, language: 'japanese' };
+        return { lesson_id: currentLesson?.id || '', word: '', kanji: '', hiragana: '', meaning: '', example: '', example_translation: '', difficulty: 'easy', is_difficult: false, language: currentLanguage || currentCourse?.language || currentLesson?.language || 'japanese' };
       case 'kanji':
-        return { lesson_id: '', character: '', meaning: '', onyomi: [], kunyomi: [], stroke_count: 0, examples: [] };
+        return { lesson_id: currentLesson?.id || '', character: '', meaning: '', onyomi: [], kunyomi: [], stroke_count: 0, examples: [] };
       case 'grammar':
-        return { lesson_id: '', pattern: '', meaning: '', explanation: '', examples: [], language: 'japanese' };
+        return { lesson_id: currentLesson?.id || '', pattern: '', meaning: '', explanation: '', examples: [], language: currentLanguage || currentCourse?.language || currentLesson?.language || 'japanese' };
       case 'listening':
-        return { lesson_id: '', title: '', audio_url: '', image_url: '', transcript: '', questions: [], language: 'japanese' };
+        return { lesson_id: currentLesson?.id || '', title: '', audio_url: '', image_url: '', transcript: '', questions: [], language: currentLanguage || currentCourse?.language || currentLesson?.language || 'japanese' };
       case 'games':
-        return { lesson_id: '', sentence: '', translation: '', words: [], correct_order: [], hint: '', language: 'japanese' };
+        return { lesson_id: currentLesson?.id || '', sentence: '', translation: '', words: [], correct_order: [], hint: '', language: currentLanguage || currentCourse?.language || currentLesson?.language || 'japanese' };
       case 'roleplay':
         return {
-          lesson_id: '',
+          lesson_id: currentLesson?.id || '',
           title: '',
           description: '',
           scenario: '',
@@ -1417,7 +1698,7 @@ Ví dụ:
           difficulty: 'easy',
           image_url: '',
           enable_scoring: false,
-          language: 'japanese'
+          language: currentLanguage || currentCourse?.language || currentLesson?.language || 'japanese'
         };
       default:
         return {};
@@ -1714,12 +1995,6 @@ Ví dụ:
               <div className="form-group">
                 <label>
                   Ngôn ngữ *
-                  <span className="field-tooltip">
-                    <span className="field-tooltip-icon">?</span>
-                    <span className="field-tooltip-content">
-                      Chọn ngôn ngữ cho khóa học. Tiếng Nhật có 5 cấp độ (N5-N1), Tiếng Trung có 6 cấp độ (HSK1-HSK6)
-                    </span>
-                  </span>
                 </label>
                 <select
                   value={formData.language || 'japanese'}
@@ -1740,13 +2015,6 @@ Ví dụ:
               <div className="form-group">
                 <label>
                   Cấp độ *
-                  <span className="field-tooltip">
-                    <span className="field-tooltip-icon">?</span>
-                    <span className="field-tooltip-content">
-                      N5/HSK1: Dễ nhất, dành cho người mới bắt đầu<br />
-                      N1/HSK6: Khó nhất, trình độ cao cấp
-                    </span>
-                  </span>
                 </label>
                 <select
                   value={formData.level}
@@ -1776,12 +2044,6 @@ Ví dụ:
               <div className="form-group">
                 <label>
                   Tiêu đề *
-                  <span className="field-tooltip">
-                    <span className="field-tooltip-icon">?</span>
-                    <span className="field-tooltip-content">
-                      Tên khóa học, ví dụ: "Tiếng Nhật N5 - Cơ bản" hoặc "HSK1 - Giao tiếp hàng ngày"
-                    </span>
-                  </span>
                 </label>
                 <input
                   type="text"
@@ -1794,12 +2056,6 @@ Ví dụ:
               <div className="form-group">
                 <label>
                   Mô tả
-                  <span className="field-tooltip">
-                    <span className="field-tooltip-icon">?</span>
-                    <span className="field-tooltip-content">
-                      Mô tả ngắn về khóa học, nội dung sẽ học, đối tượng phù hợp. Có thể để trống.
-                    </span>
-                  </span>
                 </label>
                 <textarea
                   value={formData.description || ''}
@@ -1827,6 +2083,7 @@ Ví dụ:
                     });
                   }}
                   required
+                  disabled={!!currentLanguage}
                 >
                   <option value="japanese">🇯🇵 Tiếng Nhật</option>
                   <option value="chinese">🇨🇳 Tiếng Trung</option>
@@ -1838,6 +2095,7 @@ Ví dụ:
                   value={formData.course_id}
                   onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
                   required
+                  disabled={!!currentCourse}
                 >
                   <option value="">Chọn khóa học</option>
                   {courses
@@ -1857,7 +2115,7 @@ Ví dụ:
                 />
               </div>
               <div className="form-group">
-                <label>Số bài *</label>
+                <label>Bài số mấy *</label>
                 <input
                   type="number"
                   value={formData.lesson_number}
@@ -1871,6 +2129,7 @@ Ví dụ:
                   value={formData.level}
                   onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                   required
+                  disabled={!!currentLevel || !!currentCourse}
                 >
                   {(formData.language === 'chinese') ? (
                     <>
@@ -1938,12 +2197,6 @@ Ví dụ:
               <div className="form-group">
                 <label>
                   Ngôn ngữ *
-                  <span className="field-tooltip">
-                    <span className="field-tooltip-icon">?</span>
-                    <span className="field-tooltip-content">
-                      Chọn ngôn ngữ cho từ vựng. Tiếng Nhật cần Hiragana và Kanji (nếu có). Tiếng Trung cần Hán tự và Pinyin.
-                    </span>
-                  </span>
                 </label>
                 <select
                   value={formData.language || 'japanese'}
@@ -1964,12 +2217,6 @@ Ví dụ:
               <div className="form-group">
                 <label>
                   Bài học *
-                  <span className="field-tooltip">
-                    <span className="field-tooltip-icon">?</span>
-                    <span className="field-tooltip-content">
-                      Chọn bài học mà từ vựng này thuộc về. Danh sách chỉ hiển thị bài học cùng ngôn ngữ bạn đã chọn.
-                    </span>
-                  </span>
                 </label>
                 <select
                   value={formData.lesson_id}
@@ -2094,24 +2341,49 @@ Ví dụ:
                 />
               </div>
               <div className="form-group">
-                <label>Độ khó</label>
-                <select
-                  value={formData.difficulty}
-                  onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-                >
-                  <option value="easy">Dễ</option>
-                  <option value="medium">Trung bình</option>
-                  <option value="hard">Khó</option>
-                </select>
+                <label>Độ khó / Mức độ ưu tiên</label>
+                <div className="difficulty-selector">
+                  <button
+                    type="button"
+                    className={`diff-option easy ${formData.difficulty === 'easy' ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, difficulty: 'easy' })}
+                  >
+                    <span className="diff-emoji">🌱</span>
+                    <span>Dễ</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`diff-option medium ${formData.difficulty === 'medium' || !formData.difficulty ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, difficulty: 'medium' })}
+                  >
+                    <span className="diff-emoji">🌿</span>
+                    <span>Thường</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`diff-option hard ${formData.difficulty === 'hard' ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, difficulty: 'hard' })}
+                  >
+                    <span className="diff-emoji">🌳</span>
+                    <span>Khó</span>
+                  </button>
+                </div>
               </div>
-              <div className="form-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={formData.is_difficult || false}
-                    onChange={(e) => setFormData({ ...formData, is_difficult: e.target.checked })}
-                  />
-                  Từ vựng khó
+
+              <div className="form-group" style={{ marginTop: '2rem' }}>
+                <label className={`modern-checkbox-card ${formData.is_difficult ? 'active' : ''}`}>
+                  <div className="modern-checkbox-content">
+                    <span className="modern-checkbox-title">🚨 Từ vựng quan trọng / khó</span>
+                    <span className="modern-checkbox-desc">Đánh dấu để ưu tiên ôn tập thường xuyên hơn</span>
+                  </div>
+                  <div className="modern-switch">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_difficult || false}
+                      onChange={(e) => setFormData({ ...formData, is_difficult: e.target.checked })}
+                    />
+                    <span className="modern-slider"></span>
+                  </div>
                 </label>
               </div>
             </>
@@ -2132,6 +2404,7 @@ Ví dụ:
                     });
                   }}
                   required
+                  disabled={!!currentLanguage}
                 >
                   <option value="japanese">🇯🇵 Tiếng Nhật</option>
                   <option value="chinese">🇨🇳 Tiếng Trung</option>
@@ -2143,6 +2416,7 @@ Ví dụ:
                   value={formData.lesson_id}
                   onChange={(e) => setFormData({ ...formData, lesson_id: e.target.value })}
                   required
+                  disabled={!!currentLesson}
                 >
                   <option value="">Chọn bài học</option>
                   {lessons
@@ -2239,14 +2513,32 @@ Ví dụ:
 
               <div className="form-group">
                 <label>Độ khó mặc định</label>
-                <select
-                  value={formData.difficulty || 'easy'}
-                  onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-                >
-                  <option value="easy">Dễ</option>
-                  <option value="medium">Trung bình</option>
-                  <option value="hard">Khó</option>
-                </select>
+                <div className="difficulty-selector">
+                  <button
+                    type="button"
+                    className={`diff-option easy ${formData.difficulty === 'easy' ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, difficulty: 'easy' })}
+                  >
+                    <span className="diff-emoji">🌱</span>
+                    <span>Dễ</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`diff-option medium ${formData.difficulty === 'medium' || !formData.difficulty ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, difficulty: 'medium' })}
+                  >
+                    <span className="diff-emoji">🌿</span>
+                    <span>Thường</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`diff-option hard ${formData.difficulty === 'hard' ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, difficulty: 'hard' })}
+                  >
+                    <span className="diff-emoji">🌳</span>
+                    <span>Khó</span>
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -2323,24 +2615,49 @@ Ví dụ:
                 />
               </div>
               <div className="form-group">
-                <label>Độ khó</label>
-                <select
-                  value={formData.difficulty}
-                  onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-                >
-                  <option value="easy">Dễ</option>
-                  <option value="medium">Trung bình</option>
-                  <option value="hard">Khó</option>
-                </select>
+                <label>Độ khó / Mức độ ưu tiên</label>
+                <div className="difficulty-selector">
+                  <button
+                    type="button"
+                    className={`diff-option easy ${formData.difficulty === 'easy' ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, difficulty: 'easy' })}
+                  >
+                    <span className="diff-emoji">🌱</span>
+                    <span>Dễ</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`diff-option medium ${formData.difficulty === 'medium' || !formData.difficulty ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, difficulty: 'medium' })}
+                  >
+                    <span className="diff-emoji">🌿</span>
+                    <span>Thường</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`diff-option hard ${formData.difficulty === 'hard' ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, difficulty: 'hard' })}
+                  >
+                    <span className="diff-emoji">🌳</span>
+                    <span>Khó</span>
+                  </button>
+                </div>
               </div>
-              <div className="form-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={formData.is_difficult || false}
-                    onChange={(e) => setFormData({ ...formData, is_difficult: e.target.checked })}
-                  />
-                  Từ vựng khó
+
+              <div className="form-group" style={{ marginTop: '2rem' }}>
+                <label className={`modern-checkbox-card ${formData.is_difficult ? 'active' : ''}`}>
+                  <div className="modern-checkbox-content">
+                    <span className="modern-checkbox-title">🚨 Từ vựng quan trọng / khó</span>
+                    <span className="modern-checkbox-desc">Đánh dấu để ưu tiên ôn tập thường xuyên hơn</span>
+                  </div>
+                  <div className="modern-switch">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_difficult || false}
+                      onChange={(e) => setFormData({ ...formData, is_difficult: e.target.checked })}
+                    />
+                    <span className="modern-slider"></span>
+                  </div>
                 </label>
               </div>
             </>

@@ -24,7 +24,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import AIConversation from './components/AIConversation';
 import VoiceRecorder from './components/VoiceRecorder';
-import AIRoleplayCSSOnly from './components/AIRoleplayCSSOnly';
 import AssignmentList from './components/AssignmentList';
 import AssignmentDetail from './components/AssignmentDetail';
 import GradingInterface from './components/GradingInterface';
@@ -132,7 +131,7 @@ function App() {
                   {/* Shared Routes */}
                   <Route path="/study-progress" element={<StudyProgress />} />
                   <Route path="/ai-conversation" element={<AIConversation />} />
-                  <Route path="/ai-roleplay" element={<AIRoleplayCSSOnly />} />
+                  <Route path="/ai-roleplay" element={<AIConversation />} />
                   <Route path="/voice-recorder" element={<VoiceRecorder />} />
 
                   {/* Assignment Routes */}

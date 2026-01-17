@@ -47,18 +47,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchUserRole = async (email: string | undefined): Promise<UserRole | null> => {
     if (!email) return null;
     try {
-      // Timeout protection - 3 seconds max using Promise.race
-      const queryPromise = supabase
+      const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('email', email)
-        .single();
-
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout')), 3000)
-      );
-
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+        .maybeSingle();
 
       if (data && !error) {
         return data.role as UserRole;

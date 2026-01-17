@@ -39,7 +39,7 @@ export const assignRole = async (email: string, role: 'teacher' | 'student' | 'a
         .from('user_roles')
         .select('id')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
     if (existing) {
         const { data, error } = await supabase

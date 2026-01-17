@@ -15,10 +15,13 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      console.error('Error fetching profile:', error);
+      // Only log if it's a real error, not just "not found"
+      if (error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
+      }
       return null;
     }
 
@@ -36,7 +39,7 @@ export const updateProfile = async (userId: string, updates: Partial<Profile>): 
       .update(updates)
       .eq('id', userId)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
     return data as Profile;

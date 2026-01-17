@@ -211,20 +211,12 @@ const StudentDashboard: React.FC = () => {
         <div className="dashboard-card-content">
           <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
             <Link
-              to={hasClass ? "/ai-conversation" : "#"}
-              className={`dashboard-btn dashboard-btn-primary ${!hasClass ? 'opacity-50 cursor-not-allowed' : ''}`}
-              style={{ width: '100%', justifyContent: 'center', pointerEvents: hasClass ? 'auto' : 'none' }}
-              onClick={(e) => !hasClass && e.preventDefault()}
-            >
-              💬 AI Conversation
-            </Link>
-            <Link
               to={hasClass ? "/ai-roleplay" : "#"}
               className={`dashboard-btn dashboard-btn-primary ${!hasClass ? 'opacity-50 cursor-not-allowed' : ''}`}
               style={{ width: '100%', justifyContent: 'center', pointerEvents: hasClass ? 'auto' : 'none' }}
               onClick={(e) => !hasClass && e.preventDefault()}
             >
-              🎭 AI Roleplay
+              🎭 Nhập vai cùng AI
             </Link>
           </div>
           {!hasClass && (
@@ -258,7 +250,7 @@ const StudentDashboard: React.FC = () => {
               ⭐ Từ đã lưu
             </Link>
             <Link to="/study-progress" className="dashboard-btn dashboard-btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
-              📊 Tiến độ
+              Tiến độ
             </Link>
           </div>
         </div>

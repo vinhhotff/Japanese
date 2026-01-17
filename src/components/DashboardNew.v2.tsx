@@ -881,31 +881,18 @@ const DashboardNew = () => {
           </Link>
 
           <Link
-            to="/ai-conversation"
-            className="feature-card feature-highlight"
-            onClick={(e) => handleAuthRequired(e, '/ai-conversation')}
-          >
-            <svg className="feature-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            <h3 className="feature-title">Chat với AI</h3>
-            <p className="feature-desc">Trò chuyện tự nhiên, học thực tế</p>
-            <span className="feature-badge">HOT</span>
-          </Link>
-
-          <Link
             to="/ai-roleplay"
             className="feature-card feature-highlight"
             onClick={(e) => handleAuthRequired(e, '/ai-roleplay')}
+            style={{ gridColumn: 'span 2' }}
           >
             <svg className="feature-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="22" />
             </svg>
-            <h3 className="feature-title">Roleplay AI</h3>
-            <p className="feature-desc">Tình huống thực tế, phản hồi tức thì</p>
-            <span className="feature-badge">NEW</span>
+            <h3 className="feature-title">Nhập vai cùng AI</h3>
+            <p className="feature-desc">Trò chuyện và nhập vai cùng nhân vật hoạt hình thông minh, có gợi ý câu trả lời & dịch thuật tức thì</p>
+            <span className="feature-badge">HOT PRO</span>
           </Link>
 
           <Link to="/study-progress" className="feature-card">
