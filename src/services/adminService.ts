@@ -32,6 +32,21 @@ export const getAllUserRoles = async () => {
     return data as UserRoleRecord[];
 };
 
+// Get single user role
+export const getUserRole = async (email: string) => {
+    const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('email', email)
+        .maybeSingle();
+
+    if (error) {
+        console.warn("Error fetching user role:", error);
+        return null;
+    }
+    return data?.role || null;
+};
+
 // Assign role to an email
 export const assignRole = async (email: string, role: 'teacher' | 'student' | 'admin') => {
     // Check if exists

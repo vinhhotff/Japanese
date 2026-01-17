@@ -14,7 +14,7 @@ import {
   getSentenceGames, createSentenceGame, updateSentenceGame, deleteSentenceGame,
   getRoleplayScenarios, createRoleplayScenario, updateRoleplayScenario, deleteRoleplayScenario
 } from '../services/supabaseService';
-import { getAllUserRoles, assignRole, assignTeacherToCourse, removeRole } from '../services/adminService';
+import { getAllUserRoles, assignRole, assignTeacherToCourse, removeRole, getUserRole } from '../services/adminService';
 import { parseVocabularyBatch } from '../utils/vocabParser';
 import { parseKanjiBatch } from '../utils/kanjiParser';
 import { parseGrammarBatch } from '../utils/grammarParser';
@@ -64,7 +64,9 @@ const AdminPanel = () => {
 
   // User Management State
   const [userEmailInput, setUserEmailInput] = useState('');
+  const [assignTeacherEmail, setAssignTeacherEmail] = useState('');
   const [selectedRole, setSelectedRole] = useState<'teacher' | 'student' | 'admin'>('student');
+  const [userActiveTab, setUserActiveTab] = useState<'list' | 'roles' | 'assignments'>('list');
   const [assignCourseLang, setAssignCourseLang] = useState('japanese');
   const [assignCourseLevel, setAssignCourseLevel] = useState('N5');
 
@@ -392,255 +394,355 @@ const AdminPanel = () => {
     return (
       <motion.div
         className="user-management"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.4 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Phân quyền Widget */}
-          <motion.div
-            className="admin-widget-card p-6 rounded-xl border shadow-sm hover:shadow-lg transition-all"
-            whileHover={{ scale: 1.01 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <h3 className="admin-widget-title font-bold mb-4 flex items-center gap-2">
-              <span className="bg-blue-100 text-blue-600 p-2 rounded-lg text-xl">👤</span>
-              <span className="text-lg">Phân quyền thành viên</span>
-            </h3>
-            <div className="space-y-5">
-              <div>
-                <label className="admin-label block ml-1 mb-1">Email người dùng</label>
-                <input
-                  type="email"
-                  placeholder="example@gmail.com"
-                  value={userEmailInput}
-                  onChange={e => setUserEmailInput(e.target.value)}
-                  className="admin-input-base w-full p-3 rounded-lg transition-all"
-                />
-              </div>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="admin-label block ml-1 mb-1">Vai trò</label>
-                  <div className="relative">
-                    <select
-                      value={selectedRole}
-                      onChange={(e: any) => setSelectedRole(e.target.value)}
-                      className="admin-input-base w-full p-3 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors appearance-none"
-                    >
-                      <option value="student">Học sinh</option>
-                      <option value="teacher">Giáo viên</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
-                  </div>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={async () => {
-                    if (!userEmailInput) { showToast('Vui lòng nhập email', 'error'); return; }
-                    try {
-                      await assignRole(userEmailInput, selectedRole);
-                      showToast('Đã phân quyền thành công', 'success');
-                      loadUsers();
-                      setUserEmailInput('');
-                    } catch (e: any) {
-                      showToast('Lỗi: ' + e.message, 'error');
-                    }
-                  }}
-                  className="self-end bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:shadow-lg transition-all"
-                >
-                  Cập nhật
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
+        <AnimatePresence mode="wait">
+          {userActiveTab === 'roles' && (
+            <motion.div
+              key="roles-tab"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="max-w-4xl mx-auto"
+            >
+              <div className="admin-form-card">
 
-          {/* Phân công Widget */}
-          <motion.div
-            className="admin-widget-card p-6 rounded-xl border shadow-sm hover:shadow-lg transition-all"
-            whileHover={{ scale: 1.01 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <h3 className="admin-widget-title font-bold mb-4 flex items-center gap-2">
-              <span className="bg-green-100 text-green-600 p-2 rounded-lg text-xl">🎓</span>
-              <span className="text-lg">Phân công giảng dạy</span>
-            </h3>
-            <div className="space-y-5">
-              <div>
-                <label className="admin-label block ml-1 mb-1">Email giáo viên</label>
-                <input
-                  type="email"
-                  placeholder="teacher@example.com"
-                  value={userEmailInput}
-                  onChange={e => setUserEmailInput(e.target.value)}
-                  className="admin-input-base w-full p-3 rounded-lg transition-all"
-                />
-              </div>
-              <div className="flex gap-3">
-                <div style={{ flex: 2 }}>
-                  <label className="admin-label block ml-1 mb-1">Ngôn ngữ</label>
-                  <div className="relative">
-                    <select
-                      value={assignCourseLang}
-                      onChange={e => setAssignCourseLang(e.target.value)}
-                      className="admin-input-base w-full p-3 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors appearance-none"
-                    >
-                      <option value="japanese">🇯🇵 Nhật</option>
-                      <option value="chinese">🇨🇳 Trung</option>
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
-                  </div>
+                {/* ===== TITLE ===== */}
+                <div className="admin-form-header">
+                  <div className="admin-form-icon">🛡️</div>
+                  <h3 className="admin-form-title">
+                    Kiểm soát quyền truy cập
+                  </h3>
                 </div>
-                <div style={{ flex: 1.5 }}>
-                  <label className="admin-label block ml-1 mb-1">Cấp độ</label>
-                  <div className="relative">
-                    <select
-                      value={assignCourseLevel}
-                      onChange={e => setAssignCourseLevel(e.target.value)}
-                      className="admin-input-base w-full p-3 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors appearance-none"
-                    >
-                      <option value="N5">N5</option>
-                      <option value="N4">N4</option>
-                      <option value="N3">N3</option>
-                      <option value="N2">N2</option>
-                      <option value="N1">N1</option>
-                      <option value="HSK1">HSK1</option>
-                      <option value="HSK2">HSK2</option>
-                      <option value="HSK3">HSK3</option>
-                      <option value="HSK4">HSK4</option>
-                      <option value="HSK5">HSK5</option>
-                      <option value="HSK6">HSK6</option>
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
-                  </div>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={async () => {
-                    if (!userEmailInput) { showToast('Vui lòng nhập email giáo viên', 'error'); return; }
-                    try {
-                      await assignTeacherToCourse(userEmailInput, assignCourseLang, assignCourseLevel);
-                      showToast('Đã phân công giáo viên', 'success');
-                    } catch (e: any) {
-                      showToast('Lỗi: ' + e.message, 'error');
-                    }
-                  }}
-                  className="self-end bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:shadow-lg transition-all"
-                >
-                  Phân công
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
 
-        {/* User Table Card */}
-        <motion.div
-          className="admin-table-container shadow-xl border-t-4 border-blue-600 overflow-hidden rounded-xl"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <table className="admin-table w-full">
-            <thead className="border-b border-slate-200/50">
-              <tr>
-                <th className="py-4 px-6 text-left admin-text-secondary font-bold uppercase text-sm tracking-wider" style={{ width: '50%' }}>👤 Thông tin thành viên</th>
-                <th className="py-4 px-6 text-left admin-text-secondary font-bold uppercase text-sm tracking-wider" style={{ width: '30%' }}>🛡️ Vai trò</th>
-                <th className="py-4 px-6 text-right admin-text-secondary font-bold uppercase text-sm tracking-wider" style={{ width: '20%' }}>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <AnimatePresence>
-                {currentItems.length > 0 ? currentItems.map((userRole: any, index: number) => (
-                  <motion.tr
-                    key={userRole.id || userRole.email}
-                    className="admin-row-hover border-b border-slate-50/10 last:border-0 transition-colors"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ scale: 1.002, backgroundColor: 'rgba(56, 189, 248, 0.05)' }}
+                {/* ===== FORM BODY ===== */}
+                <div className="admin-form-body">
+
+                  {/* EMAIL */}
+                  <div className="form-group">
+                    <label className="admin-label">
+                      Email tài khoản người dùng
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="name@example.com"
+                      value={userEmailInput}
+                      onChange={e => setUserEmailInput(e.target.value)}
+                      className="admin-input-base"
+                    />
+                  </div>
+
+                  {/* ROLE */}
+                  <div className="form-group">
+                    <label className="admin-label">
+                      Vai trò hệ thống
+                    </label>
+
+                    <div className="role-grid">
+                      <button
+                        onClick={() => setSelectedRole('student')}
+                        className={`admin-role-option student ${selectedRole === 'student' ? 'selected' : ''
+                          }`}
+                      >
+                        <span className="role-icon">🌟</span>
+                        <span className="role-text">Học viên</span>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedRole('teacher')}
+                        className={`admin-role-option teacher ${selectedRole === 'teacher' ? 'selected' : ''
+                          }`}
+                      >
+                        <span className="role-icon">👨‍🏫</span>
+                        <span className="role-text">Giảng viên</span>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedRole('admin')}
+                        className={`admin-role-option admin ${selectedRole === 'admin' ? 'selected' : ''
+                          }`}
+                      >
+                        <span className="role-icon">⚖️</span>
+                        <span className="role-text">Quản trị viên</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ACTION */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={async () => {
+                      if (!userEmailInput) {
+                        showToast('Vui lòng nhập email', 'error');
+                        return;
+                      }
+                      try {
+                        await assignRole(userEmailInput, selectedRole);
+                        showToast('Đã phân quyền thành công', 'success');
+                        loadUsers();
+                        setUserEmailInput('');
+                      } catch (e: any) {
+                        showToast('Lỗi: ' + e.message, 'error');
+                      }
+                    }}
+                    className="admin-button-premium blue"
                   >
-                    <td className="py-4 px-6 font-medium">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm ${userRole.role === 'admin' ? 'bg-gradient-to-br from-red-400 to-red-600' :
-                          userRole.role === 'teacher' ? 'bg-gradient-to-br from-blue-400 to-blue-600' :
-                            'bg-gradient-to-br from-green-400 to-green-600'
-                          }`}>
-                          {userRole.email.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold admin-text-primary">{userRole.email}</span>
-                          <span className="text-xs admin-text-secondary">ID: {userRole.id ? userRole.id.substring(0, 8) + '...' : 'N/A'}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm border ${userRole.role === 'admin' ? 'bg-red-50 text-red-600 border-red-100' :
-                        userRole.role === 'teacher' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                          'bg-green-50 text-green-600 border-green-100'
-                        }`}>
-                        {userRole.role === 'admin' ? '🔥 Admin System' : userRole.role === 'teacher' ? '👨‍🏫 Giáo viên' : '👶 Học sinh'}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex justify-end gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => {
-                            setUserEmailInput(userRole.email);
-                            setSelectedRole(userRole.role);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-blue-100 hover:text-blue-600 transition-colors shadow-sm"
-                          title="Sửa quyền"
-                        >
-                          ✏️
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDelete(userRole.email)}
-                          className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 hover:text-red-700 transition-colors shadow-sm"
-                          title="Xóa quyền"
-                        >
-                          🗑️
-                        </motion.button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                )) : (
-                  <motion.tr
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    Cập nhật quyền truy cập
+                  </motion.button>
+
+                </div>
+              </div>
+            </motion.div>
+
+          )}
+
+          {userActiveTab === 'assignments' && (
+            <motion.div
+              key="assignments-tab"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="max-w-4xl mx-auto"
+            >
+              <div className="admin-form-card">
+                {/* ===== TITLE ===== */}
+                <div className="admin-form-header">
+                  <div className="admin-form-icon">📜</div>
+                  <h3 className="admin-form-title">
+                    Điều phối giảng dạy
+                  </h3>
+                </div>
+
+                {/* ===== FORM BODY ===== */}
+                <div className="admin-form-body">
+                  <div className="form-group">
+                    <label className="admin-label">Email giảng viên</label>
+                    <input
+                      type="email"
+                      placeholder="teacher@example.com"
+                      value={assignTeacherEmail}
+                      onChange={e => setAssignTeacherEmail(e.target.value)}
+                      className="admin-input-base"
+                    />
+                  </div>
+
+                  <div className="space-y-8">
+                    <div className="form-group">
+                      <label className="admin-label">Khóa học</label>
+                      <select
+                        value={assignCourseLang}
+                        onChange={e => setAssignCourseLang(e.target.value)}
+                        className="admin-input-base"
+                        style={{ appearance: 'none' }}
+                      >
+                        <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                        <option value="chinese">🇨🇳 Tiếng Trung</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="admin-label">Cấp độ</label>
+                      <select
+                        value={assignCourseLevel}
+                        onChange={e => setAssignCourseLevel(e.target.value)}
+                        className="admin-input-base"
+                        style={{ appearance: 'none' }}
+                      >
+                        {assignCourseLang === 'japanese' ? (
+                          <>
+                            <option value="N5">N5 (Cơ bản)</option>
+                            <option value="N4">N4 (Sơ cấp)</option>
+                            <option value="N3">N3 (Trung cấp)</option>
+                            <option value="N2">N2 (Cao cấp)</option>
+                            <option value="N1">N1 (Thượng thừa)</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="HSK1">HSK 1 (Cơ bản)</option>
+                            <option value="HSK2">HSK 2 (Sơ cấp)</option>
+                            <option value="HSK3">HSK 3 (Trung cấp)</option>
+                            <option value="HSK4">HSK 4 (Cao cấp)</option>
+                            <option value="HSK5">HSK 5 (Chuyên nghiệp)</option>
+                            <option value="HSK6">HSK 6 (Thượng thừa)</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={async () => {
+                      if (!assignTeacherEmail) { showToast('Vui lòng nhập email giảng viên', 'error'); return; }
+                      try {
+                        const role = await getUserRole(assignTeacherEmail);
+                        if (role !== 'teacher') {
+                          showToast('Email này chưa phải là Giảng viên. Vui lòng cấp quyền trước.', 'error');
+                          return;
+                        }
+
+                        await assignTeacherToCourse(assignTeacherEmail, assignCourseLang, assignCourseLevel);
+                        showToast(`Đã phân công dạy ${assignCourseLevel} (${assignCourseLang === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'})`, 'success');
+                        setAssignTeacherEmail('');
+                      } catch (e: any) {
+                        showToast('Lỗi: ' + e.message, 'error');
+                      }
+                    }}
+                    className="admin-button-premium green"
                   >
-                    <td colSpan={3} className="text-center py-20 text-slate-400">
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-4xl shadow-inner">
-                          👥
-                        </div>
-                        <div className="text-lg font-medium admin-text-primary">Không tìm thấy thành viên nào</div>
-                        <p className="text-sm admin-text-secondary max-w-md mt-2">Thử tìm kiếm với từ khóa khác hoặc sử dụng form phía trên để phân quyền cho người dùng mới.</p>
-                      </div>
-                    </td>
-                  </motion.tr>
-                )}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </motion.div>
-        <div className="mt-6">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={filteredData.length}
-          />
-        </div>
+                    Xác nhận phân công giảng dạy
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {userActiveTab === 'list' && (
+            <motion.div
+              key="list-tab"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="admin-table-container">
+
+                {/* ===== HEADER ===== */}
+                <div className="admin-table-header">
+                  <h3 className="admin-title">
+                    <span>👥</span>
+                    Danh sách người dùng hệ thống
+                  </h3>
+
+                  <span className="admin-count">
+                    {filteredData.length} Thành viên
+                  </span>
+                </div>
+
+                {/* ===== TABLE ===== */}
+                <div className="admin-table-wrapper">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Thông tin người dùng</th>
+                        <th>Vai trò hiện tại</th>
+                        <th className="text-right">Hành động</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      <AnimatePresence mode="popLayout">
+
+                        {currentItems.length > 0 ? (
+                          currentItems.map((userRole: any, index: number) => (
+                            <motion.tr
+                              key={userRole.id || userRole.email}
+                              initial={{ opacity: 0, y: 12 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ delay: index * 0.04 }}
+                              className="admin-row"
+                            >
+                              {/* USER INFO */}
+                              <td>
+                                <div className="user-info">
+                                  <div className={`user-avatar ${userRole.role}`}>
+                                    {userRole.email.charAt(0).toUpperCase()}
+                                  </div>
+
+                                  <div className="user-text">
+                                    <span className="user-email">{userRole.email}</span>
+                                    <span className="user-id">
+                                      UID: {userRole.id ? userRole.id.slice(0, 12) : 'SYSTEM'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* ROLE */}
+                              <td>
+                                <div className={`role-badge ${userRole.role}`}>
+                                  <span>
+                                    {userRole.role === 'admin'
+                                      ? '⚡'
+                                      : userRole.role === 'teacher'
+                                        ? '💎'
+                                        : '🌟'}
+                                  </span>
+                                  {userRole.role === 'admin'
+                                    ? 'Administrator'
+                                    : userRole.role === 'teacher'
+                                      ? 'Instructor'
+                                      : 'Student'}
+                                </div>
+                              </td>
+
+                              {/* ACTION */}
+                              <td>
+                                <div className="action-group">
+                                  <motion.button
+                                    whileHover={{ scale: 1.1, rotate: -6 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="btn-action edit"
+                                    title="Chỉnh sửa"
+                                  >
+                                    ✏️
+                                  </motion.button>
+
+                                  <motion.button
+                                    whileHover={{ scale: 1.1, rotate: 6 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="btn-action delete"
+                                    title="Xoá"
+                                  >
+                                    🗑️
+                                  </motion.button>
+                                </div>
+                              </td>
+                            </motion.tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={3}>
+                              <div className="empty-state">
+                                <div className="empty-icon">🔍</div>
+                                <h4>Không tìm thấy kết quả</h4>
+                                <p>
+                                  Rất tiếc, chúng tôi không tìm thấy người dùng nào khớp
+                                  với tiêu chí tìm kiếm của bạn.
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+
+                      </AnimatePresence>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* ===== FOOTER ===== */}
+                <div className="admin-table-footer">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={filteredData.length}
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+          )}
+        </AnimatePresence>
       </motion.div>
     );
   };
@@ -666,7 +768,7 @@ const AdminPanel = () => {
         {viewMode !== 'languages' && (
           <div className="controls-bar">
             {viewMode === 'content' ? (
-              <div className="admin-tabs" style={{ marginBottom: 0 }}>
+              <div className="admin-tabs">
                 {['vocabulary', 'kanji', 'grammar', 'listening', 'games', 'roleplay'].map(tab => (
                   <button key={tab} className={`tab-btn ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab as TabType)}>
                     {getLabel(tab)}
@@ -674,8 +776,25 @@ const AdminPanel = () => {
                 ))}
               </div>
             ) : viewMode === 'users' ? (
-              <div className="admin-section-title">
-                <span className="mr-2">👥</span> Quản lý Thành viên & Phân quyền
+              <div className="admin-tabs">
+                <button
+                  className={`tab-btn ${userActiveTab === 'list' ? 'active' : ''}`}
+                  onClick={() => setUserActiveTab('list')}
+                >
+                  👥 Thành viên
+                </button>
+                <button
+                  className={`tab-btn ${userActiveTab === 'roles' ? 'active' : ''}`}
+                  onClick={() => setUserActiveTab('roles')}
+                >
+                  🛡️ Phân quyền
+                </button>
+                <button
+                  className={`tab-btn ${userActiveTab === 'assignments' ? 'active' : ''}`}
+                  onClick={() => setUserActiveTab('assignments')}
+                >
+                  📜 Phân công
+                </button>
               </div>
             ) : (
               <div className="admin-section-title">
