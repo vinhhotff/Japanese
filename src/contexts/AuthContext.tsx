@@ -41,37 +41,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [role, setRole] = useState<UserRole>('student');
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  const fetchUserRole = async (email: string | undefined): Promise<UserRole | null> => {
-    if (!email) return null;
+  // Timeout helper for role fetching
+  const fetchUserRoleWithTimeout = async (email: string): Promise<UserRole | null> => {
     try {
-      const { data, error } = await supabase
+      // Create a timeout promise that rejects after 5 seconds
+      const timeoutPromise = new Promise<null>((_, reject) => {
+        setTimeout(() => reject(new Error('Role fetch timeout')), 5000);
+      });
+
+      // Race the fetch against the timeout
+      const fetchPromise = supabase
         .from('user_roles')
         .select('role')
         .eq('email', email)
-        .maybeSingle();
+        .maybeSingle()
+        .then(({ data, error }) => {
+          if (error) throw error;
+          return data?.role as UserRole || null;
+        });
 
-      if (data && !error) {
-        return data.role as UserRole;
-      }
+      // Use Promise.race
+      return await Promise.race([fetchPromise, timeoutPromise]) as UserRole | null;
     } catch (e) {
-      // Timeout or network error - just skip
+      console.warn('Role fetch failed or timed out, defaulting to student:', e);
+      return null;
     }
-    return null;
   };
 
   const determineRole = async (user: User | null): Promise<UserRole> => {
-    if (!user) return 'student';
+    if (!user || !user.email) return 'student';
 
     // 1. Check email patterns (instant, reliable)
-    const email = user.email?.toLowerCase();
-    if (email?.includes('admin')) {
-      // Optional: Still verify with DB if we want strictness, or keep as hardcode override
-      // For security, checking DB is better, but this acts as a hardcoded super-admin fallback
-      // return 'admin'; 
-    }
+    // admin@gmail.com check logic if needed
 
-    // 2. PRIMARY: Check remote DB
-    const remoteRole = await fetchUserRole(user.email);
+    // 2. PRIMARY: Check remote DB with timeout
+    const remoteRole = await fetchUserRoleWithTimeout(user.email);
     if (remoteRole) return remoteRole;
 
     return 'student';
@@ -83,45 +87,50 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   useEffect(() => {
-    // Get session from localStorage via Supabase
-    const initSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
+    let mounted = true;
 
+    // Listen for auth changes - THIS FIRES IMMEDIATELY ON MOUNT TOO
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+
+      try {
         setSession(session);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
 
         if (currentUser) {
+          // If we have a user, we MUST wait for the role before clearing loading
           const r = await determineRole(currentUser);
-          updateUserRole(r);
-          getProfile(currentUser.id).then(setProfile).catch(() => { });
+          if (mounted) {
+            updateUserRole(r);
+            // Fetch profile in background, don't block loading
+            getProfile(currentUser.id).then(p => {
+              if (mounted) setProfile(p);
+            }).catch(() => { });
+          }
+        } else {
+          if (mounted) {
+            setProfile(null);
+            setRole('student');
+          }
         }
       } catch (err) {
-        console.error('Auth init error:', err);
+        console.error('Auth state change processing error:', err);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          logger.log('Auth Loaded', {
+            hasUser: !!session?.user,
+            role: session?.user ? 'checked' : 'none'
+          });
+        }
       }
-    };
-
-    initSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        const r = await determineRole(currentUser);
-        updateUserRole(r);
-        getProfile(currentUser.id).then(setProfile);
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -131,17 +140,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
 
     if (data.session) {
-      setSession(data.session);
-      setUser(data.session.user);
-      const r = await determineRole(data.session.user);
-      updateUserRole(r);
-
-      logger.log('Signed in user:', {
-        email: data.session.user.email,
-        role: r
-      });
-
-      getProfile(data.session.user.id).then(setProfile);
+      // State updates will be handled by the listener above
+      // But we can eagerly set it if we want instant feedback, 
+      // though sticking to the listener is safer for consistency.
     }
 
     return { data, error };

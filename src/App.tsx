@@ -130,9 +130,21 @@ function App() {
 
                   {/* Shared Routes */}
                   <Route path="/study-progress" element={<StudyProgress />} />
-                  <Route path="/ai-conversation" element={<AIConversation />} />
-                  <Route path="/ai-roleplay" element={<AIConversation />} />
-                  <Route path="/voice-recorder" element={<VoiceRecorder />} />
+                  <Route path="/ai-conversation" element={
+                    <ProtectedRoute requireEnrollment>
+                      <AIConversation />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/ai-roleplay" element={
+                    <ProtectedRoute requireEnrollment>
+                      <AIConversation />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/voice-recorder" element={
+                    <ProtectedRoute requireEnrollment>
+                      <VoiceRecorder />
+                    </ProtectedRoute>
+                  } />
 
                   {/* Assignment Routes */}
                   <Route path="/assignments" element={<AssignmentList />} />
