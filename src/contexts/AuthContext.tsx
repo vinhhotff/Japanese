@@ -37,11 +37,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState<UserRole>(() => {
-    // Try to restore from local storage first to prevent flicker
-    const saved = localStorage.getItem('user_role');
-    return (saved as UserRole) || 'student';
-  });
+  // REMOVED LOCAL STORAGE FOR SECURITY
+  const [role, setRole] = useState<UserRole>('student');
   const [profile, setProfile] = useState<Profile | null>(null);
 
   const fetchUserRole = async (email: string | undefined): Promise<UserRole | null> => {
@@ -65,32 +62,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const determineRole = async (user: User | null): Promise<UserRole> => {
     if (!user) return 'student';
 
-    // 1. Check localStorage first (instant) - use as fallback if remote fails
-    const savedRole = localStorage.getItem('user_role') as UserRole;
-
-    // 2. Check email patterns (instant, reliable)
+    // 1. Check email patterns (instant, reliable)
     const email = user.email?.toLowerCase();
-    if (email?.includes('admin')) return 'admin';
-    if (email?.includes('teacher') || email?.includes('giao-vien')) return 'teacher';
-
-    // 3. Check metadata (instant)
-    const metaRole = user.user_metadata?.role;
-    if (metaRole === 'admin') return 'admin';
-    if (metaRole === 'teacher') return 'teacher';
-
-    // 4. Try remote table (may be slow/fail) - skip if we have cached role
-    if (!savedRole || savedRole === 'student') {
-      const remoteRole = await fetchUserRole(user.email);
-      if (remoteRole) return remoteRole;
+    if (email?.includes('admin')) {
+      // Optional: Still verify with DB if we want strictness, or keep as hardcode override
+      // For security, checking DB is better, but this acts as a hardcoded super-admin fallback
+      // return 'admin'; 
     }
 
-    return savedRole || 'student';
+    // 2. PRIMARY: Check remote DB
+    const remoteRole = await fetchUserRole(user.email);
+    if (remoteRole) return remoteRole;
+
+    return 'student';
   };
 
-  // Helper to update role state and storage
+  // Helper to update role state (Memory Only)
   const updateUserRole = (newRole: UserRole) => {
     setRole(newRole);
-    localStorage.setItem('user_role', newRole);
   };
 
   useEffect(() => {
@@ -167,7 +156,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(null);
       setProfile(null);
       setRole('student');
-      localStorage.removeItem('user_role');
+      // localStorage.removeItem('user_role'); // No longer used
 
       // Clear auth cookies
       document.cookie.split(';').forEach(cookie => {
