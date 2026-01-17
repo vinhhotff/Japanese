@@ -4,6 +4,7 @@ import { getLessons } from '../services/supabaseService.v2';
 import { getLessonCompletionPercentage, isLessonCompleted } from '../services/progressService';
 import type { Language } from '../services/supabaseService.v2';
 import FloatingCharacters from './FloatingCharacters';
+import Pagination from './common/Pagination';
 import '../styles/custom-theme.css';
 
 interface LessonListNewProps {
@@ -14,6 +15,8 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
   const { level } = useParams<{ level: string }>();
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8; // Dùng 8 cho grid view hoặc list view để đỡ dài
 
   useEffect(() => {
     loadLessons();
@@ -57,12 +60,15 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
         });
 
       setLessons(lessonsOfLevel);
+      setCurrentPage(1); // Reset page when level changes
     } catch (err) {
       console.error('Error loading lessons:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  const currentItems = lessons.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (loading) {
     return (
@@ -96,8 +102,6 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* Decorative background elements - Removed for cleaner look */}
-
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div style={{ fontSize: '4rem' }}>
@@ -225,9 +229,10 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
 
       {/* Lessons List */}
       <div style={{ display: 'grid', gap: '1.5rem', paddingBottom: '3rem' }}>
-        {lessons.map((lesson, index) => {
+        {currentItems.map((lesson, index) => {
           const progress = getLessonCompletionPercentage(lesson.id);
           const completed = isLessonCompleted(lesson.id);
+          const displayIndex = (currentPage - 1) * itemsPerPage + index + 1;
 
           return (
             <Link
@@ -280,7 +285,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                     flexShrink: 0,
                     boxShadow: 'var(--shadow-md)'
                   }}>
-                    {lesson.lessonNumber || index + 1}
+                    {lesson.lessonNumber || displayIndex}
                   </div>
 
                   {/* Content */}
@@ -397,6 +402,14 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
           );
         })}
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(lessons.length / itemsPerPage)}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={lessons.length}
+      />
 
       {lessons.length === 0 && (
         <div className="empty-state">

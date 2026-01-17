@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
@@ -20,6 +21,7 @@ import { parseGrammarBatch } from '../utils/grammarParser';
 import { parseSentenceGameBatch } from '../utils/sentenceGameParser';
 import { uploadAudio, uploadImage, validateFileType, validateFileSize } from '../utils/fileUpload';
 import AdminHelpGuide from './AdminHelpGuide';
+import Pagination from './common/Pagination';
 import '../App.css';
 import '../styles/admin-panel-complete.css';
 import '../styles/admin-help-guide.css';
@@ -385,35 +387,59 @@ const AdminPanel = () => {
   };
 
   // Helper render cho Users tab
+  // Helper render cho Users tab
   const renderUserManagement = () => {
     return (
-      <div className="user-management">
+      <motion.div
+        className="user-management"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4 }}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="p-6 bg-white rounded-xl border border-slate-100 shadow-sm">
-            <h3 className="font-bold mb-4 text-slate-700 flex items-center gap-2">
-              <span className="bg-blue-100 text-blue-600 p-1 rounded">👤</span>
-              Phân quyền thành viên
+          {/* Phân quyền Widget */}
+          <motion.div
+            className="admin-widget-card p-6 rounded-xl border shadow-sm hover:shadow-lg transition-all"
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <h3 className="admin-widget-title font-bold mb-4 flex items-center gap-2">
+              <span className="bg-blue-100 text-blue-600 p-2 rounded-lg text-xl">👤</span>
+              <span className="text-lg">Phân quyền thành viên</span>
             </h3>
-            <div className="space-y-3">
-              <input
-                type="email"
-                placeholder="Email người dùng"
-                value={userEmailInput}
-                onChange={e => setUserEmailInput(e.target.value)}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
-              />
-              <div className="flex gap-2">
-                <select
-                  value={selectedRole}
-                  onChange={(e: any) => setSelectedRole(e.target.value)}
-                  className="p-2 border rounded-lg flex-1 outline-none cursor-pointer"
-                >
-                  <option value="student">Học sinh</option>
-                  <option value="teacher">Giáo viên</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <button
+            <div className="space-y-5">
+              <div>
+                <label className="admin-label block ml-1 mb-1">Email người dùng</label>
+                <input
+                  type="email"
+                  placeholder="example@gmail.com"
+                  value={userEmailInput}
+                  onChange={e => setUserEmailInput(e.target.value)}
+                  className="admin-input-base w-full p-3 rounded-lg transition-all"
+                />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="admin-label block ml-1 mb-1">Vai trò</label>
+                  <div className="relative">
+                    <select
+                      value={selectedRole}
+                      onChange={(e: any) => setSelectedRole(e.target.value)}
+                      className="admin-input-base w-full p-3 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors appearance-none"
+                    >
+                      <option value="student">Học sinh</option>
+                      <option value="teacher">Giáo viên</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                  </div>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={async () => {
+                    if (!userEmailInput) { showToast('Vui lòng nhập email', 'error'); return; }
                     try {
                       await assignRole(userEmailInput, selectedRole);
                       showToast('Đã phân quyền thành công', 'success');
@@ -423,51 +449,78 @@ const AdminPanel = () => {
                       showToast('Lỗi: ' + e.message, 'error');
                     }
                   }}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition"
+                  className="self-end bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:shadow-lg transition-all"
                 >
                   Cập nhật
-                </button>
+                </motion.button>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="p-6 bg-white rounded-xl border border-slate-100 shadow-sm">
-            <h3 className="font-bold mb-4 text-slate-700 flex items-center gap-2">
-              <span className="bg-green-100 text-green-600 p-1 rounded">🎓</span>
-              Phân công giảng dạy
+          {/* Phân công Widget */}
+          <motion.div
+            className="admin-widget-card p-6 rounded-xl border shadow-sm hover:shadow-lg transition-all"
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <h3 className="admin-widget-title font-bold mb-4 flex items-center gap-2">
+              <span className="bg-green-100 text-green-600 p-2 rounded-lg text-xl">🎓</span>
+              <span className="text-lg">Phân công giảng dạy</span>
             </h3>
-            <div className="space-y-3">
-              <input
-                type="email"
-                placeholder="Email giáo viên"
-                value={userEmailInput}
-                onChange={e => setUserEmailInput(e.target.value)}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-100 outline-none"
-              />
-              <div className="flex gap-2">
-                <select
-                  value={assignCourseLang}
-                  onChange={e => setAssignCourseLang(e.target.value)}
-                  className="p-2 border rounded-lg flex-1 outline-none"
-                >
-                  <option value="japanese">Nhật</option>
-                  <option value="chinese">Trung</option>
-                </select>
-                <select
-                  value={assignCourseLevel}
-                  onChange={e => setAssignCourseLevel(e.target.value)}
-                  className="p-2 border rounded-lg w-24 outline-none"
-                >
-                  <option value="N5">N5</option>
-                  <option value="N4">N4</option>
-                  <option value="N3">N3</option>
-                  <option value="N2">N2</option>
-                  <option value="N1">N1</option>
-                  <option value="HSK1">HSK1</option>
-                  <option value="HSK2">HSK2</option>
-                </select>
-                <button
+            <div className="space-y-5">
+              <div>
+                <label className="admin-label block ml-1 mb-1">Email giáo viên</label>
+                <input
+                  type="email"
+                  placeholder="teacher@example.com"
+                  value={userEmailInput}
+                  onChange={e => setUserEmailInput(e.target.value)}
+                  className="admin-input-base w-full p-3 rounded-lg transition-all"
+                />
+              </div>
+              <div className="flex gap-3">
+                <div style={{ flex: 2 }}>
+                  <label className="admin-label block ml-1 mb-1">Ngôn ngữ</label>
+                  <div className="relative">
+                    <select
+                      value={assignCourseLang}
+                      onChange={e => setAssignCourseLang(e.target.value)}
+                      className="admin-input-base w-full p-3 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors appearance-none"
+                    >
+                      <option value="japanese">🇯🇵 Nhật</option>
+                      <option value="chinese">🇨🇳 Trung</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                  </div>
+                </div>
+                <div style={{ flex: 1.5 }}>
+                  <label className="admin-label block ml-1 mb-1">Cấp độ</label>
+                  <div className="relative">
+                    <select
+                      value={assignCourseLevel}
+                      onChange={e => setAssignCourseLevel(e.target.value)}
+                      className="admin-input-base w-full p-3 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors appearance-none"
+                    >
+                      <option value="N5">N5</option>
+                      <option value="N4">N4</option>
+                      <option value="N3">N3</option>
+                      <option value="N2">N2</option>
+                      <option value="N1">N1</option>
+                      <option value="HSK1">HSK1</option>
+                      <option value="HSK2">HSK2</option>
+                      <option value="HSK3">HSK3</option>
+                      <option value="HSK4">HSK4</option>
+                      <option value="HSK5">HSK5</option>
+                      <option value="HSK6">HSK6</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                  </div>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={async () => {
+                    if (!userEmailInput) { showToast('Vui lòng nhập email giáo viên', 'error'); return; }
                     try {
                       await assignTeacherToCourse(userEmailInput, assignCourseLang, assignCourseLevel);
                       showToast('Đã phân công giáo viên', 'success');
@@ -475,50 +528,120 @@ const AdminPanel = () => {
                       showToast('Lỗi: ' + e.message, 'error');
                     }
                   }}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition"
+                  className="self-end bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:shadow-lg transition-all"
                 >
-                  Phân
-                </button>
+                  Phân công
+                </motion.button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
-        <div className="admin-table-container">
-          <table className="admin-table">
-            <thead>
+        {/* User Table Card */}
+        <motion.div
+          className="admin-table-container shadow-xl border-t-4 border-blue-600 overflow-hidden rounded-xl"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          <table className="admin-table w-full">
+            <thead className="border-b border-slate-200/50">
               <tr>
-                <th>Email</th>
-                <th>Vai trò</th>
-                <th>Hành động</th>
+                <th className="py-4 px-6 text-left admin-text-secondary font-bold uppercase text-sm tracking-wider" style={{ width: '50%' }}>👤 Thông tin thành viên</th>
+                <th className="py-4 px-6 text-left admin-text-secondary font-bold uppercase text-sm tracking-wider" style={{ width: '30%' }}>🛡️ Vai trò</th>
+                <th className="py-4 px-6 text-right admin-text-secondary font-bold uppercase text-sm tracking-wider" style={{ width: '20%' }}>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {(data || []).map((userRole: any) => (
-                <tr key={userRole.id || userRole.email}>
-                  <td className="font-medium">{userRole.email}</td>
-                  <td>
-                    <span className={`px-2 py-1 rounded text-xs font-bold ${userRole.role === 'admin' ? 'bg-red-100 text-red-700' :
-                      userRole.role === 'teacher' ? 'bg-blue-100 text-blue-700' :
-                        'bg-green-100 text-green-700'
-                      }`}>
-                      {userRole.role ? userRole.role.toUpperCase() : 'STUDENT'}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleDelete(userRole.email)}
-                      className="text-red-500 hover:text-red-700 font-medium text-sm transition"
-                    >
-                      Xóa quyền
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              <AnimatePresence>
+                {currentItems.length > 0 ? currentItems.map((userRole: any, index: number) => (
+                  <motion.tr
+                    key={userRole.id || userRole.email}
+                    className="admin-row-hover border-b border-slate-50/10 last:border-0 transition-colors"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.002, backgroundColor: 'rgba(56, 189, 248, 0.05)' }}
+                  >
+                    <td className="py-4 px-6 font-medium">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm ${userRole.role === 'admin' ? 'bg-gradient-to-br from-red-400 to-red-600' :
+                          userRole.role === 'teacher' ? 'bg-gradient-to-br from-blue-400 to-blue-600' :
+                            'bg-gradient-to-br from-green-400 to-green-600'
+                          }`}>
+                          {userRole.email.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold admin-text-primary">{userRole.email}</span>
+                          <span className="text-xs admin-text-secondary">ID: {userRole.id ? userRole.id.substring(0, 8) + '...' : 'N/A'}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm border ${userRole.role === 'admin' ? 'bg-red-50 text-red-600 border-red-100' :
+                        userRole.role === 'teacher' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                          'bg-green-50 text-green-600 border-green-100'
+                        }`}>
+                        {userRole.role === 'admin' ? '🔥 Admin System' : userRole.role === 'teacher' ? '👨‍🏫 Giáo viên' : '👶 Học sinh'}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <div className="flex justify-end gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => {
+                            setUserEmailInput(userRole.email);
+                            setSelectedRole(userRole.role);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-blue-100 hover:text-blue-600 transition-colors shadow-sm"
+                          title="Sửa quyền"
+                        >
+                          ✏️
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleDelete(userRole.email)}
+                          className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 hover:text-red-700 transition-colors shadow-sm"
+                          title="Xóa quyền"
+                        >
+                          🗑️
+                        </motion.button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                )) : (
+                  <motion.tr
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <td colSpan={3} className="text-center py-20 text-slate-400">
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-4xl shadow-inner">
+                          👥
+                        </div>
+                        <div className="text-lg font-medium admin-text-primary">Không tìm thấy thành viên nào</div>
+                        <p className="text-sm admin-text-secondary max-w-md mt-2">Thử tìm kiếm với từ khóa khác hoặc sử dụng form phía trên để phân quyền cho người dùng mới.</p>
+                      </div>
+                    </td>
+                  </motion.tr>
+                )}
+              </AnimatePresence>
             </tbody>
           </table>
+        </motion.div>
+        <div className="mt-6">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredData.length}
+          />
         </div>
-      </div>
+      </motion.div>
     );
   };
 
@@ -530,8 +653,8 @@ const AdminPanel = () => {
           {viewMode === 'content' && <span className="text-sm font-normal ml-3 bg-blue-100 text-blue-600 px-2 py-1 rounded-full">{selectedLesson?.title}</span>}
         </div>
         <div className="admin-actions">
-          <button onClick={() => setViewMode('users')} className={`hover:bg-blue-50 text-slate-600 ${viewMode === 'users' ? 'bg-blue-50 text-blue-600 font-bold' : ''}`}>Quản lý User</button>
-          <button onClick={handleBackToLanguages} className={`hover:bg-blue-50 text-slate-600 ${viewMode !== 'users' ? 'bg-blue-50 text-blue-600 font-bold' : ''}`}>Quản lý Nội dung</button>
+          <button onClick={() => setViewMode('users')} className={`hover:bg-blue-50/10 ${viewMode === 'users' ? 'bg-blue-50/20 font-bold border-b-2 border-white' : ''}`}>Quản lý User</button>
+          <button onClick={handleBackToLanguages} className={`hover:bg-blue-50/10 ${viewMode !== 'users' ? 'bg-blue-50/20 font-bold border-b-2 border-white' : ''}`}>Quản lý Nội dung</button>
           <button className="logout-btn" onClick={signOut}>Đăng xuất</button>
         </div>
       </header>
@@ -540,7 +663,7 @@ const AdminPanel = () => {
         {viewMode !== 'users' && renderBreadcrumbs()}
 
         {/* CONTROLS BAR (Search, Add, Tabs) */}
-        {viewMode !== 'languages' && viewMode !== 'users' && (
+        {viewMode !== 'languages' && (
           <div className="controls-bar">
             {viewMode === 'content' ? (
               <div className="admin-tabs" style={{ marginBottom: 0 }}>
@@ -549,6 +672,10 @@ const AdminPanel = () => {
                     {getLabel(tab)}
                   </button>
                 ))}
+              </div>
+            ) : viewMode === 'users' ? (
+              <div className="admin-section-title">
+                <span className="mr-2">👥</span> Quản lý Thành viên & Phân quyền
               </div>
             ) : (
               <div className="admin-section-title">
@@ -598,12 +725,11 @@ const AdminPanel = () => {
               }}>
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                  <h2 className="responsive-title" style={{
+                  <h2 className="responsive-title admin-text-primary" style={{
                     fontWeight: '800',
-                    color: '#1e293b',
                     marginBottom: '0.5rem'
                   }}> Chọn ngôn ngữ</h2>
-                  <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Chọn ngôn ngữ bạn muốn quản lý nội dung</p>
+                  <p className="admin-text-secondary" style={{ fontSize: '1.1rem' }}>Chọn ngôn ngữ bạn muốn quản lý nội dung</p>
                 </div>
 
                 {/* Cards Container */}
@@ -616,26 +742,11 @@ const AdminPanel = () => {
                   {/* Japanese Card */}
                   <div
                     onClick={() => handleSelectLanguage('japanese')}
+                    className="lang-card-japanese"
                     style={{
-                      position: 'relative',
-                      background: 'linear-gradient(135deg, #fff5f5 0%, #ffffff 100%)',
                       borderRadius: '24px',
                       padding: '2.5rem',
-                      cursor: 'pointer',
-                      border: '2px solid #fecaca',
-                      boxShadow: '0 10px 40px -10px rgba(239, 68, 68, 0.2)',
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      overflow: 'hidden'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
-                      e.currentTarget.style.boxShadow = '0 25px 60px -15px rgba(239, 68, 68, 0.35)';
-                      e.currentTarget.style.borderColor = '#ef4444';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                      e.currentTarget.style.boxShadow = '0 10px 40px -10px rgba(239, 68, 68, 0.2)';
-                      e.currentTarget.style.borderColor = '#fecaca';
+                      cursor: 'pointer'
                     }}
                   >
                     {/* Background decoration */}
@@ -665,17 +776,16 @@ const AdminPanel = () => {
                       <span style={{ fontSize: '2.5rem' }}>🇯🇵</span>
                     </div>
 
-                    <h3 style={{
+                    <h3 className="admin-text-primary" style={{
                       fontSize: '1.75rem',
                       fontWeight: '800',
-                      color: '#1e293b',
                       marginBottom: '0.5rem',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem'
                     }}>
                       Tiếng Nhật
-                      <span style={{
+                      <span className="lang-badge jp" style={{
                         fontSize: '0.75rem',
                         background: 'linear-gradient(135deg, #ef4444, #f97316)',
                         color: 'white',
@@ -685,8 +795,8 @@ const AdminPanel = () => {
                       }}>JLPT</span>
                     </h3>
 
-                    <p style={{ color: '#64748b', marginBottom: '2rem', lineHeight: '1.6' }}>
-                      Quản lý khóa học <strong>N5 → N1</strong> và tài liệu học tập tiếng Nhật.
+                    <p className="admin-text-secondary" style={{ marginBottom: '2rem', lineHeight: '1.6' }}>
+                      Quản lý khóa học <strong>N5 → N1</strong> và tài liệu giảng dạy tiếng Nhật.
                     </p>
 
                     <div style={{
@@ -718,26 +828,11 @@ const AdminPanel = () => {
                   {/* Chinese Card */}
                   <div
                     onClick={() => handleSelectLanguage('chinese')}
+                    className="lang-card-chinese"
                     style={{
-                      position: 'relative',
-                      background: 'linear-gradient(135deg, #fef3c7 0%, #ffffff 100%)',
                       borderRadius: '24px',
                       padding: '2.5rem',
-                      cursor: 'pointer',
-                      border: '2px solid #fed7aa',
-                      boxShadow: '0 10px 40px -10px rgba(234, 88, 12, 0.2)',
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      overflow: 'hidden'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
-                      e.currentTarget.style.boxShadow = '0 25px 60px -15px rgba(234, 88, 12, 0.35)';
-                      e.currentTarget.style.borderColor = '#ea580c';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                      e.currentTarget.style.boxShadow = '0 10px 40px -10px rgba(234, 88, 12, 0.2)';
-                      e.currentTarget.style.borderColor = '#fed7aa';
+                      cursor: 'pointer'
                     }}
                   >
                     {/* Background decoration */}
@@ -828,10 +923,10 @@ const AdminPanel = () => {
                 padding: '2rem'
               }}>
                 <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                  <h2 style={{ fontSize: '2rem', fontWeight: '800', color: '#1e293b' }}>
+                  <h2 className="admin-text-primary" style={{ fontSize: '2rem', fontWeight: '800' }}>
                     {selectedLanguage === 'japanese' ? '🇯🇵 Chọn cấp độ JLPT' : '🇨🇳 Chọn cấp độ HSK'}
                   </h2>
-                  <p style={{ color: '#64748b' }}>Chọn cấp độ để quản lý các khóa học tương ứng</p>
+                  <p className="admin-text-secondary">Chọn cấp độ để quản lý các khóa học tương ứng</p>
                 </div>
 
                 <div className="admin-grid" style={{
@@ -846,15 +941,12 @@ const AdminPanel = () => {
                     <div
                       key={level}
                       onClick={() => handleSelectLevel(level)}
+                      className="level-selection-card"
                       style={{
-                        background: 'white',
                         padding: '2rem 1.5rem',
                         borderRadius: '20px',
                         textAlign: 'center',
-                        cursor: 'pointer',
-                        border: '2px solid #e2e8f0',
-                        transition: 'all 0.3s ease',
-                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                        cursor: 'pointer'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = 'translateY(-5px)';
@@ -863,7 +955,7 @@ const AdminPanel = () => {
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.borderColor = '#e2e8f0';
+                        e.currentTarget.style.borderColor = '[data-theme="dark"]' === document.documentElement.getAttribute('data-theme') ? '#334155' : '#e2e8f0';
                         e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
                       }}
                     >
@@ -898,33 +990,19 @@ const AdminPanel = () => {
                   <div
                     key={course.id}
                     onClick={() => handleSelectCourse(course)}
+                    className="course-card"
                     style={{
-                      background: 'white',
-                      borderRadius: '20px',
-                      padding: '1.5rem',
-                      border: '1px solid #e2e8f0',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
+                      padding: '2rem',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '1rem',
                       position: 'relative',
                       overflow: 'hidden'
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-4px)';
-                      e.currentTarget.style.boxShadow = '0 12px 20px -5px rgba(0,0,0,0.1)';
-                      e.currentTarget.style.borderColor = selectedLanguage === 'japanese' ? '#fecaca' : '#fed7aa';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                      e.currentTarget.style.borderColor = '#e2e8f0';
-                    }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', flex: 1 }}>{course.title}</h3>
-                      <span style={{
+                      <h3 className="admin-text-primary" style={{ fontSize: '1.25rem', fontWeight: '700', flex: 1 }}>{course.title}</h3>
+                      <span className="course-badge" style={{
                         background: selectedLanguage === 'japanese' ? '#fee2e2' : '#ffedd5',
                         color: selectedLanguage === 'japanese' ? '#ef4444' : '#ea580c',
                         padding: '0.25rem 0.75rem',
@@ -934,8 +1012,7 @@ const AdminPanel = () => {
                       }}>{course.level}</span>
                     </div>
 
-                    <p style={{
-                      color: '#64748b',
+                    <p className="admin-text-secondary" style={{
                       fontSize: '0.9rem',
                       lineHeight: '1.5',
                       display: '-webkit-box',
@@ -951,7 +1028,7 @@ const AdminPanel = () => {
                       alignItems: 'center',
                       marginTop: 'auto',
                       paddingTop: '1rem',
-                      borderTop: '1px solid #f1f5f9'
+                      borderTop: '1px solid var(--border-color)'
                     }}>
                       <button
                         className="manage-content-btn"
@@ -974,16 +1051,15 @@ const AdminPanel = () => {
                     </div>
                   </div>
                 )) : (
-                  <div style={{
+                  <div className="admin-card-base" style={{
                     gridColumn: '1 / -1',
                     textAlign: 'center',
                     padding: '4rem 2rem',
-                    background: '#f8fafc',
                     borderRadius: '24px',
-                    border: '2px dashed #e2e8f0'
+                    borderStyle: 'dashed'
                   }}>
                     <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#475569' }}>Chưa có khóa học nào</h3>
+                    <h3 className="admin-text-primary" style={{ fontSize: '1.25rem', fontWeight: '700' }}>Chưa có khóa học nào</h3>
                     <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>Hãy tạo khóa học đầu tiên cho cấp độ này</p>
                     <button
                       className="btn-add"
@@ -994,6 +1070,13 @@ const AdminPanel = () => {
                     </button>
                   </div>
                 )}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={filteredData.length}
+                />
               </div>
             )}
 
@@ -1015,10 +1098,10 @@ const AdminPanel = () => {
                       <tr key={lesson.id} className="admin-row-hover group">
                         <td data-label="Bài số" className="font-bold text-slate-400 group-hover:text-red-600 transition-colors">#{lesson.lesson_number}</td>
                         <td data-label="Tên bài học">
-                          <div className="font-bold text-slate-700 group-hover:text-red-600 transition-colors text-lg">{lesson.title}</div>
-                          <div className="text-xs text-slate-400 md:hidden">{lesson.description}</div>
+                          <div className="font-bold admin-text-primary group-hover:text-red-600 transition-colors text-lg">{lesson.title}</div>
+                          <div className="text-xs admin-text-secondary md:hidden">{lesson.description}</div>
                         </td>
-                        <td data-label="Mô tả" className="text-slate-500 italic text-sm">{lesson.description || 'Chưa có mô tả'}</td>
+                        <td data-label="Mô tả" className="admin-text-secondary italic text-sm">{lesson.description || 'Chưa có mô tả'}</td>
                         <td data-label="Quản lý" style={{ textAlign: 'center' }}>
                           <button
                             onClick={() => handleSelectLesson(lesson)}
@@ -1039,13 +1122,21 @@ const AdminPanel = () => {
                         </td>
                       </tr>
                     )) : (
-                      <tr><td colSpan={5} className="text-center py-12 text-slate-500">
+                      <tr><td colSpan={5} className="text-center py-12 admin-text-secondary">
                         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
                         Chưa có bài học nào được tạo cho khóa học này.
                       </td></tr>
                     )}
                   </tbody>
                 </table>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={filteredData.length}
+                />
+
               </div>
             )}
 
@@ -1087,14 +1178,14 @@ const AdminPanel = () => {
                         {activeTab === 'vocabulary' ? (
                           <>
                             <td data-label="Từ vựng">
-                              <div className="font-bold text-xl text-slate-800">{item.word}</div>
-                              {item.kanji && <div className="text-sm text-slate-400">Kanji: {item.kanji}</div>}
-                              <div className="text-xs font-mono text-red-500 bg-red-50 inline-block px-1 rounded mt-1">{item.hiragana}</div>
+                              <div className="font-bold text-xl admin-text-primary">{item.word}</div>
+                              {item.kanji && <div className="text-sm admin-text-secondary">Kanji: {item.kanji}</div>}
+                              <div className="text-xs font-mono text-red-500 bg-red-50 dark:bg-red-900/20 inline-block px-1 rounded mt-1">{item.hiragana}</div>
                             </td>
                             <td data-label="Nghĩa">
-                              <div className="font-semibold text-slate-700">{item.meaning}</div>
+                              <div className="font-semibold admin-text-primary">{item.meaning}</div>
                               {item.example && (
-                                <div className="text-xs text-slate-400 mt-1 italic">
+                                <div className="text-xs admin-text-secondary mt-1 italic">
                                   Ví dụ: {item.example}
                                 </div>
                               )}
@@ -1114,16 +1205,16 @@ const AdminPanel = () => {
                         ) : activeTab === 'kanji' ? (
                           <>
                             <td data-label="Ký tự">
-                              <div className="text-4xl font-bold bg-slate-50 w-16 h-16 flex items-center justify-center rounded-xl border border-slate-100">{item.character}</div>
+                              <div className="text-4xl font-bold bg-slate-50 dark:bg-slate-800 w-16 h-16 flex items-center justify-center rounded-xl border border-slate-100 dark:border-slate-700">{item.character}</div>
                             </td>
                             <td data-label="Ý nghĩa">
-                              <div className="font-bold text-slate-700 text-lg">{item.meaning}</div>
+                              <div className="font-bold admin-text-primary text-lg">{item.meaning}</div>
                               <div className="text-sm text-red-500">On: {Array.isArray(item.onyomi) ? item.onyomi.join(', ') : item.onyomi}</div>
                               <div className="text-sm text-blue-500">Kun: {Array.isArray(item.kunyomi) ? item.kunyomi.join(', ') : item.kunyomi}</div>
                             </td>
                             <td data-label="Số nét" style={{ textAlign: 'center' }}>
-                              <div className="text-2xl font-bold text-slate-400">{item.stroke_count}</div>
-                              <div className="text-xs text-slate-300">nét</div>
+                              <div className="text-2xl font-bold admin-text-secondary">{item.stroke_count}</div>
+                              <div className="text-xs admin-text-secondary opacity-60">nét</div>
                             </td>
                             <td data-label="Hành động">
                               <div className="row-action-btns" style={{ justifyContent: 'flex-end' }}>
@@ -1135,11 +1226,11 @@ const AdminPanel = () => {
                         ) : activeTab === 'grammar' ? (
                           <>
                             <td data-label="Cấu trúc">
-                              <div className="font-bold text-lg text-red-600 bg-red-50 px-3 py-1 rounded inline-block">{item.pattern}</div>
-                              <div className="text-sm text-slate-700 font-semibold mt-1">{item.meaning}</div>
+                              <div className="font-bold text-lg text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded inline-block">{item.pattern}</div>
+                              <div className="text-sm admin-text-primary font-semibold mt-1">{item.meaning}</div>
                             </td>
                             <td data-label="Giải thích">
-                              <div className="text-sm text-slate-500 line-clamp-2">{item.explanation}</div>
+                              <div className="text-sm admin-text-secondary line-clamp-2">{item.explanation}</div>
                               {item.examples && item.examples.length > 0 && (
                                 <div className="text-xs text-blue-400 mt-1">({item.examples.length} ví dụ)</div>
                               )}
@@ -1153,7 +1244,7 @@ const AdminPanel = () => {
                           </>
                         ) : (
                           <>
-                            <td data-label="Nội dung" className="font-medium text-slate-700">{item.title || item.sentence || item.question || 'Nội dung bài học'}</td>
+                            <td data-label="Nội dung" className="font-medium admin-text-primary">{item.title || item.sentence || item.question || 'Nội dung bài học'}</td>
                             <td data-label="Hành động">
                               <div className="row-action-btns" style={{ justifyContent: 'flex-end' }}>
                                 <button onClick={() => { setEditingItem(item); setShowForm(true); }} className="btn-icon btn-edit">✏️ Sửa</button>
@@ -1164,37 +1255,26 @@ const AdminPanel = () => {
                         )}
                       </tr>
                     )) : (
-                      <tr><td colSpan={5} className="text-center py-12 text-slate-500">
+                      <tr><td colSpan={5} className="text-center py-12 admin-text-secondary">
                         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📦</div>
                         Danh mục này chưa có dữ liệu. Hãy bấm "Thêm Mới" để bắt đầu.
                       </td></tr>
                     )}
                   </tbody>
                 </table>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={filteredData.length}
+                />
+
               </div>
             )}
           </div>
         )}
 
-        {totalPages > 1 && viewMode !== 'languages' && (
-          <div className="pagination flex justify-center gap-2 mt-6">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(p => p - 1)}
-              className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-slate-50"
-            >
-              Prev
-            </button>
-            <span className="px-3 py-1 font-bold text-slate-600">{currentPage} / {totalPages}</span>
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(p => p + 1)}
-              className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-slate-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
       </div>
 
       {showForm && (
@@ -1987,16 +2067,17 @@ Ví dụ:
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2>{item ? 'Sửa' : 'Thêm mới'} {getTypeLabel(type)}</h2>
+        <h2 className="admin-text-primary">{item ? 'Sửa' : 'Thêm mới'} {getTypeLabel(type)}</h2>
         <form onSubmit={handleSubmit}>
           {renderAIPromptHint()}
           {type === 'courses' && (
             <>
               <div className="form-group">
-                <label>
+                <label className="admin-label">
                   Ngôn ngữ *
                 </label>
                 <select
+                  className="admin-input-base"
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value;
@@ -2008,15 +2089,16 @@ Ví dụ:
                   }}
                   required
                 >
-                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
-                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                  <option value="japanese">Tiếng Nhật</option>
+                  <option value="chinese">Tiếng Trung</option>
                 </select>
               </div>
               <div className="form-group">
-                <label>
+                <label className="admin-label">
                   Cấp độ *
                 </label>
                 <select
+                  className="admin-input-base"
                   value={formData.level}
                   onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                   required
@@ -2042,11 +2124,12 @@ Ví dụ:
                 </select>
               </div>
               <div className="form-group">
-                <label>
+                <label className="admin-label">
                   Tiêu đề *
                 </label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
@@ -2054,10 +2137,11 @@ Ví dụ:
                 />
               </div>
               <div className="form-group">
-                <label>
+                <label className="admin-label">
                   Mô tả
                 </label>
                 <textarea
+                  className="admin-input-base"
                   value={formData.description || ''}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
@@ -2070,8 +2154,9 @@ Ví dụ:
           {type === 'lessons' && (
             <>
               <div className="form-group">
-                <label>Ngôn ngữ *</label>
+                <label className="admin-label">Ngôn ngữ *</label>
                 <select
+                  className="admin-input-base"
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value;
@@ -2085,13 +2170,14 @@ Ví dụ:
                   required
                   disabled={!!currentLanguage}
                 >
-                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
-                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                  <option value="japanese">Tiếng Nhật</option>
+                  <option value="chinese">Tiếng Trung</option>
                 </select>
               </div>
               <div className="form-group">
-                <label>Khóa học *</label>
+                <label className="admin-label">Khóa học *</label>
                 <select
+                  className="admin-input-base"
                   value={formData.course_id}
                   onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
                   required
@@ -2106,26 +2192,29 @@ Ví dụ:
                 </select>
               </div>
               <div className="form-group">
-                <label>Tiêu đề *</label>
+                <label className="admin-label">Tiêu đề *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Bài số mấy *</label>
+                <label className="admin-label">Bài số mấy *</label>
                 <input
                   type="number"
+                  className="admin-input-base"
                   value={formData.lesson_number}
                   onChange={(e) => setFormData({ ...formData, lesson_number: parseInt(e.target.value) })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Cấp độ *</label>
+                <label className="admin-label">Cấp độ *</label>
                 <select
+                  className="admin-input-base"
                   value={formData.level}
                   onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                   required
@@ -2152,8 +2241,9 @@ Ví dụ:
                 </select>
               </div>
               <div className="form-group">
-                <label>Mô tả</label>
+                <label className="admin-label">Mô tả</label>
                 <textarea
+                  className="admin-input-base"
                   value={formData.description || ''}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
@@ -2316,32 +2406,35 @@ Ví dụ:
               )}
 
               <div className="form-group">
-                <label>Nghĩa *</label>
+                <label className="admin-label">Nghĩa *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.meaning}
                   onChange={(e) => setFormData({ ...formData, meaning: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Ví dụ</label>
+                <label className="admin-label">Ví dụ</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.example || ''}
                   onChange={(e) => setFormData({ ...formData, example: e.target.value })}
                 />
               </div>
               <div className="form-group">
-                <label>Dịch ví dụ</label>
+                <label className="admin-label">Dịch ví dụ</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.example_translation || ''}
                   onChange={(e) => setFormData({ ...formData, example_translation: e.target.value })}
                 />
               </div>
               <div className="form-group">
-                <label>Độ khó / Mức độ ưu tiên</label>
+                <label className="admin-label">Độ khó / Mức độ ưu tiên</label>
                 <div className="difficulty-selector">
                   <button
                     type="button"
@@ -2392,8 +2485,9 @@ Ví dụ:
           {type === 'vocabulary' && importMode === 'batch' && (
             <>
               <div className="form-group">
-                <label>Ngôn ngữ *</label>
+                <label className="admin-label">Ngôn ngữ *</label>
                 <select
+                  className="admin-input-base"
                   value={formData.language || 'japanese'}
                   onChange={(e) => {
                     const newLanguage = e.target.value as 'japanese' | 'chinese';
@@ -2406,13 +2500,14 @@ Ví dụ:
                   required
                   disabled={!!currentLanguage}
                 >
-                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
-                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                  <option value="japanese">Tiếng Nhật</option>
+                  <option value="chinese">Tiếng Trung</option>
                 </select>
               </div>
               <div className="form-group">
-                <label>Bài học *</label>
+                <label className="admin-label">Bài học *</label>
                 <select
+                  className="admin-input-base"
                   value={formData.lesson_id}
                   onChange={(e) => setFormData({ ...formData, lesson_id: e.target.value })}
                   required
@@ -2436,7 +2531,7 @@ Ví dụ:
                 </select>
               </div>
               <div className="form-group">
-                <label>
+                <label className="admin-label">
                   Nhập từ vựng (mỗi dòng một từ) *
                   <span className="format-hint">
                     {formData.language === 'chinese' ? (
@@ -2447,7 +2542,7 @@ Ví dụ:
                   </span>
                 </label>
                 <textarea
-                  className="batch-input"
+                  className="batch-input admin-input-base"
                   value={batchText}
                   onChange={(e) => {
                     setBatchText(e.target.value);
@@ -2512,7 +2607,7 @@ Ví dụ:
               )}
 
               <div className="form-group">
-                <label>Độ khó mặc định</label>
+                <label className="admin-label">Độ khó mặc định</label>
                 <div className="difficulty-selector">
                   <button
                     type="button"
@@ -2546,8 +2641,9 @@ Ví dụ:
           {type === 'vocabulary' && item && (
             <>
               <div className="form-group">
-                <label>Bài học *</label>
+                <label className="admin-label">Bài học *</label>
                 <select
+                  className="admin-input-base"
                   value={formData.lesson_id}
                   onChange={(e) => setFormData({ ...formData, lesson_id: e.target.value })}
                   required
@@ -2564,58 +2660,64 @@ Ví dụ:
                 </select>
               </div>
               <div className="form-group">
-                <label>Từ (Hiragana) *</label>
+                <label className="admin-label">Từ (Hiragana/Hanzi) *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.word}
                   onChange={(e) => setFormData({ ...formData, word: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Kanji</label>
+                <label className="admin-label">Kanji</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.kanji || ''}
                   onChange={(e) => setFormData({ ...formData, kanji: e.target.value })}
                 />
               </div>
               <div className="form-group">
-                <label>Hiragana *</label>
+                <label className="admin-label">Hiragana/Pinyin *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.hiragana}
                   onChange={(e) => setFormData({ ...formData, hiragana: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Nghĩa *</label>
+                <label className="admin-label">Nghĩa *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.meaning}
                   onChange={(e) => setFormData({ ...formData, meaning: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Ví dụ</label>
+                <label className="admin-label">Ví dụ</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.example || ''}
                   onChange={(e) => setFormData({ ...formData, example: e.target.value })}
                 />
               </div>
               <div className="form-group">
-                <label>Dịch ví dụ</label>
+                <label className="admin-label">Dịch ví dụ</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.example_translation || ''}
                   onChange={(e) => setFormData({ ...formData, example_translation: e.target.value })}
                 />
               </div>
               <div className="form-group">
-                <label>Độ khó / Mức độ ưu tiên</label>
+                <label className="admin-label">Độ khó / Mức độ ưu tiên</label>
                 <div className="difficulty-selector">
                   <button
                     type="button"
@@ -2868,9 +2970,10 @@ Hoặc với đọc âm:
                 </select>
               </div>
               <div className="form-group">
-                <label>Kanji *</label>
+                <label className="admin-label">Kanji *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.character}
                   onChange={(e) => setFormData({ ...formData, character: e.target.value })}
                   required
@@ -2878,36 +2981,40 @@ Hoặc với đọc âm:
                 />
               </div>
               <div className="form-group">
-                <label>Nghĩa *</label>
+                <label className="admin-label">Nghĩa *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.meaning}
                   onChange={(e) => setFormData({ ...formData, meaning: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Âm On (音読み) - cách nhau bằng dấu phẩy</label>
+                <label className="admin-label">Âm On (音読み) - cách nhau bằng dấu phẩy</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={Array.isArray(formData.onyomi) ? formData.onyomi.join(', ') : formData.onyomi || ''}
                   onChange={(e) => setFormData({ ...formData, onyomi: e.target.value })}
                   placeholder="シ, ジ"
                 />
               </div>
               <div className="form-group">
-                <label>Âm Kun (訓読み) - cách nhau bằng dấu phẩy</label>
+                <label className="admin-label">Âm Kun (訓読み) - cách nhau bằng dấu phẩy</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={Array.isArray(formData.kunyomi) ? formData.kunyomi.join(', ') : formData.kunyomi || ''}
                   onChange={(e) => setFormData({ ...formData, kunyomi: e.target.value })}
                   placeholder="わたし, わたくし"
                 />
               </div>
               <div className="form-group">
-                <label>Số nét</label>
+                <label className="admin-label">Số nét</label>
                 <input
                   type="number"
+                  className="admin-input-base"
                   value={formData.stroke_count || 0}
                   onChange={(e) => setFormData({ ...formData, stroke_count: parseInt(e.target.value) })}
                 />
@@ -2989,27 +3096,30 @@ Hoặc với đọc âm:
                 </select>
               </div>
               <div className="form-group">
-                <label>Mẫu câu *</label>
+                <label className="admin-label">Mẫu câu *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.pattern}
                   onChange={(e) => setFormData({ ...formData, pattern: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Nghĩa *</label>
+                <label className="admin-label">Nghĩa *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.meaning}
                   onChange={(e) => setFormData({ ...formData, meaning: e.target.value })}
                   required
-                  style={{ fontSize: '1rem', fontWeight: '600', padding: '0.75rem', color: 'var(--text-primary)' }}
+                  style={{ fontSize: '1rem', fontWeight: '600', padding: '0.75rem' }}
                 />
               </div>
               <div className="form-group">
-                <label>Giải thích</label>
+                <label className="admin-label">Giải thích</label>
                 <textarea
+                  className="admin-input-base"
                   value={formData.explanation || ''}
                   onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
                   rows={3}
@@ -3913,27 +4023,30 @@ Hoặc với đọc âm:
                 </select>
               </div>
               <div className="form-group">
-                <label>Câu tiếng Nhật *</label>
+                <label className="admin-label">Câu tiếng Nhật *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.sentence}
                   onChange={(e) => setFormData({ ...formData, sentence: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Dịch *</label>
+                <label className="admin-label">Dịch *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.translation}
                   onChange={(e) => setFormData({ ...formData, translation: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Các từ (cách nhau bằng dấu phẩy) *</label>
+                <label className="admin-label">Các từ (cách nhau bằng dấu phẩy) *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={Array.isArray(formData.words) ? formData.words.join(', ') : formData.words || ''}
                   onChange={(e) => setFormData({ ...formData, words: e.target.value })}
                   placeholder="私, は, 学生, です"
@@ -3941,9 +4054,10 @@ Hoặc với đọc âm:
                 />
               </div>
               <div className="form-group">
-                <label>Thứ tự đúng (số, cách nhau bằng dấu phẩy) *</label>
+                <label className="admin-label">Thứ tự đúng (số, cách nhau bằng dấu phẩy) *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={Array.isArray(formData.correct_order) ? formData.correct_order.join(', ') : formData.correct_order || ''}
                   onChange={(e) => setFormData({ ...formData, correct_order: e.target.value })}
                   placeholder="0, 1, 2, 3"
@@ -3951,17 +4065,19 @@ Hoặc với đọc âm:
                 />
               </div>
               <div className="form-group">
-                <label>Gợi ý</label>
+                <label className="admin-label">Gợi ý</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.hint || ''}
                   onChange={(e) => setFormData({ ...formData, hint: e.target.value })}
                 />
               </div>
               {!item && (
                 <div className="form-group">
-                  <label>Dán JSON từ AI (1 câu game)</label>
+                  <label className="admin-label">Dán JSON từ AI (1 câu game)</label>
                   <textarea
+                    className="admin-input-base"
                     value={aiJsonText}
                     onChange={(e) => setAiJsonText(e.target.value)}
                     rows={4}
@@ -4238,8 +4354,9 @@ Hoặc với đọc âm:
 
               {!item && (
                 <div className="form-group">
-                  <label>Dán JSON từ AI (Roleplay)</label>
+                  <label className="admin-label">Dán JSON từ AI (Roleplay)</label>
                   <textarea
+                    className="admin-input-base"
                     value={aiJsonText}
                     onChange={(e) => setAiJsonText(e.target.value)}
                     rows={5}
@@ -4262,25 +4379,28 @@ Hoặc với đọc âm:
               )}
 
               <div className="form-group">
-                <label>Tiêu đề *</label>
+                <label className="admin-label">Tiêu đề *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Mô tả</label>
+                <label className="admin-label">Mô tả</label>
                 <textarea
+                  className="admin-input-base"
                   value={formData.description || ''}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={2}
                 />
               </div>
               <div className="form-group">
-                <label>Tình huống *</label>
+                <label className="admin-label">Tình huống *</label>
                 <textarea
+                  className="admin-input-base"
                   value={formData.scenario}
                   onChange={(e) => setFormData({ ...formData, scenario: e.target.value })}
                   required
@@ -4289,9 +4409,10 @@ Hoặc với đọc âm:
                 />
               </div>
               <div className="form-group">
-                <label>Nhân vật A *</label>
+                <label className="admin-label">Nhân vật A *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.character_a}
                   onChange={(e) => setFormData({ ...formData, character_a: e.target.value })}
                   required
@@ -4299,9 +4420,10 @@ Hoặc với đọc âm:
                 />
               </div>
               <div className="form-group">
-                <label>Nhân vật B *</label>
+                <label className="admin-label">Nhân vật B *</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={formData.character_b}
                   onChange={(e) => setFormData({ ...formData, character_b: e.target.value })}
                   required
@@ -4309,8 +4431,9 @@ Hoặc với đọc âm:
                 />
               </div>
               <div className="form-group">
-                <label>Script nhân vật A (mỗi dòng một câu) *</label>
+                <label className="admin-label">Script nhân vật A (mỗi dòng một câu) *</label>
                 <textarea
+                  className="admin-input-base"
                   value={Array.isArray(formData.character_a_script) ? formData.character_a_script.join('\n') : formData.character_a_script || ''}
                   onChange={(e) => setFormData({ ...formData, character_a_script: e.target.value.split('\n').filter(l => l.trim()) })}
                   required
@@ -4322,8 +4445,9 @@ Hoặc với đọc âm:
                 </div>
               </div>
               <div className="form-group">
-                <label>Script nhân vật B (mỗi dòng một câu) *</label>
+                <label className="admin-label">Script nhân vật B (mỗi dòng một câu) *</label>
                 <textarea
+                  className="admin-input-base"
                   value={Array.isArray(formData.character_b_script) ? formData.character_b_script.join('\n') : formData.character_b_script || ''}
                   onChange={(e) => setFormData({ ...formData, character_b_script: e.target.value.split('\n').filter(l => l.trim()) })}
                   required
@@ -4335,25 +4459,27 @@ Hoặc với đọc âm:
                 </div>
               </div>
               <div className="form-group">
-                <label>Gợi ý từ vựng (cách nhau bằng dấu phẩy)</label>
+                <label className="admin-label">Gợi ý từ vựng (cách nhau bằng dấu phẩy)</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={Array.isArray(formData.vocabulary_hints) ? formData.vocabulary_hints.join(', ') : formData.vocabulary_hints || ''}
                   onChange={(e) => setFormData({ ...formData, vocabulary_hints: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                   placeholder="Xin chào, đặt bàn, cảm ơn"
                 />
               </div>
               <div className="form-group">
-                <label>Điểm ngữ pháp (cách nhau bằng dấu phẩy)</label>
+                <label className="admin-label">Điểm ngữ pháp (cách nhau bằng dấu phẩy)</label>
                 <input
                   type="text"
+                  className="admin-input-base"
                   value={Array.isArray(formData.grammar_points) ? formData.grammar_points.join(', ') : formData.grammar_points || ''}
                   onChange={(e) => setFormData({ ...formData, grammar_points: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                   placeholder="です, ます, ません"
                 />
               </div>
               <div className="form-group">
-                <label>Độ khó</label>
+                <label className="admin-label">Độ khó mặc định</label>
                 <select
                   value={formData.difficulty || 'medium'}
                   onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAssignments } from '../services/assignmentService';
 import { useAuth } from '../contexts/AuthContext';
+import Pagination from './common/Pagination';
 import '../styles/assignments.css';
 
 interface AssignmentListProps {
@@ -15,6 +16,8 @@ const AssignmentList = ({ lessonId, language }: AssignmentListProps) => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     loadAssignments();
@@ -23,9 +26,10 @@ const AssignmentList = ({ lessonId, language }: AssignmentListProps) => {
   const loadAssignments = async () => {
     try {
       setLoading(true);
-      const result = await getAssignments(lessonId, language, page, 10);
+      const result = await getAssignments(lessonId, language, page, itemsPerPage);
       setAssignments(result.data);
       setTotalPages(result.totalPages);
+      setTotalItems(result.total || result.data.length); // Fallback if total isn't provided
     } catch (error) {
       console.error('Error loading assignments:', error);
     } finally {
@@ -82,7 +86,7 @@ const AssignmentList = ({ lessonId, language }: AssignmentListProps) => {
     <div className="assignments-container">
       <div className="assignments-header">
         <h2>📚 Bài tập</h2>
-        <p>{assignments.length} bài tập</p>
+        <p>{totalItems || assignments.length} bài tập</p>
       </div>
 
       <div className="assignments-grid">
@@ -136,28 +140,13 @@ const AssignmentList = ({ lessonId, language }: AssignmentListProps) => {
         ))}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            className="pagination-btn"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            ← Trước
-          </button>
-          <span className="pagination-info">
-            Trang {page} / {totalPages}
-          </span>
-          <button
-            className="pagination-btn"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Sau →
-          </button>
-        </div>
-      )}
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={totalItems || (totalPages * itemsPerPage)}
+      />
     </div>
   );
 };

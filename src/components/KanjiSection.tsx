@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Kanji } from '../types';
 import type { Language } from '../services/supabaseService.v2';
+import Pagination from './common/Pagination';
 import '../App.css';
 
 interface KanjiSectionProps {
@@ -8,6 +10,16 @@ interface KanjiSectionProps {
 }
 
 const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  // Reset page when kanji changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [kanji]);
+
+  const currentItems = kanji.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className="section-container kanji-section">
       <div className="section-header kanji-header">
@@ -23,93 +35,102 @@ const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
       </div>
       <div className="section-content">
         {kanji.length > 0 ? (
-          <div className="kanji-grid">
-            {kanji.map((k) => (
-              <div key={k.id} className="kanji-card">
-                <div className="kanji-character-wrapper">
-                  <div className="kanji-character">{k.character}</div>
-                  <div className="kanji-stroke-count">{k.strokeCount} nét</div>
-                </div>
-                <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                  {k.meaning}
-                </h3>
-                {language === 'japanese' ? (
-                  <div className="kanji-readings">
-                    {k.readings && (
-                      <>
-                        <div className="reading-group">
-                          <div className="reading-label">Âm On (音読み)</div>
-                          <div className="reading-value">
-                            {k.readings.onyomi && k.readings.onyomi.length > 0 ? (
-                              k.readings.onyomi.map((reading, idx) => (
-                                <span key={idx} className="reading-tag">{reading}</span>
-                              ))
-                            ) : (
-                              <span className="reading-tag">-</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="reading-group">
-                          <div className="reading-label">Âm Kun (訓読み)</div>
-                          <div className="reading-value">
-                            {k.readings.kunyomi && k.readings.kunyomi.length > 0 ? (
-                              k.readings.kunyomi.map((reading, idx) => (
-                                <span key={idx} className="reading-tag">{reading}</span>
-                              ))
-                            ) : (
-                              <span className="reading-tag">-</span>
-                            )}
-                          </div>
-                        </div>
-                      </>
-                    )}
+          <>
+            <div className="kanji-grid">
+              {currentItems.map((k) => (
+                <div key={k.id} className="kanji-card">
+                  <div className="kanji-character-wrapper">
+                    <div className="kanji-character">{k.character}</div>
+                    <div className="kanji-stroke-count">{k.strokeCount} nét</div>
                   </div>
-                ) : (
-                  <div className="kanji-readings">
-                    {k.pinyin && (
-                      <div className="reading-group">
-                        <div className="reading-label">Pinyin</div>
-                        <div className="reading-value">
-                          <span className="reading-tag">{k.pinyin}</span>
-                        </div>
-                      </div>
-                    )}
-                    {k.radical && (
-                      <div className="reading-group">
-                        <div className="reading-label">Bộ thủ</div>
-                        <div className="reading-value">
-                          <span className="reading-tag">{k.radical}</span>
-                        </div>
-                      </div>
-                    )}
-                    {(k.simplified || k.traditional) && (
-                      <div className="reading-group">
-                        <div className="reading-label">Dạng chữ</div>
-                        <div className="reading-value">
-                          {k.simplified && k.simplified !== k.character && (
-                            <span className="reading-tag">简: {k.simplified}</span>
-                          )}
-                          {k.traditional && k.traditional !== k.character && (
-                            <span className="reading-tag">繁: {k.traditional}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                <div className="kanji-examples">
-                  <div className="examples-label">Ví dụ:</div>
-                  {k.examples.map((example, idx) => (
-                    <div key={idx} className="example-item">
-                      <span className="example-word">{example.word}</span>
-                      <span className="example-reading">({example.reading})</span>
-                      <span className="example-meaning">- {example.meaning}</span>
+                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                    {k.meaning}
+                  </h3>
+                  {language === 'japanese' ? (
+                    <div className="kanji-readings">
+                      {k.readings && (
+                        <>
+                          <div className="reading-group">
+                            <div className="reading-label">Âm On (音読み)</div>
+                            <div className="reading-value">
+                              {k.readings.onyomi && k.readings.onyomi.length > 0 ? (
+                                k.readings.onyomi.map((reading, idx) => (
+                                  <span key={idx} className="reading-tag">{reading}</span>
+                                ))
+                              ) : (
+                                <span className="reading-tag">-</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="reading-group">
+                            <div className="reading-label">Âm Kun (訓読み)</div>
+                            <div className="reading-value">
+                              {k.readings.kunyomi && k.readings.kunyomi.length > 0 ? (
+                                k.readings.kunyomi.map((reading, idx) => (
+                                  <span key={idx} className="reading-tag">{reading}</span>
+                                ))
+                              ) : (
+                                <span className="reading-tag">-</span>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  ))}
+                  ) : (
+                    <div className="kanji-readings">
+                      {k.pinyin && (
+                        <div className="reading-group">
+                          <div className="reading-label">Pinyin</div>
+                          <div className="reading-value">
+                            <span className="reading-tag">{k.pinyin}</span>
+                          </div>
+                        </div>
+                      )}
+                      {k.radical && (
+                        <div className="reading-group">
+                          <div className="reading-label">Bộ thủ</div>
+                          <div className="reading-value">
+                            <span className="reading-tag">{k.radical}</span>
+                          </div>
+                        </div>
+                      )}
+                      {(k.simplified || k.traditional) && (
+                        <div className="reading-group">
+                          <div className="reading-label">Dạng chữ</div>
+                          <div className="reading-value">
+                            {k.simplified && k.simplified !== k.character && (
+                              <span className="reading-tag">简: {k.simplified}</span>
+                            )}
+                            {k.traditional && k.traditional !== k.character && (
+                              <span className="reading-tag">繁: {k.traditional}</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div className="kanji-examples">
+                    <div className="examples-label">Ví dụ:</div>
+                    {k.examples.map((example, idx) => (
+                      <div key={idx} className="example-item">
+                        <span className="example-word">{example.word}</span>
+                        <span className="example-reading">({example.reading})</span>
+                        <span className="example-meaning">- {example.meaning}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(kanji.length / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={kanji.length}
+            />
+          </>
         ) : (
           <div className="empty-state">
             <p>Bài này chưa có {language === 'japanese' ? 'kanji' : 'hán tự'}</p>
@@ -121,4 +142,3 @@ const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
 };
 
 export default KanjiSection;
-

@@ -1193,6 +1193,219 @@ input:checked+.modern-slider:before {
   box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3) !important;
 }
 
+/* ===== SEMANTIC CLASSES FOR THEMING ===== */
+.admin-card-base {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.admin-widget-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+  color: var(--text-primary);
+}
+
+.admin-widget-title {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.admin-label {
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.admin-input-base {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.2s;
+}
+
+.admin-input-base:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-shadow);
+}
+
+.admin-text-primary {
+  color: var(--text-primary);
+}
+
+.admin-text-secondary {
+  color: var(--text-secondary);
+}
+
+/* Level Cards Override */
+.level-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+/* ===== PREMIUM DARK MODE - MIDNIGHT THEME ===== */
+[data-theme="dark"] .admin-container {
+  background-color: #0B1120;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+}
+
+[data-theme="dark"] .admin-header {
+  background: rgba(15, 23, 42, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+[data-theme="dark"] .admin-card,
+[data-theme="dark"] .course-card,
+[data-theme="dark"] .admin-widget-card,
+[data-theme="dark"] .level-card,
+[data-theme="dark"] .controls-bar,
+[data-theme="dark"] .admin-table-container,
+[data-theme="dark"] .breadcrumbs {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .admin-widget-card .bg-slate-50,
+[data-theme="dark"] .admin-input-base {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .admin-widget-title,
+[data-theme="dark"] .admin-text-primary,
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] .course-title,
+[data-theme="dark"] .modern-checkbox-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .admin-label,
+[data-theme="dark"] .admin-text-secondary,
+[data-theme="dark"] .course-desc,
+[data-theme="dark"] .text-slate-500,
+[data-theme="dark"] .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .admin-table thead {
+  background: #0f172a !important;
+  border-bottom: 2px solid #334155 !important;
+}
+
+[data-theme="dark"] .admin-table th {
+  color: #64748b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .admin-table td {
+  border-bottom-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .admin-row-hover:hover {
+  background-color: rgba(56, 189, 248, 0.03) !important;
+}
+
+[data-theme="dark"] .search-input {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] select {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .breadcrumb-item {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .pagination-container {
+  background: #1e293b;
+  border-top: 1px solid #334155;
+}
+
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .pagination-btn:hover:not(:disabled) {
+  background: #2563eb;
+  color: white;
+}
+
+/* Language Selection Cards */
+.lang-card-japanese {
+  position: relative;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+  border: 2px solid #fecaca;
+  box-shadow: 0 10px 40px -10px rgba(239, 68, 68, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.lang-card-japanese:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 60px -15px rgba(239, 68, 68, 0.35);
+  border-color: #ef4444;
+}
+
+[data-theme="dark"] .lang-card-japanese {
+  background: linear-gradient(135deg, #1e1b1b 0%, #111827 100%) !important;
+  border-color: #450a0a !important;
+}
+
+.lang-card-chinese {
+  position: relative;
+  background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
+  border: 2px solid #fed7aa;
+  box-shadow: 0 10px 40px -10px rgba(234, 88, 12, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.lang-card-chinese:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 60px -15px rgba(234, 88, 12, 0.35);
+  border-color: #ea580c;
+}
+
+[data-theme="dark"] .lang-card-chinese {
+  background: linear-gradient(135deg, #1c1917 0%, #111827 100%) !important;
+  border-color: #442a08 !important;
+}
+
+.level-selection-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .level-selection-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
 [data-theme="dark"] .mode-btn {
   background: #1e293b !important;
 }

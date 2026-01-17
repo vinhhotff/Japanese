@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { getTeacherClasses, createClass, deleteClass, getClassStudents } from '../../services/classService';
 import { getTeacherHomework, createHomework, deleteHomework } from '../../services/homeworkService';
+import Pagination from '../common/Pagination';
 import '../../styles/dashboard-modern.css';
 
 const TeacherDashboard: React.FC = () => {
@@ -23,6 +24,9 @@ const TeacherDashboard: React.FC = () => {
     description: '',
     due_date: ''
   });
+  const [classesPage, setClassesPage] = useState(1);
+  const [homeworkPage, setHomeworkPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     loadData();
@@ -30,7 +34,7 @@ const TeacherDashboard: React.FC = () => {
 
   const loadData = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const [classesData, homeworkData] = await Promise.all([
@@ -158,34 +162,43 @@ const TeacherDashboard: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <ul className="dashboard-list">
-                {classes.map((cls: any) => (
-                  <li key={cls.id} className="dashboard-list-item">
-                    <div className="dashboard-list-item-content">
-                      <div className="dashboard-list-item-title">
-                        {cls.name}
+              <>
+                <ul className="dashboard-list">
+                  {classes.slice((classesPage - 1) * itemsPerPage, classesPage * itemsPerPage).map((cls: any) => (
+                    <li key={cls.id} className="dashboard-list-item">
+                      <div className="dashboard-list-item-content">
+                        <div className="dashboard-list-item-title">
+                          {cls.name}
+                        </div>
+                        <div className="dashboard-list-item-subtitle">
+                          Mã: {cls.code} • {cls.level} • {cls.language === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}
+                        </div>
                       </div>
-                      <div className="dashboard-list-item-subtitle">
-                        Mã: {cls.code} • {cls.level} • {cls.language === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Link
+                          to={`/teacher/class/${cls.id}`}
+                          className="dashboard-list-item-action primary"
+                        >
+                          Quản lý
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteClass(cls.id)}
+                          className="dashboard-list-item-action danger"
+                        >
+                          Xóa
+                        </button>
                       </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <Link
-                        to={`/teacher/class/${cls.id}`}
-                        className="dashboard-list-item-action primary"
-                      >
-                        Quản lý
-                      </Link>
-                      <button
-                        onClick={() => handleDeleteClass(cls.id)}
-                        className="dashboard-list-item-action danger"
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+                <Pagination
+                  currentPage={classesPage}
+                  totalPages={Math.ceil(classes.length / itemsPerPage)}
+                  onPageChange={setClassesPage}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={classes.length}
+                />
+              </>
             )}
           </div>
         </div>
@@ -211,32 +224,41 @@ const TeacherDashboard: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <ul className="dashboard-list">
-                {homework.slice(0, 5).map((hw: any) => (
-                  <li key={hw.id} className="dashboard-list-item">
-                    <div className="dashboard-list-item-content">
-                      <div className="dashboard-list-item-title">{hw.title}</div>
-                      <div className="dashboard-list-item-subtitle">
-                        {hw.classes?.name} • Hạn: {new Date(hw.due_date).toLocaleDateString('vi-VN')}
+              <>
+                <ul className="dashboard-list">
+                  {homework.slice((homeworkPage - 1) * itemsPerPage, homeworkPage * itemsPerPage).map((hw: any) => (
+                    <li key={hw.id} className="dashboard-list-item">
+                      <div className="dashboard-list-item-content">
+                        <div className="dashboard-list-item-title">{hw.title}</div>
+                        <div className="dashboard-list-item-subtitle">
+                          {hw.classes?.name} • Hạn: {new Date(hw.due_date).toLocaleDateString('vi-VN')}
+                        </div>
                       </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <Link
-                        to={`/teacher/homework/${hw.id}`}
-                        className="dashboard-list-item-action primary"
-                      >
-                        Xem
-                      </Link>
-                      <button
-                        onClick={() => handleDeleteHomework(hw.id)}
-                        className="dashboard-list-item-action danger"
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Link
+                          to={`/teacher/homework/${hw.id}`}
+                          className="dashboard-list-item-action primary"
+                        >
+                          Xem
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteHomework(hw.id)}
+                          className="dashboard-list-item-action danger"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <Pagination
+                  currentPage={homeworkPage}
+                  totalPages={Math.ceil(homework.length / itemsPerPage)}
+                  onPageChange={setHomeworkPage}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={homework.length}
+                />
+              </>
             )}
           </div>
         </div>

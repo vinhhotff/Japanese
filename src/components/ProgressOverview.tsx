@@ -58,7 +58,7 @@ const ProgressOverview = () => {
     <div style={{ marginBottom: '3rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-          📊 Tiến độ học tập
+          Tiến độ học tập
         </h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>
           Theo dõi quá trình học của bạn
