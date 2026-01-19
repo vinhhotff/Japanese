@@ -7,6 +7,7 @@ import { getProgressStats, getUserProgress } from '../services/progressService';
 import { useAuth } from '../contexts/AuthContext';
 import { getStudentClasses, joinClass, createClass, getAllClasses } from '../services/classService';
 import DragonAnimation from './DragonAnimation';
+import FloatingCharactersPhysics from './FloatingCharactersPhysics';
 import '../styles/dashboard-v2.css';
 
 type Language = 'japanese' | 'chinese';
@@ -446,39 +447,7 @@ const DashboardNew = () => {
 
       {/* Floating Characters Background */}
       <DragonAnimation />
-      <div className="floating-characters">
-        {selectedLanguage === 'japanese' ? (
-          <>
-            <span className="float-char jp-char char-1">あ</span>
-            <span className="float-char jp-char char-2">か</span>
-            <span className="float-char jp-char char-3">さ</span>
-            <span className="float-char jp-char char-4">た</span>
-            <span className="float-char jp-char char-5">な</span>
-            <span className="float-char jp-char char-6">は</span>
-            <span className="float-char jp-char char-7">ま</span>
-            <span className="float-char jp-char char-8">や</span>
-            <span className="float-char jp-char char-9">ら</span>
-            <span className="float-char jp-char char-10">わ</span>
-            <span className="float-char jp-char char-11">学</span>
-            <span className="float-char jp-char char-12">日</span>
-          </>
-        ) : (
-          <>
-            <span className="float-char cn-char char-1">你</span>
-            <span className="float-char cn-char char-2">好</span>
-            <span className="float-char cn-char char-3">学</span>
-            <span className="float-char cn-char char-4">习</span>
-            <span className="float-char cn-char char-5">中</span>
-            <span className="float-char cn-char char-6">文</span>
-            <span className="float-char cn-char char-7">汉</span>
-            <span className="float-char cn-char char-8">字</span>
-            <span className="float-char cn-char char-9">语</span>
-            <span className="float-char cn-char char-10">言</span>
-            <span className="float-char cn-char char-11">书</span>
-            <span className="float-char cn-char char-12">写</span>
-          </>
-        )}
-      </div>
+      <FloatingCharactersPhysics language={selectedLanguage} />
 
       {/* Hero Header */}
       <div className="hero-header">

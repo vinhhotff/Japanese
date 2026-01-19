@@ -1,0 +1,58 @@
+/* Physics-based Floating Characters Styles */
+
+.physics-characters-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.physics-char {
+    position: absolute;
+    user-select: none;
+    pointer-events: none;
+    will-change: transform;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    white-space: nowrap;
+}
+
+.jp-physics-char {
+    font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+    color: #ff8fa3;
+    text-shadow: 0 0 15px rgba(255, 143, 163, 0.6);
+}
+
+.cn-physics-char {
+    font-family: 'Noto Sans SC', 'Microsoft YaHei', 'SimHei', sans-serif;
+    color: #ff6b6b;
+    text-shadow: 0 0 15px rgba(255, 107, 107, 0.6);
+}
+
+[data-theme="dark"] .jp-physics-char {
+    color: #ffc0cb;
+    text-shadow: 0 0 20px rgba(255, 192, 203, 0.7);
+}
+
+[data-theme="dark"] .cn-physics-char {
+    color: #ffa07a;
+    text-shadow: 0 0 20px rgba(255, 160, 122, 0.7);
+}
+
+/* Character individual glow */
+.physics-char::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, currentColor 0%, transparent 70%);
+    opacity: 0.15;
+    z-index: -1;
+}

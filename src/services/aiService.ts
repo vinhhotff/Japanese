@@ -107,7 +107,9 @@ async function callDeepSeek(messages: Message[]): Promise<AIResponse> {
 
     if (!content) {
       return {
-        content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
+        content: messages.some(m => m.content.includes('[ZH]'))
+          ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
+          : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
         error: undefined,
       };
     }
@@ -178,7 +180,9 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
       console.error('Hugging Face API Error:', errorText);
 
       return {
-        content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
+        content: messages.some(m => m.content.includes('[ZH]'))
+          ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
+          : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
         error: undefined,
       };
     }
@@ -193,14 +197,19 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
     }
 
     if (!content) {
-      content = 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)'
+      const isChinese = messages.some(m => m.content.includes('[ZH]'));
+      content = isChinese
+        ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
+        : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)';
     }
 
     return { content };
   } catch (error: any) {
     console.error('Hugging Face Error:', error);
     return {
-      content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại không?)',
+      content: messages.some(m => m.content.includes('[ZH]'))
+        ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại không?)'
+        : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại không?)',
       error: undefined
     };
   }
@@ -273,10 +282,19 @@ async function callQwen(messages: Message[]): Promise<AIResponse> {
     const content = data.output?.text || data.output?.choices?.[0]?.message?.content || '';
 
     if (!content) {
+      const isChinese = messages.some(m => m.content.includes('[ZH]'));
       const finishReason = data.output?.finish_reason;
-      const fallbackMessage = finishReason === 'content_filter'
-        ? 'すみません、もう少し簡単な言葉で話してください。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
-        : 'こんにちは！どうぞよろしくお願いします。\n(Xin chào! Rất vui được gặp bạn.)';
+      let fallbackMessage = '';
+
+      if (isChinese) {
+        fallbackMessage = finishReason === 'content_filter'
+          ? '对不起，请用更简单的词语说话。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
+          : '你好！很高兴见到你。\n(Xin chào! Rất vui được gặp bạn.)';
+      } else {
+        fallbackMessage = finishReason === 'content_filter'
+          ? 'すみません、もう少し簡単な言葉で話してください。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
+          : 'こんにちは！どうぞよろしくお願いします。\n(Xin chào! Rất vui được gặp bạn.)';
+      }
 
       return {
         content: fallbackMessage,
@@ -356,10 +374,19 @@ async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
     const content = data.choices?.[0]?.message?.content || '';
 
     if (!content) {
+      const isChinese = messages.some(m => m.content.includes('[ZH]'));
       const finishReason = data.choices?.[0]?.finish_reason;
-      const fallbackMessage = finishReason === 'content_filter'
-        ? 'すみません、もう少し簡単な言葉で話してください。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
-        : 'こんにちは！どうぞよろしくお願いします。\n(Xin chào! Rất vui được gặp bạn.)';
+      let fallbackMessage = '';
+
+      if (isChinese) {
+        fallbackMessage = finishReason === 'content_filter'
+          ? '对不起，请用更简单的词语说话。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
+          : '你好！很高兴见到你。\n(Xin chào! Rất vui được gặp bạn.)';
+      } else {
+        fallbackMessage = finishReason === 'content_filter'
+          ? 'すみません、もう少し簡単な言葉で話してください。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
+          : 'こんにちは！どうぞよろしくお願いします。\n(Xin chào! Rất vui được gặp bạn.)';
+      }
 
       return {
         content: fallbackMessage,
@@ -407,7 +434,9 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
 
       if (!content) {
         return {
-          content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
+          content: messages.some(m => m.content.includes('[ZH]'))
+            ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
+            : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
           error: undefined,
         };
       }
@@ -488,7 +517,9 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
 
     if (!content) {
       return {
-        content: 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
+        content: messages.some(m => m.content.includes('[ZH]'))
+          ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
+          : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
         error: undefined,
       };
     }
@@ -640,12 +671,16 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
       // Nếu bị chặn do safety, đưa ra gợi ý cụ thể
       if (blockReason === 'SAFETY' || data.promptFeedback?.blockReason) {
         return {
-          content: '申し訳ございません。もう一度、簡単な言葉で話してください。\n(Xin lỗi. Hãy thử nói lại bằng từ ngữ đơn giản hơn.)',
+          content: messages.some(m => m.content.includes('[ZH]'))
+            ? '对不起。请再用更简单的词语说话。\n(Xin lỗi. Hãy thử nói lại bằng từ ngữ đơn giản hơn.)'
+            : '申し訳ございません。もう一度、簡単な言葉で話してください。\n(Xin lỗi. Hãy thử nói lại bằng từ ngữ đơn giản hơn.)',
           error: undefined,
         };
       }
 
-      const fallbackMessage = 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)';
+      const fallbackMessage = messages.some(m => m.content.includes('[ZH]'))
+        ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
+        : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)';
 
       return {
         content: fallbackMessage,
@@ -666,6 +701,7 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
 // Main function to call AI based on provider
 export async function getAIResponse(
   messages: Message[],
+  language?: 'japanese' | 'chinese',
   provider?: 'openai' | 'gemini' | 'deepseek' | 'huggingface' | 'qwen' | 'openrouter' | 'cloudflare'
 ): Promise<AIResponse> {
   const selectedProvider = provider || import.meta.env.VITE_AI_PROVIDER || 'cloudflare';
@@ -709,11 +745,13 @@ export async function getAIResponse(
 }
 
 // Helper function to create system prompt
-export function createSystemPrompt(scenarioPrompt: string): Message {
+export function createSystemPrompt(scenarioPrompt: string, language?: 'japanese' | 'chinese'): Message {
   // Cải thiện prompt để tránh bị safety filter chặn
   const improvedPrompt = `${scenarioPrompt}
 
 Quy tắc quan trọng:
+- CHỈ phản hồi bằng ngôn ngữ đích (${language === 'chinese' ? 'TIẾNG TRUNG' : 'TIẾNG NHẬT'})
+- Tuyệt đối không nhầm lẫn giữa tiếng Nhật và tiếng Trung.
 - Chỉ trả lời 1-2 câu ngắn gọn
 - Sử dụng ngôn ngữ lịch sự, thân thiện
 - Tập trung vào giao tiếp hàng ngày
@@ -726,12 +764,32 @@ Quy tắc quan trọng:
 }
 
 // Mock response for testing (when no API key is configured)
-export function getMockResponse(userInput: string, scenarioId: string): string {
+export function getMockResponse(userInput: string, scenarioId: string, messages?: Message[]): string {
   const responses: Record<string, string[]> = {
     restaurant: [
       'かしこまりました。お席にご案内いたします。\n(Vâng ạ. Tôi sẽ dẫn quý khách đến chỗ ngồi.)',
       'お飲み物は何になさいますか？\n(Quý khách dùng đồ uống gì ạ?)',
       'お決まりになりましたら、お呼びください。\n(Khi nào quyết định xong, xin gọi tôi ạ.)',
+    ],
+    restaurant_cn: [
+      '好的，请跟我来。\n(Vâng, xin hãy đi theo tôi.)',
+      '请问想喝点什么？\n(Cho hỏi bạn muốn uống gì?)',
+      '看好了请叫我。\n(Xem xong hãy gọi tôi nhé.)',
+    ],
+    hotel_cn: [
+      '您的房间在三楼305号。\n(Phòng của bạn ở phòng 305 tầng 3 ạ.)',
+      '早餐从七点到九点。\n(Bữa sáng từ 7 giờ đến 9 giờ ạ.)',
+      '十一点退房。\n(Trả phòng lúc 11 giờ ạ.)',
+    ],
+    shopping_cn: [
+      '这个怎么样？\n(Cái này thế nào ạ?)',
+      '试衣间在那边。\n(Phòng thử đồ ở đằng kia ạ.)',
+      '一共五千块。\n(Tổng cộng là 5000 tệ ạ.)',
+    ],
+    friend_cn: [
+      '原来是这样！很有趣呢！\n(Hóa ra là vậy! Thú vị thật đấy!)',
+      '下次一起去吧！\n(Lần sau cùng đi nhé!)',
+      '再联系哦！\n(Liên lạc lại nhé!)',
     ],
     shopping: [
       'こちらはいかがでしょうか？\n(Cái này thì sao ạ?)',
@@ -761,7 +819,9 @@ export function getMockResponse(userInput: string, scenarioId: string): string {
   };
 
   const scenarioResponses = responses[scenarioId] || [
-    'はい、わかりました。\n(Vâng, tôi hiểu rồi.)',
+    messages?.some(m => m.content.includes('[ZH]'))
+      ? '好的，我知道了。\n(Vâng, tôi hiểu rồi.)'
+      : 'はい、わかりました。\n(Vâng, tôi hiểu rồi.)',
   ];
   return scenarioResponses[Math.floor(Math.random() * scenarioResponses.length)];
 }

@@ -266,7 +266,7 @@ const AIConversation = () => {
 
       if (hasOpenAI || hasGemini || hasDeepSeek || hasHuggingFace || hasQwen || hasOpenRouter) {
         const conversationMessages = [
-          createSystemPrompt(selectedScenario.systemPrompt),
+          createSystemPrompt(selectedScenario.systemPrompt, selectedLanguage || undefined),
           ...messages.map(m => ({
             role: m.role as 'user' | 'assistant' | 'system',
             content: m.content
@@ -274,11 +274,11 @@ const AIConversation = () => {
           { role: 'user' as const, content: userInput }
         ];
 
-        const response = await getAIResponse(conversationMessages);
+        const response = await getAIResponse(conversationMessages, selectedLanguage || undefined);
 
         if (response.error) {
           console.error('AI Error:', response.error);
-          aiContent = getMockResponse(userInput, selectedScenario.id);
+          aiContent = getMockResponse(userInput, selectedScenario.id, conversationMessages);
         } else {
           aiContent = response.content
             .replace(/<think>[\s\S]*?<\/think>/gi, '')
