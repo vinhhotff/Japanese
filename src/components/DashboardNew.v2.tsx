@@ -6,6 +6,7 @@ import { getCourses, getLessons, PaginatedResponse } from '../services/supabaseS
 import { getProgressStats, getUserProgress } from '../services/progressService';
 import { useAuth } from '../contexts/AuthContext';
 import { getStudentClasses, joinClass, createClass, getAllClasses } from '../services/classService';
+import DragonAnimation from './DragonAnimation';
 import '../styles/dashboard-v2.css';
 
 type Language = 'japanese' | 'chinese';
@@ -444,6 +445,7 @@ const DashboardNew = () => {
       </svg>
 
       {/* Floating Characters Background */}
+      <DragonAnimation />
       <div className="floating-characters">
         {selectedLanguage === 'japanese' ? (
           <>
