@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { addToNotebook, removeFromNotebook, getNotebookItems } from '../services/notebookService';
 import { Kanji } from '../types';
 import type { Language } from '../services/supabaseService.v2';
 import Pagination from './common/Pagination';
@@ -10,13 +12,47 @@ interface KanjiSectionProps {
 }
 
 const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
+  const [notebookItems, setNotebookItems] = useState<Set<string>>(new Set());
   const itemsPerPage = 6;
 
-  // Reset page when kanji changes
+  // Reset page and load notebook status
   useEffect(() => {
     setCurrentPage(1);
-  }, [kanji]);
+    if (user) {
+      loadNotebookStatus();
+    }
+  }, [kanji, user]);
+
+  const loadNotebookStatus = async () => {
+    const items = await getNotebookItems(user!.id);
+    const itemIds = new Set(items.map(i => i.item_id));
+    setNotebookItems(itemIds);
+  };
+
+  const handleToggleNotebook = async (k: Kanji) => {
+    if (!user) {
+      alert('Vui lòng đăng nhập để sử dụng tính năng Sổ tay');
+      return;
+    }
+
+    try {
+      if (notebookItems.has(k.id)) {
+        await removeFromNotebook(user.id, k.id);
+        const newItems = new Set(notebookItems);
+        newItems.delete(k.id);
+        setNotebookItems(newItems);
+      } else {
+        await addToNotebook(user.id, 'kanji', k.id);
+        const newItems = new Set(notebookItems);
+        newItems.add(k.id);
+        setNotebookItems(newItems);
+      }
+    } catch (error) {
+      console.error('Error toggling notebook:', error);
+    }
+  };
 
   const currentItems = kanji.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -39,9 +75,34 @@ const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
             <div className="kanji-grid">
               {currentItems.map((k) => (
                 <div key={k.id} className="kanji-card">
-                  <div className="kanji-character-wrapper">
+                  <div className="kanji-character-wrapper" style={{ position: 'relative' }}>
                     <div className="kanji-character">{k.character}</div>
                     <div className="kanji-stroke-count">{k.strokeCount} nét</div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleToggleNotebook(k); }}
+                      title={notebookItems.has(k.id) ? "Xóa khỏi sổ tay" : "Lưu vào sổ tay"}
+                      style={{
+                        position: 'absolute',
+                        top: '-10px',
+                        right: '-10px',
+                        background: 'white',
+                        border: '2px solid var(--border-color)',
+                        borderRadius: '50%',
+                        width: '32px',
+                        height: '32px',
+                        cursor: 'pointer',
+                        fontSize: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: notebookItems.has(k.id) ? '#f59e0b' : '#cbd5e1',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        zIndex: 2,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {notebookItems.has(k.id) ? '⭐' : '☆'}
+                    </button>
                   </div>
                   <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                     {k.meaning}

@@ -6,8 +6,9 @@ import { getCourses, getLessons, PaginatedResponse } from '../services/supabaseS
 import { getProgressStats, getUserProgress } from '../services/progressService';
 import { useAuth } from '../contexts/AuthContext';
 import { getStudentClasses, joinClass, createClass, getAllClasses } from '../services/classService';
-import DragonAnimation from './DragonAnimation';
-import FloatingCharactersPhysics from './FloatingCharactersPhysics';
+import FloatingElements from './FloatingElements';
+import Leaderboard from './Leaderboard';
+import { getUserBadges } from '../services/badgeService';
 import '../styles/dashboard-v2.css';
 
 type Language = 'japanese' | 'chinese';
@@ -59,6 +60,7 @@ const DashboardNew = () => {
   const [showPracticeModal, setShowPracticeModal] = useState(false);
   const [practiceType, setPracticeType] = useState<'vocabulary' | 'writing'>('vocabulary');
 
+  const [userBadges, setUserBadges] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   // Ref to prevent double-firing
@@ -67,8 +69,17 @@ const DashboardNew = () => {
   useEffect(() => {
     if (!authLoading) {
       loadData();
+      if (user) {
+        fetchUserBadges();
+      }
     }
-  }, [authLoading]);
+  }, [authLoading, user]);
+
+  const fetchUserBadges = async () => {
+    if (!user) return;
+    const badges = await getUserBadges(user.id);
+    setUserBadges(badges || []);
+  };
 
   const loadData = async () => {
     // Prevent duplicate calls
@@ -445,9 +456,8 @@ const DashboardNew = () => {
         <rect width="100%" height="100%" fill={`url(#${selectedLanguage === 'japanese' ? 'jp' : 'cn'}-glow)`} />
       </svg>
 
-      {/* Floating Characters Background */}
-      <DragonAnimation />
-      <FloatingCharactersPhysics language={selectedLanguage} />
+      {/* Floating Background - Sakura for JP, Lanterns for CN */}
+      <FloatingElements language={selectedLanguage} />
 
       {/* Hero Header */}
       <div className="hero-header">
@@ -673,6 +683,84 @@ const DashboardNew = () => {
           )}
         </div>
       </div>
+
+      {/* Gamification & Community Section */}
+      <section style={{ maxWidth: '1200px', margin: '4rem auto', padding: '0 20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', alignItems: 'start' }}>
+          <div>
+            <div className="section-title" style={{ textAlign: 'left', margin: '0 0 24px 0' }}>
+              <h2 style={{ fontSize: '1.8rem' }}>Hoạt động học tập</h2>
+              <p>Duy trì chuỗi học tập để nhận nhiều điểm thưởng hơn!</p>
+            </div>
+
+            {/* Quick Stats / Daily Challenge shortcut */}
+            <div className="card" style={{ padding: '2rem', background: 'linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%)', color: 'white' }}>
+              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'white' }}>Tiếp tục học nào! ✍️</h3>
+              <p style={{ opacity: 0.9, marginBottom: '1.5rem' }}>Bạn đã có những tiến bộ rất tốt. Đừng để chuỗi học tập bị gián đoạn nhé.</p>
+              <button
+                onClick={() => navigate('/japanese/courses')}
+                style={{ background: 'white', color: 'var(--primary-color)', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: 800, cursor: 'pointer' }}
+              >
+                Vào học ngay
+              </button>
+            </div>
+
+            <div style={{ marginTop: '2rem' }}>
+              <Link to="/notebook" style={{ textDecoration: 'none' }}>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: '2px solid var(--border-color)', borderRadius: '20px' }}>
+                  <div style={{ fontSize: '2rem' }}>📔</div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Sổ tay cá nhân</h4>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Xem lại từ vựng và ngữ pháp đã lưu</p>
+                  </div>
+                  <div style={{ marginLeft: 'auto', fontSize: '1.2rem' }}>→</div>
+                </div>
+              </Link>
+            </div>
+
+            {userBadges.length > 0 && (
+              <div style={{ marginTop: '2.5rem' }}>
+                <div className="section-title" style={{ textAlign: 'left', margin: '0 0 16px 0' }}>
+                  <h3 style={{ fontSize: '1.2rem' }}>Huy hiệu của bạn ({userBadges.length})</h3>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                  {userBadges.map((ub, idx) => (
+                    <div key={idx} className="badge-item" title={ub.badges?.description} style={{
+                      width: '70px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '50%',
+                        background: 'var(--bg-secondary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '2rem',
+                        border: '2px solid var(--primary-color)',
+                        marginBottom: '0.5rem',
+                        filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))'
+                      }}>
+                        {ub.badges?.icon_url || '🏅'}
+                      </div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>{ub.badges?.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <Leaderboard />
+          </div>
+        </div>
+      </section>
+
 
       {/* Enroll Modal */}
       {showEnrollModal && (

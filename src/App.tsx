@@ -23,6 +23,7 @@ import AdminPanel from './components/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import AIConversation from './components/AIConversation';
+import NotebookView from './components/NotebookView';
 import VoiceRecorder from './components/VoiceRecorder';
 import AssignmentList from './components/AssignmentList';
 import AssignmentDetail from './components/AssignmentDetail';
@@ -140,6 +141,11 @@ function App() {
                       <AIConversation />
                     </ProtectedRoute>
                   } />
+                  <Route path="/notebook" element={
+                    <ProtectedRoute>
+                      <NotebookView />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/voice-recorder" element={
                     <ProtectedRoute requireEnrollment>
                       <VoiceRecorder />
@@ -150,8 +156,6 @@ function App() {
                   <Route path="/assignments" element={<AssignmentList />} />
                   <Route path="/assignments/:assignmentId" element={<AssignmentDetail />} />
                   <Route path="/my-assignments" element={<AssignmentList />} />
-                  <Route path="/admin/grading/:submissionId" element={<GradingInterface />} />
-
                   <Route path="/admin/grading/:submissionId" element={<GradingInterface />} />
 
                   <Route

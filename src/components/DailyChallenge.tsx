@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { getUserProgress, getTodayChallenge, updateDailyChallenge, checkAllChallengesCompleted } from '../utils/storage';
+import { addExperiencePoints, updateStreak, getUserStats } from '../services/statsService';
+import { checkAndAwardBadges } from '../services/badgeService';
 import VocabularyChallenge from './challenges/VocabularyChallenge';
 import ListeningChallenge from './challenges/ListeningChallenge';
 import SpeakingChallenge from './challenges/SpeakingChallenge';
@@ -8,18 +11,29 @@ import Celebration from './Celebration';
 import '../App.css';
 
 const DailyChallenge = () => {
+  const { user } = useAuth();
   const [progress, setProgress] = useState(getUserProgress());
   const [todayChallenge, setTodayChallenge] = useState(getTodayChallenge());
   const [activeChallenge, setActiveChallenge] = useState<'vocabulary' | 'listening' | 'speaking' | 'grammar' | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [cloudStats, setCloudStats] = useState<any>(null);
 
   useEffect(() => {
     const updatedProgress = getUserProgress();
     setProgress(updatedProgress);
     setTodayChallenge(getTodayChallenge());
-  }, []);
 
-  const handleChallengeComplete = (
+    if (user) {
+      loadCloudStats();
+    }
+  }, [user]);
+
+  const loadCloudStats = async () => {
+    const stats = await getUserStats(user!.id);
+    if (stats) setCloudStats(stats);
+  };
+
+  const handleChallengeComplete = async (
     type: 'vocabulary' | 'listening' | 'speaking' | 'grammar',
     score: number
   ) => {
@@ -29,9 +43,23 @@ const DailyChallenge = () => {
     setTodayChallenge(getTodayChallenge());
     setActiveChallenge(null);
 
+    // Sync Gamification to Cloud
+    if (user) {
+      await addExperiencePoints(user.id, score * 10);
+      await updateStreak(user.id);
+
+      const newBadges = await checkAndAwardBadges(user.id);
+      if (newBadges.length > 0) {
+        alert(`Chúc mừng! Bạn đã nhận được ${newBadges.length} huy hiệu mới: ${newBadges.map(b => b.name).join(', ')}`);
+      }
+
+      loadCloudStats();
+    }
+
     // Check if all challenges completed
     if (checkAllChallengesCompleted()) {
       setShowCelebration(true);
+      if (user) await addExperiencePoints(user.id, 100); // Bonus for all clear
       setTimeout(() => setShowCelebration(false), 5000);
     }
   };
@@ -80,7 +108,7 @@ const DailyChallenge = () => {
   return (
     <>
       {showCelebration && <Celebration />}
-      
+
       <div className="daily-challenge-card">
         <div className="daily-challenge-header">
           <div>
@@ -94,11 +122,11 @@ const DailyChallenge = () => {
           </div>
           <div className="challenge-stats">
             <div className="stat-item">
-              <div className="stat-value">{progress.currentStreak}</div>
+              <div className="stat-value">{cloudStats ? cloudStats.currentStreak : progress.currentStreak}</div>
               <div className="stat-label">🔥 Streak</div>
             </div>
             <div className="stat-item">
-              <div className="stat-value">{progress.totalPoints}</div>
+              <div className="stat-value">{cloudStats ? cloudStats.totalPoints : progress.totalPoints}</div>
               <div className="stat-label">⭐ Điểm</div>
             </div>
             <div className="stat-item">
@@ -109,8 +137,8 @@ const DailyChallenge = () => {
         </div>
 
         <div className="challenge-progress-bar">
-          <div 
-            className="challenge-progress-fill" 
+          <div
+            className="challenge-progress-fill"
             style={{ width: `${(completedCount / 4) * 100}%` }}
           ></div>
         </div>

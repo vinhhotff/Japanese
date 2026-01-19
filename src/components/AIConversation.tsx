@@ -323,13 +323,15 @@ const AIConversation = () => {
 
   const parseMessageContent = (content: string) => {
     const jpMatch = content.match(/\[(JP|ZH)\]([\s\S]*?)(?=\[VI\]|$)/);
-    const viMatch = content.match(/\[VI\]([\s\S]*?)(?=\[OP\]|$)/);
-    const opMatch = content.match(/\[OP\]([\s\S]*)/);
+    const viMatch = content.match(/\[VI\]([\s\S]*?)(?=\[OP\]|\[FIX\]|$)/);
+    const opMatch = content.match(/\[OP\]([\s\S]*?)(?=\[FIX\]|$)/);
+    const fixMatch = content.match(/\[FIX\]([\s\S]*)/);
 
     return {
       jp: jpMatch ? jpMatch[2].trim() : content,
       vi: viMatch ? viMatch[1].trim() : '',
-      op: opMatch ? opMatch[1].trim().split('\n').filter(l => l.trim()) : []
+      op: opMatch ? opMatch[1].trim().split('\n').filter(l => l.trim()) : [],
+      fix: fixMatch ? fixMatch[1].trim() : ''
     };
   };
 
@@ -499,13 +501,26 @@ const AIConversation = () => {
           <div className="messages-list-css">
             {messages.map(message => {
               const isAI = message.role === 'assistant';
-              const { jp, vi, op } = isAI ? parseMessageContent(message.content) : { jp: message.content, vi: '', op: [] };
+              const { jp, vi, op, fix } = isAI ? parseMessageContent(message.content) : { jp: message.content, vi: '', op: [], fix: '' };
               const isExpanded = suggestionStates[message.id];
 
               return (
                 <div key={message.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isAI ? 'flex-start' : 'flex-end', marginBottom: '1rem' }}>
                   <div className={`message-css ${isAI ? 'ai' : 'user'}`}>
                     <div style={{ whiteSpace: 'pre-line' }}>{jp}</div>
+                    {isAI && fix && (
+                      <div style={{
+                        marginTop: '0.75rem',
+                        padding: '0.5rem 0.75rem',
+                        background: 'rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        fontSize: '0.8rem',
+                        borderLeft: '3px solid #fbbf24',
+                        color: 'rgba(255, 255, 255, 0.95)'
+                      }}>
+                        <strong>📝 Góp ý:</strong> {fix}
+                      </div>
+                    )}
                   </div>
 
                   {isAI && (

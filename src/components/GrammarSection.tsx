@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { addToNotebook, removeFromNotebook, getNotebookItems } from '../services/notebookService';
 import { Grammar } from '../types';
 import Pagination from './common/Pagination';
 import '../App.css';
@@ -8,13 +10,47 @@ interface GrammarSectionProps {
 }
 
 const GrammarSection = ({ grammar }: GrammarSectionProps) => {
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
+  const [notebookItems, setNotebookItems] = useState<Set<string>>(new Set());
   const itemsPerPage = 5;
 
-  // Reset page when grammar changes
+  // Reset page and load notebook status
   useEffect(() => {
     setCurrentPage(1);
-  }, [grammar]);
+    if (user) {
+      loadNotebookStatus();
+    }
+  }, [grammar, user]);
+
+  const loadNotebookStatus = async () => {
+    const items = await getNotebookItems(user!.id);
+    const itemIds = new Set(items.map(i => i.item_id));
+    setNotebookItems(itemIds);
+  };
+
+  const handleToggleNotebook = async (g: Grammar) => {
+    if (!user) {
+      alert('Vui lòng đăng nhập để sử dụng tính năng Sổ tay');
+      return;
+    }
+
+    try {
+      if (notebookItems.has(g.id)) {
+        await removeFromNotebook(user.id, g.id);
+        const newItems = new Set(notebookItems);
+        newItems.delete(g.id);
+        setNotebookItems(newItems);
+      } else {
+        await addToNotebook(user.id, 'grammar', g.id);
+        const newItems = new Set(notebookItems);
+        newItems.add(g.id);
+        setNotebookItems(newItems);
+      }
+    } catch (error) {
+      console.error('Error toggling notebook:', error);
+    }
+  };
 
   const currentItems = grammar.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -40,7 +76,24 @@ const GrammarSection = ({ grammar }: GrammarSectionProps) => {
                   <span className="pattern-label">Mẫu câu:</span>
                   <span className="pattern-text">{g.pattern}</span>
                 </div>
-                <h3 className="grammar-meaning">{g.meaning}</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                  <h3 className="grammar-meaning">{g.meaning}</h3>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleNotebook(g); }}
+                    title={notebookItems.has(g.id) ? "Xóa khỏi sổ tay" : "Lưu vào sổ tay"}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '1.25rem',
+                      padding: '0.25rem',
+                      color: notebookItems.has(g.id) ? '#f59e0b' : '#cbd5e1',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {notebookItems.has(g.id) ? '⭐' : '☆'}
+                  </button>
+                </div>
                 <p className="grammar-explanation">{g.explanation}</p>
                 <div className="grammar-examples">
                   <div className="examples-title">Ví dụ:</div>

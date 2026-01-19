@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { getLessons, type Language } from '../services/supabaseService.v2';
+import { evaluateExercise } from '../services/aiService';
 import { JapanFlag, ChinaFlag } from './icons/Icons';
 import '../App.css';
 import '../styles/spaced-repetition.css';
@@ -37,6 +38,8 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [validationResult, setValidationResult] = useState<'correct' | 'incorrect' | null>(null);
   const [score, setScore] = useState(0);
+  const [aiFeedback, setAiFeedback] = useState<{ score: number; feedback: string; tips: string } | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
 
   // Helper wrapper for timeout
   const withTimeout = <T,>(promise: Promise<T> | PromiseLike<T>, ms = 5000): Promise<T> => {
@@ -245,7 +248,7 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
     return found ? { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 } : null;
   };
 
-  const checkWriting = () => {
+  const checkWriting = async () => {
     const canvas = canvasRef.current;
     if (!canvas || !currentKanji) return;
 
@@ -283,7 +286,7 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
     if (!refCtx) return;
 
     // Draw centered text
-    refCtx.font = `bold ${canvas.width * 0.8}px "Noto Sans JP", sans-serif`;
+    refCtx.font = `bold ${canvas.width * 0.8}px \"Noto Sans JP\", sans-serif`;
     refCtx.fillStyle = 'black';
     refCtx.textAlign = 'center';
     refCtx.textBaseline = 'middle';
@@ -330,29 +333,36 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
     }
 
     // 5. Calculate Score
-    // IoU is strict. Precision/Recall combination is better for handwriting.
-    // Precision: How much of user's ink is correct?
-    // Recall: How much of the character did they write?
-    const precision = intersection / (union - (targetArea - intersection) + 1); // Approx User Area in denom
-
-    // Simplification:
-    // Let's use specific overlap.
-    // We want generous matching.
-
     const overlapScore = (intersection / targetArea) * 100; // Coverage
     const accuracyScore = (intersection / union) * 100; // Loosely IoU
 
-    // Combo score
+    // 5. Calculate Score (Local)
     const finalScore = Math.round((overlapScore * 0.6) + (accuracyScore * 0.4));
-
-    // Debug
-    console.log('Validation:', { intersection, union, targetArea, overlapScore, accuracyScore, finalScore });
-
     setScore(finalScore);
-    if (finalScore >= 50) { // Tolerant threshold
-      setValidationResult('correct');
-    } else {
-      setValidationResult('incorrect');
+
+    // 6. AI Detailed Evaluation (Cloud)
+    setLoadingAI(true);
+    try {
+      const imageData = canvas.toDataURL('image/png');
+      const aiRes = await evaluateExercise('writing', currentKanji.character, '', language || 'japanese', imageData);
+      setAiFeedback(aiRes);
+
+      // Use AI score if local score is low but AI says it's ok
+      if (aiRes.score > finalScore) {
+        setScore(aiRes.score);
+      }
+
+      if (aiRes.score >= 60 || finalScore >= 50) {
+        setValidationResult('correct');
+      } else {
+        setValidationResult('incorrect');
+      }
+    } catch (e) {
+      console.error('AI Eval Writing Error:', e);
+      if (finalScore >= 50) setValidationResult('correct');
+      else setValidationResult('incorrect');
+    } finally {
+      setLoadingAI(false);
     }
   };
 
@@ -743,6 +753,33 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
                   </div>
                 )}
               </div>
+
+              {loadingAI && (
+                <div style={{ marginTop: '1rem', textAlign: 'center', color: '#3b82f6' }}>
+                  <div className="spinner-small" style={{ margin: '0 auto 0.5rem' }}></div>
+                  <p style={{ fontSize: '0.8rem' }}>AI đang chấm điểm nét viết...</p>
+                </div>
+              )}
+
+              {aiFeedback && (
+                <div className="ai-writing-feedback" style={{
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  background: 'rgba(255,255,255,0.8)',
+                  borderRadius: '12px',
+                  borderLeft: `4px solid ${aiFeedback.score >= 60 ? '#10b981' : '#ef4444'}`,
+                  maxWidth: '300px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.8rem', color: '#1e293b', marginBottom: '0.25rem' }}>AI FEEDBACK:</div>
+                  <p style={{ fontSize: '0.85rem', margin: '0 0 0.5rem 0', lineHeight: 1.4 }}>{aiFeedback.feedback}</p>
+                  {aiFeedback.tips && (
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>
+                      💡 {aiFeedback.tips}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button

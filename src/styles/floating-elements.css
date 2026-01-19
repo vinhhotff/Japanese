@@ -1,0 +1,222 @@
+/* Floating Elements - Characters, Sakura & Lanterns */
+
+.floating-elements-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+/* ===== Floating Characters ===== */
+.floating-char-element {
+    position: absolute;
+    top: -60px;
+    font-family: 'Noto Sans JP', 'Noto Sans SC', sans-serif;
+    font-weight: 300;
+    animation: floatDownChar linear infinite;
+    will-change: transform;
+    user-select: none;
+}
+
+@keyframes floatDownChar {
+    0% {
+        transform: translateY(-10vh) translateX(0) rotate(-5deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: var(--char-opacity, 0.15);
+    }
+
+    90% {
+        opacity: var(--char-opacity, 0.15);
+    }
+
+    100% {
+        transform: translateY(110vh) translateX(30px) rotate(5deg);
+        opacity: 0;
+    }
+}
+
+/* ===== Sakura Petals (Japanese) - Float DOWN ===== */
+.floating-sakura {
+    position: absolute;
+    top: -50px;
+    color: #ffb7c5;
+    animation: floatDownSakura ease-in-out infinite;
+    will-change: transform;
+    filter: drop-shadow(0 2px 6px rgba(255, 183, 197, 0.4));
+}
+
+.floating-sakura svg {
+    width: 100%;
+    height: 100%;
+    animation: sakuraSpin 4s ease-in-out infinite;
+}
+
+@keyframes floatDownSakura {
+    0% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+        opacity: 0;
+    }
+
+    5% {
+        opacity: 0.7;
+    }
+
+    25% {
+        transform: translateY(25vh) translateX(30px) rotate(90deg);
+    }
+
+    50% {
+        transform: translateY(50vh) translateX(-20px) rotate(180deg);
+    }
+
+    75% {
+        transform: translateY(75vh) translateX(40px) rotate(270deg);
+    }
+
+    95% {
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: translateY(115vh) translateX(10px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+@keyframes sakuraSpin {
+
+    0%,
+    100% {
+        transform: rotateY(0deg) rotateX(0deg);
+    }
+
+    25% {
+        transform: rotateY(45deg) rotateX(15deg);
+    }
+
+    50% {
+        transform: rotateY(0deg) rotateX(0deg);
+    }
+
+    75% {
+        transform: rotateY(-45deg) rotateX(-15deg);
+    }
+}
+
+/* ===== Lanterns (Chinese) - Float UP ===== */
+.floating-lantern {
+    position: absolute;
+    bottom: -80px;
+    animation: floatUpLantern ease-in-out infinite;
+    will-change: transform;
+    filter: drop-shadow(0 4px 12px rgba(255, 68, 68, 0.4));
+}
+
+.floating-lantern svg {
+    width: 100%;
+    height: 100%;
+    animation: lanternGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes floatUpLantern {
+    0% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+        opacity: 0;
+    }
+
+    5% {
+        opacity: 0.8;
+    }
+
+    25% {
+        transform: translateY(-25vh) translateX(15px) rotate(3deg);
+    }
+
+    50% {
+        transform: translateY(-50vh) translateX(-10px) rotate(-3deg);
+    }
+
+    75% {
+        transform: translateY(-75vh) translateX(20px) rotate(2deg);
+    }
+
+    95% {
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateY(-115vh) translateX(5px) rotate(0deg);
+        opacity: 0;
+    }
+}
+
+@keyframes lanternGlow {
+    0% {
+        filter: brightness(1);
+    }
+
+    100% {
+        filter: brightness(1.2);
+    }
+}
+
+/* ===== Theme variations ===== */
+.floating-elements-container.japanese .floating-char-element {
+    color: rgba(196, 30, 58, 0.2);
+    text-shadow: 0 2px 8px rgba(196, 30, 58, 0.1);
+}
+
+.floating-elements-container.chinese .floating-char-element {
+    color: rgba(220, 20, 60, 0.2);
+    text-shadow: 0 2px 8px rgba(220, 20, 60, 0.1);
+}
+
+/* ===== Dark mode ===== */
+[data-theme="dark"] .floating-char-element {
+    opacity: 0.35 !important;
+    color: rgba(255, 150, 170, 0.5) !important;
+    text-shadow: 0 2px 10px rgba(255, 150, 170, 0.3);
+}
+
+[data-theme="dark"] .floating-elements-container.japanese .floating-char-element {
+    color: rgba(255, 180, 200, 0.5) !important;
+}
+
+[data-theme="dark"] .floating-elements-container.chinese .floating-char-element {
+    color: rgba(255, 160, 160, 0.5) !important;
+}
+
+[data-theme="dark"] .floating-sakura {
+    color: #ff9eb5;
+    filter: drop-shadow(0 2px 8px rgba(255, 158, 181, 0.5));
+}
+
+[data-theme="dark"] .floating-lantern {
+    filter: drop-shadow(0 4px 16px rgba(255, 100, 100, 0.5));
+}
+
+/* ===== Reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+
+    .floating-char-element,
+    .floating-sakura,
+    .floating-lantern {
+        animation: none;
+        opacity: 0.1;
+    }
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+    .floating-char-element {
+        font-size: 20px !important;
+        opacity: 0.1 !important;
+    }
+}

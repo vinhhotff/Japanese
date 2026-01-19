@@ -4,6 +4,7 @@ import { getLessonById, getSentenceGames, getRoleplayScenarios } from '../servic
 import { transformLessonFromDB } from '../utils/dataTransform';
 import { Lesson, RoleplayScenario } from '../types';
 import { getLessonProgress, updateLessonProgress } from '../services/progressService';
+import { useAuth } from '../contexts/AuthContext';
 import type { Language } from '../services/supabaseService.v2';
 import VocabularySection from './VocabularySection';
 import KanjiSection from './KanjiSection';
@@ -25,6 +26,7 @@ interface LessonDetailProps {
 }
 
 const LessonDetail = ({ language }: LessonDetailProps) => {
+  const { user } = useAuth();
   const { lessonId } = useParams<{ lessonId: string }>();
   const [currentStep, setCurrentStep] = useState<LearningStep>('learn');
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -41,9 +43,16 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
   useEffect(() => {
     if (lessonId) {
       loadLesson();
-      loadProgress();
+      if (user) {
+        // Sync from cloud when entering lesson if logged in
+        import('../services/progressService').then(m => m.syncProgressFromCloud(user.id)).then(() => {
+          loadProgress();
+        });
+      } else {
+        loadProgress();
+      }
     }
-  }, [lessonId]);
+  }, [lessonId, user]);
 
   const loadLesson = async () => {
     try {
@@ -99,8 +108,8 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
     newCompleted.add(step);
     setCompletedSteps(newCompleted);
 
-    // Lưu vào service mới
-    updateLessonProgress(lessonId!, [...newCompleted], 6);
+    // Lưu vào service mới (hỗ trợ cloud sync nếu đã đăng nhập)
+    updateLessonProgress(lessonId!, [...newCompleted], 6, user?.id);
   };
 
   if (loading) {

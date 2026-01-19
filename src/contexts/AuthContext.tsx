@@ -47,18 +47,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Timeout helper for role fetching
   const fetchUserRoleWithTimeout = async (email: string): Promise<UserRole | null> => {
     try {
-      // Create a timeout promise that rejects after 10 seconds
+      // Create a timeout promise that rejects after 30 seconds
       const timeoutPromise = new Promise<null>((_, reject) => {
-        setTimeout(() => reject(new Error('Role fetch timeout')), 10000);
+        setTimeout(() => reject(new Error('Role fetch timeout')), 30000);
       });
 
       // Race the fetch against the timeout
+      console.time('SupabaseRoleQuery');
       const fetchPromise = supabase
         .from('user_roles')
         .select('role')
         .eq('email', email)
         .maybeSingle()
         .then(({ data, error }) => {
+          console.timeEnd('SupabaseRoleQuery');
           if (error) throw error;
           // If no data found, they are a STUDENT (confirmed)
           return (data?.role as UserRole) || 'student';

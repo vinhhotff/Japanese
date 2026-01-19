@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../config/supabase';
 import { getStudentClasses } from '../services/classService';
 import { getLessons } from '../services/supabaseService.v2';
 import { getLessonCompletionPercentage, isLessonCompleted } from '../services/progressService';
@@ -46,8 +47,24 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
       return;
     }
 
-    // Check student enrollment
+    // Check access from both purchased courses and class enrollments
     try {
+      // 1. Check user_courses (Direct purchase)
+      const { data: courseAccess } = await supabase
+        .from('user_courses')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('course_id', courseInfo?.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (courseAccess) {
+        setHasAccess(true);
+        await loadLessons();
+        return;
+      }
+
+      // 2. Fallback to old enrollment system
       const enrollments = await getStudentClasses(user.id);
       const isEnrolled = enrollments.some((e: any) =>
         e.classes?.language === language &&
@@ -55,7 +72,6 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
       );
 
       setHasAccess(isEnrolled);
-      // ALWAYS load lessons - they will be displayed with lock/FREE badges based on access
       await loadLessons();
     } catch (error) {
       console.error('Error checking access:', error);
@@ -570,78 +586,220 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
       {/* Purchase Confirmation Modal */}
       <AnimatePresence>
         {showPurchaseModal && courseInfo && (
-          <div className="modal-overlay" style={{ zIndex: 10001 }} onClick={() => setShowPurchaseModal(false)}>
+          <div className="modal-overlay" style={{
+            zIndex: 10001,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }} onClick={() => setShowPurchaseModal(false)}>
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="modal-content"
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              className="purchase-modal"
               style={{
-                maxWidth: '450px',
-                padding: '2.5rem',
+                width: '90%',
+                maxWidth: '480px',
                 borderRadius: '32px',
-                textAlign: 'center',
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(0,0,0,0.05)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                position: 'relative',
+                overflow: 'hidden',
+                background: 'var(--card-bg, #ffffff)',
+                border: language === 'japanese'
+                  ? '2px solid var(--primary-color, #ffb7c5)'
+                  : '2px solid var(--secondary-color, #ff4444)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)'
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>💳</div>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '1rem', color: '#111827' }}>
-                Xác nhận đăng ký
-              </h2>
-              <p style={{ color: '#4B5563', marginBottom: '2rem', lineHeight: 1.6 }}>
-                Bạn có chắc chắn muốn mua khóa học <strong>{courseInfo.title}</strong> này không? Bạn sẽ được chuyển hướng đến trang thanh toán an toàn.
-              </p>
-
+              {/* Header Gradient Strip */}
               <div style={{
-                background: '#F9FAFB',
-                padding: '1.5rem',
-                borderRadius: '20px',
-                marginBottom: '2rem',
-                border: '1px solid #E5E7EB'
+                height: '8px',
+                width: '100%',
+                background: language === 'japanese'
+                  ? 'linear-gradient(90deg, #ffb7c5, #ff8fa3)'
+                  : 'linear-gradient(90deg, #ff4444, #cc0000)'
+              }} />
+
+              {/* Decorative Background Pattern */}
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                opacity: 0.05,
+                zIndex: 0,
+                pointerEvents: 'none'
               }}>
-                <div style={{ fontSize: '0.875rem', color: '#6B7280', marginBottom: '0.25rem' }}>Tổng cộng</div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#111827' }}>
-                  {formatCurrency(courseInfo.price || 0)}
-                </div>
+                {language === 'japanese' ? (
+                  <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2c-1.5 0-3 1.5-3 3.5 0 1 .3 1.8.7 2.5-.8.3-1.7.8-2.2 1.5C6.5 10.5 6 12 6 14c0 2.5 1.5 4.5 4 5.5 0 1 .5 2.5 2 2.5s2-1.5 2-2.5c2.5-1 4-3 4-5.5 0-2-0.5-3.5-1.5-4.5-.5-.7-1.4-1.2-2.2-1.5.4-.7.7-1.5.7-2.5 0-2-1.5-3.5-3-3.5z" />
+                  </svg>
+                ) : (
+                  <svg width="120" height="120" viewBox="0 0 24 32" fill="currentColor">
+                    <ellipse cx="12" cy="16" rx="8" ry="10" />
+                  </svg>
+                )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <button
-                  onClick={() => setShowPurchaseModal(false)}
-                  style={{
-                    padding: '1rem',
-                    borderRadius: '16px',
-                    border: '1px solid #E5E7EB',
-                    background: 'white',
-                    color: '#374151',
+              <div style={{ padding: '2.5rem', position: 'relative', zIndex: 1, textAlign: 'center' }}>
+                <div style={{
+                  width: '72px',
+                  height: '72px',
+                  borderRadius: '24px',
+                  background: language === 'japanese' ? 'rgba(255, 183, 197, 0.15)' : 'rgba(255, 68, 68, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.5rem',
+                  color: language === 'japanese' ? '#ff8fa3' : '#ff4444'
+                }}>
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                    <line x1="1" y1="10" x2="23" y2="10" />
+                  </svg>
+                </div>
+
+                <h2 style={{
+                  fontSize: '1.75rem',
+                  fontWeight: 800,
+                  marginBottom: '0.5rem',
+                  color: 'var(--text-primary, #111827)'
+                }}>
+                  {language === 'japanese' ? 'Tiếp tục học tập?' : 'Bắt đầu ngay?'}
+                </h2>
+                <p style={{
+                  color: 'var(--text-secondary, #4b5563)',
+                  marginBottom: '2rem',
+                  fontSize: '1rem',
+                  lineHeight: 1.5
+                }}>
+                  Đăng ký khóa học để mở khóa toàn bộ nội dung bài học và bài tập đặc sắc.
+                </p>
+
+                {/* Course Badge */}
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '6px 16px',
+                  borderRadius: '100px',
+                  background: 'var(--bg-secondary, #f3f4f6)',
+                  marginBottom: '2rem',
+                  border: '1px solid var(--border-color, #e5e7eb)'
+                }}>
+                  <span style={{
+                    fontSize: '0.85rem',
                     fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  Hủy bỏ
-                </button>
-                <button
-                  onClick={handleConfirmPurchase}
-                  disabled={isProcessingPayment}
-                  style={{
-                    padding: '1rem',
-                    borderRadius: '16px',
-                    border: 'none',
-                    background: '#111827',
-                    color: 'white',
-                    fontWeight: 700,
-                    cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s',
-                    opacity: isProcessingPayment ? 0.7 : 1
-                  }}
-                >
-                  {isProcessingPayment ? 'Đang xử lý...' : 'Xác nhận ngay'}
-                </button>
+                    color: language === 'japanese' ? '#ff8fa3' : '#ff4444',
+                    marginRight: '8px'
+                  }}>
+                    {courseInfo.level}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted, #6b7280)' }}>
+                    • {courseInfo.title}
+                  </span>
+                </div>
+
+                {/* Price Display */}
+                <div style={{
+                  background: 'var(--bg-secondary, #f9fafb)',
+                  padding: '1.5rem',
+                  borderRadius: '24px',
+                  marginBottom: '2rem',
+                  border: '1px solid var(--border-color, #f3f4f6)'
+                }}>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text-muted, #6b7280)', marginBottom: '0.25rem' }}>Số tiền thanh toán</div>
+                  <div style={{
+                    fontSize: '2.25rem',
+                    fontWeight: 900,
+                    color: 'var(--text-primary, #111827)',
+                    letterSpacing: '-0.02em'
+                  }}>
+                    {formatCurrency(courseInfo.price || 0)}
+                  </div>
+                </div>
+
+                {/* Benefits List */}
+                <div style={{
+                  textAlign: 'left',
+                  marginBottom: '2rem',
+                  fontSize: '0.9rem',
+                  color: 'var(--text-secondary, #4b5563)',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    </div>
+                    <span>Toàn bộ bài học</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    </div>
+                    <span>Sử dụng trọn đời</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <button
+                    onClick={() => setShowPurchaseModal(false)}
+                    className="modal-btn-secondary"
+                    style={{
+                      padding: '1rem',
+                      borderRadius: '18px',
+                      border: '1.5px solid var(--border-color, #e5e7eb)',
+                      background: 'transparent',
+                      color: 'var(--text-secondary, #4b5563)',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Xem thêm
+                  </button>
+                  <button
+                    onClick={handleConfirmPurchase}
+                    disabled={isProcessingPayment}
+                    className="modal-btn-primary"
+                    style={{
+                      padding: '1rem',
+                      borderRadius: '18px',
+                      border: 'none',
+                      background: language === 'japanese' ? '#ff8fa3' : '#ff4444',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: language === 'japanese'
+                        ? '0 10px 15px -3px rgba(255, 143, 163, 0.3)'
+                        : '0 10px 15px -3px rgba(255, 68, 68, 0.3)'
+                    }}
+                  >
+                    {isProcessingPayment ? 'Đang chuyển...' : 'Thanh toán'}
+                  </button>
+                </div>
+
+                {/* Secure Payment Note */}
+                <div style={{
+                  marginTop: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  fontSize: '0.75rem',
+                  color: 'var(--text-muted, #9ca3af)'
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  Thanh toán an toàn qua cổng PayOS
+                </div>
               </div>
             </motion.div>
           </div>

@@ -313,7 +313,7 @@ async function callQwen(messages: Message[]): Promise<AIResponse> {
 }
 
 // OpenRouter Integration (Truy cập nhiều AI models miễn phí)
-async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
+async function callOpenRouter(messages: Message[], imageData?: string): Promise<AIResponse> {
   const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
 
   if (!apiKey) {
@@ -335,10 +335,34 @@ async function callOpenRouter(messages: Message[]): Promise<AIResponse> {
         'X-Title': 'Japanese Learning App', // Optional: App name
       },
       body: JSON.stringify({
-        model: 'qwen/qwen-2.5-coder-32b-instruct', // Model miễn phí tốt cho tiếng Nhật
-        messages: messages,
+        model: imageData
+          ? 'qwen/qwen-2.5-vl-7b-instruct:free'
+          : 'qwen/qwen-2.5-7b-instruct',
+        messages: [
+          // Luôn giữ tin nhắn System đầu tiên (chứa hướng dẫn quan trọng)
+          messages.find(m => m.role === 'system') || { role: 'system', content: 'You are a helpful assistant.' },
+          // Chỉ lấy tối đa 10 tin nhắn hội thoại gần nhất (trừ system)
+          ...messages.filter(m => m.role !== 'system').slice(-10)
+        ].map((msg, index, array) => {
+          // Chỉ thêm hình ảnh vào tin nhắn cuối cùng của người dùng
+          if (imageData && index === array.length - 1 && msg.role === 'user') {
+            return {
+              role: 'user',
+              content: [
+                { type: 'text', text: msg.content },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: imageData.startsWith('data:') ? imageData : `data:image/png;base64,${imageData}`
+                  }
+                }
+              ]
+            };
+          }
+          return msg;
+        }),
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 800, // Tăng lên chút để đảm bảo không bị cắt ngang khi có giải thích dài
         top_p: 0.9,
         stream: false,
       }),
@@ -535,71 +559,49 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
 }
 
 // Google Gemini Integration
-async function callGemini(messages: Message[]): Promise<AIResponse> {
+async function callGemini(messages: Message[], imageData?: string): Promise<AIResponse> {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey || apiKey === 'YOUR_NEW_API_KEY_HERE') {
     return {
       content: '',
-      error: 'Chưa cấu hình Gemini API key. Vui lòng thêm VITE_GEMINI_API_KEY vào file .env.local\n\nHướng dẫn: Vào https://aistudio.google.com/app/apikey để lấy key miễn phí.'
+      error: 'Chưa cấu hình Gemini API key. Vui lòng thêm VITE_GEMINI_API_KEY vào file .env.local'
     };
   }
 
   try {
-    // Convert messages to Gemini format
     const systemMessage = messages.find(m => m.role === 'system');
-    const conversationHistory = messages
-      .filter(m => m.role !== 'system')
-      .map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
-      }));
+    const userMessage = messages[messages.length - 1];
 
-    const prompt = systemMessage
-      ? `${systemMessage.content}\n\n${conversationHistory[conversationHistory.length - 1].parts[0].text}`
-      : conversationHistory[conversationHistory.length - 1].parts[0].text;
+    const contents = [
+      {
+        role: 'user',
+        parts: [
+          ...(imageData ? [{
+            inline_data: {
+              mime_type: 'image/png',
+              data: imageData.split(',')[1] || imageData
+            }
+          }] : []),
+          { text: userMessage.content }
+        ]
+      }
+    ];
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }]
-            }
-          ],
+          contents,
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.4,
             maxOutputTokens: 500,
-            topP: 0.9,
-            topK: 40,
           },
-          systemInstruction: {
-            parts: [{ text: "You are a helpful assistant. Respond directly without thinking process or evaluation." }]
-          },
-          safetySettings: [
-            {
-              category: 'HARM_CATEGORY_HARASSMENT',
-              threshold: 'BLOCK_ONLY_HIGH'
-            },
-            {
-              category: 'HARM_CATEGORY_HATE_SPEECH',
-              threshold: 'BLOCK_ONLY_HIGH'
-            },
-            {
-              category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-              threshold: 'BLOCK_ONLY_HIGH'
-            },
-            {
-              category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-              threshold: 'BLOCK_ONLY_HIGH'
-            }
-          ],
+          systemInstruction: systemMessage ? {
+            parts: [{ text: systemMessage.content }]
+          } : undefined
         }),
       }
     );
@@ -699,44 +701,86 @@ async function callGemini(messages: Message[]): Promise<AIResponse> {
 }
 
 // Main function to call AI based on provider
+// Evaluate exercise performance using AI
+export async function evaluateExercise(
+  type: 'pronunciation' | 'writing',
+  expected: string,
+  actual: string,
+  language: 'japanese' | 'chinese' = 'japanese',
+  imageData?: string
+): Promise<{ score: number; feedback: string; tips: string }> {
+  const systemPrompt = `You are a professional ${language === 'chinese' ? 'Chinese' : 'Japanese'} teacher. 
+Evaluate the student's performance.
+Type: ${type}
+Expected character/word: ${expected}
+${type === 'writing' ? 'The user has drawn the character on a canvas (see image).' : `The student said: ${actual}`}
+
+Return JSON format ONLY:
+{
+  "score": (0-100),
+  "feedback": "Concise feedback in Vietnamese about accuracy",
+  "tips": "Brief advice in Vietnamese to improve"
+}`;
+
+  const response = await getAIResponse(
+    [{ role: 'system', content: systemPrompt }, { role: 'user', content: 'Evaluate the provided input.' }],
+    language,
+    'gemini',
+    imageData
+  );
+
+  if (response.error) {
+    return { score: 0, feedback: 'Không thể kết nối với AI để đánh giá.', tips: '' };
+  }
+
+  try {
+    const jsonStr = response.content.match(/\{[\s\S]*\}/)?.[0] || response.content;
+    const result = JSON.parse(jsonStr);
+    return {
+      score: result.score || 0,
+      feedback: result.feedback || 'Không có nhận xét.',
+      tips: result.tips || ''
+    };
+  } catch (e) {
+    console.error('Error parsing AI evaluation:', e);
+    return { score: 70, feedback: response.content, tips: '' };
+  }
+}
+
 export async function getAIResponse(
   messages: Message[],
   language?: 'japanese' | 'chinese',
-  provider?: 'openai' | 'gemini' | 'deepseek' | 'huggingface' | 'qwen' | 'openrouter' | 'cloudflare'
+  provider?: 'openai' | 'gemini' | 'deepseek' | 'huggingface' | 'qwen' | 'openrouter' | 'cloudflare',
+  imageData?: string
 ): Promise<AIResponse> {
   const selectedProvider = provider || import.meta.env.VITE_AI_PROVIDER || 'cloudflare';
 
-  // Thử provider được chọn trước
   let response: AIResponse;
 
-  if (selectedProvider === 'cloudflare') {
+  if (selectedProvider === 'gemini') {
+    response = await callGemini(messages, imageData);
+  } else if (selectedProvider === 'cloudflare') {
     response = await callCloudflare(messages);
-    // Nếu Cloudflare lỗi, fallback sang Gemini
     if (response.error) {
-      response = await callGemini(messages);
+      response = await callGemini(messages, imageData);
     }
   } else if (selectedProvider === 'openrouter') {
-    response = await callOpenRouter(messages);
-    // Nếu OpenRouter lỗi, fallback sang Gemini
+    response = await callOpenRouter(messages, imageData);
     if (response.error) {
-      response = await callGemini(messages);
+      response = await callGemini(messages, imageData);
     }
   } else if (selectedProvider === 'qwen') {
     response = await callQwen(messages);
-    // Nếu Qwen lỗi, fallback sang Gemini
     if (response.error) {
-      response = await callGemini(messages);
+      response = await callGemini(messages, imageData);
     }
   } else if (selectedProvider === 'deepseek') {
     response = await callDeepSeek(messages);
-    // Nếu DeepSeek lỗi, fallback sang Gemini
-    if (response.error && response.error.includes('Insufficient Balance')) {
-      response = await callGemini(messages);
+    if (response.error && (response.error.includes('Insufficient Balance') || response.error.includes('Balance'))) {
+      response = await callGemini(messages, imageData);
     }
   } else if (selectedProvider === 'huggingface') {
     response = await callHuggingFace(messages);
-  } else if (selectedProvider === 'gemini') {
-    response = await callGemini(messages);
   } else {
     response = await callOpenAI(messages);
   }
@@ -746,16 +790,37 @@ export async function getAIResponse(
 
 // Helper function to create system prompt
 export function createSystemPrompt(scenarioPrompt: string, language?: 'japanese' | 'chinese'): Message {
-  // Cải thiện prompt để tránh bị safety filter chặn
+  const isChinese = language === 'chinese';
+  const tag = isChinese ? 'ZH' : 'JP';
+
   const improvedPrompt = `${scenarioPrompt}
 
-Quy tắc quan trọng:
-- CHỈ phản hồi bằng ngôn ngữ đích (${language === 'chinese' ? 'TIẾNG TRUNG' : 'TIẾNG NHẬT'})
-- Tuyệt đối không nhầm lẫn giữa tiếng Nhật và tiếng Trung.
-- Chỉ trả lời 1-2 câu ngắn gọn
-- Sử dụng ngôn ngữ lịch sự, thân thiện
-- Tập trung vào giao tiếp hàng ngày
-- Tránh nội dung nhạy cảm hoặc gây tranh cãi`;
+CÁC QUY TẮC BẮT BUỘC (QUAN TRỌNG NHẤT):
+1. **NGHIÊM CẤM LẶP LẠI**: Tuyệt đối KHÔNG nhắc lại câu nói của người dùng trong câu trả lời của bạn. Chỉ trả lời câu tiếp theo của nhân vật.
+2. **LUÔN CÓ DỊCH**: Mọi câu bằng ${isChinese ? 'Tiếng Trung' : 'Tiếng Nhật'} phải được dịch sang Tiếng Việt trong tag [VI].
+3. **ĐỊNH DẠNG CHUẨN**: Phải trả về chính xác theo cấu trúc:
+   [${tag}] (Câu trả lời của bạn - KHÔNG lặp lại lời người dùng)
+   [VI] (Dịch tiếng Việt của câu trên)
+   [OP]
+   1. (Gợi ý trả lời 1 kèm dịch)
+   2. (Gợi ý trả lời 2 kèm dịch)
+   3. (Gợi ý trả lời 3 kèm dịch)
+   [FIX] (Nhận xét ngữ pháp nếu người dùng sai)
+
+VÍ DỤ (CÁCH LÀM ĐÚNG):
+Người dùng: "Cái này bao nhiêu tiền?"
+Bạn ĐÚNG:
+[${tag}] これは五千円です。
+[VI] Cái này là 5 ngàn yên.
+[OP]
+1. ちょっと高いですね (Hơi đắt nhỉ)
+2. これをください (Lấy cho tôi cái này)
+3. カードで払えますか (Trả bằng thẻ được không?)
+
+Bạn SAI (KHÔNG ĐƯỢC LÀM THẾ NÀY):
+[${tag}] Cái này bao nhiêu tiền? Đây là 5 ngàn yên. (<- LỖI: Lặp lại lời người dùng)
+
+LƯU Ý: Phản hồi ngắn gọn, tự nhiên theo vai diễn.`;
 
   return {
     role: 'system',

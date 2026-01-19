@@ -1,3 +1,5 @@
+import { supabase } from '../config/supabase';
+
 // Service quản lý tiến độ học tập
 export interface LessonProgress {
   lessonId: string;
@@ -16,7 +18,7 @@ export interface UserProgress {
 
 const PROGRESS_KEY = 'user-learning-progress';
 
-// Lấy toàn bộ tiến độ
+// Lấy toàn bộ tiến độ (ưu tiên local, sau đó đồng bộ cloud)
 export const getUserProgress = (): UserProgress => {
   const saved = localStorage.getItem(PROGRESS_KEY);
   if (saved) {
@@ -30,9 +32,42 @@ export const getUserProgress = (): UserProgress => {
   };
 };
 
-// Lưu tiến độ
+// Lưu tiến độ vào localStorage
 const saveUserProgress = (progress: UserProgress) => {
   localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+};
+
+// Đồng bộ từ Cloud về Local
+export const syncProgressFromCloud = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('user_learning_progress')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error syncing from cloud:', error);
+    return;
+  }
+
+  if (data) {
+    const localProgress = getUserProgress();
+    data.forEach((item: any) => {
+      localProgress.lessons[item.lesson_id] = {
+        lessonId: item.lesson_id,
+        completedSteps: item.completed_steps || [],
+        lastStudied: item.last_studied_at,
+        totalSteps: 6, // Default
+        completedAt: item.completed_at
+      };
+    });
+
+    // Recalculate stats
+    const lessons = Object.values(localProgress.lessons);
+    localProgress.totalLessonsStarted = lessons.length;
+    localProgress.totalLessonsCompleted = lessons.filter(l => l.completedAt).length;
+
+    saveUserProgress(localProgress);
+  }
 };
 
 // Lấy tiến độ của một bài học
@@ -42,14 +77,15 @@ export const getLessonProgress = (lessonId: string): LessonProgress | null => {
 };
 
 // Cập nhật tiến độ bài học
-export const updateLessonProgress = (
+export const updateLessonProgress = async (
   lessonId: string,
   completedSteps: string[],
-  totalSteps: number = 6
+  totalSteps: number = 6,
+  userId?: string
 ) => {
   const progress = getUserProgress();
   const isCompleted = completedSteps.length >= totalSteps;
-  
+
   const lessonProgress: LessonProgress = {
     lessonId,
     completedSteps,
@@ -60,22 +96,36 @@ export const updateLessonProgress = (
       : {}),
   };
 
-  // Cập nhật hoặc thêm mới
+  // Cập nhật Local
   const wasNew = !progress.lessons[lessonId];
   const wasIncomplete = progress.lessons[lessonId] && !progress.lessons[lessonId].completedAt;
-  
+
   progress.lessons[lessonId] = lessonProgress;
   progress.lastActivity = new Date().toISOString();
 
-  // Đếm lại số bài học
-  if (wasNew) {
-    progress.totalLessonsStarted += 1;
-  }
-  if (isCompleted && wasIncomplete) {
-    progress.totalLessonsCompleted += 1;
-  }
+  if (wasNew) progress.totalLessonsStarted += 1;
+  if (isCompleted && wasIncomplete) progress.totalLessonsCompleted += 1;
 
   saveUserProgress(progress);
+
+  // Cập nhật Cloud nếu có userId
+  if (userId) {
+    try {
+      await supabase.from('user_learning_progress').upsert({
+        user_id: userId,
+        lesson_id: lessonId,
+        completed_steps: completedSteps,
+        is_completed: isCompleted,
+        completed_at: lessonProgress.completedAt,
+        last_studied_at: lessonProgress.lastStudied
+      }, {
+        onConflict: 'user_id,lesson_id'
+      });
+    } catch (e) {
+      console.error('Failed to sync to cloud:', e);
+    }
+  }
+
   return lessonProgress;
 };
 
@@ -109,7 +159,7 @@ export const getCompletedLessons = (): LessonProgress[] => {
 };
 
 // Reset tiến độ một bài học
-export const resetLessonProgress = (lessonId: string) => {
+export const resetLessonProgress = async (lessonId: string, userId?: string) => {
   const progress = getUserProgress();
   if (progress.lessons[lessonId]) {
     delete progress.lessons[lessonId];
@@ -118,6 +168,10 @@ export const resetLessonProgress = (lessonId: string) => {
       progress.totalLessonsCompleted = Math.max(0, progress.totalLessonsCompleted - 1);
     }
     saveUserProgress(progress);
+
+    if (userId) {
+      await supabase.from('user_learning_progress').delete().eq('user_id', userId).eq('lesson_id', lessonId);
+    }
   }
 };
 
@@ -130,10 +184,10 @@ export const resetAllProgress = () => {
 export const getProgressStats = () => {
   const progress = getUserProgress();
   const lessons = Object.values(progress.lessons);
-  
+
   const totalSteps = lessons.reduce((sum, l) => sum + l.completedSteps.length, 0);
   const totalPossibleSteps = lessons.reduce((sum, l) => sum + l.totalSteps, 0);
-  
+
   return {
     totalLessonsStarted: progress.totalLessonsStarted,
     totalLessonsCompleted: progress.totalLessonsCompleted,
@@ -143,3 +197,4 @@ export const getProgressStats = () => {
     recentLessons: lessons.slice(0, 5),
   };
 };
+

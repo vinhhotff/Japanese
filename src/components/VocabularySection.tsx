@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { addToNotebook, removeFromNotebook, getNotebookItems } from '../services/notebookService';
 import { Vocabulary } from '../types';
 import { speakTextSafely, isSpeechSynthesisSupported } from '../utils/speech';
 import type { Language } from '../services/supabaseService.v2';
@@ -11,14 +13,48 @@ interface VocabularySectionProps {
 }
 
 const VocabularySection = ({ vocabulary, language }: VocabularySectionProps) => {
+  const { user } = useAuth();
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6; // Dùng 6 cho grid 2 cột để cân đối
+  const [notebookItems, setNotebookItems] = useState<Set<string>>(new Set());
+  const itemsPerPage = 6;
 
-  // Reset page when vocabulary changes
+  // Reset page and load notebook status
   useEffect(() => {
     setCurrentPage(1);
-  }, [vocabulary]);
+    if (user) {
+      loadNotebookStatus();
+    }
+  }, [vocabulary, user]);
+
+  const loadNotebookStatus = async () => {
+    const items = await getNotebookItems(user!.id);
+    const itemIds = new Set(items.map(i => i.item_id));
+    setNotebookItems(itemIds);
+  };
+
+  const handleToggleNotebook = async (vocab: Vocabulary) => {
+    if (!user) {
+      alert('Vui lòng đăng nhập để sử dụng tính năng Sổ tay');
+      return;
+    }
+
+    try {
+      if (notebookItems.has(vocab.id)) {
+        await removeFromNotebook(user.id, vocab.id);
+        const newItems = new Set(notebookItems);
+        newItems.delete(vocab.id);
+        setNotebookItems(newItems);
+      } else {
+        await addToNotebook(user.id, 'vocabulary', vocab.id);
+        const newItems = new Set(notebookItems);
+        newItems.add(vocab.id);
+        setNotebookItems(newItems);
+      }
+    } catch (error) {
+      console.error('Error toggling notebook:', error);
+    }
+  };
 
   const handleSpeak = async (vocab: Vocabulary) => {
     if (!isSpeechSynthesisSupported()) {
@@ -134,24 +170,42 @@ const VocabularySection = ({ vocabulary, language }: VocabularySectionProps) => 
                           </>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleSpeak(vocab)}
-                        title="Phát âm"
-                        disabled={!isSpeechSynthesisSupported()}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '1.5rem',
-                          padding: '0.25rem',
-                          opacity: speakingId === vocab.id ? 1 : 0.6,
-                          transition: 'opacity 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                        onMouseLeave={(e) => e.currentTarget.style.opacity = speakingId === vocab.id ? '1' : '0.6'}
-                      >
-                        {speakingId === vocab.id ? '⏸️' : '🔊'}
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleToggleNotebook(vocab); }}
+                          title={notebookItems.has(vocab.id) ? "Xóa khỏi sổ tay" : "Lưu vào sổ tay"}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '1.25rem',
+                            padding: '0.25rem',
+                            color: notebookItems.has(vocab.id) ? '#f59e0b' : 'var(--text-secondary)',
+                            opacity: notebookItems.has(vocab.id) ? 1 : 0.4,
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {notebookItems.has(vocab.id) ? '⭐' : '☆'}
+                        </button>
+                        <button
+                          onClick={() => handleSpeak(vocab)}
+                          title="Phát âm"
+                          disabled={!isSpeechSynthesisSupported()}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '1.5rem',
+                            padding: '0.25rem',
+                            opacity: speakingId === vocab.id ? 1 : 0.6,
+                            transition: 'opacity 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                          onMouseLeave={(e) => e.currentTarget.style.opacity = speakingId === vocab.id ? '1' : '0.6'}
+                        >
+                          {speakingId === vocab.id ? '⏸️' : '🔊'}
+                        </button>
+                      </div>
                     </div>
                   </div>
 

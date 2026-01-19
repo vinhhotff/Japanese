@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { SpeakingExercise, Vocabulary } from '../types';
 import { startSpeechRecognition, isSpeechRecognitionSupported, compareJapaneseText, speakText, isSpeechSynthesisSupported } from '../utils/speech';
+import { evaluateExercise } from '../services/aiService';
 import '../App.css';
 
 interface SpeakingSectionProps {
@@ -19,6 +20,7 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
       similarity: number;
       differences: string[];
     } | null;
+    aiFeedback?: { score: number; feedback: string; tips: string } | null;
   }>>({});
 
   const [vocabRecordingStates, setVocabRecordingStates] = useState<Record<string, {
@@ -31,6 +33,7 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
       similarity: number;
       differences: string[];
     } | null;
+    aiFeedback?: { score: number; feedback: string; tips: string } | null;
   }>>({});
 
   const [activeTab, setActiveTab] = useState<'exercises' | 'vocabulary'>('exercises');
@@ -43,7 +46,7 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
       return;
     }
 
-    setRecordingStates(prev => ({
+    setRecordingStates((prev: any) => ({
       ...prev,
       [exerciseId]: {
         isRecording: true,
@@ -77,22 +80,38 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
             }
           }));
 
-          setTimeout(() => {
-            const comparison = compareJapaneseText(expectedText, result.transcript);
-            setRecordingStates(prev => ({
-              ...prev,
-              [exerciseId]: {
-                ...prev[exerciseId],
-                isAnalyzing: false,
-                result: comparison
-              }
-            }));
-          }, 500);
+          // Local comparison first
+          const comparison = compareJapaneseText(expectedText, result.transcript);
+
+          // AI Evaluation
+          evaluateExercise('pronunciation', expectedText, result.transcript)
+            .then(aiRes => {
+              setRecordingStates((prev: any) => ({
+                ...prev,
+                [exerciseId]: {
+                  ...prev[exerciseId],
+                  isAnalyzing: false,
+                  result: comparison,
+                  aiFeedback: aiRes
+                }
+              }));
+            })
+            .catch(e => {
+              console.error('AI Eval Error:', e);
+              setRecordingStates((prev: any) => ({
+                ...prev,
+                [exerciseId]: {
+                  ...prev[exerciseId],
+                  isAnalyzing: false,
+                  result: comparison
+                }
+              }));
+            });
         }
       },
-      (error) => {
+      (error: string) => {
         alert(error);
-        setRecordingStates(prev => ({
+        setRecordingStates((prev: any) => ({
           ...prev,
           [exerciseId]: {
             ...prev[exerciseId],
@@ -101,7 +120,7 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
         }));
       },
       () => {
-        setRecordingStates(prev => ({
+        setRecordingStates((prev: any) => ({
           ...prev,
           [exerciseId]: {
             ...prev[exerciseId],
@@ -137,7 +156,7 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
 
   const handlePlayRecording = async (text: string) => {
     if (!text) return;
-    
+
     if (!isSpeechSynthesisSupported()) {
       alert('Trình duyệt của bạn không hỗ trợ tính năng phát âm');
       return;
@@ -158,7 +177,7 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
       return;
     }
 
-    setVocabRecordingStates(prev => ({
+    setVocabRecordingStates((prev: any) => ({
       ...prev,
       [vocabId]: {
         isRecording: true,
@@ -171,8 +190,8 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
 
     const stopRecording = startSpeechRecognition(
       'ja-JP',
-      (result) => {
-        setVocabRecordingStates(prev => ({
+      (result: any) => {
+        setVocabRecordingStates((prev: any) => ({
           ...prev,
           [vocabId]: {
             ...prev[vocabId],
@@ -182,8 +201,8 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
           }
         }));
 
-        // Compare with expected text (both kanji and hiragana)
-        setVocabRecordingStates(prev => ({
+        // Compare with both kanji and hiragana
+        setVocabRecordingStates((prev: any) => ({
           ...prev,
           [vocabId]: {
             ...prev[vocabId],
@@ -191,36 +210,51 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
           }
         }));
 
-        setTimeout(() => {
-          // Compare with both kanji and hiragana
-          const expectedTexts = [
-            vocab.hiragana,
-            vocab.kanji || vocab.word,
-            vocab.word
-          ].filter(Boolean) as string[];
-          
-          let bestMatch = { match: false, similarity: 0, differences: [] as string[] };
-          
-          for (const expected of expectedTexts) {
-            const comparison = compareJapaneseText(expected, result.transcript);
-            if (comparison.similarity > bestMatch.similarity) {
-              bestMatch = comparison;
-            }
+        const expectedTexts = [
+          vocab.hiragana,
+          vocab.kanji || vocab.word,
+          vocab.word
+        ].filter(Boolean) as string[];
+
+        const primaryExpected = vocab.hiragana || vocab.word;
+
+        // Compare locally for quick feedback
+        let bestMatch = { match: false, similarity: 0, differences: [] as string[] };
+        for (const expected of expectedTexts) {
+          const comparison = compareJapaneseText(expected, result.transcript);
+          if (comparison.similarity > bestMatch.similarity) {
+            bestMatch = comparison;
           }
-          
-          setVocabRecordingStates(prev => ({
-            ...prev,
-            [vocabId]: {
-              ...prev[vocabId],
-              isAnalyzing: false,
-              result: bestMatch
-            }
-          }));
-        }, 500);
+        }
+
+        // AI Evaluation
+        evaluateExercise('pronunciation', primaryExpected, result.transcript)
+          .then(aiRes => {
+            setVocabRecordingStates((prev: any) => ({
+              ...prev,
+              [vocabId]: {
+                ...prev[vocabId],
+                isAnalyzing: false,
+                result: bestMatch,
+                aiFeedback: aiRes
+              }
+            }));
+          })
+          .catch(e => {
+            console.error('AI Vocab Eval Error:', e);
+            setVocabRecordingStates((prev: any) => ({
+              ...prev,
+              [vocabId]: {
+                ...prev[vocabId],
+                isAnalyzing: false,
+                result: bestMatch
+              }
+            }));
+          });
       },
-      (error) => {
+      (error: string) => {
         alert(error);
-        setVocabRecordingStates(prev => ({
+        setVocabRecordingStates((prev: any) => ({
           ...prev,
           [vocabId]: {
             ...prev[vocabId],
@@ -229,7 +263,7 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
         }));
       },
       () => {
-        setVocabRecordingStates(prev => ({
+        setVocabRecordingStates((prev: any) => ({
           ...prev,
           [vocabId]: {
             ...prev[vocabId],
@@ -316,127 +350,166 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
       <div className="section-content">
         {activeTab === 'exercises' && (
           <>
-        {speaking.length > 0 ? (
-          speaking.map((exercise) => {
-            const currentState = state(exercise.id);
-            return (
-              <div key={exercise.id} className="speaking-card">
-                <h3 className="exercise-title">{exercise.title}</h3>
-                <div className="prompt-box">
-                  <div className="prompt-header">
-                    <div className="prompt-label">📋 Đề bài:</div>
-                    {exercise.exampleResponse && (
-                      <button
-                        className="btn-play-example"
-                        onClick={() => handlePlayExample(exercise.exampleResponse!)}
-                        title="Nghe ví dụ"
-                      >
-                        🔊 Nghe ví dụ
-                      </button>
-                    )}
-                  </div>
-                  <div className="prompt-text">{exercise.prompt}</div>
-                </div>
-                {exercise.exampleResponse && (
-                  <div className="example-response-box">
-                    <div className="example-label">💡 Ví dụ trả lời:</div>
-                    <div className="example-response-text">{exercise.exampleResponse}</div>
-                  </div>
-                )}
-
-                <div className="recording-controls">
-                  {!currentState.isRecording ? (
-                    <button
-                      className="btn btn-record"
-                      onClick={() => handleStartRecording(exercise.id, exercise.exampleResponse)}
-                    >
-                      <span className="record-icon">🎤</span>
-                      Bắt đầu ghi âm
-                    </button>
-                  ) : (
-                    <button
-                      className="btn btn-stop"
-                      onClick={() => handleStopRecording(exercise.id)}
-                    >
-                      <span className="recording-indicator">🔴</span>
-                      Đang ghi âm... (Nhấn để dừng)
-                    </button>
-                  )}
-                </div>
-
-                {currentState.transcript && (
-                  <div className="recording-result">
-                    <div className="result-header">
-                      <div className="result-label">📝 Bạn đã nói:</div>
-                      <div className="result-confidence">
-                        Độ chính xác: {currentState.confidence ? `${Math.round(currentState.confidence * 100)}%` : 'N/A'}
+            {speaking.length > 0 ? (
+              speaking.map((exercise) => {
+                const currentState = state(exercise.id);
+                return (
+                  <div key={exercise.id} className="speaking-card">
+                    <h3 className="exercise-title">{exercise.title}</h3>
+                    <div className="prompt-box">
+                      <div className="prompt-header">
+                        <div className="prompt-label">📋 Đề bài:</div>
+                        {exercise.exampleResponse && (
+                          <button
+                            className="btn-play-example"
+                            onClick={() => handlePlayExample(exercise.exampleResponse!)}
+                            title="Nghe ví dụ"
+                          >
+                            🔊 Nghe ví dụ
+                          </button>
+                        )}
                       </div>
+                      <div className="prompt-text">{exercise.prompt}</div>
                     </div>
-                    <div className="result-transcript">{currentState.transcript}</div>
-                    <div className="result-actions">
-                      <button
-                        className="btn btn-play-recording"
-                        onClick={() => handlePlayRecording(currentState.transcript)}
-                      >
-                        ▶️ Phát lại bản ghi âm
-                      </button>
+                    {exercise.exampleResponse && (
+                      <div className="example-response-box">
+                        <div className="example-label">💡 Ví dụ trả lời:</div>
+                        <div className="example-response-text">{exercise.exampleResponse}</div>
+                      </div>
+                    )}
+
+                    <div className="recording-controls">
+                      {!currentState.isRecording ? (
+                        <button
+                          className="btn btn-record"
+                          onClick={() => handleStartRecording(exercise.id, exercise.exampleResponse)}
+                        >
+                          <span className="record-icon">🎤</span>
+                          Bắt đầu ghi âm
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-stop"
+                          onClick={() => handleStopRecording(exercise.id)}
+                        >
+                          <span className="recording-indicator">🔴</span>
+                          Đang ghi âm... (Nhấn để dừng)
+                        </button>
+                      )}
                     </div>
-                  </div>
-                )}
 
-                {currentState.isAnalyzing && (
-                  <div className="analyzing-indicator">
-                    <span className="spinner">⏳</span>
-                    Đang phân tích...
-                  </div>
-                )}
+                    {currentState.transcript && (
+                      <div className="recording-result">
+                        <div className="result-header">
+                          <div className="result-label">📝 Bạn đã nói:</div>
+                          <div className="result-confidence">
+                            Độ chính xác: {currentState.confidence ? `${Math.round(currentState.confidence * 100)}%` : 'N/A'}
+                          </div>
+                        </div>
+                        <div className="result-transcript">{currentState.transcript}</div>
+                        <div className="result-actions">
+                          <button
+                            className="btn btn-play-recording"
+                            onClick={() => handlePlayRecording(currentState.transcript)}
+                          >
+                            ▶️ Phát lại bản ghi âm
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
-                {currentState.result && (
-                  <div className={`comparison-result ${currentState.result.match ? 'match' : 'no-match'}`}>
-                    {currentState.result.match ? (
-                      <>
-                        <div className="result-icon">✅</div>
-                        <div className="result-title">Tuyệt vời! Phát âm chính xác!</div>
-                        <div className="result-similarity">
-                          Độ tương đồng: {Math.round(currentState.result.similarity)}%
+                    {currentState.isAnalyzing && (
+                      <div className="analyzing-indicator">
+                        <span className="spinner">⏳</span>
+                        Đang phân tích...
+                      </div>
+                    )}
+
+                    {currentState.aiFeedback && (
+                      <div className="ai-feedback-rich" style={{
+                        marginTop: '1.5rem',
+                        padding: '1.5rem',
+                        background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                        borderRadius: '20px',
+                        border: '1px solid #bae6fd',
+                        boxShadow: '0 4px 12px rgba(186, 230, 253, 0.2)',
+                        animation: 'slideUp 0.4s ease-out'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                          <div style={{
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '50%',
+                            background: 'var(--primary-color)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 800,
+                            fontSize: '1.1rem'
+                          }}>
+                            {currentState.aiFeedback.score}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0369a1', textTransform: 'uppercase' }}>Gemini Evaluation</div>
+                            <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{currentState.aiFeedback.score >= 80 ? 'Xuất sắc!' : 'Khá ổn!'}</div>
+                          </div>
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="result-icon">⚠️</div>
-                        <div className="result-title">Cần cải thiện phát âm</div>
-                        <div className="result-similarity">
-                          Độ tương đồng: {Math.round(currentState.result.similarity)}%
-                        </div>
-                        {currentState.result.differences.length > 0 && (
-                          <div className="result-differences">
-                            {currentState.result.differences.map((diff, idx) => (
-                              <div key={idx} className="difference-item">{diff}</div>
-                            ))}
+                        <p style={{ fontSize: '0.95rem', margin: '0 0 0.75rem 0', color: '#1e293b' }}>{currentState.aiFeedback.feedback}</p>
+                        {currentState.aiFeedback.tips && (
+                          <div style={{ fontSize: '0.85rem', color: '#475569', background: 'white', padding: '0.75rem', borderRadius: '12px' }}>
+                            💡 <strong>Mẹo:</strong> {currentState.aiFeedback.tips}
                           </div>
                         )}
-                        <div className="result-suggestion">
-                          💡 Hãy nghe lại ví dụ và thử lại nhé!
-                        </div>
-                      </>
+                      </div>
+                    )}
+
+                    {currentState.result && !currentState.aiFeedback && (
+                      <div className={`comparison-result ${currentState.result.match ? 'match' : 'no-match'}`}>
+                        {currentState.result.match ? (
+                          <>
+                            <div className="result-icon">✅</div>
+                            <div className="result-title">Tuyệt vời! Phát âm chính xác!</div>
+                            <div className="result-similarity">
+                              Độ tương đồng: {Math.round(currentState.result.similarity)}%
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="result-icon">⚠️</div>
+                            <div className="result-title">Cần cải thiện phát âm</div>
+                            <div className="result-similarity">
+                              Độ tương đồng: {Math.round(currentState.result.similarity)}%
+                            </div>
+                            {currentState.result.differences.length > 0 && (
+                              <div className="result-differences">
+                                {currentState.result.differences.map((diff, idx) => (
+                                  <div key={idx} className="difference-item">{diff}</div>
+                                ))}
+                              </div>
+                            )}
+                            <div className="result-suggestion">
+                              💡 Hãy nghe lại ví dụ và thử lại nhé!
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {!isSpeechRecognitionSupported() && (
+                      <div className="browser-warning">
+                        ⚠️ Tính năng nhận diện giọng nói chỉ hoạt động trên Chrome, Edge hoặc Safari.
+                        Vui lòng sử dụng một trong các trình duyệt này.
+                      </div>
                     )}
                   </div>
-                )}
-
-                {!isSpeechRecognitionSupported() && (
-                  <div className="browser-warning">
-                    ⚠️ Tính năng nhận diện giọng nói chỉ hoạt động trên Chrome, Edge hoặc Safari. 
-                    Vui lòng sử dụng một trong các trình duyệt này.
-                  </div>
-                )}
+                );
+              })
+            ) : (
+              <div className="empty-state">
+                <p>Bài này chưa có bài tập nói</p>
               </div>
-            );
-          })
-        ) : (
-          <div className="empty-state">
-            <p>Bài này chưa có bài tập nói</p>
-          </div>
-        )}
+            )}
           </>
         )}
 
@@ -510,7 +583,27 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
                       </div>
                     )}
 
-                    {currentVocabState.result && (
+                    {currentVocabState.aiFeedback && (
+                      <div className="ai-vocab-feedback" style={{
+                        marginTop: '1rem',
+                        padding: '1rem',
+                        background: '#f8fafc',
+                        borderRadius: '12px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '0.85rem'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                          <span style={{ fontWeight: 700, color: 'var(--primary-color)' }}>AI Feedback</span>
+                          <span style={{ fontWeight: 800 }}>{currentVocabState.aiFeedback.score}/100</span>
+                        </div>
+                        <p style={{ margin: '0 0 0.5rem 0' }}>{currentVocabState.aiFeedback.feedback}</p>
+                        {currentVocabState.aiFeedback.tips && (
+                          <div style={{ color: '#64748b', fontSize: '0.8rem' }}>💡 {currentVocabState.aiFeedback.tips}</div>
+                        )}
+                      </div>
+                    )}
+
+                    {currentVocabState.result && !currentVocabState.aiFeedback && (
                       <div className={`vocab-comparison-result ${currentVocabState.result.match ? 'match' : 'no-match'}`}>
                         {currentVocabState.result.match ? (
                           <>

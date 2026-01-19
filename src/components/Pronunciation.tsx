@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Vocabulary } from '../types';
 import { startSpeechRecognition, isSpeechRecognitionSupported, compareJapaneseText, speakText } from '../utils/speech';
+import { evaluateExercise } from '../services/aiService';
 import '../App.css';
 
 interface PronunciationProps {
@@ -12,6 +13,8 @@ const Pronunciation = ({ vocabulary }: PronunciationProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [result, setResult] = useState<{ match: boolean; similarity: number } | null>(null);
+  const [aiFeedback, setAiFeedback] = useState<{ score: number; feedback: string; tips: string } | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
   const stopRecordingRef = useRef<(() => void) | null>(null);
 
   const currentVocab = vocabulary[currentIndex];
@@ -27,28 +30,29 @@ const Pronunciation = ({ vocabulary }: PronunciationProps) => {
     setIsRecording(true);
     setTranscript('');
     setResult(null);
+    setAiFeedback(null);
 
     const stopRecording = startSpeechRecognition(
       'ja-JP',
-      (recognitionResult) => {
+      async (recognitionResult) => {
         setTranscript(recognitionResult.transcript);
         setIsRecording(false);
 
-        const expectedTexts = [
-          currentVocab.hiragana,
-          currentVocab.kanji || currentVocab.word,
-          currentVocab.word
-        ].filter(Boolean) as string[];
+        // 1. Basic Comparison (Fast)
+        const expected = currentVocab.hiragana || currentVocab.word;
+        const comparison = compareJapaneseText(expected, recognitionResult.transcript);
+        setResult(comparison);
 
-        let bestMatch = { match: false, similarity: 0 };
-        for (const expected of expectedTexts) {
-          const comparison = compareJapaneseText(expected, recognitionResult.transcript);
-          if (comparison.similarity > bestMatch.similarity) {
-            bestMatch = comparison;
-          }
+        // 2. AI Advanced Evaluation (Rich)
+        setLoadingAI(true);
+        try {
+          const aiRes = await evaluateExercise('pronunciation', expected, recognitionResult.transcript);
+          setAiFeedback(aiRes);
+        } catch (e) {
+          console.error('AI Eval Error:', e);
+        } finally {
+          setLoadingAI(false);
         }
-
-        setResult(bestMatch);
       },
       (error) => {
         alert(error);
@@ -166,7 +170,62 @@ const Pronunciation = ({ vocabulary }: PronunciationProps) => {
             </div>
           )}
 
-          {result && (
+          {loadingAI && (
+            <div style={{ marginTop: '1.5rem', textAlign: 'center', color: 'var(--primary-color)' }}>
+              <div className="spinner" style={{ margin: '0 auto 0.5rem' }}></div>
+              <p style={{ fontSize: '0.9rem' }}>AI đang phân tích phát âm của bạn...</p>
+            </div>
+          )}
+
+          {aiFeedback && (
+            <div className="ai-feedback-container" style={{
+              marginTop: '1.5rem',
+              padding: '1.5rem',
+              background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+              borderRadius: '20px',
+              border: '1px solid #e2e8f0',
+              animation: 'slideUp 0.4s ease-out'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  background: 'var(--primary-color)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 800,
+                  fontSize: '1.2rem',
+                  boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)'
+                }}>
+                  {aiFeedback.score}
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '1px' }}>AI Đánh giá</div>
+                  <div style={{ fontWeight: 600 }}>{aiFeedback.score >= 80 ? 'Rất tuyệt vời!' : aiFeedback.score >= 50 ? 'Khá tốt!' : 'Cần cố gắng thêm'}</div>
+                </div>
+              </div>
+
+              <p style={{ margin: '0 0 1rem 0', lineHeight: 1.5 }}>{aiFeedback.feedback}</p>
+
+              {aiFeedback.tips && (
+                <div style={{
+                  padding: '1rem',
+                  background: 'white',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  color: 'var(--text-secondary)',
+                  borderLeft: '4px solid var(--primary-color)'
+                }}>
+                  <strong>Mẹo:</strong> {aiFeedback.tips}
+                </div>
+              )}
+            </div>
+          )}
+
+          {result && !aiFeedback && !loadingAI && (
             <div className={`pronunciation-feedback ${result.match ? 'match' : 'no-match'}`}>
               <div className="feedback-icon">{result.match ? '✅' : '⚠️'}</div>
               <div className="feedback-text">
