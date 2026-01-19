@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../config/supabase';
-import { getStudentClasses } from '../services/classService';
+import { getStudentClasses, joinClass } from '../services/classService';
 import { getLessons } from '../services/supabaseService.v2';
 import { getLessonCompletionPercentage, isLessonCompleted } from '../services/progressService';
 import type { Language } from '../services/supabaseService.v2';
@@ -28,6 +28,9 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
   const [courseInfo, setCourseInfo] = useState<any>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [enrollCode, setEnrollCode] = useState('');
+  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [enrollError, setEnrollError] = useState<string | null>(null);
   const itemsPerPage = 8;
 
   useEffect(() => {
@@ -201,6 +204,24 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
     }
   };
 
+  const handleJoinByCode = async () => {
+    if (!user || !enrollCode.trim()) return;
+
+    try {
+      setIsEnrolling(true);
+      setEnrollError(null);
+      await joinClass(user.id, enrollCode.trim().toUpperCase());
+      // Refresh access status
+      await checkAccessAndLoad();
+      setEnrollCode('');
+      alert('Chúc mừng! Bạn đã tham gia khóa học thành công.');
+    } catch (err: any) {
+      setEnrollError(err.message || 'Mã không hợp lệ hoặc đã hết hạn');
+    } finally {
+      setIsEnrolling(false);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
@@ -340,7 +361,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
         border: `2px solid ${language === 'japanese' ? '#8b5cf6' : '#ef4444'}`,
         boxShadow: 'var(--shadow-md)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'start', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'start', gap: '1rem', flexWrap: 'wrap' }}>
           <div style={{
             fontSize: '2rem',
             background: language === 'japanese' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)',
@@ -349,7 +370,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
           }}>
             💡
           </div>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: '300px' }}>
             <h3 style={{
               fontSize: '1.125rem',
               fontWeight: '700',
@@ -369,6 +390,63 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                 : `HSK (Hanyu Shuiping Kaoshi) ${level} là kỳ thi năng lực tiếng Trung quốc tế. Hoàn thành khóa học này sẽ giúp bạn đạt trình độ ${level}.`}
             </p>
           </div>
+
+          {/* Join Code Section - Only show if no access */}
+          {!hasAccess && (
+            <div style={{
+              flex: '1 1 100%',
+              marginTop: '1.5rem',
+              paddingTop: '1.5rem',
+              borderTop: '1px dashed var(--border-color)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
+            }}>
+              <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                🔑 Đã có mã tham gia từ giáo viên?
+              </h4>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={enrollCode}
+                  onChange={(e) => setEnrollCode(e.target.value.toUpperCase())}
+                  placeholder="Nhập mã (VD: JP-N5-XXXXXX)"
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem 1rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)',
+                    outline: 'none',
+                    fontWeight: '600'
+                  }}
+                />
+                <button
+                  onClick={handleJoinByCode}
+                  disabled={isEnrolling || !enrollCode.trim()}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: language === 'japanese' ? 'var(--primary-color)' : 'var(--danger-color)',
+                    color: 'white',
+                    fontWeight: '700',
+                    cursor: (isEnrolling || !enrollCode.trim()) ? 'not-allowed' : 'pointer',
+                    opacity: (isEnrolling || !enrollCode.trim()) ? 0.7 : 1,
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {isEnrolling ? 'Đang tham gia...' : 'Tham gia lớp'}
+                </button>
+              </div>
+              {enrollError && (
+                <p style={{ margin: 0, color: 'var(--danger-color)', fontSize: '0.85rem', fontWeight: '600' }}>
+                  ⚠️ {enrollError}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

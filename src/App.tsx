@@ -53,17 +53,17 @@ function App() {
 
                   {/* Japanese Learning Routes - Protected with Enrollment */}
                   <Route path="/japanese/courses" element={
-                    <ProtectedRoute requireEnrollment>
+                    <ProtectedRoute>
                       <CourseList language="japanese" />
                     </ProtectedRoute>
                   } />
                   <Route path="/japanese/courses/:level" element={
-                    <ProtectedRoute requireEnrollment>
+                    <ProtectedRoute>
                       <LessonListNew language="japanese" />
                     </ProtectedRoute>
                   } />
                   <Route path="/japanese/lessons/:lessonId" element={
-                    <ProtectedRoute requireEnrollment>
+                    <ProtectedRoute>
                       <LessonDetail language="japanese" />
                     </ProtectedRoute>
                   } />
@@ -92,17 +92,17 @@ function App() {
 
                   {/* Chinese Learning Routes - Protected with Enrollment */}
                   <Route path="/chinese/courses" element={
-                    <ProtectedRoute requireEnrollment>
+                    <ProtectedRoute>
                       <CourseList language="chinese" />
                     </ProtectedRoute>
                   } />
                   <Route path="/chinese/courses/:level" element={
-                    <ProtectedRoute requireEnrollment>
+                    <ProtectedRoute>
                       <LessonListNew language="chinese" />
                     </ProtectedRoute>
                   } />
                   <Route path="/chinese/lessons/:lessonId" element={
-                    <ProtectedRoute requireEnrollment>
+                    <ProtectedRoute>
                       <LessonDetail language="chinese" />
                     </ProtectedRoute>
                   } />
@@ -193,17 +193,17 @@ function App() {
 
                   {/* Legacy redirects for backward compatibility - Also protected */}
                   <Route path="/courses" element={
-                    <ProtectedRoute requireEnrollment>
+                    <ProtectedRoute>
                       <AllCourses />
                     </ProtectedRoute>
                   } />
                   <Route path="/courses/:level" element={
-                    <ProtectedRoute requireEnrollment>
+                    <ProtectedRoute>
                       <LessonListNew language="japanese" />
                     </ProtectedRoute>
                   } />
                   <Route path="/lessons/:lessonId" element={
-                    <ProtectedRoute requireEnrollment>
+                    <ProtectedRoute>
                       <LessonDetail language="japanese" />
                     </ProtectedRoute>
                   } />

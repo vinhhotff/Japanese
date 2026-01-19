@@ -87,6 +87,7 @@ export interface Lesson {
   roleplay?: RoleplayScenario[];
   difficultVocabulary: string[]; // IDs of difficult vocabulary words
   language?: Language;
+  is_free?: boolean;
 }
 
 export interface Course {
