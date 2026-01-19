@@ -519,7 +519,7 @@ const DashboardNew = () => {
       {myClasses.length > 0 && (
         <section className="my-classes-section">
           <h2 className="my-classes-title">
-            <span>{isAdmin ? '📋' : '📝'}</span>
+            <span>{isAdmin ? '' : ''}</span>
             {isAdmin ? 'Tất cả lớp học (Admin)' : 'Lớp học của tôi'}
           </h2>
           {isAdmin && (
