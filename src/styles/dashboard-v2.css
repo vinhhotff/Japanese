@@ -89,35 +89,39 @@
 
 .float-char {
   position: absolute;
-  font-weight: 500;
-  opacity: 0.25;
+  font-weight: 700;
+  /* Bolder */
+  opacity: 0.45;
+  /* Much brighter */
   user-select: none;
   transition: all 0.5s ease;
-  filter: drop-shadow(0 0 8px currentColor);
+  filter: drop-shadow(0 0 12px currentColor);
 }
 
 /* Japanese Characters Styling */
 .jp-char {
   font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
-  font-size: 4.5rem;
+  font-size: 5rem;
+  /* Larger */
   color: #ff8fa3;
-  animation: floatJP 25s infinite ease-in-out;
-  text-shadow: 0 0 15px rgba(255, 143, 163, 0.4);
+  animation: floatJP 30s infinite ease-in-out;
+  text-shadow: 0 0 20px rgba(255, 143, 163, 0.6);
 }
 
 [data-theme="dark"] .jp-char {
   color: #ffc0cb;
-  opacity: 0.2;
+  opacity: 0.55;
 }
 
 /* Chinese Characters Styling */
 .cn-char {
   font-family: 'Noto Sans SC', 'Microsoft YaHei', 'SimHei', sans-serif;
-  font-size: 4.5rem;
+  font-size: 5rem;
+  /* Larger */
   color: #ff6b6b;
-  animation: floatCN 25s infinite ease-in-out;
-  font-weight: 600;
-  text-shadow: 0 0 15px rgba(255, 107, 107, 0.4);
+  animation: floatCN 30s infinite ease-in-out;
+  font-weight: 700;
+  text-shadow: 0 0 20px rgba(255, 107, 107, 0.6);
 }
 
 [data-theme="dark"] .cn-char {

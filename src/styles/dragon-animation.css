@@ -13,10 +13,10 @@
 
 .dragon-clip {
     position: absolute;
-    width: 500px;
-    /* Increased size */
-    height: 250px;
-    filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.4));
+    width: 300px;
+    /* Reverted to Version 1 size */
+    height: 150px;
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
     opacity: 0;
 }
 
