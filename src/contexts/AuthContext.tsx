@@ -38,18 +38,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   // REMOVED LOCAL STORAGE FOR SECURITY
-  const [role, setRole] = useState<UserRole>('student');
-  const roleRef = useRef<UserRole>('student'); // Keep track of role in ref for listener access
-  const roleCheckCompleted = useRef(false); // Optimization: Check role only ONCE
+  // REMOVED LOCAL STORAGE FOR SECURITY - RE-INTRODUCED SESSION STORAGE FOR UX PERFORMANCE
+  const [role, setRole] = useState<UserRole>(() => {
+    return (sessionStorage.getItem('user_role') as UserRole) || 'student';
+  });
+  const roleRef = useRef<UserRole>(role);
+  const roleCheckCompleted = useRef(false);
   const retryCount = useRef(0);
   const [profile, setProfile] = useState<Profile | null>(null);
 
   // Timeout helper for role fetching
   const fetchUserRoleWithTimeout = async (email: string): Promise<UserRole | null> => {
     try {
-      // Create a timeout promise that rejects after 30 seconds
+      // Create a timeout promise that rejects after 5 seconds
       const timeoutPromise = new Promise<null>((_, reject) => {
-        setTimeout(() => reject(new Error('Role fetch timeout')), 30000);
+        setTimeout(() => reject(new Error('Role fetch timeout')), 5000);
       });
 
       // Race the fetch against the timeout
@@ -92,6 +95,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const updateUserRole = (newRole: UserRole) => {
     setRole(newRole);
     roleRef.current = newRole;
+    sessionStorage.setItem('user_role', newRole);
   };
 
   useEffect(() => {
@@ -149,10 +153,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.error('Auth state change processing error:', err);
       } finally {
         if (mounted) {
+          // Set loading false as long as we have session status (logged in or not)
+          // Don't wait for role to be confirmed, UI can adapt dynamically
           setLoading(false);
-          logger.log('Auth Loaded', {
-            hasUser: !!session?.user,
-            role: session?.user ? 'checked' : 'none'
+          logger.log('Auth Session Ready', {
+            hasUser: !!session?.user
           });
         }
       }
@@ -188,9 +193,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(null);
       setProfile(null);
       setProfile(null);
+      setProfile(null);
       updateUserRole('student');
       roleCheckCompleted.current = false; // Reset check flag
-      // localStorage.removeItem('user_role'); // No longer used
+      sessionStorage.removeItem('user_role');
 
       // Clear auth cookies
       document.cookie.split(';').forEach(cookie => {

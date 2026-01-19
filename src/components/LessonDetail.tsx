@@ -58,7 +58,10 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
       setLoading(true);
       setCheckingAccess(true);
 
-      // 1. Load Lesson Data
+      // Fetch lesson data first or in parallel? 
+      // We need course_id from lesson to check specific course access.
+      // But we can check class enrollments even without lesson data.
+
       const lessonData = await getLessonById(lessonId!);
       if (!lessonData) {
         setLoading(false);
@@ -70,75 +73,74 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
       setLesson(transformed);
       setCourseLevel(transformed.level);
 
-      // 2. Check Access
-      const isFree = lessonData.is_free;
-      const { isAdmin, isTeacher } = await import('../contexts/AuthContext').then(m => ({
-        isAdmin: false, // Fallback if context not fully loaded
-        isTeacher: false
-      })); // This is a bit hacky, better use the values from useAuth()
+      // Parallelize checks that depend on having the lesson/user
+      const checks = [];
 
-      // Handle access check
       if (user) {
-        if (isAdmin || isTeacher) {
-          setHasAccess(true);
-        } else {
-          // Check purchased courses
-          const { data: courseAccess } = await supabase
+        // 1. Check direct purchase
+        checks.push(
+          supabase
             .from('user_courses')
             .select('id')
             .eq('user_id', user.id)
             .eq('course_id', lessonData.course_id)
             .eq('status', 'active')
-            .maybeSingle();
+            .maybeSingle()
+            .then(({ data }) => !!data)
+        );
 
-          if (courseAccess) {
-            setHasAccess(true);
-          } else {
-            // Check class enrollments
-            const enrollments = await getStudentClasses(user.id);
-            const isEnrolled = enrollments.some((e: any) =>
+        // 2. Check class enrollments
+        checks.push(
+          getStudentClasses(user.id).then(enrollments =>
+            enrollments.some((e: any) =>
               e.classes?.id === lessonData.course_id || (
                 e.classes?.language === language &&
                 (e.classes?.level || '').toUpperCase() === (transformed.level || '').toUpperCase()
               )
-            );
-            setHasAccess(isEnrolled);
-          }
+            )
+          )
+        );
+
+        // 3. Load additional content
+        checks.push(getSentenceGames(lessonId!, language, 1, 100).then(res => res.data || []));
+        checks.push(getRoleplayScenarios(lessonId!, language, 1, 100).then(res => res.data || []));
+
+        const [hasPurchased, isEnrolled, gamesData, scenariosData]: [boolean, boolean, any[], any[]] = await Promise.all(checks) as any;
+
+        if (userIsAdmin || userIsTeacher || hasPurchased || isEnrolled) {
+          setHasAccess(true);
+        } else {
+          setHasAccess(false);
         }
 
-        // Sync progress if logged in
-        import('../services/progressService').then(m => m.syncProgressFromCloud(user.id)).then(() => {
+        setSentenceGames(gamesData || []);
+        if (scenariosData) {
+          setRoleplayScenarios(scenariosData.map((s: any) => ({
+            id: s.id,
+            title: s.title,
+            description: s.description,
+            scenario: s.scenario,
+            characterA: s.character_a,
+            characterB: s.character_b,
+            characterAScript: s.character_a_script || [],
+            characterBScript: s.character_b_script || [],
+            characterACorrectAnswers: s.character_a_correct_answers || [],
+            characterBCorrectAnswers: s.character_b_correct_answers || [],
+            vocabularyHints: s.vocabulary_hints || [],
+            grammarPoints: s.grammar_points || [],
+            difficulty: s.difficulty || 'medium',
+            imageUrl: s.image_url,
+            enableScoring: s.enable_scoring || false,
+          })));
+        }
+
+        // Background sync progress
+        import('../services/progressService').then(m => m.syncProgressFromCloud(user!.id)).then(() => {
           loadProgress();
         });
       } else {
         setHasAccess(false);
         loadProgress();
-      }
-
-      // 3. Load Additional Data
-      const gamesResult = await getSentenceGames(lessonId!, language, 1, 100);
-      setSentenceGames(gamesResult.data || []);
-
-      const scenariosResult = await getRoleplayScenarios(lessonId!, language, 1, 100);
-      const scenarios = scenariosResult.data;
-      if (scenarios) {
-        setRoleplayScenarios(scenarios.map((s: any) => ({
-          id: s.id,
-          title: s.title,
-          description: s.description,
-          scenario: s.scenario,
-          characterA: s.character_a,
-          characterB: s.character_b,
-          characterAScript: s.character_a_script || [],
-          characterBScript: s.character_b_script || [],
-          characterACorrectAnswers: s.character_a_correct_answers || [],
-          characterBCorrectAnswers: s.character_b_correct_answers || [],
-          vocabularyHints: s.vocabulary_hints || [],
-          grammarPoints: s.grammar_points || [],
-          difficulty: s.difficulty || 'medium',
-          imageUrl: s.image_url,
-          enableScoring: s.enable_scoring || false,
-        })));
       }
     } catch (err: any) {
       console.error('Error loading lesson:', err);
