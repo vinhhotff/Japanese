@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../config/supabase';
 import { getCourses, getLessons, PaginatedResponse } from '../services/supabaseService.v2';
 import { getProgressStats, getUserProgress } from '../services/progressService';
 import { useAuth } from '../contexts/AuthContext';
@@ -114,14 +115,35 @@ const DashboardNew = () => {
       // Stop loading spinner so user can interact
       setLoading(false);
 
-      // 2. Load Enrollments (Non-blocking)
-      // 2. Load Enrollments (Non-blocking)
+      // 2. Load Enrollments / Teacher Assignments (Non-blocking)
       if (user) {
         if (isAdmin) {
           getAllClasses().then((classes) => {
             setMyClasses(classes);
           }).catch(e => console.error("Error loading all classes", e));
+        } else if (isTeacher) {
+          // TEACHER LOGIC: Load assigned courses from teacher_assignments
+          supabase
+            .from('teacher_assignments')
+            .select('language, level')
+            .eq('teacher_email', user.email)
+            .then(({ data: assignments }: { data: any[] | null }) => {
+              if (assignments) {
+                const assignedLevels = new Set<string>(assignments.map(a => a.level));
+                setEnrolledLevels(assignedLevels);
+              }
+            });
+
+          // Also load classes created by teacher
+          supabase
+            .from('classes')
+            .select('*')
+            .eq('teacher_id', user.id)
+            .then(({ data: classes }: { data: any[] | null }) => {
+              if (classes) setMyClasses(classes);
+            });
         } else {
+          // STUDENT LOGIC
           getStudentClasses(user.id).then((enrollments) => {
             const authorizedLevels = new Set<string>();
             enrollments.forEach((e: any) => {
@@ -489,28 +511,9 @@ const DashboardNew = () => {
           </p>
 
           {/* Action Buttons based on Role */}
-          <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+          <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
 
-            {isTeacher && (
-              <button
-                onClick={() => setShowCreateClassModal(true)}
-                className="create-class-btn"
-                style={{
-                  background: 'white',
-                  color: 'var(--primary-color)',
-                  padding: '0.8rem 1.5rem',
-                  borderRadius: '99px',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                }}
-              >
-                <span>+</span> Tạo lớp học
-              </button>
-            )}
+            {/* Action Buttons Removed for Teachers as requested */}
           </div>
         </div>
 
@@ -543,49 +546,43 @@ const DashboardNew = () => {
 
       {/* My Classes Section */}
       {myClasses.length > 0 && (
-        <div className="section-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
-            {isAdmin ? '📋 Tất cả lớp học (Admin)' : '📝 Lớp học của tôi'}
+        <section className="my-classes-section">
+          <h2 className="my-classes-title">
+            <span>{isAdmin ? '📋' : '📝'}</span>
+            {isAdmin ? 'Tất cả lớp học (Admin)' : 'Lớp học của tôi'}
           </h2>
-          <div className="classes-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+          {isAdmin && (
+            <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '3rem', opacity: 0.8 }}>
+              Quản lý và theo dõi tất cả các lớp học hiện có trên hệ thống
+            </p>
+          )}
+          <div className="classes-container-grid">
             {myClasses.map((cls, idx) => (
-              <div key={idx} className="class-card" style={{
-                background: 'rgba(255,255,255,0.9)',
-                backdropFilter: 'blur(10px)',
-                padding: '1.5rem',
-                borderRadius: '16px',
-                border: '1px solid rgba(255,255,255,0.5)',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span style={{
-                    background: cls.language === 'japanese' ? '#fce7f3' : '#ffedd5',
-                    color: cls.language === 'japanese' ? '#be185d' : '#c2410c',
-                    padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 'bold'
-                  }}>
-                    {cls.language === 'japanese' ? '🇯🇵' : '🇨🇳'} {cls.level}
-                  </span>
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Code: {cls.code}</span>
+              <div key={idx} className="dashboard-class-card">
+                <div className="class-card-header">
+                  <div className={`class-level-badge ${cls.language === 'japanese' ? 'jp-badge' : 'cn-badge'}`}>
+                    <span>{cls.language === 'japanese' ? '🇯🇵' : '🇨🇳'}</span>
+                    {cls.level}
+                  </div>
+                  <span className="class-code-tag">CODE: {cls.code}</span>
                 </div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1e293b' }}>{cls.name}</h3>
-                <button style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  background: 'var(--primary-color)',
-                  color: 'white',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
+
+                <h3 className="class-card-name">{cls.name}</h3>
+
+                <button
+                  className="class-enter-btn"
                   onClick={() => alert(`Sắp ra mắt: Xem bài tập cho lớp ${cls.name}`)}
                 >
-                  Vào lớp học (Xem bài tập)
+                  <span>Vào lớp học</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
                 </button>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Courses Section */}
@@ -597,21 +594,22 @@ const DashboardNew = () => {
 
         <div className="levels-grid">
 
-          {((isAdmin || !user) ? currentCourses : currentCourses.filter(g => enrolledLevels.has(g.level))).length === 0 ? (
+          {((isAdmin || !user || isTeacher) ? currentCourses : currentCourses.filter(g => enrolledLevels.has(g.level))).length === 0 ? (
             <div style={{
               gridColumn: '1 / -1',
               textAlign: 'center',
               padding: '3rem',
-              background: 'rgba(255,255,255,0.9)',
+              background: 'var(--card-bg)',
               borderRadius: '20px',
-              border: '2px dashed rgba(0,0,0,0.1)'
+              border: '2px dashed var(--border-color)',
+              boxShadow: 'var(--shadow-lg)'
             }}>
               <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📚</div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1e293b' }}>
-                {(isAdmin || !user) ? 'Chưa có dữ liệu khóa học' : 'Chưa đăng ký khóa học nào'}
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+                {(isAdmin || !user || isTeacher) ? 'Chưa có dữ liệu khóa học' : 'Chưa đăng ký khóa học nào'}
               </h3>
-              <p style={{ color: '#64748b' }}>
-                {(isAdmin || !user)
+              <p style={{ color: 'var(--text-secondary)' }}>
+                {(isAdmin || !user || isTeacher)
                   ? `Hiện tại chưa có khóa học ${selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'} nào.`
                   : 'Vui lòng nhập mã code từ giáo viên để mở khóa nội dung học tập.'
                 }
@@ -636,7 +634,7 @@ const DashboardNew = () => {
               )}
             </div>
           ) : (
-            ((isAdmin || !user) ? currentCourses : currentCourses.filter(g => enrolledLevels.has(g.level))).map((group, index) => {
+            ((isAdmin || !user || isTeacher) ? currentCourses : currentCourses.filter(g => enrolledLevels.has(g.level))).map((group, index) => {
               const info = levelInfo[group.level];
               // Homepage shows all courses - no enrollment needed
               const isEnrolled = true;
@@ -711,20 +709,20 @@ const DashboardNew = () => {
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
         }}>
-          <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: '#1e293b' }}>🔑 Tham gia lớp học</h3>
-            <p style={{ marginBottom: '1.5rem', color: '#64748b' }}>Nhập mã lớp do giáo viên cung cấp để mở khóa.</p>
+          <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '400px', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border-color)' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: 'var(--text-primary)' }}>🔑 Tham gia lớp học</h3>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Nhập mã lớp do giáo viên cung cấp để mở khóa.</p>
             <input
               type="text"
               value={enrollCode}
               onChange={e => setEnrollCode(e.target.value)}
               placeholder="Nhập mã 6 ký tự"
-              style={{ width: '100%', padding: '0.8rem', fontSize: '1.2rem', marginBottom: '0.5rem', borderRadius: '8px', border: '1px solid #ccc', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
+              style={{ width: '100%', padding: '0.8rem', fontSize: '1.2rem', marginBottom: '0.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
             />
-            {joinError && <p style={{ color: 'red', marginBottom: '1rem', fontSize: '0.9rem' }}>{joinError}</p>}
+            {joinError && <p style={{ color: 'var(--danger-color)', marginBottom: '1rem', fontSize: '0.9rem' }}>{joinError}</p>}
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-              <button onClick={() => setShowEnrollModal(false)} style={{ flex: 1, padding: '0.8rem', background: '#f1f5f9', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', color: '#64748b' }}>Hủy</button>
-              <button onClick={handleJoinClass} style={{ flex: 1, padding: '0.8rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Tham gia</button>
+              <button onClick={() => setShowEnrollModal(false)} style={{ flex: 1, padding: '0.8rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', color: 'var(--text-secondary)' }}>Hủy</button>
+              <button onClick={handleJoinClass} style={{ flex: 1, padding: '0.8rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Tham gia</button>
             </div>
           </div>
         </div>
@@ -736,30 +734,30 @@ const DashboardNew = () => {
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
         }}>
-          <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: '#1e293b' }}>+ Tạo lớp học mới</h3>
+          <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '400px', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border-color)' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: 'var(--text-primary)' }}>+ Tạo lớp học mới</h3>
             {createdCode ? (
               <div style={{ textAlign: 'center' }}>
-                <p style={{ color: '#64748b' }}>Mã lớp của bạn là:</p>
-                <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#3b82f6', margin: '1rem 0', letterSpacing: '4px' }}>{createdCode}</div>
-                <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>Hãy gửi mã này cho học sinh để họ có thể tham gia lớp học.</p>
-                <button onClick={() => { setShowCreateClassModal(false); setCreatedCode(''); }} style={{ width: '100%', padding: '0.8rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Đóng</button>
+                <p style={{ color: 'var(--text-secondary)' }}>Mã lớp của bạn là:</p>
+                <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--primary-color)', margin: '1rem 0', letterSpacing: '4px' }}>{createdCode}</div>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Hãy gửi mã này cho học sinh để họ có thể tham gia lớp học.</p>
+                <button onClick={() => { setShowCreateClassModal(false); setCreatedCode(''); }} style={{ width: '100%', padding: '0.8rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Đóng</button>
               </div>
             ) : (
               <>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#475569' }}>Tên lớp:</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Tên lớp:</label>
                 <input
                   type="text"
                   value={newClassName}
                   onChange={e => setNewClassName(e.target.value)}
                   placeholder="Ví dụ: Lớp N5 Sáng T2-T4"
-                  style={{ width: '100%', padding: '0.8rem', marginBottom: '1rem', borderRadius: '8px', border: '1px solid #ccc' }}
+                  style={{ width: '100%', padding: '0.8rem', marginBottom: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
                 />
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#475569' }}>Cấp độ:</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Cấp độ:</label>
                 <select
                   value={newClassLevel}
                   onChange={e => setNewClassLevel(e.target.value)}
-                  style={{ width: '100%', padding: '0.8rem', marginBottom: '1.5rem', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: 'white' }}
+                  style={{ width: '100%', padding: '0.8rem', marginBottom: '1.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--input-bg)', color: 'var(--text-primary)' }}
                 >
                   {selectedLanguage === 'japanese' ? (
                     ['N5', 'N4', 'N3', 'N2', 'N1'].map(l => <option key={l} value={l}>{l}</option>)
@@ -768,8 +766,8 @@ const DashboardNew = () => {
                   )}
                 </select>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button onClick={() => setShowCreateClassModal(false)} style={{ flex: 1, padding: '0.8rem', background: '#f1f5f9', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', color: '#64748b' }}>Hủy</button>
-                  <button onClick={handleCreateClass} style={{ flex: 1, padding: '0.8rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Tạo lớp</button>
+                  <button onClick={() => setShowCreateClassModal(false)} style={{ flex: 1, padding: '0.8rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', color: 'var(--text-secondary)' }}>Hủy</button>
+                  <button onClick={handleCreateClass} style={{ flex: 1, padding: '0.8rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Tạo lớp</button>
                 </div>
               </>
             )}
@@ -783,11 +781,11 @@ const DashboardNew = () => {
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
         }}>
-          <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: '#1e293b' }}>
+          <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '400px', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border-color)' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: 'var(--text-primary)' }}>
               {practiceType === 'vocabulary' ? '🧠 Luyện từ vựng' : '✍️ Luyện viết chữ'}
             </h3>
-            <p style={{ marginBottom: '1.5rem', color: '#64748b' }}>Chọn cấp độ bạn muốn luyện tập:</p>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Chọn cấp độ bạn muốn luyện tập:</p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '1.5rem' }}>
               {(selectedLanguage === 'japanese'

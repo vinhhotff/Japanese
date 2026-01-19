@@ -7,30 +7,48 @@ export const getCourses = async () => {
     .from('courses')
     .select('*')
     .order('level', { ascending: true });
-  
+
   if (error) throw error;
   return data;
 };
 
-export const createCourse = async (course: { level: string; title: string; description?: string }) => {
+export const getCourseByLevel = async (language: string, level: string) => {
+  const { data, error } = await supabase
+    .from('courses')
+    .select('*')
+    .eq('language', language)
+    .eq('level', level)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching course by level:', error);
+    return null;
+  }
+  return data;
+};
+
+export const createCourse = async (course: { level: string; title: string; description?: string; language?: string; price?: number }) => {
   const { data, error } = await supabase
     .from('courses')
     .insert(course)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
 
-export const updateCourse = async (id: string, updates: Partial<{ title: string; description: string }>) => {
+export const updateCourse = async (id: string, updates: Partial<{ title: string; description: string; price: number }>) => {
   const { data, error } = await supabase
     .from('courses')
     .update(updates)
     .eq('id', id)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -40,7 +58,7 @@ export const deleteCourse = async (id: string) => {
     .from('courses')
     .delete()
     .eq('id', id);
-  
+
   if (error) throw error;
 };
 
@@ -53,11 +71,11 @@ export const getLessons = async (courseId?: string) => {
       course:courses(*)
     `)
     .order('lesson_number', { ascending: true });
-  
+
   if (courseId) {
     query = query.eq('course_id', courseId);
   }
-  
+
   const { data, error } = await query;
   if (error) throw error;
   return data;
@@ -86,8 +104,9 @@ export const getLessonById = async (id: string) => {
       games:sentence_games(*)
     `)
     .eq('id', id)
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -103,8 +122,9 @@ export const createLesson = async (lesson: {
     .from('lessons')
     .insert(lesson)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -119,8 +139,9 @@ export const updateLesson = async (id: string, updates: Partial<{
     .update(updates)
     .eq('id', id)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -130,7 +151,7 @@ export const deleteLesson = async (id: string) => {
     .from('lessons')
     .delete()
     .eq('id', id);
-  
+
   if (error) throw error;
 };
 
@@ -140,11 +161,11 @@ export const getVocabulary = async (lessonId?: string) => {
     .from('vocabulary')
     .select('*')
     .order('created_at', { ascending: true });
-  
+
   if (lessonId) {
     query = query.eq('lesson_id', lessonId);
   }
-  
+
   const { data, error } = await query;
   if (error) throw error;
   return data;
@@ -169,13 +190,14 @@ export const createVocabulary = async (vocab: {
     vocabData.character = vocab.kanji;
     delete vocabData.kanji;
   }
-  
+
   const { data, error } = await supabase
     .from('vocabulary')
     .insert(vocabData)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -195,8 +217,9 @@ export const updateVocabulary = async (id: string, updates: Partial<{
     .update(updates)
     .eq('id', id)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -206,7 +229,7 @@ export const deleteVocabulary = async (id: string) => {
     .from('vocabulary')
     .delete()
     .eq('id', id);
-  
+
   if (error) throw error;
 };
 
@@ -219,11 +242,11 @@ export const getKanji = async (lessonId?: string) => {
       examples:kanji_examples(*)
     `)
     .order('created_at', { ascending: true });
-  
+
   if (lessonId) {
     query = query.eq('lesson_id', lessonId);
   }
-  
+
   const { data, error } = await query;
   if (error) throw error;
   return data;
@@ -239,28 +262,29 @@ export const createKanji = async (kanji: {
   examples?: Array<{ word: string; reading: string; meaning: string }>;
 }) => {
   const { examples, ...kanjiData } = kanji;
-  
+
   const { data: kanjiResult, error: kanjiError } = await supabase
     .from('kanji')
     .insert(kanjiData)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (kanjiError) throw kanjiError;
-  
+
   if (examples && examples.length > 0) {
     const examplesData = examples.map(ex => ({
       kanji_id: kanjiResult.id,
       ...ex
     }));
-    
+
     const { error: examplesError } = await supabase
       .from('kanji_examples')
       .insert(examplesData);
-    
+
     if (examplesError) throw examplesError;
   }
-  
+
   return kanjiResult;
 };
 
@@ -276,8 +300,9 @@ export const updateKanji = async (id: string, updates: Partial<{
     .update(updates)
     .eq('id', id)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -287,7 +312,7 @@ export const deleteKanji = async (id: string) => {
     .from('kanji')
     .delete()
     .eq('id', id);
-  
+
   if (error) throw error;
 };
 
@@ -300,11 +325,11 @@ export const getGrammar = async (lessonId?: string) => {
       examples:grammar_examples(*)
     `)
     .order('created_at', { ascending: true });
-  
+
   if (lessonId) {
     query = query.eq('lesson_id', lessonId);
   }
-  
+
   const { data, error } = await query;
   if (error) throw error;
   return data;
@@ -318,28 +343,29 @@ export const createGrammar = async (grammar: {
   examples?: Array<{ japanese: string; romaji?: string; translation: string }>;
 }) => {
   const { examples, ...grammarData } = grammar;
-  
+
   const { data: grammarResult, error: grammarError } = await supabase
     .from('grammar')
     .insert(grammarData)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (grammarError) throw grammarError;
-  
+
   if (examples && examples.length > 0) {
     const examplesData = examples.map(ex => ({
       grammar_id: grammarResult.id,
       ...ex
     }));
-    
+
     const { error: examplesError } = await supabase
       .from('grammar_examples')
       .insert(examplesData);
-    
+
     if (examplesError) throw examplesError;
   }
-  
+
   return grammarResult;
 };
 
@@ -358,8 +384,9 @@ export const updateGrammar = async (id: string, updates: Partial<{
     .update(grammarUpdates)
     .eq('id', id)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
 
   // 2. Nếu có mảng examples mới, ta cập nhật bảng grammar_examples
@@ -399,7 +426,7 @@ export const deleteGrammar = async (id: string) => {
     .from('grammar')
     .delete()
     .eq('id', id);
-  
+
   if (error) throw error;
 };
 
@@ -412,11 +439,11 @@ export const getListeningExercises = async (lessonId?: string) => {
       questions:listening_questions(*)
     `)
     .order('created_at', { ascending: true });
-  
+
   if (lessonId) {
     query = query.eq('lesson_id', lessonId);
   }
-  
+
   const { data, error } = await query;
   if (error) throw error;
   return data;
@@ -431,15 +458,16 @@ export const createListeningExercise = async (exercise: {
   questions?: Array<{ question: string; options: string[]; correct_answer: number }>;
 }) => {
   const { questions, ...exerciseData } = exercise;
-  
+
   const { data: exerciseResult, error: exerciseError } = await supabase
     .from('listening_exercises')
     .insert(exerciseData)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (exerciseError) throw exerciseError;
-  
+
   if (questions && questions.length > 0) {
     const questionsData = questions.map(q => ({
       listening_exercise_id: exerciseResult.id,
@@ -447,14 +475,14 @@ export const createListeningExercise = async (exercise: {
       options: q.options || [],
       correct_answer: q.correct_answer
     }));
-    
+
     const { error: questionsError } = await supabase
       .from('listening_questions')
       .insert(questionsData);
-    
+
     if (questionsError) throw questionsError;
   }
-  
+
   return exerciseResult;
 };
 
@@ -476,7 +504,8 @@ export const updateListeningExercise = async (
     .update(exerciseUpdates)
     .eq('id', id)
     .select()
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (error) throw error;
 
@@ -525,11 +554,11 @@ export const getSpeakingExercises = async (lessonId?: string) => {
     .from('speaking_exercises')
     .select('*')
     .order('created_at', { ascending: true });
-  
+
   if (lessonId) {
     query = query.eq('lesson_id', lessonId);
   }
-  
+
   const { data, error } = await query;
   if (error) throw error;
   return data;
@@ -545,8 +574,9 @@ export const createSpeakingExercise = async (exercise: {
     .from('speaking_exercises')
     .insert(exercise)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -565,7 +595,8 @@ export const updateSpeakingExercise = async (
     .update(updates)
     .eq('id', id)
     .select()
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (error) throw error;
   return data;
@@ -586,11 +617,11 @@ export const getSentenceGames = async (lessonId?: string) => {
     .from('sentence_games')
     .select('*')
     .order('created_at', { ascending: true });
-  
+
   if (lessonId) {
     query = query.eq('lesson_id', lessonId);
   }
-  
+
   const { data, error } = await query;
   if (error) throw error;
   return data;
@@ -608,8 +639,9 @@ export const createSentenceGame = async (game: {
     .from('sentence_games')
     .insert(game)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -630,7 +662,8 @@ export const updateSentenceGame = async (
     .update(updates)
     .eq('id', id)
     .select()
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (error) throw error;
   return data;
@@ -651,11 +684,11 @@ export const getRoleplayScenarios = async (lessonId?: string) => {
     .from('roleplay_scenarios')
     .select('*')
     .order('created_at', { ascending: true });
-  
+
   if (lessonId) {
     query = query.eq('lesson_id', lessonId);
   }
-  
+
   const { data, error } = await query;
   if (error) throw error;
   return data;
@@ -679,8 +712,9 @@ export const createRoleplayScenario = async (scenario: {
     .from('roleplay_scenarios')
     .insert(scenario)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -703,8 +737,9 @@ export const updateRoleplayScenario = async (id: string, updates: Partial<{
     .update(updates)
     .eq('id', id)
     .select()
-    .single();
-  
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw error;
   return data;
 };
@@ -714,6 +749,6 @@ export const deleteRoleplayScenario = async (id: string) => {
     .from('roleplay_scenarios')
     .delete()
     .eq('id', id);
-  
+
   if (error) throw error;
 };

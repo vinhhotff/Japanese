@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
@@ -39,14 +39,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
   // REMOVED LOCAL STORAGE FOR SECURITY
   const [role, setRole] = useState<UserRole>('student');
+  const roleRef = useRef<UserRole>('student'); // Keep track of role in ref for listener access
+  const roleCheckCompleted = useRef(false); // Optimization: Check role only ONCE
+  const retryCount = useRef(0);
   const [profile, setProfile] = useState<Profile | null>(null);
 
   // Timeout helper for role fetching
   const fetchUserRoleWithTimeout = async (email: string): Promise<UserRole | null> => {
     try {
-      // Create a timeout promise that rejects after 5 seconds
+      // Create a timeout promise that rejects after 10 seconds
       const timeoutPromise = new Promise<null>((_, reject) => {
-        setTimeout(() => reject(new Error('Role fetch timeout')), 5000);
+        setTimeout(() => reject(new Error('Role fetch timeout')), 10000);
       });
 
       // Race the fetch against the timeout
@@ -57,18 +60,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .maybeSingle()
         .then(({ data, error }) => {
           if (error) throw error;
-          return data?.role as UserRole || null;
+          // If no data found, they are a STUDENT (confirmed)
+          return (data?.role as UserRole) || 'student';
         });
 
       // Use Promise.race
-      return await Promise.race([fetchPromise, timeoutPromise]) as UserRole | null;
+      const result = await Promise.race([fetchPromise, timeoutPromise]) as UserRole | null;
+      return result;
     } catch (e) {
-      console.warn('Role fetch failed or timed out, defaulting to student:', e);
+      console.warn('Role fetch failed or timed out:', e);
       return null;
     }
   };
 
-  const determineRole = async (user: User | null): Promise<UserRole> => {
+  const determineRole = async (user: User | null): Promise<UserRole | null> => {
     if (!user || !user.email) return 'student';
 
     // 1. Check email patterns (instant, reliable)
@@ -76,14 +81,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // 2. PRIMARY: Check remote DB with timeout
     const remoteRole = await fetchUserRoleWithTimeout(user.email);
-    if (remoteRole) return remoteRole;
-
-    return 'student';
+    // If remoteRole is null (error), return null to retry
+    // If remoteRole is 'student' | 'admin' | 'teacher', return it
+    return remoteRole;
   };
 
   // Helper to update role state (Memory Only)
   const updateUserRole = (newRole: UserRole) => {
     setRole(newRole);
+    roleRef.current = newRole;
   };
 
   useEffect(() => {
@@ -99,10 +105,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(currentUser);
 
         if (currentUser) {
-          // If we have a user, we MUST wait for the role before clearing loading
-          const r = await determineRole(currentUser);
+          // Optimization: Check role until confirmed or max retries reached.
+          // Allow retires on TOKEN_REFRESHED if we haven't succeeded yet.
+          // Note: determineRole now returns NULL on error, so we can retry.
+          const shouldFetchRole = !roleCheckCompleted.current && retryCount.current < 3;
+
+          if (shouldFetchRole) {
+            const r = await determineRole(currentUser);
+
+            if (mounted) {
+              if (r) {
+                // SUCCESS: We got a valid role (Student, Teacher, or Admin)
+                // Mark as completed to STOP checking.
+                roleCheckCompleted.current = true;
+                updateUserRole(r);
+                logger.log('Role confirmed:', r);
+              } else {
+                // FAILURE: Timeout or Error.
+                // Increment retry count. Do not lock 'roleCheckCompleted' yet.
+                retryCount.current += 1;
+                console.warn(`Role check failed. Retrying... (${retryCount.current}/3)`);
+              }
+            }
+          }
+
           if (mounted) {
-            updateUserRole(r);
             // Fetch profile in background, don't block loading
             getProfile(currentUser.id).then(p => {
               if (mounted) setProfile(p);
@@ -111,7 +138,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } else {
           if (mounted) {
             setProfile(null);
-            setRole('student');
+            updateUserRole('student');
+            roleCheckCompleted.current = false;
+            retryCount.current = 0;
           }
         }
       } catch (err) {
@@ -156,7 +185,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setSession(null);
       setUser(null);
       setProfile(null);
-      setRole('student');
+      setProfile(null);
+      updateUserRole('student');
+      roleCheckCompleted.current = false; // Reset check flag
       // localStorage.removeItem('user_role'); // No longer used
 
       // Clear auth cookies

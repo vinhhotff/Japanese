@@ -14,6 +14,7 @@ interface CourseListProps {
 const CourseList = ({ language }: CourseListProps) => {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   useLanguageTheme(language);
   const { cardClass } = useLanguageClasses(language);
 
@@ -24,10 +25,12 @@ const CourseList = ({ language }: CourseListProps) => {
   const loadCourses = async () => {
     try {
       setLoading(true);
+      setError(null);
       const [coursesResult, lessonsResult] = await Promise.all([
         getCourses(language, 1, 100),
-        getLessons(undefined, language, 1, 100),
+        getLessons(undefined, language, undefined, 1, 100),
       ]);
+
 
       const coursesData = coursesResult.data;
       const lessonsData = lessonsResult.data;
@@ -46,7 +49,7 @@ const CourseList = ({ language }: CourseListProps) => {
 
       // Group courses by level
       const coursesByLevel: Record<string, any[]> = {};
-      const levelOrder = language === 'japanese' 
+      const levelOrder = language === 'japanese'
         ? ['N5', 'N4', 'N3', 'N2', 'N1']
         : ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'];
 
@@ -74,8 +77,8 @@ const CourseList = ({ language }: CourseListProps) => {
 
           return {
             level,
-            title: coursesByLevel[level].length === 1 
-              ? firstCourse.title 
+            title: coursesByLevel[level].length === 1
+              ? firstCourse.title
               : `${level} - ${totalLessons} bài học`,
             description: coursesByLevel[level].length === 1
               ? firstCourse.description || ''
@@ -120,9 +123,21 @@ const CourseList = ({ language }: CourseListProps) => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="container">
+        <div className="empty-state">
+          <div style={{ fontSize: '2rem', color: '#ef4444' }}>⚠️</div>
+          <p style={{ color: '#ef4444', fontWeight: 'bold' }}>{error}</p>
+          <button onClick={() => loadCourses()} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Thử lại</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div 
-      className="container" 
+    <div
+      className="container"
       data-language={language}
       style={{ position: 'relative', zIndex: 1 }}
     >
@@ -140,7 +155,7 @@ const CourseList = ({ language }: CourseListProps) => {
           {language === 'japanese' ? '📖 Khóa học tiếng Nhật' : '📖 Khóa học tiếng Trung'}
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
-          {language === 'japanese' 
+          {language === 'japanese'
             ? 'Chọn cấp độ phù hợp và bắt đầu hành trình học tiếng Nhật của bạn'
             : 'Chọn cấp độ phù hợp và bắt đầu hành trình học tiếng Trung của bạn'}
         </p>
@@ -154,23 +169,23 @@ const CourseList = ({ language }: CourseListProps) => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
           {courses.map((course, index) => {
             const getLevelColor = (idx: number) => {
-               const colors = [
-                 'var(--success-color)', 
-                 'var(--primary-color)', 
-                 'var(--warning-color)', 
-                 'var(--danger-color)', 
-                 'var(--secondary-color)'
-               ];
-               return colors[idx % colors.length];
+              const colors = [
+                'var(--success-color)',
+                'var(--primary-color)',
+                'var(--warning-color)',
+                'var(--danger-color)',
+                'var(--secondary-color)'
+              ];
+              return colors[idx % colors.length];
             };
 
             const levelColor = getLevelColor(index);
 
             return (
               <Link key={course.level} to={`/${language}/courses/${course.level}`} style={{ textDecoration: 'none' }}>
-                <div 
+                <div
                   className={cardClass}
-                  style={{ 
+                  style={{
                     height: '100%',
                     transition: 'all 0.2s',
                     cursor: 'pointer',
@@ -204,7 +219,7 @@ const CourseList = ({ language }: CourseListProps) => {
                     <div style={{ fontSize: '2rem', fontWeight: '800' }}>
                       {course.level}
                     </div>
-                    <div style={{ 
+                    <div style={{
                       backgroundColor: 'rgba(255,255,255,0.2)',
                       padding: '0.25rem 0.75rem',
                       borderRadius: '20px',
@@ -217,18 +232,18 @@ const CourseList = ({ language }: CourseListProps) => {
 
                   {/* Content */}
                   <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <h3 style={{ 
-                      fontSize: '1.25rem', 
-                      fontWeight: '700', 
+                    <h3 style={{
+                      fontSize: '1.25rem',
+                      fontWeight: '700',
                       color: 'var(--text-primary)',
                       marginBottom: '0.75rem'
                     }}>
                       {course.title}
                     </h3>
-                    <p style={{ 
-                      color: 'var(--text-secondary)', 
-                      fontSize: '0.9375rem', 
-                      lineHeight: '1.5', 
+                    <p style={{
+                      color: 'var(--text-secondary)',
+                      fontSize: '0.9375rem',
+                      lineHeight: '1.5',
                       marginBottom: '1.5rem',
                       flex: 1
                     }}>
@@ -250,14 +265,14 @@ const CourseList = ({ language }: CourseListProps) => {
                       gap: '0.5rem',
                       transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = levelColor;
-                      e.currentTarget.style.color = 'white';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = levelColor;
-                    }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = levelColor;
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = levelColor;
+                      }}
                     >
                       Bắt đầu học
                       <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -56,6 +56,9 @@ const AllCourses = () => {
       console.log('Chinese data loaded successfully');
     } catch (e: any) {
       console.error('Failed to load Chinese data:', e);
+      // Don't overwrite Japanese error if it exists, but log it.
+      // If we want to show error for Chinese too:
+      if (!error) setError('Không thể tải dữ liệu Tiếng Trung. Vui lòng thử lại.');
     }
 
     try {

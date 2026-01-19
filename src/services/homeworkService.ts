@@ -59,7 +59,7 @@ export const getStudentHomework = async (userId: string): Promise<any[]> => {
     .eq('user_id', userId);
 
   if (enrollError) throw enrollError;
-  
+
   const classIds = enrollments?.map(e => e.class_id) || [];
   if (classIds.length === 0) return [];
 
@@ -86,7 +86,7 @@ export const createHomework = async (homeworkData: {
   teacher_id: string;
   title: string;
   description: string;
-  due_date: string;
+  due_date?: string;
 }): Promise<Homework> => {
   const { data, error } = await supabase
     .from('homework')

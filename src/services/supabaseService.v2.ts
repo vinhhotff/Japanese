@@ -196,6 +196,7 @@ export const createLesson = async (lesson: {
   description?: string;
   level: Level;
   language: Language;
+  is_free?: boolean;
 }) => {
   const { data, error } = await supabase
     .from('lessons')
@@ -213,6 +214,7 @@ export const updateLesson = async (
     title: string;
     description: string;
     lesson_number: number;
+    is_free: boolean;
   }>
 ) => {
   const { data, error } = await supabase

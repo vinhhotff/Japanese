@@ -90,9 +90,11 @@ export interface Lesson {
 }
 
 export interface Course {
+  id?: string;
   level: Level;
   title: string;
   description: string;
+  price?: number;
   lessons: Lesson[];
   language?: Language;
 }

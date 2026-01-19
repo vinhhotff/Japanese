@@ -12,7 +12,8 @@ export interface TeacherAssignment {
     id?: string;
     teacher_email: string;
     language: 'japanese' | 'chinese';
-    level: string; // 'N5', 'HSK1', etc.
+    level: string; // 'N5', 'HSK1', etc. (kept for legacy/display)
+    course_id?: string; // Links to public.courses(id)
     created_at?: string;
 }
 
@@ -49,31 +50,34 @@ export const getUserRole = async (email: string) => {
 
 // Assign role to an email
 export const assignRole = async (email: string, role: 'teacher' | 'student' | 'admin') => {
-    // Check if exists
-    const { data: existing } = await supabase
-        .from('user_roles')
+    // 1. Check if user exists in profiles to get leur ID
+    const { data: profile } = await supabase
+        .from('profiles')
         .select('id')
         .eq('email', email)
         .maybeSingle();
 
-    if (existing) {
-        const { data, error } = await supabase
-            .from('user_roles')
-            .update({ role })
-            .eq('email', email)
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
-    } else {
-        const { data, error } = await supabase
-            .from('user_roles')
-            .insert({ email, role })
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
+    const userId = profile?.id;
+
+    // 2. Perform upsert on user_roles
+    // If we have an ID, we use it. Otherwise, email is the unique key.
+    const upsertData: any = { email, role };
+    if (userId) upsertData.id = userId;
+
+    const { data, error } = await supabase
+        .from('user_roles')
+        .upsert(upsertData, {
+            onConflict: 'email'
+        })
+        .select()
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+        console.error('Error in assignRole:', error);
+        throw error;
     }
+    return data;
 };
 
 // Remove role (delete record)
@@ -102,14 +106,33 @@ export const getTeacherAssignments = async (email: string) => {
 };
 
 // Assign teacher to course
-export const assignTeacherToCourse = async (email: string, language: string, level: string) => {
+export const assignTeacherToCourse = async (email: string, language: string, level: string, courseId?: string) => {
+    // We use upsert if course_id is provided, assuming course_id is unique in teacher_assignments
+    const upsertData: any = {
+        teacher_email: email,
+        language,
+        level,
+        updated_at: new Date().toISOString()
+    };
+
+    if (courseId) {
+        upsertData.course_id = courseId;
+    }
+
     const { data, error } = await supabase
         .from('teacher_assignments')
-        .insert({ teacher_email: email, language, level })
+        .upsert(upsertData, {
+            onConflict: 'course_id',
+            ignoreDuplicates: false
+        })
         .select()
-        .single();
+        .limit(1)
+        .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+        console.error('Error in assignTeacherToCourse:', error);
+        throw error;
+    }
     return data;
 };
 

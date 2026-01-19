@@ -872,14 +872,12 @@
 /* ===== LEVELS GRID ===== */
 .levels-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  /* Exactly 3 per row */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 320px));
+  justify-content: center;
   gap: 1.5rem;
-  /* Tighter gap */
   padding: 1rem 0 3rem;
   width: 100%;
-  max-width: 1000px;
-  /* Constrain main width so cards aren't huge */
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -1793,4 +1791,172 @@
   .level-name {
     font-size: 1.5rem;
   }
+}
+
+/* ===== MY CLASSES SECTION - PREMIUM REDESIGN ===== */
+.my-classes-section {
+  max-width: 1200px;
+  margin: 8rem auto 4rem;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.my-classes-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 2.5rem;
+  color: var(--text-primary);
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+[data-theme="dark"] .my-classes-title {
+  color: white;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.classes-container-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 2.5rem;
+  padding-top: 1rem;
+  justify-content: center;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.dashboard-class-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 2rem;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .dashboard-class-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.4);
+}
+
+.dashboard-class-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+  background: #ffffff;
+}
+
+[data-theme="dark"] .dashboard-class-card:hover {
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.class-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.class-level-badge {
+  padding: 0.5rem 1.2rem;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.jp-badge {
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #fda4af;
+}
+
+.cn-badge {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+}
+
+.class-code-tag {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  font-family: 'Monaco', 'Consolas', monospace;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.35rem 0.75rem;
+  border-radius: 10px;
+}
+
+[data-theme="dark"] .class-code-tag {
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.class-card-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 2rem;
+  line-height: 1.4;
+}
+
+[data-theme="dark"] .class-card-name {
+  color: #f9fafb;
+}
+
+.class-enter-btn {
+  width: 100%;
+  padding: 1.1rem;
+  background: #111827;
+  color: white;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+[data-theme="dark"] .class-enter-btn {
+  background: var(--jp-primary);
+  color: white;
+}
+
+[data-language="chinese"][data-theme="dark"] .class-enter-btn {
+  background: var(--cn-primary);
+}
+
+.class-enter-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+}
+
+[data-theme="dark"] .class-enter-btn:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.class-enter-btn:active {
+  transform: scale(0.98);
 }
