@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { getAIResponse, createSystemPrompt, getMockResponse } from '../services/aiService';
+import { getAIResponse, createSystemPrompt, getMockResponse, formatAIResponse, createConversationSummary } from '../services/aiService';
 import AnimatedCharacter from './AnimatedCharacter';
 import '../styles/ai-roleplay-css.css';
 import '../App.css';
@@ -265,9 +265,19 @@ const AIConversation = () => {
       let aiContent = '';
 
       if (hasOpenAI || hasGemini || hasDeepSeek || hasHuggingFace || hasQwen || hasOpenRouter) {
+        // Create conversation summary for AI memory
+        const summary = createConversationSummary(
+          messages.map(m => ({ role: m.role, content: m.content })),
+          selectedScenario.title,
+          selectedLanguage || undefined
+        );
+
+        // Limit conversation history to avoid token overflow (keep last 8 messages)
+        const recentMessages = messages.slice(-8);
+
         const conversationMessages = [
-          createSystemPrompt(selectedScenario.systemPrompt, selectedLanguage || undefined),
-          ...messages.map(m => ({
+          createSystemPrompt(selectedScenario.systemPrompt, selectedLanguage || undefined, summary),
+          ...recentMessages.map(m => ({
             role: m.role as 'user' | 'assistant' | 'system',
             content: m.content
           })),
@@ -280,17 +290,8 @@ const AIConversation = () => {
           console.error('AI Error:', response.error);
           aiContent = getMockResponse(userInput, selectedScenario.id, conversationMessages);
         } else {
-          aiContent = response.content
-            .replace(/<think>[\s\S]*?<\/think>/gi, '')
-            .replace(/<think[\s\S]*?>/gi, '')
-            .replace(/<\/think>/gi, '')
-            .trim();
-        }
-
-        // Fallback or Mock
-        const tag = selectedLanguage === 'japanese' ? '[JP]' : '[ZH]';
-        if (!aiContent.includes(tag)) {
-          aiContent = `${tag} ${aiContent}\n[VI] (Bản dịch đang cập nhật)\n[OP]`;
+          // Use formatAIResponse to validate and fix the response format
+          aiContent = formatAIResponse(response.content, selectedLanguage || undefined);
         }
 
       } else {

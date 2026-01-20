@@ -15,6 +15,7 @@ export const transformLessonFromDB = (dbLesson: any): Lesson => {
     level: dbLesson.level,
     lessonNumber: dbLesson.lesson_number,
     description: dbLesson.description || '',
+    is_free: dbLesson.is_free || false,
     vocabulary: vocabData.map((v: any) => ({
       id: v.id,
       word: v.word,
@@ -26,10 +27,10 @@ export const transformLessonFromDB = (dbLesson: any): Lesson => {
       difficulty: v.difficulty || 'easy',
     })),
     kanji: kanjiData.map((k: any) => {
-      const examples = Array.isArray(k.examples) 
-        ? k.examples 
+      const examples = Array.isArray(k.examples)
+        ? k.examples
         : (k.examples?.data || []);
-      
+
       return {
         id: k.id,
         character: k.character,
@@ -47,10 +48,10 @@ export const transformLessonFromDB = (dbLesson: any): Lesson => {
       };
     }),
     grammar: grammarData.map((g: any) => {
-      const examples = Array.isArray(g.examples) 
-        ? g.examples 
+      const examples = Array.isArray(g.examples)
+        ? g.examples
         : (g.examples?.data || []);
-      
+
       return {
         id: g.id,
         pattern: g.pattern,
@@ -64,10 +65,10 @@ export const transformLessonFromDB = (dbLesson: any): Lesson => {
       };
     }),
     listening: listeningData.map((l: any) => {
-      const questions = Array.isArray(l.questions) 
-        ? l.questions 
+      const questions = Array.isArray(l.questions)
+        ? l.questions
         : (l.questions?.data || []);
-      
+
       return {
         id: l.id,
         title: l.title,

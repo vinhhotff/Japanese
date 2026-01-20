@@ -789,43 +789,212 @@ export async function getAIResponse(
 }
 
 // Helper function to create system prompt
-export function createSystemPrompt(scenarioPrompt: string, language?: 'japanese' | 'chinese'): Message {
+export function createSystemPrompt(
+  scenarioPrompt: string,
+  language?: 'japanese' | 'chinese',
+  conversationSummary?: string
+): Message {
   const isChinese = language === 'chinese';
   const tag = isChinese ? 'ZH' : 'JP';
+  const langName = isChinese ? 'Tiếng Trung' : 'Tiếng Nhật';
 
   const improvedPrompt = `${scenarioPrompt}
 
-CÁC QUY TẮC BẮT BUỘC (QUAN TRỌNG NHẤT):
-1. **NGHIÊM CẤM LẶP LẠI**: Tuyệt đối KHÔNG nhắc lại câu nói của người dùng trong câu trả lời của bạn. Chỉ trả lời câu tiếp theo của nhân vật.
-2. **LUÔN CÓ DỊCH**: Mọi câu bằng ${isChinese ? 'Tiếng Trung' : 'Tiếng Nhật'} phải được dịch sang Tiếng Việt trong tag [VI].
-3. **ĐỊNH DẠNG CHUẨN**: Phải trả về chính xác theo cấu trúc:
-   [${tag}] (Câu trả lời của bạn - KHÔNG lặp lại lời người dùng)
-   [VI] (Dịch tiếng Việt của câu trên)
-   [OP]
-   1. (Gợi ý trả lời 1 kèm dịch)
-   2. (Gợi ý trả lời 2 kèm dịch)
-   3. (Gợi ý trả lời 3 kèm dịch)
-   [FIX] (Nhận xét ngữ pháp nếu người dùng sai)
+${conversationSummary ? `[CONTEXT HIỆN TẠI]\n${conversationSummary}\n` : ''}
 
-VÍ DỤ (CÁCH LÀM ĐÚNG):
-Người dùng: "Cái này bao nhiêu tiền?"
-Bạn ĐÚNG:
-[${tag}] これは五千円です。
-[VI] Cái này là 5 ngàn yên.
+═══════════════════════════════════════════════════════════
+⚠️ QUY TẮC BẮT BUỘC - ĐỌC KỸ VÀ TUÂN THỦ 100% ⚠️
+═══════════════════════════════════════════════════════════
+
+1️⃣ **TUYỆT ĐỐI KHÔNG LẶP LẠI CÂU CỦA NGƯỜI DÙNG**
+   - Chỉ trả lời theo vai diễn của bạn
+   - KHÔNG bao giờ copy hoặc nhắc lại những gì người dùng vừa nói
+   
+2️⃣ **LUÔN TRẢ LỜI BẰNG ${langName.toUpperCase()}**
+   - Ngôn ngữ chính: ${langName} (tag [${tag}])
+   - KHÔNG ĐƯỢC dùng ngôn ngữ khác (${isChinese ? 'KHÔNG dùng tiếng Nhật' : 'KHÔNG dùng tiếng Trung'})
+   
+3️⃣ **LUÔN CÓ BẢN DỊCH TIẾNG VIỆT**
+   - SAU MỖI câu ${langName} phải có dịch trong tag [VI]
+   - Nếu thiếu [VI] = SAI FORMAT
+
+4️⃣ **GỢI Ý [OP] PHẢI LÀ CÂU TRẢ LỜI CHO NGƯỜI DÙNG (KHÁCH HÀNG)**
+   - [OP] là 3 gợi ý để **NGƯỜI DÙNG** có thể nói tiếp
+   - Bạn đang đóng vai nhân viên → [OP] phải là câu của KHÁCH HÀNG
+   - KHÔNG được gợi ý câu của nhân viên trong [OP]
+   - Mỗi gợi ý: số thứ tự + câu ${langName} + (dịch tiếng Việt)
+
+═══════════════════════════════════════════════════════════
+📋 ĐỊNH DẠNG OUTPUT - BẮT BUỘC THEO ĐÚNG
+═══════════════════════════════════════════════════════════
+
+[${tag}] <Câu trả lời của bạn (VAI NHÂN VIÊN) bằng ${langName}>
+[VI] <Dịch tiếng Việt của câu trên>
+[OP] (GỢI Ý CHO NGƯỜI DÙNG = KHÁCH HÀNG)
+1. <Câu mà KHÁCH HÀNG có thể nói> (Dịch tiếng Việt)
+2. <Câu mà KHÁCH HÀNG có thể nói> (Dịch tiếng Việt)
+3. <Câu mà KHÁCH HÀNG có thể nói> (Dịch tiếng Việt)
+
+═══════════════════════════════════════════════════════════
+✅ VÍ DỤ ĐÚNG (HỌC THEO NÀY)
+═══════════════════════════════════════════════════════════
+
+${isChinese ? `
+📌 Ví dụ 1 - Nhà hàng:
+Người dùng: "我想吃面条"
+✅ BẠN TRẢ LỜI:
+[ZH] 好的，您想要什么口味的面条？我们有牛肉面和鸡肉面。
+[VI] Vâng, bạn muốn mì vị gì? Chúng tôi có mì bò và mì gà.
 [OP]
-1. ちょっと高いですね (Hơi đắt nhỉ)
-2. これをください (Lấy cho tôi cái này)
-3. カードで払えますか (Trả bằng thẻ được không?)
+1. 牛肉面 (Mì bò)
+2. 鸡肉面 (Mì gà)
+3. 有辣的吗？ (Có cay không?)
 
-Bạn SAI (KHÔNG ĐƯỢC LÀM THẾ NÀY):
-[${tag}] Cái này bao nhiêu tiền? Đây là 5 ngàn yên. (<- LỖI: Lặp lại lời người dùng)
+📌 Ví dụ 2 - Mua sắm:
+Người dùng: "这个多少钱？"
+✅ BẠN TRẢ LỜI:
+[ZH] 这个是两百块。您需要试一下吗？
+[VI] Cái này hai trăm tệ. Bạn cần thử không?
+[OP]
+1. 可以便宜一点吗？ (Có thể rẻ hơn không?)
+2. 我要这个 (Tôi lấy cái này)
+3. 有别的颜色吗？ (Có màu khác không?)
+` : `
+📌 Ví dụ 1 - Nhà hàng:
+Người dùng: "ラーメンを食べたいです"
+✅ BẠN TRẢ LỜI:
+[JP] かしこまりました。豚骨ラーメンと醤油ラーメンがございます。
+[VI] Vâng ạ. Chúng tôi có ramen tonkotsu và ramen shouyu.
+[OP]
+1. 豚骨ラーメンをください (Cho tôi ramen tonkotsu)
+2. 醤油ラーメンをお願いします (Cho tôi ramen shouyu)
+3. おすすめは何ですか？ (Món nào được đề xuất?)
 
-LƯU Ý: Phản hồi ngắn gọn, tự nhiên theo vai diễn.`;
+📌 Ví dụ 2 - Mua sắm:
+Người dùng: "これはいくらですか？"
+✅ BẠN TRẢ LỜI:
+[JP] こちらは三千円になります。試着されますか？
+[VI] Cái này 3000 yên ạ. Bạn có muốn thử không?
+[OP]
+1. 試着してもいいですか？ (Tôi thử được không?)
+2. これをください (Lấy cái này cho tôi)
+3. 他の色はありますか？ (Có màu khác không?)
+`}
+
+═══════════════════════════════════════════════════════════
+❌ LỖI THƯỜNG GẶP - TRÁNH HOÀN TOÀN
+═══════════════════════════════════════════════════════════
+
+❌ SAI 1: Lặp lại câu người dùng
+❌ SAI 2: Thiếu tag [VI] hoặc [OP]
+❌ SAI 3: Dùng ${isChinese ? 'tiếng Nhật' : 'tiếng Trung'} thay vì ${langName}
+❌ SAI 4: Chỉ có 1-2 gợi ý thay vì 3
+❌ SAI 5: Response quá dài, lan man
+❌ SAI 6: [OP] chứa câu của NHÂN VIÊN thay vì câu của KHÁCH HÀNG
+   → VD SAI: "您要点什么?" (Quý khách muốn gọi gì?) ← Đây là câu nhân viên!
+   → VD ĐÚNG: "我要这个" (Tôi lấy cái này) ← Đây là câu khách hàng!
+
+═══════════════════════════════════════════════════════════
+
+Bây giờ hãy đóng vai và trả lời theo FORMAT trên. Nhớ: NGẮN GỌN, TỰ NHIÊN, ĐÚNG FORMAT!`;
 
   return {
     role: 'system',
     content: improvedPrompt,
   };
+}
+
+// Format and validate AI response - fix if missing parts
+export function formatAIResponse(content: string, language?: 'japanese' | 'chinese'): string {
+  const isChinese = language === 'chinese';
+  const tag = isChinese ? 'ZH' : 'JP';
+
+  // Remove any thinking tags
+  let cleaned = content
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/<think[\s\S]*?>/gi, '')
+    .replace(/<\/think>/gi, '')
+    .trim();
+
+  // Check if response has proper format
+  const hasMainTag = cleaned.includes(`[${tag}]`);
+  const hasVI = cleaned.includes('[VI]');
+  const hasOP = cleaned.includes('[OP]');
+
+  // If completely wrong format or no format at all, return fallback
+  if (!hasMainTag && !hasVI && !hasOP) {
+    // AI didn't follow format at all - create proper response
+    return isChinese
+      ? `[ZH] ${cleaned}\n[VI] (Đang cập nhật bản dịch)\n[OP]\n1. 好的 (Vâng)\n2. 谢谢 (Cảm ơn)\n3. 请继续 (Xin tiếp tục)`
+      : `[JP] ${cleaned}\n[VI] (Đang cập nhật bản dịch)\n[OP]\n1. はい (Vâng)\n2. ありがとうございます (Cảm ơn)\n3. 続けてください (Xin tiếp tục)`;
+  }
+
+  // Check if it's using wrong language tag
+  if (!hasMainTag) {
+    const wrongTag = isChinese ? '[JP]' : '[ZH]';
+    if (cleaned.includes(wrongTag)) {
+      // Wrong language detected - return fallback
+      return isChinese
+        ? `[ZH] 对不起，请再说一遍。\n[VI] Xin lỗi, bạn có thể nói lại không?\n[OP]\n1. 好的 (Vâng)\n2. 没问题 (Không vấn đề gì)\n3. 请继续 (Xin hãy tiếp tục)`
+        : `[JP] すみません、もう一度お願いします。\n[VI] Xin lỗi, bạn có thể nói lại không?\n[OP]\n1. はい (Vâng)\n2. わかりました (Tôi hiểu rồi)\n3. 続けてください (Xin hãy tiếp tục)`;
+    }
+    // Add missing main tag
+    cleaned = `[${tag}] ${cleaned}`;
+  }
+
+  // Add missing [VI] tag if needed - IMPORTANT: must have Vietnamese
+  if (!hasVI) {
+    // Try to insert after the main content and before [OP]
+    const opMatch = cleaned.match(/\[OP\]/);
+    if (opMatch && opMatch.index !== undefined) {
+      cleaned = cleaned.slice(0, opMatch.index) + '\n[VI] (Đang cập nhật bản dịch)\n' + cleaned.slice(opMatch.index);
+    } else {
+      // No [OP] found either, add both
+      cleaned += '\n[VI] (Đang cập nhật bản dịch)';
+    }
+  }
+
+  // Add missing [OP] section if needed
+  if (!hasOP) {
+    const defaultOptions = isChinese
+      ? '\n[OP]\n1. 好的 (Vâng)\n2. 谢谢 (Cảm ơn)\n3. 请继续 (Xin tiếp tục)'
+      : '\n[OP]\n1. はい (Vâng)\n2. ありがとうございます (Cảm ơn)\n3. 続けてください (Xin tiếp tục)';
+    cleaned += defaultOptions;
+  }
+
+  return cleaned;
+}
+
+// Create conversation summary to help AI remember context
+export function createConversationSummary(
+  messages: Array<{ role: string; content: string }>,
+  scenarioTitle: string,
+  language?: 'japanese' | 'chinese'
+): string {
+  if (messages.length < 2) return '';
+
+  const langName = language === 'chinese' ? 'Tiếng Trung' : 'Tiếng Nhật';
+  const totalMsgs = messages.length;
+
+  // Get last 3-4 key points from conversation
+  const recentMessages = messages.slice(-6);
+  const keyPoints: string[] = [];
+
+  for (const msg of recentMessages) {
+    if (msg.role === 'user' && msg.content.length > 5) {
+      // Shorten long messages
+      const short = msg.content.length > 50
+        ? msg.content.substring(0, 50) + '...'
+        : msg.content;
+      keyPoints.push(`- User: "${short}"`);
+    }
+  }
+
+  return `📍 Tình huống: ${scenarioTitle}
+📍 Ngôn ngữ: ${langName} (CHỈ dùng ngôn ngữ này)
+📍 Đã trao đổi: ${totalMsgs} tin nhắn
+📍 Nội dung gần đây:
+${keyPoints.slice(-3).join('\n')}`;
 }
 
 // Mock response for testing (when no API key is configured)
