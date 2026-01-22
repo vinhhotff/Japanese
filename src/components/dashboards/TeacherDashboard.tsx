@@ -127,11 +127,11 @@ const TeacherDashboard: React.FC = () => {
           </div>
           <div className="dashboard-actions">
             <button onClick={() => setShowCreateClassModal(true)} className="dashboard-btn dashboard-btn-primary">
-              ➕ Tạo lớp mới
+              🏫 Thiết lập lớp học
             </button>
-            <button onClick={() => setShowCreateHomeworkModal(true)} className="dashboard-btn dashboard-btn-primary">
-              📝 Giao bài tập
-            </button>
+            <Link to="/teacher/assignments/new" className="dashboard-btn dashboard-btn-primary">
+              📝 Quản lý bài tập
+            </Link>
             <button onClick={signOut} className="dashboard-btn dashboard-btn-secondary">
               🚪 Đăng xuất
             </button>
@@ -278,11 +278,11 @@ const TeacherDashboard: React.FC = () => {
         <div className="dashboard-card-content">
           <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
             <button onClick={() => setShowCreateClassModal(true)} className="dashboard-btn dashboard-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-              🏫 Tạo lớp mới
+              🏫 Thiết lập lớp học
             </button>
-            <button onClick={() => setShowCreateHomeworkModal(true)} className="dashboard-btn dashboard-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-              📝 Giao bài tập
-            </button>
+            <Link to="/teacher/assignments/new" className="dashboard-btn dashboard-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+              📝 Giao bài tập media
+            </Link>
             <Link to="/teacher/students" className="dashboard-btn dashboard-btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
               👥 Quản lý học sinh
             </Link>

@@ -1,0 +1,214 @@
+.class-detail-premium {
+    padding: 2rem;
+    min-height: 100vh;
+    background: #f8fafc;
+}
+
+.premium-class-header {
+    background: white;
+    border-radius: 24px;
+    padding: 2.5rem;
+    position: relative;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.header-accent-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(90deg, #6366f1, #a855f7);
+}
+
+.jp-theme .header-accent-bar {
+    background: linear-gradient(90deg, #f43f5e, #fb923c);
+}
+
+.cn-theme .header-accent-bar {
+    background: linear-gradient(90deg, #ef4444, #f59e0b);
+}
+
+.class-meta-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.class-level-pill {
+    background: #f1f5f9;
+    padding: 0.5rem 1rem;
+    border-radius: 99px;
+    font-weight: 800;
+    color: #475569;
+}
+
+.class-title-large {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #1e293b;
+}
+
+.premium-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.premium-tab-btn {
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 16px;
+    font-weight: 700;
+    color: #64748b;
+    border: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.premium-tab-btn.active {
+    background: #6366f1;
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+}
+
+.jp-theme .premium-tab-btn.active {
+    background: #f43f5e;
+    box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.3);
+}
+
+.premium-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.material-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 2px solid transparent;
+}
+
+.material-card.clickable {
+    cursor: pointer;
+}
+
+.material-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border-color: #e2e8f0;
+}
+
+.course-header-section {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-left: 8px solid #6366f1;
+}
+
+.course-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.course-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    background: #f1f5f9;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.course-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.course-stats-badge {
+    margin-left: auto;
+    text-align: center;
+    padding: 0.75rem 1.5rem;
+    background: #f8fafc;
+    border-radius: 16px;
+}
+
+.course-stats-number {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #6366f1;
+}
+
+.lesson-card-header {
+    margin-bottom: 1rem;
+}
+
+.lesson-number-badge {
+    font-weight: 800;
+    color: #94a3b8;
+    font-size: 0.875rem;
+}
+
+.lesson-card-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.lesson-card-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #94a3b8;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.material-preview {
+    color: #64748b;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.status-badge.submitted {
+    background: #dcfce7;
+    color: #166534;
+}
+
+@media (max-width: 768px) {
+    .premium-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .class-title-large {
+        font-size: 1.75rem;
+    }
+}

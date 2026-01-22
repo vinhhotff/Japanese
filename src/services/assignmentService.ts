@@ -71,7 +71,19 @@ export const createAssignment = async (assignment: {
     options?: string[];
     correct_answer?: string;
     points?: number;
+    attachment_urls?: string[];
+    audio_url?: string;
+    video_url?: string;
+    requires_file_upload?: boolean;
+    allowed_file_types?: string[];
   }>;
+  attachment_urls?: string[];
+  audio_url?: string;
+  video_url?: string;
+  rich_content?: any;
+  allow_file_upload?: boolean;
+  allowed_file_types?: string[];
+  max_file_size_mb?: number;
 }) => {
   const { questions, ...assignmentData } = assignment;
 
@@ -125,7 +137,17 @@ export const updateAssignment = async (id: string, updates: Partial<any>) => {
       .filter((q: any) => q && (q.question_text || '').trim())
       .map((q: any) => ({
         assignment_id: id,
-        ...q,
+        question_number: q.question_number,
+        question_text: q.question_text,
+        question_type: q.question_type,
+        options: q.options || [],
+        correct_answer: q.correct_answer || '',
+        points: q.points || 0,
+        attachment_urls: q.attachment_urls || [],
+        audio_url: q.audio_url || null,
+        video_url: q.video_url || null,
+        requires_file_upload: q.requires_file_upload || false,
+        allowed_file_types: q.allowed_file_types || [],
       }));
 
     if (validQuestions.length > 0) {
@@ -246,6 +268,9 @@ export const saveAnswer = async (answer: {
   question_id: string;
   answer_text?: string;
   audio_url?: string;
+  file_urls?: string[];
+  video_url?: string;
+  file_metadata?: any;
 }) => {
   // Upsert: update if exists, insert if not
   const { data, error } = await supabase

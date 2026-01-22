@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getAssignmentById, createSubmission, saveAnswer, submitAssignment, getMySubmissions } from '../services/assignmentService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
+import { uploadFile, formatFileSize, validateFileSize } from '../utils/fileUpload';
 import '../styles/assignments.css';
+import '../styles/assignment-form.css'; // Reuse some styles
 
 const AssignmentDetail = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();
@@ -17,6 +19,8 @@ const AssignmentDetail = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, string[]>>({}); // questionId -> [urls]
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (assignmentId && user) {
@@ -36,14 +40,17 @@ const AssignmentDetail = () => {
         if (submissions.data.length > 0) {
           const existingSubmission = submissions.data[0];
           setSubmission(existingSubmission);
-          
+
           // Load existing answers
           if (existingSubmission.answers) {
             const answersMap: Record<string, string> = {};
+            const filesMap: Record<string, string[]> = {};
             existingSubmission.answers.forEach((ans: any) => {
               answersMap[ans.question_id] = ans.answer_text || '';
+              filesMap[ans.question_id] = ans.file_urls || [];
             });
             setAnswers(answersMap);
+            setUploadedFiles(filesMap);
           }
         }
       }
@@ -59,6 +66,44 @@ const AssignmentDetail = () => {
     setAnswers(prev => ({
       ...prev,
       [questionId]: value,
+    }));
+  };
+
+  const handleFileUpload = async (questionId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Validate size
+    for (const file of files) {
+      if (!validateFileSize(file, 20)) {
+        showToast(`File ${file.name} quá lớn (tối đa 20MB)`, 'error');
+        return;
+      }
+    }
+
+    try {
+      setUploading(prev => ({ ...prev, [questionId]: true }));
+      const newUrls = [...(uploadedFiles[questionId] || [])];
+
+      for (const file of files) {
+        const { url, error } = await uploadFile(file, 'documents', 'submissions');
+        if (error) throw new Error(error);
+        newUrls.push(url);
+      }
+
+      setUploadedFiles(prev => ({ ...prev, [questionId]: newUrls }));
+      showToast('Đã tải lên các file', 'success');
+    } catch (error: any) {
+      showToast('Lỗi tải file: ' + error.message, 'error');
+    } finally {
+      setUploading(prev => ({ ...prev, [questionId]: false }));
+    }
+  };
+
+  const removeUploadedFile = (questionId: string, urlToRemove: string) => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      [questionId]: (prev[questionId] || []).filter(url => url !== urlToRemove)
     }));
   };
 
@@ -90,6 +135,7 @@ const AssignmentDetail = () => {
             submission_id: submissionId,
             question_id: questionId,
             answer_text: answerText,
+            file_urls: uploadedFiles[questionId] || [],
           });
         }
       }
@@ -210,6 +256,27 @@ const AssignmentDetail = () => {
           )}
           <span>📝 {assignment.questions?.length || 0} câu hỏi</span>
         </div>
+
+        {/* Media Attachments for Assignment */}
+        {(assignment.attachment_urls?.length > 0 || assignment.audio_url || assignment.video_url) && (
+          <div className="assignment-media-section mt-4">
+            <h4 className="text-sm font-bold text-slate-500 mb-2">Tài liệu đính kèm:</h4>
+            <div className="flex flex-wrap gap-4">
+              {assignment.attachment_urls?.map((url: string, i: number) => (
+                <a key={i} href={url} target="_blank" rel="noreferrer" className="media-link">🖼️ Ảnh {i + 1}</a>
+              ))}
+              {assignment.audio_url && (
+                <div className="audio-player-wrapper">
+                  <span className="mr-2">🎵 Hướng dẫn:</span>
+                  <audio src={assignment.audio_url} controls className="h-8" />
+                </div>
+              )}
+              {assignment.video_url && (
+                <a href={assignment.video_url} target="_blank" rel="noreferrer" className="media-link">📹 Video hướng dẫn</a>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Graded Feedback */}
@@ -231,6 +298,18 @@ const AssignmentDetail = () => {
 
             <div className="question-text">{question.question_text}</div>
 
+            {/* Question Media Prompts */}
+            {(question.attachment_urls?.length > 0 || question.audio_url || question.video_url) && (
+              <div className="question-media-prompts mb-4">
+                <div className="flex flex-wrap gap-2">
+                  {question.attachment_urls?.map((url: string, i: number) => (
+                    <img key={i} src={url} alt="Prompt" className="max-h-48 rounded-lg shadow-sm" />
+                  ))}
+                  {question.audio_url && <audio src={question.audio_url} controls className="h-8" />}
+                </div>
+              </div>
+            )}
+
             {question.question_type === 'multiple_choice' && question.options && (
               <div className="options-list">
                 {question.options.map((option: string, optIndex: number) => (
@@ -249,18 +328,18 @@ const AssignmentDetail = () => {
               </div>
             )}
 
-            {(question.question_type === 'short_answer' || 
+            {(question.question_type === 'short_answer' ||
               question.question_type === 'fill_blank' ||
               question.question_type === 'translation') && (
-              <input
-                type="text"
-                className="answer-input"
-                placeholder="Nhập câu trả lời..."
-                value={answers[question.id] || ''}
-                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                disabled={isSubmitted}
-              />
-            )}
+                <input
+                  type="text"
+                  className="answer-input"
+                  placeholder="Nhập câu trả lời..."
+                  value={answers[question.id] || ''}
+                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                  disabled={isSubmitted}
+                />
+              )}
 
             {question.question_type === 'essay' && (
               <textarea
@@ -277,8 +356,46 @@ const AssignmentDetail = () => {
               <div className="audio-response">
                 <p className="audio-hint">🎤 Ghi âm câu trả lời của bạn</p>
                 <button className="btn btn-outline" disabled={isSubmitted}>
-                  Ghi âm
+                  Ghi âm (Coming Soon)
                 </button>
+              </div>
+            )}
+
+            {/* File Upload for Students */}
+            {(question.requires_file_upload || assignment.allow_file_upload) && (
+              <div className="student-file-upload-section mt-4">
+                <h5 className="text-xs font-bold text-slate-400 uppercase mb-2">Tệp nộp bài:</h5>
+                <div className="flex flex-col gap-2">
+                  {!isSubmitted && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => document.getElementById(`file-upload-${question.id}`)?.click()}
+                        disabled={uploading[question.id]}
+                      >
+                        {uploading[question.id] ? '⏳ Đang tải...' : '📎 Chọn tệp'}
+                      </button>
+                      <input
+                        type="file"
+                        id={`file-upload-${question.id}`}
+                        multiple
+                        hidden
+                        onChange={(e) => handleFileUpload(question.id, e)}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    {uploadedFiles[question.id]?.map((url, i) => (
+                      <div key={i} className="uploaded-file-pill">
+                        <a href={url} target="_blank" rel="noreferrer">File {i + 1}</a>
+                        {!isSubmitted && (
+                          <button className="ml-2 text-red-500" onClick={() => removeUploadedFile(question.id, url)}>×</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 

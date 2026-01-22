@@ -28,6 +28,7 @@ import VoiceRecorder from './components/VoiceRecorder';
 import AssignmentList from './components/AssignmentList';
 import AssignmentDetail from './components/AssignmentDetail';
 import GradingInterface from './components/GradingInterface';
+import AssignmentForm from './components/AssignmentForm';
 import './styles/theme-variables.css';
 import './styles/custom-theme.css';
 import './styles/modern-effects.css';
@@ -156,6 +157,16 @@ function App() {
                   <Route path="/assignments" element={<AssignmentList />} />
                   <Route path="/assignments/:assignmentId" element={<AssignmentDetail />} />
                   <Route path="/my-assignments" element={<AssignmentList />} />
+                  <Route path="/teacher/assignments/new" element={
+                    <ProtectedRoute requireTeacher>
+                      <AssignmentForm />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/teacher/assignments/edit/:assignmentId" element={
+                    <ProtectedRoute requireTeacher>
+                      <AssignmentForm />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/admin/grading/:submissionId" element={<GradingInterface />} />
 
                   <Route
