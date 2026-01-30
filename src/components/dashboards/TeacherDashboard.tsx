@@ -3,12 +3,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { getTeacherClasses, createClass, deleteClass, getClassStudents } from '../../services/classService';
 import { getTeacherHomework, createHomework, deleteHomework } from '../../services/homeworkService';
-import { getTeacherAssignments, deleteAssignment } from '../../services/assignmentService'; // Added
+import { getTeacherAssignments, deleteAssignment } from '../../services/assignmentService';
 import Pagination from '../common/Pagination';
+import { useToast } from '../Toast';
 import '../../styles/dashboard-modern.css';
 
 const TeacherDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
+  const { showToast } = useToast();
   const [classes, setClasses] = useState<any[]>([]);
   const [homework, setHomework] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]); // Added
@@ -46,11 +48,12 @@ const TeacherDashboard: React.FC = () => {
         getTeacherAssignments(user.id)
       ]);
 
-      setClasses(classesData);
-      setHomework(homeworkData);
-      setAssignments(assignmentsData);
-    } catch (error) {
+      setClasses(classesData || []);
+      setHomework(homeworkData || []);
+      setAssignments(assignmentsData || []);
+    } catch (error: any) {
       console.error('Error loading data:', error);
+      showToast(error?.message || 'Không tải được dữ liệu. Kiểm tra quyền truy cập.', 'error');
     } finally {
       setLoading(false);
     }
@@ -77,9 +80,12 @@ const TeacherDashboard: React.FC = () => {
 
     try {
       await deleteClass(classId);
-      loadData();
-    } catch (error) {
+      setClasses(prev => prev.filter(c => c.id !== classId));
+      showToast('Đã xóa lớp thành công', 'success');
+      await loadData();
+    } catch (error: any) {
       console.error('Error deleting class:', error);
+      showToast(error?.message || 'Không thể xóa lớp. Kiểm tra quyền hoặc dữ liệu liên quan.', 'error');
     }
   };
 
@@ -104,9 +110,12 @@ const TeacherDashboard: React.FC = () => {
 
     try {
       await deleteHomework(homeworkId);
-      loadData();
-    } catch (error) {
+      setHomework(prev => prev.filter(h => h.id !== homeworkId));
+      showToast('Đã xóa bài tập đã giao thành công', 'success');
+      await loadData();
+    } catch (error: any) {
       console.error('Error deleting homework:', error);
+      showToast(error?.message || 'Không thể xóa bài tập. Kiểm tra quyền hoặc dữ liệu liên quan.', 'error');
     }
   };
 
@@ -115,9 +124,12 @@ const TeacherDashboard: React.FC = () => {
 
     try {
       await deleteAssignment(id);
-      loadData();
-    } catch (error) {
+      setAssignments(prev => prev.filter(a => a.id !== id));
+      showToast('Đã xóa bài tập media thành công', 'success');
+      await loadData();
+    } catch (error: any) {
       console.error('Error deleting assignment:', error);
+      showToast(error?.message || 'Không thể xóa bài tập media. Kiểm tra quyền hoặc dữ liệu liên quan.', 'error');
     }
   };
 

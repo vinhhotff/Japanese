@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAssignmentById, createSubmission, saveAnswer, submitAssignment, getMySubmissions } from '../services/assignmentService';
-import { supabase } from '../config/supabase'; // Added
+import { getHomeworkSubmissions, getStudentSubmission, submitHomework, gradeSubmission } from '../services/homeworkService';
+import { supabase } from '../config/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
 import { uploadFile, formatFileSize, validateFileSize } from '../utils/fileUpload';
 import '../styles/assignments.css';
-import '../styles/assignment-form.css'; // Reuse some styles
+import '../styles/assignment-form.css';
 
 const AssignmentDetail = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();
-  const { user } = useAuth();
+  const { user, isTeacher } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -20,52 +21,73 @@ const AssignmentDetail = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<Record<string, string[]>>({}); // questionId -> [urls]
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, string[]>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
+
+  // Homework (bài tập đã giao) state
+  const [isHomework, setIsHomework] = useState(false);
+  const [homeworkSubmissions, setHomeworkSubmissions] = useState<any[]>([]);
+  const [homeworkSubmission, setHomeworkSubmission] = useState<any>(null);
+  const [homeworkContent, setHomeworkContent] = useState('');
+  const [gradingId, setGradingId] = useState<string | null>(null);
+  const [gradeFeedback, setGradeFeedback] = useState('');
+  const [gradeValue, setGradeValue] = useState('');
 
   useEffect(() => {
     if (assignmentId && user) {
       loadAssignment();
     }
-  }, [assignmentId, user]);
+  }, [assignmentId, user, isTeacher]);
 
   const loadAssignment = async () => {
     try {
       setLoading(true);
+      setIsHomework(false);
+      setHomeworkSubmissions([]);
+      setHomeworkSubmission(null);
+
       let assignmentData = await getAssignmentById(assignmentId!);
 
-      // Fallback for legacy homework if not found in assignments table
+      // Fallback: bài tập đã giao (homework) - bảng homework có class_id, không có lesson_id
       if (!assignmentData) {
         const { data: hw, error: hwError } = await supabase
           .from('homework')
           .select(`
             *,
-            lesson:lessons(*)
+            classes (name, code)
           `)
           .eq('id', assignmentId)
           .maybeSingle();
 
+        if (hwError) throw hwError;
         if (hw) {
-          // Map homework to assignment structure
           assignmentData = {
             ...hw,
-            instructions: hw.description,
-            assignment_type: 'mixed', // Default for legacy
-            questions: [] // Legacy homework doesn't have structured questions here
+            instructions: hw.description || '',
+            assignment_type: 'mixed',
+            questions: [],
+            source: 'homework',
           };
+          setIsHomework(true);
+
+          if (isTeacher) {
+            const list = await getHomeworkSubmissions(assignmentId!);
+            setHomeworkSubmissions(list || []);
+          } else {
+            const mySub = await getStudentSubmission(assignmentId!, user!.id);
+            setHomeworkSubmission(mySub || null);
+            if (mySub) setHomeworkContent(mySub.content || '');
+          }
         }
       }
 
       setAssignment(assignmentData);
 
-      // Check if user has existing submission
-      if (assignmentData && user) {
+      if (assignmentData && !assignmentData.source && user) {
         const submissions = await getMySubmissions(user.id, assignmentId, 1, 1);
         if (submissions.data.length > 0) {
           const existingSubmission = submissions.data[0];
           setSubmission(existingSubmission);
-
-          // Load existing answers
           if (existingSubmission.answers) {
             const answersMap: Record<string, string> = {};
             const filesMap: Record<string, string[]> = {};
@@ -243,6 +265,178 @@ const AssignmentDetail = () => {
             Về trang chủ
           </button>
         </div>
+      </div>
+    );
+  }
+
+  // === Bài tập đã giao (homework) - view riêng ===
+  if (isHomework) {
+    const handleSubmitHomework = async () => {
+      if (!homeworkContent.trim()) {
+        showToast('Vui lòng nhập nội dung bài làm', 'warning');
+        return;
+      }
+      try {
+        setSubmitting(true);
+        await submitHomework({
+          homework_id: assignmentId!,
+          student_id: user!.id,
+          content: homeworkContent.trim(),
+        });
+        showToast('Nộp bài thành công!', 'success');
+        const mySub = await getStudentSubmission(assignmentId!, user!.id);
+        setHomeworkSubmission(mySub || null);
+      } catch (e: any) {
+        showToast(e?.message || 'Lỗi khi nộp bài', 'error');
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+    const handleGradeSubmission = async (submissionId: string) => {
+      if (!gradeFeedback.trim() || !gradeValue.trim()) {
+        showToast('Vui lòng nhập điểm và nhận xét', 'warning');
+        return;
+      }
+      try {
+        await gradeSubmission(submissionId, gradeFeedback.trim(), gradeValue.trim());
+        showToast('Đã lưu chấm bài', 'success');
+        setGradingId(null);
+        setGradeFeedback('');
+        setGradeValue('');
+        const list = await getHomeworkSubmissions(assignmentId!);
+        setHomeworkSubmissions(list || []);
+      } catch (e: any) {
+        showToast(e?.message || 'Lỗi khi chấm bài', 'error');
+      }
+    };
+
+    return (
+      <div className="assignment-detail-container">
+        <div className="assignment-detail-header">
+          <button onClick={() => navigate(-1)} className="back-btn">← Quay lại</button>
+          <div className="header-content">
+            <div className="header-left">
+              <h1>{assignment.title}</h1>
+              {assignment.classes && (
+                <p className="assignment-instructions">
+                  Lớp: {assignment.classes.name} {assignment.classes.code && `(${assignment.classes.code})`}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="assignment-instructions-box">
+          <h3>📋 Nội dung bài tập</h3>
+          <div className="instructions-content">{assignment.description || assignment.instructions || 'Không có mô tả.'}</div>
+          {assignment.due_date && (
+            <div className="assignment-meta-info">
+              <div className="meta-item">
+                <span className="meta-icon">📅</span>
+                <span>Hạn nộp: <strong>{new Date(assignment.due_date).toLocaleString('vi-VN')}</strong></span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {isTeacher ? (
+          <div className="questions-container" style={{ marginTop: '1.5rem' }}>
+            <h3>📥 Bài nộp của học sinh ({homeworkSubmissions.length})</h3>
+            {homeworkSubmissions.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Chưa có bài nộp nào.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+                {homeworkSubmissions.map((sub: any) => (
+                  <div key={sub.id} className="question-card" style={{ padding: '1.25rem' }}>
+                    <div className="question-header" style={{ marginBottom: '0.75rem' }}>
+                      <span className="question-number">
+                        {(sub.profiles?.full_name || sub.profiles?.email || 'Học sinh')}
+                      </span>
+                      {sub.grade != null && sub.grade !== '' && (
+                        <span className="question-points">Điểm: {sub.grade}</span>
+                      )}
+                    </div>
+                    <div className="instructions-content" style={{ whiteSpace: 'pre-wrap', marginBottom: '1rem' }}>
+                      {sub.content || '(Trống)'}
+                    </div>
+                    {gradingId === sub.id ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <input
+                          type="text"
+                          placeholder="Điểm (ví dụ: 8/10)"
+                          value={gradeValue}
+                          onChange={e => setGradeValue(e.target.value)}
+                          className="answer-input"
+                          style={{ maxWidth: '200px' }}
+                        />
+                        <textarea
+                          placeholder="Nhận xét"
+                          value={gradeFeedback}
+                          onChange={e => setGradeFeedback(e.target.value)}
+                          className="answer-textarea"
+                          rows={3}
+                        />
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button className="btn btn-primary" onClick={() => handleGradeSubmission(sub.id)}>
+                            Lưu chấm
+                          </button>
+                          <button className="btn btn-outline" onClick={() => { setGradingId(null); setGradeFeedback(''); setGradeValue(''); }}>
+                            Hủy
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        {sub.feedback && <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}><strong>Nhận xét:</strong> {sub.feedback}</p>}
+                        <button className="btn btn-outline" onClick={() => { setGradingId(sub.id); setGradeFeedback(sub.feedback || ''); setGradeValue(sub.grade || ''); }}>
+                          {sub.grade != null && sub.grade !== '' ? 'Sửa chấm' : 'Chấm bài'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="questions-container" style={{ marginTop: '1.5rem' }}>
+            {homeworkSubmission ? (
+              <>
+                <h3>📝 Bài làm của bạn</h3>
+                <div className="instructions-content" style={{ whiteSpace: 'pre-wrap', marginTop: '0.5rem' }}>
+                  {homeworkSubmission.content || '(Trống)'}
+                </div>
+                {homeworkSubmission.grade != null && homeworkSubmission.grade !== '' && (
+                  <p style={{ marginTop: '1rem' }}><strong>Điểm:</strong> {homeworkSubmission.grade}</p>
+                )}
+                {homeworkSubmission.feedback && (
+                  <p style={{ marginTop: '0.5rem', color: 'var(--text-secondary)' }}><strong>Nhận xét:</strong> {homeworkSubmission.feedback}</p>
+                )}
+                <div className="submitted-message" style={{ marginTop: '1.5rem' }}>
+                  <div className="success-icon">✅</div>
+                  <h3>Đã nộp bài</h3>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3>Nộp bài</h3>
+                <textarea
+                  className="answer-textarea"
+                  placeholder="Nhập nội dung bài làm..."
+                  rows={8}
+                  value={homeworkContent}
+                  onChange={e => setHomeworkContent(e.target.value)}
+                  style={{ marginTop: '0.5rem', width: '100%' }}
+                />
+                <div className="assignment-actions" style={{ marginTop: '1rem' }}>
+                  <button className="btn btn-primary" onClick={handleSubmitHomework} disabled={submitting}>
+                    {submitting ? 'Đang nộp...' : '✅ Nộp bài'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
     );
   }

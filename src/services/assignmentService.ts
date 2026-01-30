@@ -174,6 +174,33 @@ export const updateAssignment = async (id: string, updates: Partial<any>) => {
 };
 
 export const deleteAssignment = async (id: string) => {
+  // Xóa theo thứ tự để tránh lỗi FK (nếu DB không dùng CASCADE)
+  const { data: submissions } = await supabase
+    .from('assignment_submissions')
+    .select('id')
+    .eq('assignment_id', id);
+  const submissionIds = (submissions || []).map((s: any) => s.id);
+
+  if (submissionIds.length > 0) {
+    const { error: answersErr } = await supabase
+      .from('assignment_answers')
+      .delete()
+      .in('submission_id', submissionIds);
+    if (answersErr) throw answersErr;
+  }
+
+  const { error: subsErr } = await supabase
+    .from('assignment_submissions')
+    .delete()
+    .eq('assignment_id', id);
+  if (subsErr) throw subsErr;
+
+  const { error: questionsErr } = await supabase
+    .from('assignment_questions')
+    .delete()
+    .eq('assignment_id', id);
+  if (questionsErr) throw questionsErr;
+
   const { error } = await supabase.from('assignments').delete().eq('id', id);
   if (error) throw error;
 };

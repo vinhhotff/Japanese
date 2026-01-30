@@ -174,13 +174,27 @@ export const hasJoinedAnyClass = async (userId: string): Promise<boolean> => {
   return (data && data.length > 0) || false;
 };
 
-// Delete class (teacher/admin)
+// Delete class (teacher/admin) - removes enrollments and homework for this class first
 export const deleteClass = async (classId: string): Promise<void> => {
+  // 1. Remove all enrollments for this class
+  const { error: enrollError } = await supabase
+    .from('enrollments')
+    .delete()
+    .eq('class_id', classId);
+  if (enrollError) throw enrollError;
+
+  // 2. Remove all homework for this class
+  const { error: homeworkError } = await supabase
+    .from('homework')
+    .delete()
+    .eq('class_id', classId);
+  if (homeworkError) throw homeworkError;
+
+  // 3. Delete the class
   const { error } = await supabase
     .from('classes')
     .delete()
     .eq('id', classId);
-
   if (error) throw error;
 };
 

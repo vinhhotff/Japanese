@@ -234,7 +234,11 @@ const AssignmentForm: React.FC = () => {
                 await createAssignment(data as any);
             }
             showToast('Đã lưu bài tập thành công!', 'success');
-            navigate(-1);
+            if (assignmentId) {
+                navigate(-1);
+            } else {
+                navigate('/teacher-dashboard');
+            }
         } catch (error: any) {
             showToast('Lỗi lưu: ' + error.message, 'error');
         } finally {

@@ -165,6 +165,11 @@ function App() {
                       <AssignmentDetail />
                     </ProtectedRoute>
                   } />
+                  <Route path="/homework/:assignmentId" element={
+                    <ProtectedRoute>
+                      <AssignmentDetail />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/my-assignments" element={
                     <ProtectedRoute>
                       <AssignmentList />

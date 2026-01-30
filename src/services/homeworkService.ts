@@ -186,12 +186,17 @@ export const getStudentSubmission = async (
   return data;
 };
 
-// Delete homework (teacher)
+// Delete homework (teacher) - remove submissions first due to FK
 export const deleteHomework = async (homeworkId: string): Promise<void> => {
+  const { error: submissionsError } = await supabase
+    .from('homework_submissions')
+    .delete()
+    .eq('homework_id', homeworkId);
+  if (submissionsError) throw submissionsError;
+
   const { error } = await supabase
     .from('homework')
     .delete()
     .eq('id', homeworkId);
-
   if (error) throw error;
 };
