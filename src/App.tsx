@@ -11,6 +11,7 @@ import LessonListNew from './components/LessonListNew';
 import LessonDetail from './components/LessonDetail';
 import Dictionary from './components/Dictionary';
 import AllDictionary from './components/AllDictionary';
+import ClassDetail from './components/ClassDetail';
 import SavedWords from './components/SavedWords';
 import VocabularyPractice from './components/VocabularyPractice';
 import StudyProgress from './components/StudyProgress';
@@ -18,7 +19,7 @@ import KanjiWritingPractice from './components/KanjiWritingPractice';
 import SpacedRepetition from './components/SpacedRepetition';
 import Login from './components/Login';
 import Register from './components/Register';
-import TeacherDashboard from './components/TeacherDashboard';
+import TeacherDashboard from './components/dashboards/TeacherDashboard';
 import AdminPanel from './components/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -154,9 +155,21 @@ function App() {
                   } />
 
                   {/* Assignment Routes */}
-                  <Route path="/assignments" element={<AssignmentList />} />
-                  <Route path="/assignments/:assignmentId" element={<AssignmentDetail />} />
-                  <Route path="/my-assignments" element={<AssignmentList />} />
+                  <Route path="/assignments" element={
+                    <ProtectedRoute>
+                      <AssignmentList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/assignments/:assignmentId" element={
+                    <ProtectedRoute>
+                      <AssignmentDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/my-assignments" element={
+                    <ProtectedRoute>
+                      <AssignmentList />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/teacher/assignments/new" element={
                     <ProtectedRoute requireTeacher>
                       <AssignmentForm />
@@ -168,6 +181,11 @@ function App() {
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/grading/:submissionId" element={<GradingInterface />} />
+                  <Route path="/class/:classId" element={
+                    <ProtectedRoute>
+                      <ClassDetail />
+                    </ProtectedRoute>
+                  } />
 
                   <Route
                     path="/login"

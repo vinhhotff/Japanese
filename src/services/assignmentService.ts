@@ -37,6 +37,17 @@ export const getAssignments = async (
   };
 };
 
+export const getTeacherAssignments = async (teacherId: string) => {
+  const { data, error } = await supabase
+    .from('assignments')
+    .select('*, lesson:lessons(title)')
+    .eq('created_by', teacherId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
 export const getAssignmentById = async (id: string) => {
   const { data, error } = await supabase
     .from('assignments')
@@ -46,7 +57,7 @@ export const getAssignmentById = async (id: string) => {
       questions:assignment_questions(*)
     `)
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
   return data;

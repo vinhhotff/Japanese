@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { addToNotebook, removeFromNotebook, getNotebookItems } from '../services/notebookService';
 import { Grammar } from '../types';
 import Pagination from './common/Pagination';
-import '../App.css';
+import '../styles/learning-sections-premium.css';
 
 interface GrammarSectionProps {
   grammar: Grammar[];
@@ -58,7 +58,7 @@ const GrammarSection = ({ grammar }: GrammarSectionProps) => {
     <div className="section-container grammar-section">
       <div className="section-header grammar-header">
         <div className="section-icon grammar-icon">
-          <svg style={{ width: '40px', height: '40px', color: 'var(--success-color)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
@@ -72,36 +72,38 @@ const GrammarSection = ({ grammar }: GrammarSectionProps) => {
           <>
             {currentItems.map((g) => (
               <div key={g.id} className="grammar-card">
-                <div className="grammar-pattern">
-                  <span className="pattern-label">Mẫu câu:</span>
+                <div className="grammar-pattern" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center' }}>
+                  <span className="pattern-label" style={{ fontWeight: '800', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em' }}>Mẫu câu:</span>
                   <span className="pattern-text">{g.pattern}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                  <h3 className="grammar-meaning">{g.meaning}</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                  <h3 className="grammar-meaning" style={{ margin: 0, fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-primary)' }}>{g.meaning}</h3>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleToggleNotebook(g); }}
                     title={notebookItems.has(g.id) ? "Xóa khỏi sổ tay" : "Lưu vào sổ tay"}
                     style={{
-                      background: 'none',
-                      border: 'none',
+                      background: 'var(--card-bg)',
+                      border: '1px solid var(--border-color)',
                       cursor: 'pointer',
                       fontSize: '1.25rem',
-                      padding: '0.25rem',
-                      color: notebookItems.has(g.id) ? '#f59e0b' : '#cbd5e1',
-                      transition: 'all 0.2s'
+                      padding: '0.5rem',
+                      borderRadius: '12px',
+                      color: notebookItems.has(g.id) ? '#f59e0b' : 'var(--text-tertiary)',
+                      transition: 'all 0.2s',
+                      boxShadow: 'var(--shadow)'
                     }}
                   >
                     {notebookItems.has(g.id) ? '⭐' : '☆'}
                   </button>
                 </div>
-                <p className="grammar-explanation">{g.explanation}</p>
+                <p className="grammar-explanation" style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '2rem' }}>{g.explanation}</p>
                 <div className="grammar-examples">
-                  <div className="examples-title">Ví dụ:</div>
+                  <div className="examples-title" style={{ fontWeight: '800', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em', marginBottom: '1rem' }}>Ví dụ:</div>
                   {g.examples.map((example, idx) => (
                     <div key={idx} className="example-card">
-                      <div className="example-japanese">{example.japanese}</div>
-                      <div className="example-romaji">{example.romaji}</div>
-                      <div className="example-translation">{example.translation}</div>
+                      <div className="example-japanese" style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.4rem' }}>{example.japanese}</div>
+                      <div className="example-romaji" style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '0.6rem' }}>{example.romaji}</div>
+                      <div className="example-translation" style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>{example.translation}</div>
                     </div>
                   ))}
                 </div>

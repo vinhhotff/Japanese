@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
 import { getTeacherAssignments } from '../services/adminService';
@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const TeacherDashboard = () => {
     const { user, isTeacher, signOut, profile } = useAuth();
     const { showToast } = useToast();
+    const navigate = useNavigate();
     const [assignments, setAssignments] = useState<any[]>([]);
     const [classes, setClasses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -162,9 +163,7 @@ const TeacherDashboard = () => {
     };
 
     const handleOpenHomework = (cls: any) => {
-        setSelectedClassHomework(cls);
-        setHomeworkForm({ title: '', description: '', due_date: '' });
-        setShowHomeworkModal(true);
+        navigate(`/teacher/assignments/new?classId=${cls.id}`);
     };
 
     const handleSubmitHomework = async () => {
@@ -362,7 +361,7 @@ const TeacherDashboard = () => {
                         </h2>
                         <button
                             onClick={() => setShowCreateModal(true)}
-                            className="btn-add" /* Using btn-add from common styles or define in teacher.css */
+                            className="btn-add"
                             style={{
                                 padding: '0.75rem 1.5rem',
                                 background: 'var(--teacher-gradient)',
@@ -373,7 +372,7 @@ const TeacherDashboard = () => {
                                 boxShadow: 'var(--teacher-shadow)'
                             }}
                         >
-                            + Tạo lớp mới
+                            🏫 Thiết lập lớp học
                         </button>
                     </div>
 

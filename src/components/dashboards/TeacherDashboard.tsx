@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { getTeacherClasses, createClass, deleteClass, getClassStudents } from '../../services/classService';
 import { getTeacherHomework, createHomework, deleteHomework } from '../../services/homeworkService';
+import { getTeacherAssignments, deleteAssignment } from '../../services/assignmentService'; // Added
 import Pagination from '../common/Pagination';
 import '../../styles/dashboard-modern.css';
 
@@ -10,6 +11,7 @@ const TeacherDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
   const [classes, setClasses] = useState<any[]>([]);
   const [homework, setHomework] = useState<any[]>([]);
+  const [assignments, setAssignments] = useState<any[]>([]); // Added
   const [loading, setLoading] = useState(true);
   const [showCreateClassModal, setShowCreateClassModal] = useState(false);
   const [showCreateHomeworkModal, setShowCreateHomeworkModal] = useState(false);
@@ -26,6 +28,7 @@ const TeacherDashboard: React.FC = () => {
   });
   const [classesPage, setClassesPage] = useState(1);
   const [homeworkPage, setHomeworkPage] = useState(1);
+  const [assignmentsPage, setAssignmentsPage] = useState(1); // Added
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -37,13 +40,15 @@ const TeacherDashboard: React.FC = () => {
 
     setLoading(true);
     try {
-      const [classesData, homeworkData] = await Promise.all([
+      const [classesData, homeworkData, assignmentsData] = await Promise.all([
         getTeacherClasses(user.id),
-        getTeacherHomework(user.id)
+        getTeacherHomework(user.id),
+        getTeacherAssignments(user.id)
       ]);
 
       setClasses(classesData);
       setHomework(homeworkData);
+      setAssignments(assignmentsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -105,6 +110,17 @@ const TeacherDashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteAssignment = async (id: string) => {
+    if (!window.confirm('Bạn có chắc muốn xóa bài tập media này?')) return;
+
+    try {
+      await deleteAssignment(id);
+      loadData();
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="dashboard-container">
@@ -130,9 +146,9 @@ const TeacherDashboard: React.FC = () => {
               🏫 Thiết lập lớp học
             </button>
             <Link to="/teacher/assignments/new" className="dashboard-btn dashboard-btn-primary">
-              📝 Quản lý bài tập
+              ✨ Kho bài tập Media
             </Link>
-            <button onClick={signOut} className="dashboard-btn dashboard-btn-secondary">
+            <button onClick={() => signOut()} className="dashboard-btn dashboard-btn-secondary">
               🚪 Đăng xuất
             </button>
           </div>
@@ -143,12 +159,12 @@ const TeacherDashboard: React.FC = () => {
       <div className="dashboard-grid">
         <div className="dashboard-card">
           <div className="dashboard-card-header">
-            <div className="dashboard-card-icon">
+            <div className="dashboard-card-icon" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)' }}>
               🏫
             </div>
             <div className="dashboard-card-title">
               <h3>Lớp học của tôi</h3>
-              <p>{classes.length} lớp</p>
+              <p>{classes.length} lớp học đang dạy</p>
             </div>
           </div>
           <div className="dashboard-card-content">
@@ -156,7 +172,7 @@ const TeacherDashboard: React.FC = () => {
               <div className="dashboard-empty-state">
                 <div className="dashboard-empty-state-icon">🏫</div>
                 <h3>Chưa có lớp nào</h3>
-                <p>Tạo lớp đầu tiên của bạn</p>
+                <p>Tạo lớp đầu tiên để bắt đầu giảng dạy</p>
                 <button onClick={() => setShowCreateClassModal(true)} className="dashboard-btn dashboard-btn-primary" style={{ marginTop: '1rem' }}>
                   Tạo lớp ngay
                 </button>
@@ -167,22 +183,20 @@ const TeacherDashboard: React.FC = () => {
                   {classes.slice((classesPage - 1) * itemsPerPage, classesPage * itemsPerPage).map((cls: any) => (
                     <li key={cls.id} className="dashboard-list-item">
                       <div className="dashboard-list-item-content">
-                        <div className="dashboard-list-item-title">
-                          {cls.name}
-                        </div>
+                        <div className="dashboard-list-item-title">{cls.name}</div>
                         <div className="dashboard-list-item-subtitle">
                           Mã: {cls.code} • {cls.level} • {cls.language === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div className="flex gap-2">
                         <Link
-                          to={`/teacher/class/${cls.id}`}
+                          to={`/class/${cls.id}`}
                           className="dashboard-list-item-action primary"
                         >
                           Quản lý
                         </Link>
                         <button
-                          onClick={() => handleDeleteClass(cls.id)}
+                          onClick={(e) => { e.stopPropagation(); handleDeleteClass(cls.id); }}
                           className="dashboard-list-item-action danger"
                         >
                           Xóa
@@ -210,7 +224,7 @@ const TeacherDashboard: React.FC = () => {
             </div>
             <div className="dashboard-card-title">
               <h3>Bài tập đã giao</h3>
-              <p>{homework.length} bài tập</p>
+              <p>{homework.length} bài tập trên lớp</p>
             </div>
           </div>
           <div className="dashboard-card-content">
@@ -218,7 +232,7 @@ const TeacherDashboard: React.FC = () => {
               <div className="dashboard-empty-state">
                 <div className="dashboard-empty-state-icon">📚</div>
                 <h3>Chưa có bài tập</h3>
-                <p>Giao bài tập cho học sinh</p>
+                <p>Giao bài tập bổ trợ cho học sinh</p>
                 <button onClick={() => setShowCreateHomeworkModal(true)} className="dashboard-btn dashboard-btn-primary" style={{ marginTop: '1rem' }}>
                   Giao bài tập
                 </button>
@@ -234,15 +248,15 @@ const TeacherDashboard: React.FC = () => {
                           {hw.classes?.name} • Hạn: {new Date(hw.due_date).toLocaleDateString('vi-VN')}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div className="flex gap-2">
                         <Link
-                          to={`/teacher/homework/${hw.id}`}
+                          to={`/assignments/${hw.id}`}
                           className="dashboard-list-item-action primary"
                         >
                           Xem
                         </Link>
                         <button
-                          onClick={() => handleDeleteHomework(hw.id)}
+                          onClick={(e) => { e.stopPropagation(); handleDeleteHomework(hw.id); }}
                           className="dashboard-list-item-action danger"
                         >
                           Xóa
@@ -264,6 +278,75 @@ const TeacherDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Media Assignments Section */}
+      <div className="dashboard-grid" style={{ marginTop: '2.5rem' }}>
+        <div className="dashboard-card" style={{ gridColumn: 'span 2' }}>
+          <div className="dashboard-card-header">
+            <div className="dashboard-card-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+              🎥
+            </div>
+            <div className="dashboard-card-title">
+              <h3>Bài tập Media nâng cao</h3>
+              <p>{assignments.length} học liệu</p>
+            </div>
+          </div>
+          <div className="dashboard-card-content">
+            {assignments.length === 0 ? (
+              <div className="dashboard-empty-state">
+                <div className="dashboard-empty-state-icon">🎥</div>
+                <h3>Chưa có bài tập media</h3>
+                <p>Tạo bài tập với video, audio và hình ảnh</p>
+                <Link to="/teacher/assignments/new" className="dashboard-btn dashboard-btn-primary" style={{ marginTop: '1rem' }}>
+                  Tạo bài tập media
+                </Link>
+              </div>
+            ) : (
+              <>
+                <ul className="dashboard-list">
+                  {assignments.slice((assignmentsPage - 1) * itemsPerPage, assignmentsPage * itemsPerPage).map((asg: any) => (
+                    <li key={asg.id} className="dashboard-list-item">
+                      <div className="dashboard-list-item-content">
+                        <div className="dashboard-list-item-title">{asg.title}</div>
+                        <div className="dashboard-list-item-subtitle">
+                          Loại: {asg.assignment_type} • {asg.lesson?.title || 'Bài lẻ'} • {asg.language === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Link
+                          to={`/assignments/${asg.id}`}
+                          className="dashboard-list-item-action primary"
+                        >
+                          Xem
+                        </Link>
+                        <Link
+                          to={`/teacher/assignments/edit/${asg.id}`}
+                          className="dashboard-list-item-action secondary"
+                        >
+                          Sửa
+                        </Link>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteAssignment(asg.id); }}
+                          className="dashboard-list-item-action danger"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <Pagination
+                  currentPage={assignmentsPage}
+                  totalPages={Math.ceil(assignments.length / itemsPerPage)}
+                  onPageChange={setAssignmentsPage}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={assignments.length}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Quick Actions */}
       <div className="dashboard-card">
         <div className="dashboard-card-header">
@@ -276,17 +359,17 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </div>
         <div className="dashboard-card-content">
-          <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-            <button onClick={() => setShowCreateClassModal(true)} className="dashboard-btn dashboard-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+          <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            <button onClick={() => setShowCreateClassModal(true)} className="dashboard-btn dashboard-btn-primary" style={{ justifyContent: 'center' }}>
               🏫 Thiết lập lớp học
             </button>
-            <Link to="/teacher/assignments/new" className="dashboard-btn dashboard-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+            <Link to="/teacher/assignments/new" className="dashboard-btn dashboard-btn-primary" style={{ justifyContent: 'center' }}>
               📝 Giao bài tập media
             </Link>
-            <Link to="/teacher/students" className="dashboard-btn dashboard-btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
-              👥 Quản lý học sinh
+            <Link to="/assignments" className="dashboard-btn dashboard-btn-secondary" style={{ justifyContent: 'center' }}>
+              👥 Quản lý học tập
             </Link>
-            <Link to="/teacher/reports" className="dashboard-btn dashboard-btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
+            <Link to="/study-progress" className="dashboard-btn dashboard-btn-secondary" style={{ justifyContent: 'center' }}>
               📊 Báo cáo
             </Link>
           </div>

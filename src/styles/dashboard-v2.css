@@ -667,7 +667,7 @@
   position: relative;
   z-index: 1;
   padding: 3rem 2rem;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   background: transparent;
   border: none;
@@ -716,7 +716,7 @@
   gap: 1.5rem;
   padding: 1rem 0 3rem;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -1665,7 +1665,7 @@
   gap: 2.5rem;
   padding-top: 1rem;
   justify-content: center;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 

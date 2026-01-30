@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ListeningExercise } from '../types';
 import { speakTextSafely, stopSpeaking, isSpeechSynthesisSupported } from '../utils/speech';
 import AudioPlayer from './AudioPlayer';
-import '../App.css';
+import '../styles/learning-sections-premium.css';
 
 interface ListeningSectionProps {
   listening: ListeningExercise[];
@@ -34,7 +34,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
 
     setIsSpeaking(true);
     setSpeakingId(id);
-    
+
     try {
       await speakTextSafely(text);
     } catch (error) {
@@ -52,7 +52,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
       <div className="section-container listening-section">
         <div className="section-header listening-header">
           <div className="section-icon listening-icon">
-            <svg style={{ width: '40px', height: '40px', color: 'var(--warning-color)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
             </svg>
           </div>
@@ -63,14 +63,14 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
         </div>
         <div className="section-content">
           {listening.length > 0 ? (
-            <div style={{ display: 'grid', gap: '1.5rem' }}>
+            <div className="vocab-grid">
               {listening.map((exercise, index) => (
                 <div key={exercise.id} className="listening-card" style={{ cursor: 'pointer' }} onClick={() => setSelectedExercise(exercise)}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-                    <div style={{ 
-                      width: '48px', 
-                      height: '48px', 
-                      borderRadius: '12px', 
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
                       background: 'var(--warning-gradient)',
                       display: 'flex',
                       alignItems: 'center',
@@ -83,33 +83,17 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
                       {index + 1}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <h3 className="exercise-title" style={{ marginBottom: '0.5rem' }}>{exercise.title}</h3>
+                      <h3 className="exercise-title" style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>{exercise.title}</h3>
                       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                        <span>
-                          <svg style={{ width: '16px', height: '16px', display: 'inline', marginRight: '0.25rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <span style={{ display: 'flex', alignItems: 'center gap: 4px' }}>
+                          <svg style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                             <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           {exercise.questions.length} câu hỏi
                         </span>
-                        {exercise.audioUrl && (
-                          <span>
-                            <svg style={{ width: '16px', height: '16px', display: 'inline', marginRight: '0.25rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                              <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                            </svg>
-                            Có audio
-                          </span>
-                        )}
                       </div>
                     </div>
-                    <svg style={{ width: '24px', height: '24px', color: 'var(--warning-color)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <path d="M9 5l7 7-7 7" />
-                    </svg>
                   </div>
-                  {exercise.imageUrl && (
-                    <div className="listening-image-wrapper" style={{ marginTop: '1rem' }}>
-                      <img src={exercise.imageUrl} alt={exercise.title} className="listening-image" />
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -130,7 +114,7 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
   return (
     <div className="section-container listening-section">
       <div className="section-header listening-header">
-        <button 
+        <button
           className="btn btn-outline"
           onClick={() => {
             setSelectedExercise(null);
@@ -163,11 +147,11 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
               <img src={selectedExercise.imageUrl} alt={selectedExercise.title} className="listening-image" />
             </div>
           )}
-          
+
           {selectedExercise.audioUrl && (
             <AudioPlayer src={selectedExercise.audioUrl} title="🎧 Nghe bài tập" />
           )}
-          
+
           <div className="transcript-box">
             <div className="transcript-header">
               <div className="transcript-label">📝 Transcript:</div>
@@ -242,9 +226,8 @@ const ListeningSection = ({ listening }: ListeningSectionProps) => {
                   return (
                     <label
                       key={idx}
-                      className={`option-item ${
-                        showAnswers && isCorrectOption ? 'correct-answer' : ''
-                      } ${showAnswers && isSelected && !isCorrect ? 'wrong-answer' : ''}`}
+                      className={`option-item ${showAnswers && isCorrectOption ? 'correct-answer' : ''
+                        } ${showAnswers && isSelected && !isCorrect ? 'wrong-answer' : ''}`}
                     >
                       <input
                         type="radio"

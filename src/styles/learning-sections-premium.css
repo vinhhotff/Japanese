@@ -1,0 +1,341 @@
+/* ===== PREMIUM LEARNING SECTIONS ===== */
+
+.vocab-section,
+.kanji-section,
+.grammar-section,
+.listening-section,
+.game-container,
+.flashcard-container,
+.quiz-container {
+    background: var(--card-bg);
+    border-radius: 28px;
+    padding: 2.5rem;
+    margin-bottom: 3rem;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    z-index: 10;
+}
+
+[data-theme="dark"] .vocab-section,
+[data-theme="dark"] .kanji-section,
+[data-theme="dark"] .grammar-section,
+[data-theme="dark"] .listening-section,
+[data-theme="dark"] .game-container,
+[data-theme="dark"] .flashcard-container,
+[data-theme="dark"] .quiz-container {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(10px);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.section-header h2 {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.section-header p {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Vocabulary & Listening Cards Grid */
+.vocab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.vocab-card,
+.listening-card {
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+[data-theme="dark"] .vocab-card,
+[data-theme="dark"] .listening-card {
+    background: rgba(30, 41, 59, 0.4);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.vocab-card:hover,
+.listening-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+    background: var(--card-bg);
+}
+
+.vocab-badge {
+    align-self: flex-end;
+    padding: 0.3rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.vocab-kanji {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.vocab-meaning {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 1rem 0;
+}
+
+/* Kanji Cards */
+.kanji-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.kanji-card {
+    background: var(--bg-secondary);
+    border-radius: 24px;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    transition: all 0.4s ease;
+}
+
+[data-theme="dark"] .kanji-card {
+    background: rgba(30, 41, 59, 0.4);
+}
+
+.kanji-card:hover {
+    transform: scale(1.02);
+    background: var(--card-bg);
+    border-color: var(--secondary-color);
+}
+
+.kanji-character {
+    font-size: 4.5rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.reading-tag {
+    background: var(--bg-color);
+    padding: 0.3rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+/* Grammar & Example Cards */
+.grammar-card {
+    background: var(--bg-secondary);
+    border-radius: 24px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .grammar-card {
+    background: rgba(30, 41, 59, 0.4);
+}
+
+.grammar-card:hover {
+    background: var(--card-bg);
+    border-color: var(--success-color);
+    box-shadow: var(--shadow-md);
+}
+
+.pattern-text {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--primary-color);
+    margin-left: 0.5rem;
+}
+
+.example-card {
+    background: var(--bg-color);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border-left: 5px solid var(--primary-color);
+    margin-top: 1rem;
+}
+
+[data-theme="dark"] .example-card {
+    background: rgba(15, 23, 42, 0.3);
+}
+
+/* Interactive Components (Listening / Transcript / Options) */
+.transcript-box {
+    background: var(--bg-color);
+    padding: 1.5rem;
+    border-radius: 20px;
+    margin-top: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.transcript-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.transcript-text {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border-color);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.option-item,
+.quiz-option {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-primary);
+    width: 100%;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.option-item:hover,
+.quiz-option:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+}
+
+.quiz-option.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+}
+
+.quiz-option.correct {
+    background: var(--success-light);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.quiz-option.incorrect {
+    background: var(--danger-light);
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+/* Sentence Game Specifics */
+.word-chip {
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem;
+}
+
+/* Flashcard Specifics */
+.flashcard {
+    width: 100%;
+    max-width: 500px;
+    height: 350px;
+    perspective: 1000px;
+    margin: 2rem auto;
+    cursor: pointer;
+}
+
+.flashcard-front,
+.flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+    border: 2px solid var(--border-color);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flashcard-front {
+    background: var(--card-bg);
+}
+
+.flashcard-back {
+    background: var(--bg-secondary);
+    transform: rotateY(180deg);
+}
+
+.flashcard.flipped .flashcard-front {
+    transform: rotateY(180deg);
+}
+
+.flashcard.flipped .flashcard-back {
+    transform: rotateY(360deg);
+}
+
+.flashcard-word {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.flashcard-meaning {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+
+    .vocab-section,
+    .kanji-section,
+    .grammar-section,
+    .listening-section,
+    .game-container,
+    .flashcard-container,
+    .quiz-container {
+        padding: 1.5rem;
+    }
+
+    .vocab-kanji {
+        font-size: 2rem;
+    }
+
+    .kanji-character {
+        font-size: 3.5rem;
+    }
+}

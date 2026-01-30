@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAssignmentById, createSubmission, saveAnswer, submitAssignment, getMySubmissions } from '../services/assignmentService';
+import { supabase } from '../config/supabase'; // Added
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
 import { uploadFile, formatFileSize, validateFileSize } from '../utils/fileUpload';
@@ -31,11 +32,34 @@ const AssignmentDetail = () => {
   const loadAssignment = async () => {
     try {
       setLoading(true);
-      const assignmentData = await getAssignmentById(assignmentId!);
+      let assignmentData = await getAssignmentById(assignmentId!);
+
+      // Fallback for legacy homework if not found in assignments table
+      if (!assignmentData) {
+        const { data: hw, error: hwError } = await supabase
+          .from('homework')
+          .select(`
+            *,
+            lesson:lessons(*)
+          `)
+          .eq('id', assignmentId)
+          .maybeSingle();
+
+        if (hw) {
+          // Map homework to assignment structure
+          assignmentData = {
+            ...hw,
+            instructions: hw.description,
+            assignment_type: 'mixed', // Default for legacy
+            questions: [] // Legacy homework doesn't have structured questions here
+          };
+        }
+      }
+
       setAssignment(assignmentData);
 
       // Check if user has existing submission
-      if (user) {
+      if (assignmentData && user) {
         const submissions = await getMySubmissions(user.id, assignmentId, 1, 1);
         if (submissions.data.length > 0) {
           const existingSubmission = submissions.data[0];
@@ -179,7 +203,11 @@ const AssignmentDetail = () => {
       if (submission?.id) {
         await submitAssignment(submission.id);
         showToast('Nộp bài thành công! 🎉', 'success');
-        navigate('/my-assignments');
+        if (assignment.class_id) {
+          navigate(`/class/${assignment.class_id}`);
+        } else {
+          navigate('/my-assignments');
+        }
       }
     } catch (error) {
       console.error('Error submitting:', error);
@@ -201,10 +229,20 @@ const AssignmentDetail = () => {
   if (!assignment) {
     return (
       <div className="assignment-not-found">
+        <span className="not-found-icon">📝</span>
         <h2>Không tìm thấy bài tập</h2>
-        <button onClick={() => navigate(-1)} className="btn btn-primary">
-          Quay lại
-        </button>
+        <p>
+          Bài tập này có thể đã bị xóa, chưa được xuất bản, hoặc bạn không có quyền truy cập.
+          Vui lòng liên hệ với giáo viên của bạn nếu bạn nghĩ đây là một lỗi.
+        </p>
+        <div className="not-found-actions">
+          <button onClick={() => navigate(-1)} className="back-btn" style={{ marginBottom: 0 }}>
+            ← Quay lại
+          </button>
+          <button onClick={() => navigate('/')} className="btn btn-primary">
+            Về trang chủ
+          </button>
+        </div>
       </div>
     );
   }
@@ -245,16 +283,25 @@ const AssignmentDetail = () => {
 
       {/* Instructions */}
       <div className="assignment-instructions-box">
-        <h3>📋 Hướng dẫn</h3>
+        <h3>📋 Hướng dẫn chi tiết</h3>
         <div className="instructions-content">
           {assignment.instructions}
         </div>
         <div className="assignment-meta-info">
-          <span>🎯 Tổng điểm: {assignment.max_score}</span>
+          <div className="meta-item">
+            <span className="meta-icon">🎯</span>
+            <span>Tổng điểm: <strong>{assignment.max_score}</strong></span>
+          </div>
           {assignment.due_date && (
-            <span>📅 Hạn nộp: {new Date(assignment.due_date).toLocaleString('vi-VN')}</span>
+            <div className="meta-item">
+              <span className="meta-icon">📅</span>
+              <span>Hạn nộp: <strong>{new Date(assignment.due_date).toLocaleString('vi-VN')}</strong></span>
+            </div>
           )}
-          <span>📝 {assignment.questions?.length || 0} câu hỏi</span>
+          <div className="meta-item">
+            <span className="meta-icon">📝</span>
+            <span>Số lượng: <strong>{assignment.questions?.length || 0} câu hỏi</strong></span>
+          </div>
         </div>
 
         {/* Media Attachments for Assignment */}
@@ -272,7 +319,9 @@ const AssignmentDetail = () => {
                 </div>
               )}
               {assignment.video_url && (
-                <a href={assignment.video_url} target="_blank" rel="noreferrer" className="media-link">📹 Video hướng dẫn</a>
+                <a href={assignment.video_url} target="_blank" rel="noreferrer" className="dashboard-btn dashboard-btn-secondary" style={{ padding: '0.5rem 1rem' }}>
+                  📹 Video hướng dẫn
+                </a>
               )}
             </div>
           </div>

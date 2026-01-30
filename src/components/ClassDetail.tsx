@@ -79,15 +79,26 @@ const ClassDetail: React.FC = () => {
             }
 
             // 5. Get Assignments
-            const { data: assignmentsData } = await supabase
+            let assignmentsData = [];
+            const lessonIds = lessonsData.data?.filter((l: any) => l.id).map((l: any) => l.id) || [];
+
+            let assignmentsQuery = supabase
                 .from('assignments')
                 .select(`
                     *,
                     lesson:lessons(*, course:courses(*))
                 `)
-                .or(`class_id.eq.${classId},lesson_id.in.(${lessonsData.data.map((l: any) => l.id).join(',')})`)
                 .eq('is_published', true)
                 .order('due_date', { ascending: true });
+
+            if (lessonIds.length > 0) {
+                assignmentsQuery = assignmentsQuery.or(`class_id.eq.${classId},lesson_id.in.(${lessonIds.join(',')})`);
+            } else {
+                assignmentsQuery = assignmentsQuery.eq('class_id', classId);
+            }
+
+            const { data: assignmentsRes } = await assignmentsQuery;
+            assignmentsData = assignmentsRes || [];
 
             // 6. Get submission statuses
             let submissionsMap: Record<string, any> = {};
@@ -137,7 +148,40 @@ const ClassDetail: React.FC = () => {
     if (!classInfo) return null;
 
     return (
-        <div className={`class-detail-premium ${classInfo.language === 'japanese' ? 'jp-theme' : 'cn-theme'}`}>
+        <div className={`class-detail-premium ${classInfo.language === 'japanese' ? 'jp-theme' : 'cn-theme'}`} data-language={classInfo.language}>
+            {/* Cultural SVG Background Pattern */}
+            <svg className="cultural-pattern" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+                <defs>
+                    {classInfo.language === 'japanese' ? (
+                        <>
+                            <pattern id="sakura-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+                                <circle cx="50" cy="50" r="3" fill="#ffc0cb" opacity="0.15" />
+                                <circle cx="150" cy="100" r="2" fill="#ffb6c1" opacity="0.12" />
+                                <circle cx="100" cy="150" r="2.5" fill="#ffc0cb" opacity="0.1" />
+                                <path d="M 30 30 Q 35 25 40 30 T 50 30" stroke="#c41e3a" strokeWidth="0.5" fill="none" opacity="0.08" />
+                            </pattern>
+                            <radialGradient id="jp-glow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stopColor="#c41e3a" stopOpacity="0.05" />
+                                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+                            </radialGradient>
+                        </>
+                    ) : (
+                        <>
+                            <pattern id="chinese-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+                                <circle cx="50" cy="50" r="3" fill="#dc143c" opacity="0.12" />
+                                <circle cx="150" cy="100" r="2" fill="#ffd700" opacity="0.1" />
+                                <rect x="80" y="80" width="40" height="40" fill="none" stroke="#dc143c" strokeWidth="0.5" opacity="0.08" />
+                            </pattern>
+                            <radialGradient id="cn-glow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stopColor="#dc143c" stopOpacity="0.05" />
+                                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+                            </radialGradient>
+                        </>
+                    )}
+                </defs>
+                <rect width="100%" height="100%" fill={`url(#${classInfo.language === 'japanese' ? 'sakura' : 'chinese'}-pattern)`} />
+                <rect width="100%" height="100%" fill={`url(#${classInfo.language === 'japanese' ? 'jp' : 'cn'}-glow)`} />
+            </svg>
             <FloatingElements language={classInfo.language} />
 
             <motion.div
@@ -235,7 +279,7 @@ const ClassDetail: React.FC = () => {
                         exit={{ opacity: 0, x: 20 }}
                     >
                         {Object.entries(materialsByCourse).map(([id, { course, lessons }]) => (
-                            <div key={id} className="course-group mb-12">
+                            <div key={id} className="course-group mb-20">
                                 <div className="course-header-section">
                                     <div className="course-header-content">
                                         <div className="course-icon-wrapper">📖</div>

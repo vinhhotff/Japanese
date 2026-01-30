@@ -253,7 +253,30 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
   const isLocked = !hasAccess && !userIsAdmin && !userIsTeacher && !lesson.is_free;
 
   return (
-    <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+    <div className={`container lesson-detail-premium ${language === 'japanese' ? 'jp-theme' : 'cn-theme'}`} style={{ position: 'relative', zIndex: 1 }} data-language={language}>
+      {/* Cultural SVG Background Pattern */}
+      <svg className="cultural-pattern" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+        <defs>
+          {language === 'japanese' ? (
+            <>
+              <pattern id="sakura-pattern-lesson" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+                <circle cx="50" cy="50" r="3" fill="#ffc0cb" opacity="0.15" />
+                <circle cx="150" cy="100" r="2" fill="#ffb6c1" opacity="0.12" />
+                <path d="M 30 30 Q 35 25 40 30 T 50 30" stroke="#c41e3a" strokeWidth="0.5" fill="none" opacity="0.08" />
+              </pattern>
+            </>
+          ) : (
+            <>
+              <pattern id="chinese-pattern-lesson" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+                <circle cx="50" cy="50" r="3" fill="#dc143c" opacity="0.12" />
+                <rect x="80" y="80" width="40" height="40" fill="none" stroke="#dc143c" strokeWidth="0.5" opacity="0.08" />
+              </pattern>
+            </>
+          )}
+        </defs>
+        <rect width="100%" height="100%" fill={`url(#${language === 'japanese' ? 'sakura' : 'chinese'}-pattern-lesson)`} />
+      </svg>
+
       {isLocked && (
         <div style={{
           position: 'absolute',

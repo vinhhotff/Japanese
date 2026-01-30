@@ -552,7 +552,7 @@ const DashboardNew = () => {
 
                 <button
                   className="class-enter-btn"
-                  onClick={() => alert(`Sắp ra mắt: Xem bài tập cho lớp ${cls.name}`)}
+                  onClick={() => navigate(`/class/${cls.id}`)}
                 >
                   <span>Vào lớp học</span>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
