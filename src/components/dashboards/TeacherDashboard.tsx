@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { getTeacherClasses, createClass, deleteClass, getClassStudents } from '../../services/classService';
-import { getTeacherHomework, createHomework, deleteHomework } from '../../services/homeworkService';
+import { getTeacherHomework, createHomework, deleteHomework, updateHomework } from '../../services/homeworkService';
 import { getTeacherAssignments, deleteAssignment } from '../../services/assignmentService';
 import Pagination from '../common/Pagination';
 import { useToast } from '../Toast';
@@ -17,6 +17,7 @@ const TeacherDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateClassModal, setShowCreateClassModal] = useState(false);
   const [showCreateHomeworkModal, setShowCreateHomeworkModal] = useState(false);
+  const [editingHomeworkId, setEditingHomeworkId] = useState<string | null>(null);
   const [newClass, setNewClass] = useState({
     name: '',
     level: 'N5',
@@ -93,16 +94,35 @@ const TeacherDashboard: React.FC = () => {
     if (!user || !newHomework.title.trim() || !newHomework.class_id) return;
 
     try {
-      await createHomework({
-        ...newHomework,
-        teacher_id: user.id
-      });
+      if (editingHomeworkId) {
+        await updateHomework(editingHomeworkId, newHomework);
+        showToast('Đã cập nhật bài tập thành công', 'success');
+      } else {
+        await createHomework({
+          ...newHomework,
+          teacher_id: user.id
+        });
+        showToast('Đã giao bài tập mới thành công', 'success');
+      }
       setShowCreateHomeworkModal(false);
+      setEditingHomeworkId(null);
       setNewHomework({ class_id: '', title: '', description: '', due_date: '' });
       loadData();
-    } catch (error) {
-      console.error('Error creating homework:', error);
+    } catch (error: any) {
+      console.error('Error creating/updating homework:', error);
+      showToast(error?.message || 'Lỗi thao tác bài tập', 'error');
     }
+  };
+
+  const handleEditHomework = (hw: any) => {
+    setNewHomework({
+      class_id: hw.class_id,
+      title: hw.title,
+      description: hw.description || '',
+      due_date: hw.due_date ? new Date(hw.due_date).toISOString().slice(0, 16) : ''
+    });
+    setEditingHomeworkId(hw.id);
+    setShowCreateHomeworkModal(true);
   };
 
   const handleDeleteHomework = async (homeworkId: string) => {
@@ -228,132 +248,77 @@ const TeacherDashboard: React.FC = () => {
             )}
           </div>
         </div>
-
-        <div className="dashboard-card">
-          <div className="dashboard-card-header">
-            <div className="dashboard-card-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
-              📚
-            </div>
-            <div className="dashboard-card-title">
-              <h3>Bài tập đã giao</h3>
-              <p>{homework.length} bài tập trên lớp</p>
-            </div>
-          </div>
-          <div className="dashboard-card-content">
-            {homework.length === 0 ? (
-              <div className="dashboard-empty-state">
-                <div className="dashboard-empty-state-icon">📚</div>
-                <h3>Chưa có bài tập</h3>
-                <p>Giao bài tập bổ trợ cho học sinh</p>
-                <button onClick={() => setShowCreateHomeworkModal(true)} className="dashboard-btn dashboard-btn-primary" style={{ marginTop: '1rem' }}>
-                  Giao bài tập
-                </button>
-              </div>
-            ) : (
-              <>
-                <ul className="dashboard-list">
-                  {homework.slice((homeworkPage - 1) * itemsPerPage, homeworkPage * itemsPerPage).map((hw: any) => (
-                    <li key={hw.id} className="dashboard-list-item">
-                      <div className="dashboard-list-item-content">
-                        <div className="dashboard-list-item-title">{hw.title}</div>
-                        <div className="dashboard-list-item-subtitle">
-                          {hw.classes?.name} • Hạn: {new Date(hw.due_date).toLocaleDateString('vi-VN')}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Link
-                          to={`/assignments/${hw.id}`}
-                          className="dashboard-list-item-action primary"
-                        >
-                          Xem
-                        </Link>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeleteHomework(hw.id); }}
-                          className="dashboard-list-item-action danger"
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                <Pagination
-                  currentPage={homeworkPage}
-                  totalPages={Math.ceil(homework.length / itemsPerPage)}
-                  onPageChange={setHomeworkPage}
-                  itemsPerPage={itemsPerPage}
-                  totalItems={homework.length}
-                />
-              </>
-            )}
-          </div>
-        </div>
       </div>
 
-      {/* Media Assignments Section */}
+      {/* Unified Task Management Grid */}
       <div className="dashboard-grid" style={{ marginTop: '2.5rem' }}>
         <div className="dashboard-card" style={{ gridColumn: 'span 2' }}>
           <div className="dashboard-card-header">
-            <div className="dashboard-card-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
-              🎥
+            <div className="dashboard-card-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)' }}>
+              📝
             </div>
             <div className="dashboard-card-title">
-              <h3>Bài tập Media nâng cao</h3>
-              <p>{assignments.length} học liệu</p>
+              <h3>Quản lý Bài tập (Tasks)</h3>
+              <p>Tổng cộng {homework.length + assignments.length} bài tập đã giao</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setShowCreateHomeworkModal(true)} className="dashboard-btn dashboard-btn-secondary py-1 text-xs">
+                + Bài tập nhanh
+              </button>
+              <Link to="/teacher/assignments/new" className="dashboard-btn dashboard-btn-primary py-1 text-xs">
+                + Bài tập Media
+              </Link>
             </div>
           </div>
           <div className="dashboard-card-content">
-            {assignments.length === 0 ? (
+            {homework.length === 0 && assignments.length === 0 ? (
               <div className="dashboard-empty-state">
-                <div className="dashboard-empty-state-icon">🎥</div>
-                <h3>Chưa có bài tập media</h3>
-                <p>Tạo bài tập với video, audio và hình ảnh</p>
-                <Link to="/teacher/assignments/new" className="dashboard-btn dashboard-btn-primary" style={{ marginTop: '1rem' }}>
-                  Tạo bài tập media
-                </Link>
+                <div className="dashboard-empty-state-icon">📝</div>
+                <h3>Chưa có bài tập nào</h3>
+                <p>Bắt đầu bằng cách giao bài tập nhanh hoặc tạo học liệu Media</p>
               </div>
             ) : (
-              <>
-                <ul className="dashboard-list">
-                  {assignments.slice((assignmentsPage - 1) * itemsPerPage, assignmentsPage * itemsPerPage).map((asg: any) => (
-                    <li key={asg.id} className="dashboard-list-item">
-                      <div className="dashboard-list-item-content">
-                        <div className="dashboard-list-item-title">{asg.title}</div>
-                        <div className="dashboard-list-item-subtitle">
-                          Loại: {asg.assignment_type} • {asg.lesson?.title || 'Bài lẻ'} • {asg.language === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Homework Column */}
+                <div>
+                  <h4 className="text-xs font-black text-amber-600 uppercase mb-4 tracking-widest pl-2 border-l-4 border-amber-400">📝 Bài tập nhanh (Homework)</h4>
+                  <ul className="dashboard-list">
+                    {homework.map((hw: any) => (
+                      <li key={hw.id} className="dashboard-list-item">
+                        <div className="dashboard-list-item-content">
+                          <div className="dashboard-list-item-title">{hw.title}</div>
+                          <div className="dashboard-list-item-subtitle">{hw.classes?.name}</div>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Link
-                          to={`/assignments/${asg.id}`}
-                          className="dashboard-list-item-action primary"
-                        >
-                          Xem
-                        </Link>
-                        <Link
-                          to={`/teacher/assignments/edit/${asg.id}`}
-                          className="dashboard-list-item-action secondary"
-                        >
-                          Sửa
-                        </Link>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeleteAssignment(asg.id); }}
-                          className="dashboard-list-item-action danger"
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                <Pagination
-                  currentPage={assignmentsPage}
-                  totalPages={Math.ceil(assignments.length / itemsPerPage)}
-                  onPageChange={setAssignmentsPage}
-                  itemsPerPage={itemsPerPage}
-                  totalItems={assignments.length}
-                />
-              </>
+                        <div className="flex gap-1">
+                          <Link to={`/assignments/${hw.id}`} className="p-1 hover:text-indigo-600">👁️</Link>
+                          <button onClick={() => handleEditHomework(hw)} className="p-1 hover:text-amber-600">✏️</button>
+                          <button onClick={() => handleDeleteHomework(hw.id)} className="p-1 hover:text-red-600">🗑️</button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Media Column */}
+                <div>
+                  <h4 className="text-xs font-black text-indigo-600 uppercase mb-4 tracking-widest pl-2 border-l-4 border-indigo-400">🎥 Bài tập Media (Assignments)</h4>
+                  <ul className="dashboard-list">
+                    {assignments.map((asg: any) => (
+                      <li key={asg.id} className="dashboard-list-item">
+                        <div className="dashboard-list-item-content">
+                          <div className="dashboard-list-item-title">{asg.title}</div>
+                          <div className="dashboard-list-item-subtitle">{asg.assignment_type} • {asg.lesson?.title || 'Bài lẻ'}</div>
+                        </div>
+                        <div className="flex gap-1">
+                          <Link to={`/assignments/${asg.id}`} className="p-1 hover:text-indigo-600">👁️</Link>
+                          <Link to={`/teacher/assignments/edit/${asg.id}`} className="p-1 hover:text-amber-600">✏️</Link>
+                          <button onClick={() => handleDeleteAssignment(asg.id)} className="p-1 hover:text-red-600">🗑️</button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -467,20 +432,21 @@ const TeacherDashboard: React.FC = () => {
 
       {/* Create Homework Modal */}
       {showCreateHomeworkModal && (
-        <div className="dashboard-modal-overlay" onClick={() => setShowCreateHomeworkModal(false)}>
+        <div className="dashboard-modal-overlay" onClick={() => { setShowCreateHomeworkModal(false); setEditingHomeworkId(null); setNewHomework({ class_id: '', title: '', description: '', due_date: '' }); }}>
           <div className="dashboard-modal" onClick={(e) => e.stopPropagation()}>
             <div className="dashboard-modal-header">
-              <h2>Giao bài tập mới</h2>
-              <p>Tạo bài tập cho học sinh</p>
+              <h2>{editingHomeworkId ? 'Hiệu chỉnh bài tập' : 'Giao bài tập mới'}</h2>
+              <p>{editingHomeworkId ? 'Cập nhật lại thông tin bài tập đã giao' : 'Giao bài tập bổ trợ cho học sinh'}</p>
             </div>
 
             <div className="dashboard-form-group">
-              <label>Lớp học</label>
+              <label>Lớp học áp dụng</label>
               <select
                 value={newHomework.class_id}
                 onChange={(e) => setNewHomework({ ...newHomework, class_id: e.target.value })}
+                disabled={!!editingHomeworkId}
               >
-                <option value="">Chọn lớp</option>
+                <option value="">-- Chọn lớp học --</option>
                 {classes.map((cls: any) => (
                   <option key={cls.id} value={cls.id}>
                     {cls.name} ({cls.code})
@@ -490,26 +456,27 @@ const TeacherDashboard: React.FC = () => {
             </div>
 
             <div className="dashboard-form-group">
-              <label>Tiêu đề</label>
+              <label>Tiêu đề bài tập</label>
               <input
                 type="text"
                 value={newHomework.title}
                 onChange={(e) => setNewHomework({ ...newHomework, title: e.target.value })}
-                placeholder="Ví dụ: Bài tập tuần 1"
+                placeholder="Ví dụ: Luyện tập Kanji bài 5"
               />
             </div>
 
             <div className="dashboard-form-group">
-              <label>Mô tả</label>
+              <label>Yêu cầu chi tiết (Hướng dẫn)</label>
               <textarea
                 value={newHomework.description}
                 onChange={(e) => setNewHomework({ ...newHomework, description: e.target.value })}
-                placeholder="Mô tả chi tiết bài tập..."
+                placeholder="Nêu rõ các việc học sinh cần làm..."
+                rows={5}
               />
             </div>
 
             <div className="dashboard-form-group">
-              <label>Hạn nộp</label>
+              <label>Thời hạn nộp bài (Deadline)</label>
               <input
                 type="datetime-local"
                 value={newHomework.due_date}
@@ -519,17 +486,17 @@ const TeacherDashboard: React.FC = () => {
 
             <div className="dashboard-modal-actions">
               <button
-                onClick={() => setShowCreateHomeworkModal(false)}
+                onClick={() => { setShowCreateHomeworkModal(false); setEditingHomeworkId(null); setNewHomework({ class_id: '', title: '', description: '', due_date: '' }); }}
                 className="dashboard-btn dashboard-btn-secondary"
               >
-                Hủy
+                Hủy bỏ
               </button>
               <button
                 onClick={handleCreateHomework}
                 className="dashboard-btn dashboard-btn-primary"
                 disabled={!newHomework.title.trim() || !newHomework.class_id}
               >
-                Giao bài tập
+                {editingHomeworkId ? '💾 Cập nhật bài tập' : '🚀 Giao bài tập ngay'}
               </button>
             </div>
           </div>

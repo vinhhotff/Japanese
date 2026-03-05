@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
-import { getTeacherAssignments } from '../services/adminService';
-import { getTeacherClasses, createClass as createClassService, getClassStudents, removeStudent } from '../services/classService';
-import { createHomework } from '../services/homeworkService';
+import { getTeacherAssignments as getTeachingAssignments } from '../services/adminService';
+import { getTeacherClasses, createClass as createClassService, getClassStudents, removeStudent, deleteClass } from '../services/classService';
+import { createHomework, getTeacherHomework } from '../services/homeworkService';
+import { getTeacherAssignments as getMediaAssignments, deleteAssignment } from '../services/assignmentService';
+import { supabase } from '../config/supabase';
 import AdminForm, { TabType, getTypeLabel } from './AdminForm';
 import {
     getLessons, createLesson, updateLesson, deleteLesson,
@@ -23,7 +25,9 @@ const TeacherDashboard = () => {
     const { user, isTeacher, signOut, profile } = useAuth();
     const { showToast } = useToast();
     const navigate = useNavigate();
-    const [assignments, setAssignments] = useState<any[]>([]);
+    const [assignmentsList, setAssignmentsList] = useState<any[]>([]); // Media assignments list
+    const [homeworkList, setHomeworkList] = useState<any[]>([]); // Fast homework list
+    const [myAssignments, setMyAssignments] = useState<any[]>([]); // teaching assignments (courses)
     const [classes, setClasses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -62,40 +66,38 @@ const TeacherDashboard = () => {
     }, [user]);
 
     const loadData = async () => {
+        if (!user?.email) return;
         setLoading(true);
         try {
-            if (!user?.email) return;
-
-            // 1. Get assignments & Courses
-            const [myAssignments, allCourses] = await Promise.all([
-                getTeacherAssignments(user.email),
-                getCourses()
+            // 1. Fetch academic data & teacher assignments (courses)
+            const [classesData, coursesData, teacherAsgnData, hwData, asgData] = await Promise.all([
+                getTeacherClasses(user.id),
+                getCourses(),
+                getTeachingAssignments(user.email),
+                getTeacherHomework(user.id),
+                getMediaAssignments(user.id) // Need to import or use assignmentService
             ]);
 
-            // 2. Map assignments to actual course objects and remove duplicates
+            // 2. Map teaching assignments to course objects
             const courseMap = new Map();
-            myAssignments.forEach((assign: any) => {
-                // Prioritize lookup by course_id, fallback to level matching for legacy
-                const matchedCourse = allCourses?.find((c: any) =>
+            teacherAsgnData.forEach((assign: any) => {
+                const matchedCourse = coursesData?.find((c: any) =>
                     c.id === assign.course_id || (c.level === assign.level && c.language === assign.language)
                 );
-
                 if (matchedCourse && !courseMap.has(matchedCourse.id)) {
                     courseMap.set(matchedCourse.id, {
-                        ...assign, // keeps language, level, teacher_email, course_id
-                        ...matchedCourse, // overlays id, title, description from course
-                        assignment_id: assign.id // preserve assignment ID
+                        ...assign,
+                        ...matchedCourse,
+                        assignment_id: assign.id
                     });
                 }
             });
 
             const resolvedCourses = Array.from(courseMap.values());
-
-            setAssignments(resolvedCourses);
-
-            // 3. Get my created classes
-            const myClasses = await getTeacherClasses(user.id);
-            setClasses(myClasses);
+            setMyAssignments(resolvedCourses);
+            setClasses(classesData || []);
+            setHomeworkList(hwData || []);
+            setAssignmentsList(asgData || []);
 
             if (resolvedCourses.length > 0) {
                 setNewClassLevel(resolvedCourses[0].level);
@@ -162,6 +164,19 @@ const TeacherDashboard = () => {
         }
     };
 
+    const handleDeleteClass = async (classId: string, className: string) => {
+        if (!confirm(`Bạn có chắc chắn muốn xóa lớp "${className}"? Tất cả học sinh và bài tập của lớp này sẽ bị xóa.`)) return;
+
+        try {
+            await deleteClass(classId);
+            showToast('Đã xóa lớp học thành công', 'success');
+            loadData();
+        } catch (e) {
+            console.error(e);
+            showToast('Lỗi khi xóa lớp học: ' + (e as Error).message, 'error');
+        }
+    };
+
     const handleOpenHomework = (cls: any) => {
         navigate(`/teacher/assignments/new?classId=${cls.id}`);
     };
@@ -186,10 +201,10 @@ const TeacherDashboard = () => {
 
     // ================= CONTENT MANAGEMENT HANDLERS =================
     const handleOpenContentManager = () => {
-        if (!assignments || assignments.length === 0) return showToast('Bạn chưa được phân công khóa học nào', 'warning');
+        if (!myAssignments || myAssignments.length === 0) return showToast('Bạn chưa được phân công khóa học nào', 'warning');
         setShowContentModal(true);
         setContentViewMode('courses');
-        setContentData(assignments);
+        setContentData(myAssignments);
     };
 
     const handleSelectContentCourse = async (course: any) => {
@@ -297,28 +312,64 @@ const TeacherDashboard = () => {
 
     return (
         <div className="teacher-dashboard-container">
-            {/* Premium Header */}
+            {/* High-End Header */}
             <motion.header
-                initial={{ y: -20, opacity: 0 }}
+                initial={{ y: -100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="teacher-header"
             >
                 <div className="teacher-title-area">
-                    <h1>🎓 Teacher Panel</h1>
-                    <span className="teacher-badge">Giảng viên: {profile?.full_name || user?.email}</span>
+                    <div className="teacher-logo-icon">🎓</div>
+                    <div>
+                        <h1>Teacher Panel</h1>
+                        <span className="teacher-badge">
+                            GV: {profile?.full_name || user?.email?.split('@')[0]}
+                        </span>
+                    </div>
                 </div>
-                <div className="teacher-actions">
-                    <button onClick={signOut} className="teacher-btn-secondary teacher-logout-btn">
-                        Đăng xuất
-                    </button>
-                    <Link to="/" className="teacher-btn-secondary">
-                        Về trang chủ
+                <div className="teacher-header-actions">
+                    <Link to="/" className="teacher-btn btn-secondary">
+                        <span>🏠</span>
+                        <span className="hidden-mobile">Về trang chủ</span>
                     </Link>
+                    <button onClick={signOut} className="teacher-btn btn-danger">
+                        <span>🚪</span>
+                        <span className="hidden-mobile">Đăng xuất</span>
+                    </button>
                 </div>
             </motion.header>
 
             <main className="teacher-main-content">
-                {/* Section 1: My Assignments */}
+                {/* Stats Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="teacher-stats-container"
+                >
+                    <div className="stat-card">
+                        <div className="stat-icon" style={{ color: 'var(--teacher-primary)' }}>🏫</div>
+                        <div className="stat-content">
+                            <h4>Lớp học</h4>
+                            <p>{classes.length}</p>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon" style={{ color: 'var(--teacher-secondary)' }}>👥</div>
+                        <div className="stat-content">
+                            <h4>Học sinh</h4>
+                            <p>{classes.reduce((acc, c) => acc + (c.student_count || 0), 0)}</p>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon" style={{ color: 'var(--teacher-accent)' }}>📝</div>
+                        <div className="stat-content">
+                            <h4>Bài tập</h4>
+                            <p>{assignmentsList.length + homeworkList.length}</p>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Section 1: My Courses */}
                 <motion.section
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -331,15 +382,25 @@ const TeacherDashboard = () => {
                         </h2>
                     </div>
 
-                    <div className="assignments-container">
-                        {assignments.length === 0 ? (
-                            <p className="text-red-500 font-medium p-4">Bạn chưa được phân công khóa học nào. Vui lòng liên hệ Admin.</p>
+                    <div className="flex flex-wrap gap-4">
+                        {myAssignments.length === 0 ? (
+                            <div className="no-data-card" style={{ width: '100%' }}>
+                                <div className="stat-icon" style={{ fontSize: '3rem' }}>🚫</div>
+                                <h3>Chưa có phân công</h3>
+                                <p>Bạn chưa được phân công khóa học nào. Vui lòng liên hệ Admin để nhận giáo trình.</p>
+                            </div>
                         ) : (
-                            assignments.map((a, idx) => (
+                            myAssignments.map((a, idx) => (
                                 <motion.div
                                     key={idx}
-                                    whileHover={{ scale: 1.05 }}
-                                    className="assignment-pill"
+                                    whileHover={{ scale: 1.05, y: -5 }}
+                                    className="teacher-badge"
+                                    style={{
+                                        padding: '1rem 2rem',
+                                        background: 'var(--teacher-glass)',
+                                        fontSize: '1.1rem',
+                                        border: '1px solid var(--teacher-primary)'
+                                    }}
                                 >
                                     {a.language === 'japanese' ? '🇯🇵' : '🇨🇳'} {a.title || a.level}
                                 </motion.div>
@@ -357,37 +418,31 @@ const TeacherDashboard = () => {
                 >
                     <div className="teacher-section-header">
                         <h2 className="teacher-section-title">
-                            <span>🏫</span> Lớp học đang đứng lớp
+                            <span>🏫</span> Lớp học đang phụ trách
                         </h2>
                         <button
                             onClick={() => setShowCreateModal(true)}
-                            className="btn-add"
-                            style={{
-                                padding: '0.75rem 1.5rem',
-                                background: 'var(--teacher-gradient)',
-                                color: 'white',
-                                borderRadius: '12px',
-                                border: 'none',
-                                fontWeight: '700',
-                                boxShadow: 'var(--teacher-shadow)'
-                            }}
+                            className="teacher-btn btn-primary"
                         >
-                            🏫 Thiết lập lớp học
+                            <span>➕</span> Tạo lớp học mới
                         </button>
                     </div>
 
-                    <div className="teacher-grid">
-                        {classes.length === 0 ? (
-                            <div className="col-span-full text-center py-20 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                <p className="text-slate-500 font-medium">Chưa có lớp học nào. Hãy tạo lớp mới để bắt đầu giảng dạy.</p>
-                            </div>
-                        ) : (
-                            classes.map((cls, idx) => (
+                    {classes.length === 0 ? (
+                        <div className="no-data-card">
+                            <div className="stat-icon" style={{ fontSize: '3rem' }}>🏫</div>
+                            <h3>Chưa có lớp học</h3>
+                            <p>Hãy tạo lớp mới để bắt đầu quản lý học sinh và giao bài tập.</p>
+                            <button onClick={() => setShowCreateModal(true)} className="teacher-btn btn-primary">Tạo lớp ngay</button>
+                        </div>
+                    ) : (
+                        <div className="teacher-grid">
+                            {classes.map((cls, idx) => (
                                 <motion.div
                                     key={cls.id}
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: idx * 0.05 }}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
                                     className="teacher-card"
                                 >
                                     <div className="teacher-card-header">
@@ -399,72 +454,168 @@ const TeacherDashboard = () => {
 
                                     <div className="teacher-card-info">
                                         <div className="info-item">
-                                            <span className="font-bold">Mã lớp:</span>
-                                            <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-teacher-primary select-all">
-                                                {cls.code}
-                                            </code>
+                                            <span>🔑</span>
+                                            <span>Mã lớp: <strong>{cls.code}</strong></span>
                                         </div>
                                         <div className="info-item">
-                                            <span>📅 Ngày tạo:</span>
-                                            <span>{new Date(cls.created_at).toLocaleDateString()}</span>
+                                            <span>📅</span>
+                                            <span>Tạo ngày: {new Date(cls.created_at).toLocaleDateString('vi-VN')}</span>
                                         </div>
                                     </div>
 
                                     <div className="teacher-card-actions">
-                                        <button
-                                            onClick={() => handleViewStudents(cls)}
-                                            className="teacher-btn-card btn-outline"
-                                        >
-                                            👥 Học sinh
+                                        <button onClick={() => handleViewStudents(cls)} className="teacher-btn btn-secondary">
+                                            <span>👥</span> Học sinh
                                         </button>
-                                        <button
-                                            onClick={() => handleOpenHomework(cls)}
-                                            className="teacher-btn-card btn-primary"
-                                        >
-                                            📝 Giao bài
+                                        <button onClick={() => handleOpenHomework(cls)} className="teacher-btn btn-primary">
+                                            <span>📝</span> Giao bài
+                                        </button>
+                                        <button onClick={() => handleDeleteClass(cls.id, cls.name)} className="teacher-btn btn-danger">
+                                            <span>🗑️</span> Xóa
                                         </button>
                                     </div>
                                 </motion.div>
-                            ))
-                        )}
+                            ))}
+                        </div>
+                    )}
+                </motion.section>
+
+                {/* Section 3: Homework & Media */}
+                <motion.section
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="teacher-section"
+                >
+                    <div className="teacher-section-header">
+                        <h2 className="teacher-section-title">
+                            <span>⚡</span> Quản lý Hoạt động
+                        </h2>
+                        <Link to="/teacher/assignments/new" className="teacher-btn btn-primary">
+                            <span>🎥</span> Tạo bài tập Media
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        {/* Column: Fast Homework */}
+                        <div className="space-y-6">
+                            <h3 className="text-xl font-bold flex items-center gap-3">
+                                <span>📝</span> Bài tập nhanh
+                            </h3>
+                            {homeworkList.length === 0 ? (
+                                <div className="no-data-card" style={{ padding: '2rem' }}>
+                                    <p>Chưa có bài tập nhanh nào được giao.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {homeworkList.map((hw) => (
+                                        <motion.div
+                                            key={hw.id}
+                                            whileHover={{ x: 10 }}
+                                            className="teacher-grid-item-compact"
+                                        >
+                                            <div className="teacher-item-main">
+                                                <div className="teacher-item-title">{hw.title}</div>
+                                                <div className="teacher-item-meta">
+                                                    Lớp: {hw.classes?.name} • Hạn: {hw.due_date ? new Date(hw.due_date).toLocaleDateString('vi-VN') : 'Không hạn'}
+                                                </div>
+                                            </div>
+                                            <div className="teacher-item-actions">
+                                                <Link to={`/assignments/${hw.id}`} className="teacher-btn-icon" title="Chi tiết">👁️</Link>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Column: Media Assignments */}
+                        <div className="space-y-6">
+                            <h3 className="text-xl font-bold flex items-center gap-3">
+                                <span>🎥</span> Bài tập Media
+                            </h3>
+                            {assignmentsList.length === 0 ? (
+                                <div className="no-data-card" style={{ padding: '2rem' }}>
+                                    <p>Chưa có bài tập Media nào được tạo.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {assignmentsList.map((asg) => (
+                                        <motion.div
+                                            key={asg.id}
+                                            whileHover={{ x: 10 }}
+                                            className="teacher-grid-item-compact"
+                                        >
+                                            <div className="teacher-item-main">
+                                                <div className="teacher-item-title">{asg.title}</div>
+                                                <div className="teacher-item-meta">
+                                                    {asg.questions?.length || 0} câu hỏi • {new Date(asg.created_at).toLocaleDateString('vi-VN')}
+                                                </div>
+                                            </div>
+                                            <div className="teacher-item-actions">
+                                                <button onClick={() => navigate(`/teacher/assignments/edit/${asg.id}`)} className="teacher-btn-icon">✏️</button>
+                                                <button onClick={() => navigate(`/teacher/submissions/${asg.id}`)} className="teacher-btn-icon" style={{ color: 'var(--teacher-primary)' }}>👥</button>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (confirm('Xóa bài tập này?')) {
+                                                            await deleteAssignment(asg.id);
+                                                            loadData();
+                                                        }
+                                                    }}
+                                                    className="teacher-btn-icon"
+                                                    style={{ color: 'var(--teacher-accent)' }}
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </motion.section>
 
-                {/* Section 3: Content Manager Shortcut */}
-                {assignments.length > 0 && (
+                {/* Section 4: Content Manager Hero */}
+                {myAssignments.length > 0 && (
                     <motion.section
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
                         className="teacher-section"
                     >
-                        <div className="teacher-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--teacher-gradient)', color: 'white' }}>
-                            <h2 className="text-2xl font-bold flex items-center gap-3">
-                                <span>✏️</span> Trình Quản Lý Nội Dung Giáo Trình
-                            </h2>
-                            <p className="opacity-90 leading-relaxed">
-                                Bạn có quyền chỉnh sửa từ vựng, kanji, ngữ pháp và các bài tập cho các khóa học được phân công.
-                                Hệ thống sẽ tự động cập nhật nội dung cho toàn bộ học sinh trong khóa.
+                        <div className="teacher-card" style={{
+                            background: 'var(--teacher-gradient)',
+                            color: 'white',
+                            padding: '4rem',
+                            textAlign: 'center',
+                            alignItems: 'center'
+                        }}>
+                            <div className="stat-icon" style={{ fontSize: '4rem', background: 'rgba(255,255,255,0.2)', marginBottom: '1.5rem' }}>🛠️</div>
+                            <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Xây dựng Nội dung Giáo trình</h2>
+                            <p style={{ fontSize: '1.2rem', opacity: 0.9, maxWidth: '700px', marginBottom: '2.5rem' }}>
+                                Bạn có quyền hạn cao cấp để tùy chỉnh từ vựng, ngữ pháp và bài tập cho các khóa học mình phụ trách.
+                                Hãy tạo nên những bài học chất lượng nhất cho học sinh của bạn.
                             </p>
                             <button
                                 onClick={handleOpenContentManager}
-                                className="teacher-btn-secondary"
-                                style={{ background: 'white', color: 'var(--teacher-primary)', alignSelf: 'flex-start', border: 'none' }}
+                                className="teacher-btn"
+                                style={{ background: 'white', color: 'var(--teacher-surface)', fontSize: '1.2rem', padding: '1.2rem 3rem' }}
                             >
-                                Truy cập ngay &rarr;
+                                Bắt đầu chỉnh sửa ngay ✨
                             </button>
                         </div>
                     </motion.section>
                 )}
             </main>
 
-            {/* Float Action Button */}
+            {/* Premium Float Action Button */}
             <motion.button
                 whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setShowCreateModal(true)}
                 className="btn-float-add"
-                title="Tạo lớp mới"
+                style={{ border: 'none' }}
             >
                 +
             </motion.button>
@@ -509,7 +660,7 @@ const TeacherDashboard = () => {
                                             className="search-input"
                                             style={{ width: '100%', border: '2px solid var(--border-color)', appearance: 'none' }}
                                         >
-                                            {assignments.map(a => (
+                                            {myAssignments.map(a => (
                                                 <option key={a.assignment_id || a.level} value={a.level}>
                                                     {a.title || a.level} ({a.language === 'japanese' ? 'JP' : 'CN'})
                                                 </option>
@@ -696,7 +847,7 @@ const TeacherDashboard = () => {
 
                                 {contentViewMode === 'lessons' && (
                                     <div className="p-8">
-                                        <button onClick={() => { setContentViewMode('courses'); setContentData(assignments); }} className="content-back-btn mb-6">
+                                        <button onClick={() => { setContentViewMode('courses'); setContentData(myAssignments); }} className="content-back-btn mb-6">
                                             &larr; Trở lại danh sách khoá
                                         </button>
                                         <div className="admin-table-container">
@@ -815,7 +966,7 @@ const TeacherDashboard = () => {
                     <AdminForm
                         type={activeContentTab}
                         item={editingContentItem}
-                        courses={assignments}
+                        courses={myAssignments}
                         lessons={[]}
                         currentLanguage={selectedContentCourse?.language}
                         currentCourse={selectedContentCourse}

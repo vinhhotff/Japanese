@@ -78,43 +78,61 @@ const ClassDetail: React.FC = () => {
                 });
             }
 
-            // 5. Get Assignments
-            let assignmentsData = [];
+            // 5. Get Tasks (Homework & Assignments)
             const lessonIds = lessonsData.data?.filter((l: any) => l.id).map((l: any) => l.id) || [];
 
-            let assignmentsQuery = supabase
-                .from('assignments')
-                .select(`
-                    *,
-                    lesson:lessons(*, course:courses(*))
-                `)
-                .eq('is_published', true)
-                .order('due_date', { ascending: true });
-
-            if (lessonIds.length > 0) {
-                assignmentsQuery = assignmentsQuery.or(`class_id.eq.${classId},lesson_id.in.(${lessonIds.join(',')})`);
-            } else {
-                assignmentsQuery = assignmentsQuery.eq('class_id', classId);
-            }
-
-            const { data: assignmentsRes } = await assignmentsQuery;
-            assignmentsData = assignmentsRes || [];
-
-            // 6. Get submission statuses
-            let submissionsMap: Record<string, any> = {};
-            if (user && !isTeacher && assignmentsData) {
-                const { data: mySubs } = await supabase
-                    .from('assignment_submissions')
+            const [homeworkRes, assignmentsRes] = await Promise.all([
+                // Simple homework (linked to class)
+                supabase
+                    .from('homework')
                     .select('*')
-                    .eq('user_id', user.id)
-                    .in('assignment_id', assignmentsData.map(a => a.id));
+                    .eq('class_id', classId)
+                    .order('due_date', { ascending: true }),
 
-                mySubs?.forEach(sub => {
-                    submissionsMap[sub.assignment_id] = sub;
-                });
+                // Media assignments (linked to class or lesson)
+                (async () => {
+                    let assignmentsQuery = supabase
+                        .from('assignments')
+                        .select(`
+                            *,
+                            lesson:lessons(*, course:courses(*))
+                        `)
+                        .eq('is_published', true);
+
+                    if (lessonIds.length > 0) {
+                        assignmentsQuery = assignmentsQuery.or(`class_id.eq.${classId},lesson_id.in.(${lessonIds.join(',')})`);
+                    } else {
+                        assignmentsQuery = assignmentsQuery.eq('class_id', classId);
+                    }
+                    return await assignmentsQuery.order('due_date', { ascending: true });
+                })()
+            ]);
+
+            const combinedTasks = [
+                ...(homeworkRes.data || []).map(h => ({ ...h, source: 'homework' })),
+                ...(assignmentsRes.data || []).map(a => ({ ...a, source: 'assignment' }))
+            ].sort((a, b) => {
+                const dateA = new Date(a.due_date || a.created_at).getTime();
+                const dateB = new Date(b.due_date || b.created_at).getTime();
+                return dateA - dateB;
+            });
+
+            // 6. Get submission statuses for both
+            let submissionsMap: Record<string, any> = {};
+            if (user && !isTeacher && combinedTasks.length > 0) {
+                const assignmentIds = combinedTasks.filter(t => t.source === 'assignment').map(t => t.id);
+                const homeworkIds = combinedTasks.filter(t => t.source === 'homework').map(t => t.id);
+
+                const [assignSubs, hwSubs] = await Promise.all([
+                    assignmentIds.length > 0 ? supabase.from('assignment_submissions').select('*').eq('user_id', user.id).in('assignment_id', assignmentIds) : { data: [] },
+                    homeworkIds.length > 0 ? supabase.from('homework_submissions').select('*').eq('student_id', user.id).in('homework_id', homeworkIds) : { data: [] }
+                ]);
+
+                assignSubs.data?.forEach(sub => { submissionsMap[sub.assignment_id] = sub; });
+                hwSubs.data?.forEach(sub => { submissionsMap[sub.homework_id] = sub; });
             }
 
-            setAssignments(assignmentsData || []);
+            setAssignments(combinedTasks);
             setSubmissions(submissionsMap);
             setMaterialsByCourse(lessonsByCourse);
             setCourseInfo(cls.course);
@@ -250,20 +268,45 @@ const ClassDetail: React.FC = () => {
                         {assignments.map((assignment, idx) => {
                             const submission = submissions[assignment.id];
                             const isSubmitted = !!submission;
+                            const isMedia = assignment.source === 'assignment';
+
                             return (
                                 <div
-                                    key={assignment.id}
-                                    className="material-card assignment-card clickable"
-                                    onClick={() => navigate(`/assignments/${assignment.id}`)}
+                                    key={`${assignment.source}-${assignment.id}`}
+                                    className={`material-card clickable ${isMedia ? 'assignment-card-premium' : 'homework-card-simple'}`}
+                                    onClick={() => navigate(isMedia ? `/assignments/${assignment.id}` : `/homework/${assignment.id}`)}
                                 >
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="material-type">Hạn: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'N/A'}</div>
-                                        {isSubmitted && <span className="status-badge submitted">Đã nộp</span>}
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="material-type-badge">
+                                            {isMedia ? '🎥 Bài tập Media' : '📝 Bài tập về nhà'}
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2">
+                                            {assignment.due_date && (
+                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                    Hạn: {new Date(assignment.due_date).toLocaleDateString()}
+                                                </div>
+                                            )}
+                                            {isSubmitted && (
+                                                <span className={`status-pill ${submission.status || 'submitted'}`}>
+                                                    {submission.status === 'graded' ? `⭐ ${submission.grade || submission.score}/10` : '✓ Đã nộp'}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <h3 className="material-title">{assignment.title}</h3>
-                                    <p className="material-preview">{assignment.description}</p>
-                                    <div className="mt-4 pt-4 border-t flex justify-end">
-                                        <span className="text-primary font-bold">Làm bài ngay →</span>
+                                    <h3 className="material-title-premium">{assignment.title}</h3>
+                                    <p className="material-preview-text">{assignment.description}</p>
+
+                                    <div className="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center">
+                                        <div className="task-meta-small">
+                                            {isMedia ? (
+                                                <span className="text-[10px] font-black text-indigo-500 uppercase">Interactive</span>
+                                            ) : (
+                                                <span className="text-[10px] font-black text-amber-500 uppercase">Quick Task</span>
+                                            )}
+                                        </div>
+                                        <span className={`font-bold text-sm ${isMedia ? 'text-indigo-600' : 'text-amber-600'}`}>
+                                            {isSubmitted ? 'Xem lại bài làm' : 'Bắt đầu làm bài'} →
+                                        </span>
                                     </div>
                                 </div>
                             );

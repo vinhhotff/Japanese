@@ -19,7 +19,9 @@ import KanjiWritingPractice from './components/KanjiWritingPractice';
 import SpacedRepetition from './components/SpacedRepetition';
 import Login from './components/Login';
 import Register from './components/Register';
-import TeacherDashboard from './components/dashboards/TeacherDashboard';
+import TeacherDashboard from './components/TeacherDashboard';
+import SubmissionList from './components/SubmissionList';
+import GradingPage from './components/GradingPage';
 import AdminPanel from './components/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -183,6 +185,16 @@ function App() {
                   <Route path="/teacher/assignments/edit/:assignmentId" element={
                     <ProtectedRoute requireTeacher>
                       <AssignmentForm />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/teacher/submissions/:assignmentId" element={
+                    <ProtectedRoute requireTeacher>
+                      <SubmissionList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/teacher/grading/:submissionId" element={
+                    <ProtectedRoute requireTeacher>
+                      <GradingPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/grading/:submissionId" element={<GradingInterface />} />

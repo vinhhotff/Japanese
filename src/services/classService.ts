@@ -181,21 +181,43 @@ export const deleteClass = async (classId: string): Promise<void> => {
     .from('enrollments')
     .delete()
     .eq('class_id', classId);
-  if (enrollError) throw enrollError;
+  if (enrollError) throw new Error(`Không thể xóa đăng ký: ${enrollError.message}`);
 
-  // 2. Remove all homework for this class
+  // 2. Remove all homework submissions first (FK constraint)
+  const { data: homeworkList } = await supabase
+    .from('homework')
+    .select('id')
+    .eq('class_id', classId);
+
+  if (homeworkList && homeworkList.length > 0) {
+    const homeworkIds = homeworkList.map(h => h.id);
+    const { error: subError } = await supabase
+      .from('homework_submissions')
+      .delete()
+      .in('homework_id', homeworkIds);
+    if (subError) throw new Error(`Không thể xóa bài nộp: ${subError.message}`);
+  }
+
+  // 3. Remove all homework for this class
   const { error: homeworkError } = await supabase
     .from('homework')
     .delete()
     .eq('class_id', classId);
-  if (homeworkError) throw homeworkError;
+  if (homeworkError) throw new Error(`Không thể xóa bài tập: ${homeworkError.message}`);
 
-  // 3. Delete the class
-  const { error } = await supabase
+  // 4. Delete the class and verify deletion
+  const { data: deletedClass, error } = await supabase
     .from('classes')
     .delete()
-    .eq('id', classId);
-  if (error) throw error;
+    .eq('id', classId)
+    .select();
+
+  if (error) throw new Error(`Không thể xóa lớp: ${error.message}`);
+
+  // Check if any row was actually deleted
+  if (!deletedClass || deletedClass.length === 0) {
+    throw new Error('Không thể xóa lớp. Bạn có thể không có quyền xóa lớp này hoặc lớp không tồn tại.');
+  }
 };
 
 // Leave class (student)

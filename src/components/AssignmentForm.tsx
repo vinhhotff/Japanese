@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     createAssignment,
@@ -9,8 +9,9 @@ import {
 } from '../services/assignmentService';
 import { uploadFile, getFileType, validateFileSize } from '../utils/fileUpload';
 import { useToast } from './Toast';
-import { useAuth } from '../contexts/AuthContext'; // Added
+import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../config/supabase';
 import '../styles/assignment-form.css';
 
 type FormTab = 'general' | 'media' | 'questions' | 'settings';
@@ -67,16 +68,47 @@ const AssignmentForm: React.FC = () => {
     const [isPublished, setIsPublished] = useState(true);
     const [allowFileUpload, setAllowFileUpload] = useState(false);
 
+    // Class & Lesson Context
+    const [classId, setClassId] = useState<string | null>(null);
+    const [lessonId, setLessonId] = useState<string | null>(null);
+    const [classList, setClassList] = useState<any[]>([]);
+    const [lessonList, setLessonList] = useState<any[]>([]);
+
     // Questions
     const [questions, setQuestions] = useState<Question[]>([]);
 
+    // Refs for file inputs
+    const audioInputRef = useRef<HTMLInputElement>(null);
+    const videoInputRef = useRef<HTMLInputElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const qAudioRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
+    const qImageRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
+
     useEffect(() => {
+        const queryParams = new URLSearchParams(window.location.search);
+        const cid = queryParams.get('classId');
+        const lid = queryParams.get('lessonId');
+        if (cid) setClassId(cid);
+        if (lid) setLessonId(lid);
+
         if (assignmentId) {
             loadAssignment();
         } else {
             addQuestion();
         }
+        loadSelectors();
     }, [assignmentId]);
+
+    const loadSelectors = async () => {
+        try {
+            const { data: classesData } = await supabase.from('classes').select('id, name');
+            const { data: lessonsData } = await supabase.from('lessons').select('id, title, lesson_number').order('lesson_number');
+            setClassList(classesData || []);
+            setLessonList(lessonsData || []);
+        } catch (error) {
+            console.error('Error loading selectors:', error);
+        }
+    };
 
     const loadAssignment = async () => {
         try {
@@ -102,6 +134,8 @@ const AssignmentForm: React.FC = () => {
             setDurationMinutes(data.duration_minutes || 0);
             setIsPublished(data.is_published ?? true);
             setAllowFileUpload(data.allow_file_upload || false);
+            setClassId(data.class_id || null);
+            setLessonId(data.lesson_id || null);
 
             setQuestions(data.questions || []);
         } catch (error: any) {
@@ -171,7 +205,11 @@ const AssignmentForm: React.FC = () => {
         try {
             setSaving(true);
             const fileType = getFileType(file);
-            const bucket = fileType === 'image' ? 'images' : fileType === 'audio' ? 'audio-files' : 'documents';
+            let bucket = 'documents';
+            if (fileType === 'image') bucket = 'images';
+            else if (fileType === 'audio') bucket = 'audio-files';
+            else if (fileType === 'video') bucket = 'videos';
+
             const { url, error } = await uploadFile(file, bucket, 'assignments');
 
             if (error) throw new Error(error);
@@ -205,6 +243,11 @@ const AssignmentForm: React.FC = () => {
 
         try {
             setSaving(true);
+            if (!user?.id) {
+                showToast('Bạn cần đăng nhập để tạo bài tập', 'error');
+                return;
+            }
+
             const data = {
                 title,
                 description,
@@ -225,7 +268,9 @@ const AssignmentForm: React.FC = () => {
                 is_published: isPublished,
                 allow_file_upload: allowFileUpload,
                 questions: questions,
-                created_by: user?.id // Added
+                created_by: user.id,
+                class_id: classId,
+                lesson_id: lessonId
             };
 
             if (assignmentId) {
@@ -250,32 +295,52 @@ const AssignmentForm: React.FC = () => {
 
     return (
         <div className="assignment-form-container">
-            <header className="form-header-premium">
+            {/* High-End Header */}
+            <motion.header
+                initial={{ y: -50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="form-header-premium"
+            >
                 <div>
-                    <h1 className="text-4xl font-black">{assignmentId ? 'Hiệu chỉnh bài tập' : 'Thiết kế bài tập mới'}</h1>
-                    <p className="text-slate-500 font-bold mt-2">Cấu hình chi tiết học liệu và đánh giá</p>
+                    <h1 className="text-4xl font-black">
+                        {assignmentId ? 'Hiệu chỉnh Bài tập' : 'Thiết lập Bài tập mới'}
+                    </h1>
+                    <p className="text-slate-500 font-bold mt-2 flex items-center gap-2">
+                        <span>🛠️</span> Curriculum Architect / {category}
+                    </p>
                 </div>
-                <button onClick={() => navigate(-1)} className="back-link-small">Quay lại</button>
-            </header>
+                <button onClick={() => navigate(-1)} className="back-link-small">
+                    &larr; Trở lại
+                </button>
+            </motion.header>
 
-            <nav className="form-tabs-nav">
-                {(['general', 'media', 'questions', 'settings'] as FormTab[]).map(tab => (
+            {/* Premium Tab Navigation */}
+            <motion.nav
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="form-tabs-nav"
+            >
+                {(['general', 'media', 'questions', 'settings'] as FormTab[]).map((tab, idx) => (
                     <button
                         key={tab}
                         className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
                         onClick={() => setActiveTab(tab)}
                     >
-                        {tab === 'general' && '📑 Cơ bản'}
-                        {tab === 'media' && '🎬 Học liệu'}
-                        {tab === 'questions' && '❓ Câu hỏi'}
-                        {tab === 'settings' && '⚙️ Thiết lập'}
+                        {tab === 'general' && <span>📑 Cơ bản</span>}
+                        {tab === 'media' && <span>🎬 Học liệu</span>}
+                        {tab === 'questions' && <span>❓ Câu hỏi</span>}
+                        {tab === 'settings' && <span>⚙️ Quy tắc</span>}
                     </button>
                 ))}
-            </nav>
+            </motion.nav>
 
             <motion.div
                 layout
                 className="form-card-premium"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
             >
                 <AnimatePresence mode="wait">
                     {activeTab === 'general' && (
@@ -293,50 +358,87 @@ const AssignmentForm: React.FC = () => {
                             <div className="fields-grid-premium">
                                 <div className="field-group-premium" style={{ gridColumn: 'span 2' }}>
                                     <label>Tiêu đề bài tập</label>
-                                    <input type="text" className="input-premium" value={title} onChange={e => setTitle(e.target.value)} placeholder="VD: Kiểm tra từ vựng N5 - Bài 1" />
+                                    <input
+                                        type="text"
+                                        className="input-premium"
+                                        value={title}
+                                        onChange={e => setTitle(e.target.value)}
+                                        placeholder="VD: Kiểm tra từ vựng N5 - Bài 1"
+                                    />
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Danh mục</label>
+                                    <label>Danh mục bài tập</label>
                                     <select className="select-premium" value={category} onChange={e => setCategory(e.target.value)}>
-                                        <option value="exercise">Bài tập (Exercise)</option>
-                                        <option value="quiz">Trắc nghiệm (Quiz)</option>
-                                        <option value="exam">Kiểm tra (Exam)</option>
-                                        <option value="homework">BTVN (Homework)</option>
+                                        <option value="exercise">Bài tập luyện tập</option>
+                                        <option value="quiz">Trắc nghiệm nhanh</option>
+                                        <option value="exam">Bài thi định kỳ</option>
+                                        <option value="homework">Bài tập về nhà</option>
                                     </select>
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Loại nội dung</label>
+                                    <label>Lĩnh vực kiến thức</label>
                                     <select className="select-premium" value={assignmentType} onChange={e => setAssignmentType(e.target.value as any)}>
-                                        <option value="vocabulary">Từ vựng</option>
-                                        <option value="grammar">Ngữ pháp</option>
-                                        <option value="kanji">Hán tự</option>
-                                        <option value="listening">Nghe hiểu</option>
-                                        <option value="reading">Đọc hiểu</option>
-                                        <option value="mixed">Tổng hợp</option>
+                                        <option value="vocabulary">Từ vựng (Vocabulary)</option>
+                                        <option value="grammar">Ngữ pháp (Grammar)</option>
+                                        <option value="kanji">Hán tự (Kanji)</option>
+                                        <option value="listening">Nghe hiểu (Listening)</option>
+                                        <option value="reading">Đọc hiểu (Reading)</option>
+                                        <option value="mixed">Tổng hợp (General)</option>
                                     </select>
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Ngôn ngữ</label>
+                                    <label>Hệ ngôn ngữ</label>
                                     <select className="select-premium" value={language} onChange={e => setLanguage(e.target.value as any)}>
-                                        <option value="japanese">Tiếng Nhật (JLPT)</option>
-                                        <option value="chinese">Tiếng Trung (HSK)</option>
+                                        <option value="japanese">Tiếng Nhật (JLPT System)</option>
+                                        <option value="chinese">Tiếng Trung (HSK System)</option>
                                     </select>
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Cấp độ & Độ khó</label>
-                                    <div className="flex gap-2">
-                                        <input type="text" className="input-premium w-24" value={level} onChange={e => setLevel(e.target.value)} placeholder="N5" />
+                                    <label>Độ khó & Trình độ</label>
+                                    <div className="flex gap-3">
+                                        <input
+                                            type="text"
+                                            className="input-premium"
+                                            style={{ width: '100px' }}
+                                            value={level}
+                                            onChange={e => setLevel(e.target.value)}
+                                            placeholder="N5"
+                                        />
                                         <select className="select-premium flex-1" value={difficulty} onChange={e => setDifficulty(e.target.value as any)}>
-                                            <option value="easy">Dễ</option>
-                                            <option value="medium">Trung bình</option>
-                                            <option value="hard">Khó</option>
+                                            <option value="easy">Cơ bản (Easy)</option>
+                                            <option value="medium">Trung bình (Medium)</option>
+                                            <option value="hard">Nâng cao (Hard)</option>
                                         </select>
                                     </div>
                                 </div>
+                                <div className="field-group-premium">
+                                    <label>Gắn vào Lớp học (Tùy chọn)</label>
+                                    <select className="select-premium" value={classId || ''} onChange={e => setClassId(e.target.value || null)}>
+                                        <option value="">-- Không chọn lớp --</option>
+                                        {classList.map(cls => (
+                                            <option key={cls.id} value={cls.id}>{cls.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="field-group-premium">
+                                    <label>Gắn vào Bài học (Tùy chọn)</label>
+                                    <select className="select-premium" value={lessonId || ''} onChange={e => setLessonId(e.target.value || null)}>
+                                        <option value="">-- Không chọn bài học --</option>
+                                        {lessonList.map(lesson => (
+                                            <option key={lesson.id} value={lesson.id}>L{lesson.lesson_number}: {lesson.title}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
-                            <div className="field-group-premium mt-8">
-                                <label>Mô tả tổng quan</label>
-                                <textarea className="textarea-premium" value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Mô tả mục tiêu của bài tập này..." />
+                            <div className="field-group-premium mt-10">
+                                <label>Mô tả tổng quan cho học sinh</label>
+                                <textarea
+                                    className="textarea-premium"
+                                    value={description}
+                                    onChange={e => setDescription(e.target.value)}
+                                    rows={3}
+                                    placeholder="Nêu rõ mục tiêu của bài tập và những gì học sinh cần chuẩn bị..."
+                                />
                             </div>
                         </motion.div>
                     )}
@@ -353,44 +455,80 @@ const AssignmentForm: React.FC = () => {
                                 <span className="icon">🎬</span>
                                 <h2>Học liệu đính kèm</h2>
                             </div>
-                            <div className="field-group-premium mb-8">
-                                <label>Hướng dẫn chi tiết (Rich Content)</label>
-                                <textarea className="textarea-premium" value={instructions} onChange={e => setInstructions(e.target.value)} rows={6} placeholder="Nhập hướng dẫn làm bài, các quy tắc hoặc đoạn văn bản mẫu..." />
+                            <div className="field-group-premium mb-10">
+                                <label>Hướng dẫn chi tiết (Yêu cầu làm bài)</label>
+                                <textarea
+                                    className="textarea-premium"
+                                    value={instructions}
+                                    onChange={e => setInstructions(e.target.value)}
+                                    rows={5}
+                                    placeholder="Nhập đoạn văn bản mẫu, quy tắc làm bài, hoặc lời nhắn nhủ..."
+                                />
                             </div>
 
                             <div className="fields-grid-premium">
                                 <div className="field-group-premium">
-                                    <label>Audio Hướng dẫn (MP3/WAV)</label>
+                                    <label>Audio Bài học (MP3/WAV)</label>
                                     {!audioUrl ? (
-                                        <div className="media-zone-premium" onClick={() => document.getElementById('audio-up')?.click()}>
-                                            ➕ Tải Audio lên
-                                            <input type="file" id="audio-up" hidden accept="audio/*" onChange={e => handleFileUpload(e, 'assignment')} />
+                                        <div className="media-zone-premium" onClick={() => audioInputRef.current?.click()}>
+                                            <span style={{ fontSize: '3rem' }}>🎵</span>
+                                            <p className="font-bold underline">Click để tải audio lên</p>
+                                            <span className="text-xs opacity-60">Dung lượng tối đa 20MB</span>
+                                            <input type="file" ref={audioInputRef} hidden accept="audio/*" onChange={e => handleFileUpload(e, 'assignment')} />
                                         </div>
                                     ) : (
-                                        <div className="media-pill-premium">
-                                            <div className="info">🎵 Audio đã sẵn sàng</div>
-                                            <span className="media-remove-link" onClick={() => removeAssignmentMedia('audio')}>Xóa</span>
+                                        <div className="stat-card" style={{ padding: '1.5rem', background: 'var(--asgn-glass)' }}>
+                                            <div className="stat-icon" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>🎵</div>
+                                            <div className="stat-content">
+                                                <h4 className="text-xs uppercase mb-1">Audio File</h4>
+                                                <button onClick={() => removeAssignmentMedia('audio')} className="text-xs text-red-400 font-bold hover:underline">Xóa tệp này</button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Video Minh họa (Link/File)</label>
-                                    <input type="text" className="input-premium" value={videoUrl || ''} onChange={e => setVideoUrl(e.target.value)} placeholder="Link YouTube hoặc URL Video" />
+                                    <label>Video Minh họa (Youtube/Upload)</label>
+                                    <input
+                                        type="text"
+                                        className="input-premium mb-4"
+                                        value={videoUrl || ''}
+                                        onChange={e => setVideoUrl(e.target.value)}
+                                        placeholder="Dán link Youtube tại đây..."
+                                    />
+                                    {!videoUrl ? (
+                                        <div className="media-zone-premium" style={{ padding: '2rem' }} onClick={() => videoInputRef.current?.click()}>
+                                            <span>📹</span> Tải video trực tiếp (Max 20MB)
+                                            <input type="file" ref={videoInputRef} hidden accept="video/*" onChange={e => handleFileUpload(e, 'assignment')} />
+                                        </div>
+                                    ) : !videoUrl.includes('youtube') && (
+                                        <div className="stat-card" style={{ padding: '1.5rem', background: 'var(--asgn-glass)' }}>
+                                            <div className="stat-icon" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>📹</div>
+                                            <div className="stat-content">
+                                                <h4 className="text-xs uppercase mb-1">Video Direct Link</h4>
+                                                <button onClick={() => removeAssignmentMedia('video')} className="text-xs text-red-500 font-bold">Gỡ bỏ video</button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="field-group-premium mt-8">
-                                <label>Hình ảnh tham chiếu (Gallery)</label>
-                                <div className="media-zone-premium" onClick={() => document.getElementById('img-up')?.click()}>
-                                    ➕ Thêm hình ảnh mới
-                                    <input type="file" id="img-up" hidden accept="image/*" onChange={e => handleFileUpload(e, 'assignment')} />
-                                </div>
+                            <div className="field-group-premium mt-12">
+                                <label>Bộ sưu tập hình ảnh (Gallery View)</label>
                                 <div className="media-gallery-premium">
+                                    <div className="media-zone-premium" style={{ height: '150px', padding: '1rem' }} onClick={() => imageInputRef.current?.click()}>
+                                        <span style={{ fontSize: '2rem' }}>➕</span>
+                                        <input type="file" ref={imageInputRef} hidden accept="image/*" onChange={e => handleFileUpload(e, 'assignment')} />
+                                    </div>
                                     {attachmentUrls.map((url, i) => (
-                                        <div key={i} className="media-item-premium">
-                                            <img src={url} alt="Reference" />
-                                            <button className="delete-media-btn" onClick={() => removeAssignmentMedia('image', i)}>×</button>
-                                        </div>
+                                        <motion.div
+                                            key={i}
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            className="media-item-premium"
+                                        >
+                                            <img src={url} alt="Ref" />
+                                            <button className="delete-media-btn" onClick={() => removeAssignmentMedia('image', i)}>&times;</button>
+                                        </motion.div>
                                     ))}
                                 </div>
                             </div>
@@ -405,149 +543,142 @@ const AssignmentForm: React.FC = () => {
                             exit={{ opacity: 0, x: 20 }}
                             className="form-section-premium"
                         >
-                            <div className="flex justify-between items-center mb-8">
+                            <div className="flex justify-between items-center mb-10">
                                 <div className="section-label mb-0">
                                     <span className="icon">❓</span>
-                                    <h2>Cấu trúc câu hỏi</h2>
+                                    <h2>Cấu trúc câu hỏi ({questions.length})</h2>
                                 </div>
-                                <button onClick={addQuestion} className="btn btn-primary">+ Thêm câu hỏi</button>
+                                <button onClick={addQuestion} className="teacher-btn btn-primary" style={{ padding: '0.6rem 1.5rem', width: 'auto' }}>
+                                    + Thêm câu hỏi mới
+                                </button>
                             </div>
 
-                            {questions.map((q, idx) => (
-                                <div key={idx} className="question-item-premium">
-                                    <div className="question-top-bar">
-                                        <div className="flex items-center gap-4">
-                                            <span className="q-number-premium">{q.question_number}</span>
-                                            <select
-                                                className="select-premium py-1"
-                                                value={q.question_type}
-                                                onChange={e => updateQuestion(idx, { question_type: e.target.value as any })}
+                            <div className="space-y-8">
+                                {questions.map((q, idx) => (
+                                    <motion.div
+                                        key={idx}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        className="question-item-premium"
+                                    >
+                                        <div className="question-top-bar">
+                                            <div className="flex items-center gap-5">
+                                                <span className="q-number-premium">{q.question_number}</span>
+                                                <select
+                                                    className="select-premium py-2"
+                                                    style={{ width: '220px', background: 'var(--asgn-glass)' }}
+                                                    value={q.question_type}
+                                                    onChange={e => updateQuestion(idx, { question_type: e.target.value as any })}
+                                                >
+                                                    <option value="multiple_choice">Trắc nghiệm MC</option>
+                                                    <option value="short_answer">Trả lời ngắn</option>
+                                                    <option value="essay">Tự luận / Dịch thuật</option>
+                                                    <option value="audio_response">Giao tiếp / Ghi âm</option>
+                                                </select>
+                                            </div>
+                                            <button
+                                                className="teacher-btn btn-danger"
+                                                style={{ padding: '0.4rem 1.2rem', width: 'auto', fontSize: '0.8rem' }}
+                                                onClick={() => removeQuestion(idx)}
                                             >
-                                                <option value="multiple_choice">Trắc nghiệm</option>
-                                                <option value="short_answer">Trả lời ngắn</option>
-                                                <option value="essay">Tự luận/Dịch</option>
-                                                <option value="audio_response">Ghi âm</option>
-                                            </select>
-                                        </div>
-                                        <button
-                                            className="delete-question-btn"
-                                            onClick={() => removeQuestion(idx)}
-                                            title="Xóa câu hỏi này"
-                                        >
-                                            🗑️ Xóa câu hỏi
-                                        </button>
-                                    </div>
-
-                                    <div className="field-group-premium mb-6">
-                                        <label>Nội dung câu hỏi</label>
-                                        <textarea
-                                            className="textarea-premium"
-                                            value={q.question_text}
-                                            onChange={e => updateQuestion(idx, { question_text: e.target.value })}
-                                            rows={2}
-                                            placeholder="Nhập nội dung câu hỏi hoặc yêu cầu..."
-                                        />
-                                    </div>
-
-                                    {/* Question Media Gallery */}
-                                    <div className="field-group-premium mb-8">
-                                        <label>Học liệu cho câu hỏi (Hình ảnh / Audio)</label>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="media-zone-premium flex items-center justify-center p-4 min-h-[80px]" onClick={() => document.getElementById(`q-img-up-${idx}`)?.click()}>
-                                                🖼️ Ảnh
-                                                <input type="file" id={`q-img-up-${idx}`} hidden accept="image/*" onChange={e => handleFileUpload(e, 'question', idx)} />
-                                            </div>
-                                            <div className="media-zone-premium flex items-center justify-center p-4 min-h-[80px]" onClick={() => document.getElementById(`q-audio-up-${idx}`)?.click()}>
-                                                🎵 Audio
-                                                <input type="file" id={`q-audio-up-${idx}`} hidden accept="audio/*" onChange={e => handleFileUpload(e, 'question', idx)} />
-                                            </div>
+                                                🗑️ Gỡ bỏ
+                                            </button>
                                         </div>
 
-                                        <div className="flex flex-col gap-4 mt-4">
-                                            {/* Question Video URL */}
+                                        <div className="field-group-premium mb-8">
+                                            <label>Yêu cầu câu hỏi</label>
+                                            <textarea
+                                                className="textarea-premium"
+                                                value={q.question_text}
+                                                onChange={e => updateQuestion(idx, { question_text: e.target.value })}
+                                                rows={2}
+                                                placeholder="VD: Chọn đáp án đúng nhất hoặc dịch câu sau..."
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                             <div className="field-group-premium">
-                                                <label className="text-[10px]">Video URL (YouTube/Link)</label>
-                                                <input
-                                                    type="text"
-                                                    className="input-premium py-2 text-sm"
-                                                    value={q.video_url || ''}
-                                                    onChange={e => updateQuestion(idx, { video_url: e.target.value })}
-                                                    placeholder="Nhập link video cho câu hỏi này..."
-                                                />
-                                            </div>
-
-                                            {/* Audio Indicator */}
-                                            {q.audio_url && (
-                                                <div className="media-pill-premium">
-                                                    <div className="info">🎵 Audio câu hỏi đã sẵn sàng</div>
-                                                    <span className="media-remove-link" onClick={() => removeQuestionMedia(idx, 'audio')}>Xóa</span>
+                                                <label>Hình ảnh minh họa</label>
+                                                <div className="flex gap-4 overflow-x-auto py-2">
+                                                    <div className="media-zone-premium" style={{ width: '100px', height: '100px', padding: 0 }} onClick={() => qImageRefs.current[idx]?.click()}>
+                                                        🖼️
+                                                        <input type="file" ref={el => qImageRefs.current[idx] = el} hidden accept="image/*" onChange={e => handleFileUpload(e, 'question', idx)} />
+                                                    </div>
+                                                    {q.attachment_urls.map((url, iIdx) => (
+                                                        <div key={iIdx} className="media-item-premium" style={{ width: '100px', height: '100px' }}>
+                                                            <img src={url} alt="Q" />
+                                                            <button className="delete-media-btn" onClick={() => removeQuestionMedia(idx, 'image', iIdx)} style={{ width: '24px', height: '24px', fontSize: '1rem' }}>&times;</button>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            )}
+                                            </div>
+                                            <div className="field-group-premium">
+                                                <label>Audio câu hỏi</label>
+                                                {!q.audio_url ? (
+                                                    <div className="media-zone-premium" style={{ height: '100px', padding: 0 }} onClick={() => qAudioRefs.current[idx]?.click()}>
+                                                        🎵 Tải lên âm thanh câu hỏi
+                                                        <input type="file" ref={el => qAudioRefs.current[idx] = el} hidden accept="audio/*" onChange={e => handleFileUpload(e, 'question', idx)} />
+                                                    </div>
+                                                ) : (
+                                                    <div className="stat-card" style={{ padding: '1rem', background: 'var(--asgn-glass)', margin: 0 }}>
+                                                        <div className="stat-icon" style={{ width: '32px', height: '32px', fontSize: '1rem' }}>🎵</div>
+                                                        <div className="stat-content">
+                                                            <p className="text-[10px] uppercase font-black">Ready</p>
+                                                            <button onClick={() => removeQuestionMedia(idx, 'audio')} className="text-[10px] text-red-500 underline">Gỡ</button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        {/* Image Gallery for Question */}
-                                        {q.attachment_urls && q.attachment_urls.length > 0 && (
-                                            <div className="media-gallery-premium mt-4">
-                                                {q.attachment_urls.map((url, iIdx) => (
-                                                    <div key={iIdx} className="media-item-premium">
-                                                        <img src={url} alt={`Q ${idx + 1} reference`} />
-                                                        <button className="delete-media-btn" onClick={() => removeQuestionMedia(idx, 'image', iIdx)}>×</button>
+                                        {q.question_type === 'multiple_choice' && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                                {q.options.map((opt, oIdx) => (
+                                                    <div key={oIdx} className="field-group-premium">
+                                                        <label className="text-[10px]">Tùy chọn {oIdx + 1}</label>
+                                                        <div className="flex gap-2">
+                                                            <input
+                                                                type="text"
+                                                                className="input-premium py-2 text-sm"
+                                                                value={opt}
+                                                                onChange={e => {
+                                                                    const newOpts = [...q.options];
+                                                                    newOpts[oIdx] = e.target.value;
+                                                                    updateQuestion(idx, { options: newOpts });
+                                                                }}
+                                                                placeholder={`Phương án ${oIdx + 1}`}
+                                                            />
+                                                            <button
+                                                                className={`teacher-btn ${q.correct_answer === opt ? 'btn-primary' : 'btn-secondary'}`}
+                                                                style={{ padding: '0 1rem', width: 'auto', fontSize: '0.75rem' }}
+                                                                onClick={() => updateQuestion(idx, { correct_answer: opt })}
+                                                            >
+                                                                {q.correct_answer === opt ? '✓' : 'O'}
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
                                         )}
-                                    </div>
 
-                                    {q.question_type === 'multiple_choice' && (
-                                        <div className="fields-grid-premium mb-8">
-                                            {q.options.map((opt, oIdx) => (
-                                                <div key={oIdx} className="field-group-premium">
-                                                    <label>Lựa chọn {oIdx + 1} {opt === q.correct_answer && '✅'}</label>
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            type="text"
-                                                            className="input-premium flex-1"
-                                                            value={opt}
-                                                            onChange={e => {
-                                                                const newOpts = [...q.options];
-                                                                newOpts[oIdx] = e.target.value;
-                                                                updateQuestion(idx, { options: newOpts });
-                                                            }}
-                                                            placeholder={`Đáp án ${oIdx + 1}`}
-                                                        />
-                                                        <button
-                                                            className={`btn btn-sm ${q.correct_answer === opt ? 'btn-primary' : 'btn-outline'}`}
-                                                            onClick={() => updateQuestion(idx, { correct_answer: opt })}
-                                                            title="Đánh dấu là đáp án đúng"
-                                                        >
-                                                            {q.correct_answer === opt ? 'Đúng' : 'Chọn'}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div className="field-group-premium">
+                                                <label className="text-[10px]">Gợi ý (Hint)</label>
+                                                <input type="text" className="input-premium py-2 text-sm" value={q.hint || ''} onChange={e => updateQuestion(idx, { hint: e.target.value })} />
+                                            </div>
+                                            <div className="field-group-premium">
+                                                <label className="text-[10px]">Điểm</label>
+                                                <input type="number" className="input-premium py-2 text-sm" value={q.points} onChange={e => updateQuestion(idx, { points: Number(e.target.value) })} />
+                                            </div>
+                                            <div className="field-group-premium flex flex-row items-center gap-3 pt-6">
+                                                <input type="checkbox" className="w-5 h-5 accent-teal-500" checked={q.requires_file_upload} onChange={e => updateQuestion(idx, { requires_file_upload: e.target.checked })} />
+                                                <label className="mb-0 text-[10px]">Cần nộp tệp?</label>
+                                            </div>
                                         </div>
-                                    )}
-
-                                    <div className="fields-grid-premium">
-                                        <div className="field-group-premium">
-                                            <label>Gợi ý (Hint)</label>
-                                            <input type="text" className="input-premium" value={q.hint || ''} onChange={e => updateQuestion(idx, { hint: e.target.value })} placeholder="VD: Hãy chú ý trợ từ..." />
-                                        </div>
-                                        <div className="field-group-premium">
-                                            <label>Giải thích (Explanation)</label>
-                                            <input type="text" className="input-premium" value={q.explanation || ''} onChange={e => updateQuestion(idx, { explanation: e.target.value })} placeholder="Giải thích đáp án cho học sinh..." />
-                                        </div>
-                                        <div className="field-group-premium">
-                                            <label>Điểm số</label>
-                                            <input type="number" className="input-premium" value={q.points} onChange={e => updateQuestion(idx, { points: Number(e.target.value) })} />
-                                        </div>
-                                        <div className="field-group-premium flex flex-row items-center gap-4 pt-10">
-                                            <label className="mb-0">Cần nộp file?</label>
-                                            <input type="checkbox" className="w-6 h-6 accent-slate-800" checked={q.requires_file_upload} onChange={e => updateQuestion(idx, { requires_file_upload: e.target.checked })} />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                                    </motion.div>
+                                ))}
+                            </div>
                         </motion.div>
                     )}
 
@@ -561,37 +692,51 @@ const AssignmentForm: React.FC = () => {
                         >
                             <div className="section-label">
                                 <span className="icon">⚙️</span>
-                                <h2>Cấu hình & Quy tắc</h2>
+                                <h2>Cấu hình & Quy tắc công khai</h2>
                             </div>
                             <div className="fields-grid-premium">
                                 <div className="field-group-premium">
-                                    <label>Hạn chót nộp bài</label>
+                                    <label>Hạn chót hoàn thành</label>
                                     <input type="date" className="input-premium" value={dueDate} onChange={e => setDueDate(e.target.value)} />
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Thời gian làm bài (Phút)</label>
+                                    <label>Giới hạn thời gian (Phút)</label>
                                     <input type="number" className="input-premium" value={durationMinutes} onChange={e => setDurationMinutes(Number(e.target.value))} />
-                                    <span className="text-xs text-slate-400">0 = Không giới hạn thời gian</span>
+                                    <span className="text-xs opacity-50">Để 0 nếu không muốn giới hạn</span>
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Điểm tối đa</label>
+                                    <label>Tổng điểm tối đa</label>
                                     <input type="number" className="input-premium" value={maxScore} onChange={e => setMaxScore(Number(e.target.value))} />
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Điểm đạt (Passing)</label>
+                                    <label>Điểm vượt qua (Passing)</label>
                                     <input type="number" className="input-premium" value={passingScore} onChange={e => setPassingScore(Number(e.target.value))} />
                                 </div>
-                                <div className="field-group-premium">
-                                    <label>Số lần thử tối đa</label>
-                                    <input type="number" className="input-premium" value={allowedAttempts} onChange={e => setAllowedAttempts(Number(e.target.value))} />
+                            </div>
+                            <div className="flex gap-10 mt-12 bg-slate-900/50 p-10 rounded-[30px] border border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <input
+                                        type="checkbox"
+                                        className="w-8 h-8 accent-teal-500"
+                                        checked={isPublished}
+                                        onChange={e => setIsPublished(e.target.checked)}
+                                    />
+                                    <div>
+                                        <p className="font-bold">Công khai ngay lập tức</p>
+                                        <p className="text-xs opacity-60">Học sinh sẽ thấy bài tập này trong danh sách</p>
+                                    </div>
                                 </div>
-                                <div className="field-group-premium flex flex-row items-center gap-4 pt-8">
-                                    <label className="mb-0">Cho phép nộp file chung</label>
-                                    <input type="checkbox" checked={allowFileUpload} onChange={e => setAllowFileUpload(e.target.checked)} />
-                                </div>
-                                <div className="field-group-premium flex flex-row items-center gap-4 pt-8">
-                                    <label className="mb-0">Công khai bài tập</label>
-                                    <input type="checkbox" checked={isPublished} onChange={e => setIsPublished(e.target.checked)} />
+                                <div className="flex items-center gap-4">
+                                    <input
+                                        type="checkbox"
+                                        className="w-8 h-8 accent-teal-500"
+                                        checked={allowFileUpload}
+                                        onChange={e => setAllowFileUpload(e.target.checked)}
+                                    />
+                                    <div>
+                                        <p className="font-bold">Cho phép gửi tệp đính kèm</p>
+                                        <p className="text-xs opacity-60">Học sinh có thể tải lên tệp zip/pdf bổ sung</p>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
@@ -599,17 +744,25 @@ const AssignmentForm: React.FC = () => {
                 </AnimatePresence>
             </motion.div>
 
-            <div className="action-bar-premium">
-                <p className="text-slate-400 font-bold">Lưu ý: Mọi thay đổi sẽ được cập nhật ngay lập tức cho học sinh khi nhấn Lưu.</p>
+            {/* Premium Action Bar */}
+            <motion.div
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                className="action-bar-premium"
+            >
+                <div className="hidden-mobile">
+                    <p className="text-asgn-text font-bold">Xác nhận thiết lập Curriculum</p>
+                    <p className="text-asgn-text-muted text-xs">Mọi thay đổi sẽ ảnh hưởng đến tất cả học sinh đang theo học</p>
+                </div>
                 <button
-                    className="save-btn-premium disabled:opacity-50"
+                    className="save-btn-premium"
                     onClick={handleSave}
                     disabled={saving}
                 >
-                    {saving ? '📦 Đang xử lý...' : assignmentId ? 'Cập nhật thay đổi' : 'Tạo & Đăng bài tập'}
+                    {saving ? '📦 Đang đồng bộ hóa...' : assignmentId ? 'Cập nhật giáo trình' : '🚀 Phát hành bài tập'}
                 </button>
-            </div>
-        </div>
+            </motion.div >
+        </div >
     );
 };
 

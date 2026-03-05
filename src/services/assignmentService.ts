@@ -174,35 +174,70 @@ export const updateAssignment = async (id: string, updates: Partial<any>) => {
 };
 
 export const deleteAssignment = async (id: string) => {
-  // Xóa theo thứ tự để tránh lỗi FK (nếu DB không dùng CASCADE)
-  const { data: submissions } = await supabase
-    .from('assignment_submissions')
-    .select('id')
-    .eq('assignment_id', id);
-  const submissionIds = (submissions || []).map((s: any) => s.id);
+  try {
+    // Xóa theo thứ tự để tránh lỗi FK (nếu DB không dùng CASCADE)
+    // 1. Xóa assignment_answers trước
+    const { data: submissions } = await supabase
+      .from('assignment_submissions')
+      .select('id')
+      .eq('assignment_id', id);
 
-  if (submissionIds.length > 0) {
-    const { error: answersErr } = await supabase
-      .from('assignment_answers')
+    const submissionIds = (submissions || []).map((s: any) => s.id);
+
+    if (submissionIds.length > 0) {
+      const { error: answersErr } = await supabase
+        .from('assignment_answers')
+        .delete()
+        .in('submission_id', submissionIds);
+      if (answersErr) {
+        console.error('Error deleting assignment_answers:', answersErr);
+        throw new Error(`Không thể xóa câu trả lời: ${answersErr.message}`);
+      }
+    }
+
+    // 2. Xóa assignment_submissions
+    const { error: subsErr } = await supabase
+      .from('assignment_submissions')
       .delete()
-      .in('submission_id', submissionIds);
-    if (answersErr) throw answersErr;
+      .eq('assignment_id', id);
+    if (subsErr) {
+      console.error('Error deleting assignment_submissions:', subsErr);
+      throw new Error(`Không thể xóa bài nộp: ${subsErr.message}`);
+    }
+
+    // 3. Xóa assignment_questions
+    const { error: questionsErr } = await supabase
+      .from('assignment_questions')
+      .delete()
+      .eq('assignment_id', id);
+    if (questionsErr) {
+      console.error('Error deleting assignment_questions:', questionsErr);
+      throw new Error(`Không thể xóa câu hỏi: ${questionsErr.message}`);
+    }
+
+    // 4. Cuối cùng xóa assignment và kiểm tra thực sự xóa được
+    const { data: deletedAssignment, error } = await supabase
+      .from('assignments')
+      .delete()
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      console.error('Error deleting assignment:', error);
+      throw new Error(`Không thể xóa bài tập: ${error.message}. Có thể do thiếu quyền hoặc RLS policy chưa được cấu hình.`);
+    }
+
+    // Check if any row was actually deleted
+    if (!deletedAssignment || deletedAssignment.length === 0) {
+      throw new Error('Không thể xóa bài tập. Bạn có thể không có quyền xóa hoặc bài tập không tồn tại.');
+    }
+  } catch (error: any) {
+    // Re-throw với thông báo rõ ràng hơn
+    if (error.message) {
+      throw error;
+    }
+    throw new Error(`Lỗi khi xóa bài tập: ${error?.message || 'Lỗi không xác định'}`);
   }
-
-  const { error: subsErr } = await supabase
-    .from('assignment_submissions')
-    .delete()
-    .eq('assignment_id', id);
-  if (subsErr) throw subsErr;
-
-  const { error: questionsErr } = await supabase
-    .from('assignment_questions')
-    .delete()
-    .eq('assignment_id', id);
-  if (questionsErr) throw questionsErr;
-
-  const { error } = await supabase.from('assignments').delete().eq('id', id);
-  if (error) throw error;
 };
 
 // ===== SUBMISSIONS (Student) =====
@@ -246,6 +281,7 @@ export const getSubmissionById = async (id: string) => {
     .select(`
       *,
       assignment:assignments(*),
+      profiles:user_id(id, full_name, email),
       answers:assignment_answers(
         *,
         question:assignment_questions(*)
@@ -310,17 +346,32 @@ export const saveAnswer = async (answer: {
   video_url?: string;
   file_metadata?: any;
 }) => {
-  // Upsert: update if exists, insert if not
-  const { data, error } = await supabase
+  // Find if exists
+  const { data: existing } = await supabase
     .from('assignment_answers')
-    .upsert(answer, {
-      onConflict: 'submission_id,question_id',
-    })
-    .select()
-    .single();
+    .select('id')
+    .eq('submission_id', answer.submission_id)
+    .eq('question_id', answer.question_id)
+    .maybeSingle();
 
-  if (error) throw error;
-  return data;
+  if (existing) {
+    const { data, error } = await supabase
+      .from('assignment_answers')
+      .update(answer)
+      .eq('id', existing.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('assignment_answers')
+      .insert(answer)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
 };
 
 export const getAnswersBySubmission = async (submissionId: string) => {
@@ -350,7 +401,8 @@ export const getAllSubmissions = async (
     .from('assignment_submissions')
     .select(`
       *,
-      assignment:assignments(*)
+      assignment:assignments(*),
+      profiles:user_id(id, full_name, email)
     `, { count: 'exact' })
     .order('submitted_at', { ascending: false });
 
