@@ -672,11 +672,11 @@ const AdminPanel = () => {
                               <td>
                                 <div className="user-info">
                                   <div className={`user-avatar ${userRole.role}`}>
-                                    {userRole.email.charAt(0).toUpperCase()}
+                                    {userRole.email ? userRole.email.charAt(0).toUpperCase() : '?'}
                                   </div>
 
                                   <div className="user-text">
-                                    <span className="user-email">{userRole.email}</span>
+                                    <span className="user-email">{userRole.email || 'No email provided'}</span>
                                     <span className="user-id">
                                       UID: {userRole.id ? userRole.id.slice(0, 12) : 'SYSTEM'}
                                     </span>

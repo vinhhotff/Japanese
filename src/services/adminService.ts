@@ -107,33 +107,49 @@ export const getTeacherAssignments = async (email: string) => {
 
 // Assign teacher to course
 export const assignTeacherToCourse = async (email: string, language: string, level: string, courseId?: string) => {
-    // We use upsert if course_id is provided, assuming course_id is unique in teacher_assignments
     const upsertData: any = {
         teacher_email: email,
         language,
-        level,
-        updated_at: new Date().toISOString()
+        level
     };
 
-    if (courseId) {
-        upsertData.course_id = courseId;
-    }
+    try {
+        if (courseId) {
+            upsertData.course_id = courseId;
 
-    const { data, error } = await supabase
-        .from('teacher_assignments')
-        .upsert(upsertData, {
-            onConflict: 'course_id',
-            ignoreDuplicates: false
-        })
-        .select()
-        .limit(1)
-        .maybeSingle();
+            // Check if there is already an assignment for this course
+            const { data: existing } = await supabase
+                .from('teacher_assignments')
+                .select('id')
+                .eq('course_id', courseId)
+                .maybeSingle();
 
-    if (error) {
+            if (existing && existing.id) {
+                // Update the existing assignment
+                const { data, error } = await supabase
+                    .from('teacher_assignments')
+                    .update(upsertData)
+                    .eq('id', existing.id)
+                    .select()
+                    .maybeSingle();
+                if (error) throw error;
+                return data;
+            }
+        }
+
+        // Insert new assignment
+        const { data, error } = await supabase
+            .from('teacher_assignments')
+            .insert([upsertData])
+            .select()
+            .maybeSingle();
+
+        if (error) throw error;
+        return data;
+    } catch (error) {
         console.error('Error in assignTeacherToCourse:', error);
         throw error;
     }
-    return data;
 };
 
 // Remove assignment

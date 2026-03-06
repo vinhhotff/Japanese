@@ -528,12 +528,32 @@ const DashboardNew = () => {
       {/* My Classes Section */}
       {myClasses.length > 0 && (
         <section className="my-classes-section">
-          <h2 className="my-classes-title">
-            <span>{isAdmin ? '' : ''}</span>
-            {isAdmin ? 'Tất cả lớp học (Admin)' : 'Lớp học của tôi'}
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+            <h2 className="my-classes-title" style={{ marginBottom: 0 }}>
+              {isAdmin ? 'Tất cả lớp học (Admin)' : 'Lớp học của tôi'}
+            </h2>
+            {user && !isAdmin && !isTeacher && (
+              <button
+                onClick={() => setShowEnrollModal(true)}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--primary-color)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '20px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>+</span> Nhập mã tham gia lớp
+              </button>
+            )}
+          </div>
           {isAdmin && (
-            <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '3rem', opacity: 0.8 }}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem', opacity: 0.8 }}>
               Quản lý và theo dõi tất cả các lớp học hiện có trên hệ thống
             </p>
           )}
@@ -552,7 +572,7 @@ const DashboardNew = () => {
 
                 <button
                   className="class-enter-btn"
-                  onClick={() => alert(`Sắp ra mắt: Xem bài tập cho lớp ${cls.name}`)}
+                  onClick={() => navigate(`/${cls.language}/courses/${cls.level}`)}
                 >
                   <span>Vào lớp học</span>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -587,15 +607,17 @@ const DashboardNew = () => {
             }}>
               <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📚</div>
               <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-                {(isAdmin || !user || isTeacher) ? 'Chưa có dữ liệu khóa học' : 'Chưa đăng ký khóa học nào'}
+                {(isAdmin || !user) ? 'Chưa có dữ liệu khóa học' : isTeacher ? 'Bạn chưa được phân bổ giảng dạy khoá học nào' : 'Chưa đăng ký khóa học nào'}
               </h3>
               <p style={{ color: 'var(--text-secondary)' }}>
-                {(isAdmin || !user || isTeacher)
+                {(isAdmin || !user)
                   ? `Hiện tại chưa có khóa học ${selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'} nào.`
-                  : 'Vui lòng nhập mã code từ giáo viên để mở khóa nội dung học tập.'
+                  : isTeacher
+                    ? `Vui lòng liên hệ Admin để được phân công dạy cấp độ ${selectedLanguage === 'japanese' ? 'Tiếng Nhật' : 'Tiếng Trung'}`
+                    : 'Vui lòng nhập mã code từ giáo viên để mở khóa nội dung học tập.'
                 }
               </p>
-              {user && !isAdmin && (
+              {user && !isAdmin && !isTeacher && (
                 <button
                   onClick={() => setShowEnrollModal(true)}
                   style={{
@@ -617,8 +639,7 @@ const DashboardNew = () => {
           ) : (
             ((isAdmin || !user || isTeacher) ? currentCourses : currentCourses.filter(g => enrolledLevels.has(g.level))).map((group, index) => {
               const info = levelInfo[group.level];
-              // Homepage shows all courses - no enrollment needed
-              const isEnrolled = true;
+              const isAssignedTeacher = isTeacher && enrolledLevels.has(group.level);
 
               return (
                 <div
@@ -630,14 +651,12 @@ const DashboardNew = () => {
                     cursor: 'pointer'
                   } as React.CSSProperties}
                   onClick={() => {
-                    // Check if guest
                     if (!user) {
                       if (window.confirm('Vui lòng đăng nhập để tham gia khóa học!')) {
                         navigate('/login');
                       }
                       return;
                     }
-                    // Direct navigation - all courses accessible from homepage
                     navigate(`/${selectedLanguage}/courses/${group.level}`);
                   }}
                 >
@@ -651,27 +670,32 @@ const DashboardNew = () => {
                   <div className="card-body">
                     <h3 className="level-name">{info?.name || group.level}</h3>
                     <p className="level-desc">{info?.description || 'Khóa học'}</p>
-
-                    {/* Stats Removed as per Step Id 239 */}
-
-                    {/* Stats Removed as per Step Id 239 */}
-
-                    {/* 
-                  <div className="level-progress">
-                    <div className="progress-info">
-                      <span className="progress-label">Tiến độ</span>
-                      <span className="progress-percent">{progressByLevel[group.level] || 0}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${progressByLevel[group.level] || 0}%`, background: levelColors[group.level] }}></div>
-                    </div>
-                  </div> 
-                  */}
                   </div>
 
-                  <div className="card-footer">
-                    <span className="start-btn">
-                      Bắt đầu học
+                  <div className="card-footer" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {isAssignedTeacher && (
+                      <span className="start-btn" style={{
+                        background: 'rgba(255, 255, 255, 0.2)',
+                        alignSelf: 'stretch',
+                        textAlign: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.85rem'
+                      }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNewClassLevel(group.level);
+                          setShowCreateClassModal(true);
+                        }}>
+                        Tạo lớp học cho cấp độ này
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="12 5 12 19" />
+                          <polyline points="5 12 19 12" />
+                        </svg>
+                      </span>
+                    )}
+
+                    <span className="start-btn" style={{ alignSelf: 'stretch', justifyContent: 'center' }}>
+                      {isAssignedTeacher ? 'Vào xem tài liệu dạy học' : 'Bắt đầu học'}
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="9 18 15 12 9 6" />
                       </svg>
