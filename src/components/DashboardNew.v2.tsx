@@ -498,8 +498,8 @@ const DashboardNew = () => {
           </div>
         </div>
 
-        {/* Language Switcher */}
-        <div className="language-switcher">
+        {/* Language Switcher - scoped class to avoid conflict with header */}
+        <div className="dashboard-language-switcher">
           <button
             className={`lang-switch-btn ${selectedLanguage === 'japanese' ? 'active' : ''}`}
             onClick={() => setSelectedLanguage('japanese')}

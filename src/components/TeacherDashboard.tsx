@@ -445,33 +445,40 @@ const TeacherDashboard = () => {
                                     transition={{ delay: idx * 0.1 }}
                                     className="teacher-card"
                                 >
-                                    <div className="teacher-card-header">
-                                        <h3 className="teacher-card-title">{cls.name}</h3>
-                                        <span className="teacher-card-badge">
-                                            {cls.language === 'japanese' ? 'JP' : 'CN'} {cls.level}
-                                        </span>
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                            <div className="teacher-card-badge" style={{ width: 'fit-content', marginBottom: '1rem' }}>
+                                                {cls.language === 'japanese' ? 'JP' : 'CN'} {cls.level}
+                                            </div>
+                                            <h3 className="teacher-card-title" style={{ fontSize: '1.75rem' }}>{cls.name}</h3>
+                                        </div>
+                                        <div className="activity-icon" style={{ rotate: '15deg', opacity: 0.2 }}>🏫</div>
                                     </div>
 
-                                    <div className="teacher-card-info">
-                                        <div className="info-item">
-                                            <span>🔑</span>
-                                            <span>Mã lớp: <strong>{cls.code}</strong></span>
+                                    <div className="space-y-3 py-4 border-y border-white/5">
+                                        <div className="flex items-center gap-3 text-slate-400">
+                                            <span style={{ fontSize: '1.2rem' }}>🔑</span>
+                                            <span className="font-medium">Mã lớp: <strong className="text-teacher-primary font-mono">{cls.code}</strong></span>
                                         </div>
-                                        <div className="info-item">
-                                            <span>📅</span>
-                                            <span>Tạo ngày: {new Date(cls.created_at).toLocaleDateString('vi-VN')}</span>
+                                        <div className="flex items-center gap-3 text-slate-400">
+                                            <span style={{ fontSize: '1.2rem' }}>📅</span>
+                                            <span className="font-medium">Tạo ngày: {new Date(cls.created_at).toLocaleDateString('vi-VN')}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-slate-400">
+                                            <span style={{ fontSize: '1.2rem' }}>👥</span>
+                                            <span className="font-medium">Sĩ số: <strong className="text-white">{cls.student_count || 0} học viên</strong></span>
                                         </div>
                                     </div>
 
-                                    <div className="teacher-card-actions">
-                                        <button onClick={() => handleViewStudents(cls)} className="teacher-btn btn-secondary">
-                                            <span>👥</span> Học sinh
+                                    <div className="flex gap-3 pt-2">
+                                        <button onClick={() => handleViewStudents(cls)} className="teacher-btn btn-secondary" style={{ flex: 1, padding: '0.7rem' }}>
+                                            Học sinh
                                         </button>
-                                        <button onClick={() => handleOpenHomework(cls)} className="teacher-btn btn-primary">
-                                            <span>📝</span> Giao bài
+                                        <button onClick={() => handleOpenHomework(cls)} className="teacher-btn btn-primary" style={{ flex: 1.5, padding: '0.7rem' }}>
+                                            Giao bài
                                         </button>
-                                        <button onClick={() => handleDeleteClass(cls.id, cls.name)} className="teacher-btn btn-danger">
-                                            <span>🗑️</span> Xóa
+                                        <button onClick={() => handleDeleteClass(cls.id, cls.name)} className="teacher-btn btn-danger" style={{ width: '50px', padding: '0.7rem' }}>
+                                            🗑️
                                         </button>
                                     </div>
                                 </motion.div>
@@ -512,16 +519,19 @@ const TeacherDashboard = () => {
                                         <motion.div
                                             key={hw.id}
                                             whileHover={{ x: 10 }}
-                                            className="teacher-grid-item-compact"
+                                            className="activity-item"
                                         >
-                                            <div className="teacher-item-main">
-                                                <div className="teacher-item-title">{hw.title}</div>
-                                                <div className="teacher-item-meta">
-                                                    Lớp: {hw.classes?.name} • Hạn: {hw.due_date ? new Date(hw.due_date).toLocaleDateString('vi-VN') : 'Không hạn'}
+                                            <div className="activity-info">
+                                                <div className="activity-icon">📝</div>
+                                                <div className="activity-meta">
+                                                    <h4>{hw.title}</h4>
+                                                    <p>Lớp: {hw.classes?.name} • Hạn: {hw.due_date ? new Date(hw.due_date).toLocaleDateString('vi-VN') : 'Không hạn'}</p>
                                                 </div>
                                             </div>
-                                            <div className="teacher-item-actions">
-                                                <Link to={`/assignments/${hw.id}`} className="teacher-btn-icon" title="Chi tiết">👁️</Link>
+                                            <div className="flex gap-2">
+                                                <Link to={`/assignments/${hw.id}`} className="teacher-btn btn-secondary" style={{ padding: '0.5rem 1rem' }}>
+                                                    Chi tiết
+                                                </Link>
                                             </div>
                                         </motion.div>
                                     ))}
@@ -544,17 +554,20 @@ const TeacherDashboard = () => {
                                         <motion.div
                                             key={asg.id}
                                             whileHover={{ x: 10 }}
-                                            className="teacher-grid-item-compact"
+                                            className="activity-item"
                                         >
-                                            <div className="teacher-item-main">
-                                                <div className="teacher-item-title">{asg.title}</div>
-                                                <div className="teacher-item-meta">
-                                                    {asg.questions?.length || 0} câu hỏi • {new Date(asg.created_at).toLocaleDateString('vi-VN')}
+                                            <div className="activity-info">
+                                                <div className="activity-icon">🎥</div>
+                                                <div className="activity-meta">
+                                                    <h4>{asg.title}</h4>
+                                                    <p>{asg.questions?.length || 0} câu hỏi • {new Date(asg.created_at).toLocaleDateString('vi-VN')}</p>
                                                 </div>
                                             </div>
-                                            <div className="teacher-item-actions">
-                                                <button onClick={() => navigate(`/teacher/assignments/edit/${asg.id}`)} className="teacher-btn-icon">✏️</button>
-                                                <button onClick={() => navigate(`/teacher/submissions/${asg.id}`)} className="teacher-btn-icon" style={{ color: 'var(--teacher-primary)' }}>👥</button>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => navigate(`/teacher/submissions/${asg.id}`)} className="teacher-btn btn-secondary" style={{ padding: '0.5rem 1rem', color: 'var(--teacher-primary)' }}>
+                                                    Kết quả
+                                                </button>
+                                                <button onClick={() => navigate(`/teacher/assignments/edit/${asg.id}`)} className="teacher-btn btn-ghost" style={{ padding: '0.5rem' }}>✏️</button>
                                                 <button
                                                     onClick={async () => {
                                                         if (confirm('Xóa bài tập này?')) {
@@ -562,8 +575,8 @@ const TeacherDashboard = () => {
                                                             loadData();
                                                         }
                                                     }}
-                                                    className="teacher-btn-icon"
-                                                    style={{ color: 'var(--teacher-accent)' }}
+                                                    className="teacher-btn btn-ghost"
+                                                    style={{ padding: '0.5rem', color: '#ef4444' }}
                                                 >
                                                     🗑️
                                                 </button>
@@ -635,21 +648,20 @@ const TeacherDashboard = () => {
                                 <h3>🏫 Tạo lớp học mới</h3>
                                 <button onClick={() => setShowCreateModal(false)} className="premium-modal-close">✕</button>
                             </div>
-                            <div className="premium-modal-body">
-                                <div className="space-y-6">
-                                    <div className="form-group">
-                                        <label className="admin-label">Tên lớp học</label>
+                            <div className="premium-modal-body" style={{ padding: '3rem' }}>
+                                <div className="space-y-8">
+                                    <div className="teacher-form-group">
+                                        <label className="teacher-label">Tên lớp học</label>
                                         <input
                                             type="text"
                                             value={newClassName}
                                             onChange={e => setNewClassName(e.target.value)}
-                                            className="search-input"
-                                            style={{ width: '100%', border: '2px solid var(--border-color)' }}
+                                            className="teacher-input"
                                             placeholder="VD: N5 Cấp tốc - Tối 2-4-6"
                                         />
                                     </div>
-                                    <div className="form-group">
-                                        <label className="admin-label">Lựa chọn Giáo trình</label>
+                                    <div className="teacher-form-group">
+                                        <label className="teacher-label">Lựa chọn Giáo trình</label>
                                         <select
                                             value={newClassLevel}
                                             onChange={e => {
@@ -657,8 +669,7 @@ const TeacherDashboard = () => {
                                                 if (e.target.value.startsWith('N')) setNewClassLang('japanese');
                                                 if (e.target.value.startsWith('HSK')) setNewClassLang('chinese');
                                             }}
-                                            className="search-input"
-                                            style={{ width: '100%', border: '2px solid var(--border-color)', appearance: 'none' }}
+                                            className="teacher-select"
                                         >
                                             {myAssignments.map(a => (
                                                 <option key={a.assignment_id || a.level} value={a.level}>
@@ -667,9 +678,9 @@ const TeacherDashboard = () => {
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="flex gap-4 pt-4">
-                                        <button onClick={() => setShowCreateModal(false)} className="teacher-btn-secondary" style={{ flex: 1, color: 'var(--text-primary)' }}>Hủy</button>
-                                        <button onClick={handleCreateClass} className="teacher-btn-card btn-primary" style={{ flex: 2, fontSize: '1rem' }}>Xác nhận tạo lớp</button>
+                                    <div className="flex gap-4 pt-6">
+                                        <button onClick={() => setShowCreateModal(false)} className="teacher-btn btn-secondary" style={{ flex: 1 }}>Hủy</button>
+                                        <button onClick={handleCreateClass} className="teacher-btn btn-primary" style={{ flex: 2 }}>Xác nhận tạo lớp</button>
                                     </div>
                                 </div>
                             </div>
@@ -756,43 +767,43 @@ const TeacherDashboard = () => {
                                 <h3>📝 Giao bài tập</h3>
                                 <button onClick={() => setShowHomeworkModal(false)} className="premium-modal-close">✕</button>
                             </div>
-                            <div className="premium-modal-body">
-                                <p className="mb-6 text-slate-500 font-medium">Lớp: <span className="text-teacher-primary">{selectedClassHomework.name}</span></p>
-                                <div className="space-y-6">
-                                    <div className="form-group">
-                                        <label className="admin-label">Tiêu đề bài tập *</label>
+                            <div className="premium-modal-body" style={{ padding: '3rem' }}>
+                                <p className="mb-8 text-slate-400 font-medium bg-white/5 p-4 rounded-xl border border-white/5">
+                                    Giao bài cho lớp: <span className="text-teacher-primary font-bold">{selectedClassHomework.name}</span>
+                                </p>
+                                <div className="space-y-8">
+                                    <div className="teacher-form-group">
+                                        <label className="teacher-label">Tiêu đề bài tập *</label>
                                         <input
                                             type="text"
                                             value={homeworkForm.title}
                                             onChange={e => setHomeworkForm({ ...homeworkForm, title: e.target.value })}
-                                            className="search-input"
-                                            style={{ width: '100%', border: '2px solid var(--border-color)' }}
+                                            className="teacher-input"
                                             placeholder="VD: Luyện tập Kanji bài 1"
                                         />
                                     </div>
-                                    <div className="form-group">
-                                        <label className="admin-label">Yêu cầu chi tiết</label>
+                                    <div className="teacher-form-group">
+                                        <label className="teacher-label">Yêu cầu chi tiết</label>
                                         <textarea
                                             value={homeworkForm.description}
                                             onChange={e => setHomeworkForm({ ...homeworkForm, description: e.target.value })}
-                                            className="search-input"
-                                            style={{ width: '100%', border: '2px solid var(--border-color)', height: '120px', resize: 'none' }}
-                                            placeholder="Ghi chú thêm cho học sinh..."
+                                            className="teacher-textarea"
+                                            style={{ height: '140px' }}
+                                            placeholder="Ghi chú thêm cho học sinh về nội dung bài tập..."
                                         />
                                     </div>
-                                    <div className="form-group">
-                                        <label className="admin-label">Hạn nộp bài</label>
+                                    <div className="teacher-form-group">
+                                        <label className="teacher-label">Hạn nộp bài</label>
                                         <input
                                             type="datetime-local"
                                             value={homeworkForm.due_date}
                                             onChange={e => setHomeworkForm({ ...homeworkForm, due_date: e.target.value })}
-                                            className="search-input"
-                                            style={{ width: '100%', border: '2px solid var(--border-color)' }}
+                                            className="teacher-input"
                                         />
                                     </div>
-                                    <div className="flex gap-4 pt-4">
-                                        <button onClick={() => setShowHomeworkModal(false)} className="teacher-btn-secondary" style={{ flex: 1, color: 'var(--text-primary)' }}>Hủy</button>
-                                        <button onClick={handleSubmitHomework} className="teacher-btn-card btn-indigo" style={{ flex: 2, fontSize: '1rem' }}>Giao ngay</button>
+                                    <div className="flex gap-4 pt-6">
+                                        <button onClick={() => setShowHomeworkModal(false)} className="teacher-btn btn-secondary" style={{ flex: 1 }}>Hủy</button>
+                                        <button onClick={handleSubmitHomework} className="teacher-btn btn-primary" style={{ flex: 2 }}>Giao ngay</button>
                                     </div>
                                 </div>
                             </div>
@@ -810,34 +821,77 @@ const TeacherDashboard = () => {
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             className="premium-modal-content fullscreen"
                         >
-                            <div className="premium-modal-header" style={{ borderRadius: 0 }}>
+                            <div className="premium-modal-header" style={{ borderRadius: 0, padding: '1.5rem 3rem', background: 'var(--teacher-surface)', borderBottom: '1px solid var(--teacher-glass-border)' }}>
                                 <div className="teacher-title-area">
-                                    <h3>✏️ Content Manager</h3>
-                                    {selectedContentCourse && <span className="teacher-badge">Khoá: {selectedContentCourse.title}</span>}
-                                    {selectedContentLesson && <span className="teacher-badge">Bài: {selectedContentLesson.title}</span>}
+                                    <div className="teacher-logo-icon" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>✏️</div>
+                                    <div>
+                                        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Content Manager</h3>
+                                        <div className="flex gap-2 mt-1">
+                                            {selectedContentCourse && <span className="teacher-badge" style={{ background: 'var(--teacher-primary-glow)', color: 'var(--teacher-primary)', borderColor: 'transparent' }}>{selectedContentCourse.title}</span>}
+                                            {selectedContentLesson && <span className="teacher-badge" style={{ background: 'var(--teacher-secondary-glow)', color: 'var(--teacher-secondary)', borderColor: 'transparent' }}>Bài {selectedContentLesson.lesson_number}: {selectedContentLesson.title}</span>}
+                                        </div>
+                                    </div>
                                 </div>
-                                <button onClick={() => setShowContentModal(false)} className="premium-modal-close">✕</button>
+                                <button onClick={() => setShowContentModal(false)} className="premium-modal-close" style={{ background: 'var(--teacher-glass)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                             </div>
 
                             <div className="premium-modal-body" style={{ height: 'calc(100% - 80px)', overflowY: 'hidden', padding: 0 }}>
                                 {contentViewMode === 'courses' && (
-                                    <div className="p-8">
-                                        <h2 className="teacher-section-title mb-6">Chọn khoá học để chỉnh sửa</h2>
+                                    <div className="p-12">
+                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16">
+                                            <div>
+                                                <h2 className="teacher-section-title" style={{ margin: 0, fontSize: '2.75rem', lineHeight: 1.1 }}>Chọn khoá học để chỉnh sửa</h2>
+                                                <p className="text-slate-400 mt-3 text-lg font-medium opacity-80">Lựa chọn chương trình giảng dạy bạn muốn tùy chỉnh nội dung chuyên sâu</p>
+                                            </div>
+                                            <div className="teacher-badge" style={{ padding: '1rem 2rem', background: 'rgba(0, 242, 254, 0.1)', color: 'var(--teacher-primary)', fontSize: '1.1rem', borderRadius: '20px', border: '1px solid rgba(0, 242, 254, 0.2)' }}>
+                                                {contentData.length} Khóa học khả dụng
+                                            </div>
+                                        </div>
                                         <div className="teacher-grid">
-                                            {contentData.map(course => (
+                                            {contentData.map((course, idx) => (
                                                 <motion.div
                                                     key={course.id}
-                                                    whileHover={{ scale: 1.02 }}
+                                                    initial={{ opacity: 0, y: 40 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: idx * 0.1, duration: 0.6 }}
+                                                    whileHover={{ y: -15, scale: 1.02 }}
                                                     onClick={() => handleSelectContentCourse(course)}
-                                                    className="teacher-card cursor-pointer group"
+                                                    className="teacher-card course-premium cursor-pointer group"
+                                                    style={{ minHeight: '420px', justifyContent: 'space-between', padding: '3.5rem' }}
                                                 >
-                                                    <div className="teacher-card-header">
-                                                        <h4 className="teacher-card-title group-hover:text-teacher-primary transition-colors">{course.title}</h4>
-                                                        <span className="teacher-card-badge">{course.level}</span>
+                                                    <div>
+                                                        <div className="flex justify-between items-start mb-8">
+                                                            <div className="teacher-card-icon-wrapper" style={{ margin: 0, width: '80px', height: '80px', fontSize: '3rem' }}>
+                                                                {course.language === 'japanese' ? '🇯🇵' : '🇨🇳'}
+                                                            </div>
+                                                            <span className="teacher-card-badge" style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem' }}>{course.level}</span>
+                                                        </div>
+                                                        <h4 className="teacher-card-title group-hover:text-teacher-primary transition-colors" style={{ fontSize: '2.25rem', marginBottom: '1.25rem', letterSpacing: '-0.02em' }}>{course.title}</h4>
+                                                        <p className="text-slate-400 text-lg leading-relaxed mb-10 opacity-70">
+                                                            {course.description || 'Chương trình giảng dạy chuẩn hóa, tối ưu cho việc học ngoại ngữ qua phương pháp thực hành.'}
+                                                        </p>
                                                     </div>
-                                                    <p className="text-slate-500 text-sm">{course.description || 'Chưa có mô tả khoá học.'}</p>
-                                                    <div className="mt-4 flex justify-end">
-                                                        <span className="text-teacher-primary font-bold">Chỉnh sửa bài học &rarr;</span>
+
+                                                    <div className="pt-8 border-t border-white/10 flex justify-between items-center">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="flex -space-x-4">
+                                                                {[1, 2, 3].map(i => (
+                                                                    <div key={i} className="w-12 h-12 rounded-full border-2 border-[#0b1120] bg-slate-800 flex items-center justify-center text-lg shadow-xl">
+                                                                        🎓
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                            <span className="text-slate-500 text-sm font-bold uppercase tracking-wider">Premium Content</span>
+                                                        </div>
+                                                        <span className="text-teacher-primary font-bold flex items-center gap-3 text-xl transition-all group-hover:gap-5">
+                                                            Chỉnh sửa
+                                                            <motion.span
+                                                                animate={{ x: [0, 8, 0] }}
+                                                                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                                                            >
+                                                                &rarr;
+                                                            </motion.span>
+                                                        </span>
                                                     </div>
                                                 </motion.div>
                                             ))}
@@ -928,25 +982,57 @@ const TeacherDashboard = () => {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div className="content-grid">
+                                                <div className="content-grid" style={{ padding: '2rem 3rem' }}>
                                                     {contentData.map((item, idx) => (
                                                         <motion.div
                                                             key={item.id || idx}
-                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                            initial={{ opacity: 0, scale: 0.9 }}
                                                             animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{ delay: idx * 0.05 }}
                                                             className="teacher-card group"
+                                                            style={{ padding: '2rem', gap: '1rem' }}
                                                         >
-                                                            <div className="mb-4">
-                                                                <h4 className="teacher-card-title" style={{ fontSize: '1.25rem' }}>
-                                                                    {item.word || item.character || item.pattern || item.title || item.sentence || 'Dữ liệu'}
-                                                                </h4>
-                                                                <p className="text-secondary font-bold mt-2" style={{ color: 'var(--teacher-primary)' }}>
+                                                            <div className="flex justify-between items-start">
+                                                                <div className="flex-1">
+                                                                    <div className="teacher-card-badge" style={{ marginBottom: '0.75rem', width: 'fit-content' }}>
+                                                                        #{idx + 1}
+                                                                    </div>
+                                                                    <h4 className="teacher-card-title" style={{ fontSize: '1.5rem', lineHeight: 1.2 }}>
+                                                                        {item.word || item.character || item.pattern || item.title || item.sentence || 'Dữ liệu'}
+                                                                    </h4>
+                                                                    {item.furigana && <p className="text-teacher-primary font-mono text-sm mt-1">{item.furigana}</p>}
+                                                                </div>
+                                                                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-xl opacity-50 group-hover:opacity-100 transition-opacity">
+                                                                    ✨
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="py-2 border-t border-white/5">
+                                                                <p className="text-secondary font-bold text-lg" style={{ color: 'var(--teacher-secondary)' }}>
                                                                     {item.meaning || item.explanation || item.description || ''}
                                                                 </p>
+                                                                {item.example_sentence && (
+                                                                    <p className="text-slate-500 italic text-sm mt-2 leading-relaxed">
+                                                                        "{item.example_sentence}"
+                                                                    </p>
+                                                                )}
                                                             </div>
-                                                            <div className="teacher-card-actions">
-                                                                <button onClick={() => { setEditingContentItem(item); setShowAdminForm(true); }} className="teacher-btn-card btn-outline">✏️ Edit</button>
-                                                                <button onClick={() => handleDeleteContent(item.id)} className="teacher-btn-card btn-outline" style={{ color: '#ef4444' }}>🗑️ Delete</button>
+
+                                                            <div className="teacher-card-actions border-t border-white/5 pt-4">
+                                                                <button
+                                                                    onClick={() => { setEditingContentItem(item); setShowAdminForm(true); }}
+                                                                    className="teacher-btn btn-secondary"
+                                                                    style={{ padding: '0.6rem', fontSize: '0.9rem' }}
+                                                                >
+                                                                    <span>✏️</span> Sửa
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteContent(item.id)}
+                                                                    className="teacher-btn btn-danger"
+                                                                    style={{ padding: '0.6rem', fontSize: '0.9rem' }}
+                                                                >
+                                                                    <span>🗑️</span> Xóa
+                                                                </button>
                                                             </div>
                                                         </motion.div>
                                                     ))}
