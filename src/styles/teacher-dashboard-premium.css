@@ -21,7 +21,7 @@
     --teacher-glass: rgba(0, 0, 0, 0.02);
     --teacher-glass-border: rgba(15, 23, 42, 0.06);
     --teacher-text: #0f172a;
-    --teacher-text-muted: #64748b;
+    --teacher-text-muted: #475569;
     --teacher-gradient: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
     --teacher-gradient-mesh: linear-gradient(45deg, #3b82f6, #0ea5e9, #22c55e);
     --teacher-surface: #ffffff;
@@ -43,7 +43,7 @@
     --teacher-glass: rgba(255, 255, 255, 0.05);
     --teacher-glass-border: rgba(255, 255, 255, 0.12);
     --teacher-text: #f1f5f9;
-    --teacher-text-muted: #94a3b8;
+    --teacher-text-muted: #cbd5e1;
     --teacher-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
     --teacher-gradient-mesh: linear-gradient(45deg, #00f2fe, #4facfe, #00f2fe);
     --teacher-surface: #0f172a;
@@ -191,14 +191,23 @@
 }
 
 .btn-secondary {
-    background: var(--teacher-glass);
+    background: rgba(15, 23, 42, 0.05);
     color: var(--teacher-text);
-    border-color: var(--teacher-glass-border);
+    border-color: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="dark"] .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.1);
     transform: translateY(-3px);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .btn-danger {
@@ -293,7 +302,11 @@
 }
 
 .teacher-card.course-premium {
-    background: linear-gradient(165deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+    background: var(--teacher-card-premium-bg, linear-gradient(165deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%));
+}
+
+[data-theme="light"] {
+    --teacher-card-premium-bg: linear-gradient(165deg, rgba(240, 249, 255, 0.8) 0%, rgba(224, 242, 254, 0.9) 100%);
 }
 
 .teacher-card-badge {
@@ -383,7 +396,7 @@
 .teacher-input,
 .teacher-select,
 .teacher-textarea {
-    background: rgba(15, 23, 42, 0.6);
+    background: var(--teacher-card-bg);
     border: 1px solid var(--teacher-glass-border);
     border-radius: 14px;
     padding: 1.25rem;
@@ -393,13 +406,25 @@
     transition: all 0.3s ease;
 }
 
+[data-theme="dark"] .teacher-input,
+[data-theme="dark"] .teacher-select,
+[data-theme="dark"] .teacher-textarea {
+    background: rgba(15, 23, 42, 0.6);
+}
+
 .teacher-input:focus,
 .teacher-select:focus,
 .teacher-textarea:focus {
     outline: none;
     border-color: var(--teacher-primary);
-    background: rgba(15, 23, 42, 0.8);
+    background: var(--teacher-surface);
     box-shadow: 0 0 0 4px var(--teacher-primary-glow);
+}
+
+[data-theme="dark"] .teacher-input:focus,
+[data-theme="dark"] .teacher-select:focus,
+[data-theme="dark"] .teacher-textarea:focus {
+    background: rgba(15, 23, 42, 0.8);
 }
 
 /* Activity Items */
@@ -456,43 +481,594 @@
     backdrop-filter: blur(20px);
 }
 
+html:not([data-theme="dark"]) .premium-modal-overlay.fullscreen {
+    background: rgba(15, 23, 42, 0.6);
+}
+
 .premium-modal-content.fullscreen {
     background: var(--teacher-bg);
     border-radius: 0;
     color: var(--teacher-text);
 }
 
-.content-tabs-container {
-    background: rgba(15, 23, 42, 0.9);
-    backdrop-filter: blur(15px);
-    border-bottom: 1px solid var(--teacher-glass-border);
-    padding: 2rem 4rem;
+html:not([data-theme="dark"]) .premium-modal-content.fullscreen {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+/* ===== Content Manager - Course Selection (Senior UI) ===== */
+.content-courses-view {
+    padding: 2.5rem 3rem 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.content-courses-header {
+    margin-bottom: 2.5rem;
+}
+
+.content-courses-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--teacher-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.content-courses-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin: 0 0 0.5rem 0;
+    color: var(--teacher-text);
+}
+
+.content-courses-subtitle {
+    font-size: 1rem;
+    color: var(--teacher-text-muted);
+    margin: 0;
+    font-weight: 500;
+}
+
+.content-courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.5rem;
+}
+
+.content-course-card {
+    background: var(--teacher-card-bg);
+    border: 1px solid var(--teacher-glass-border);
+    border-radius: 20px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+html:not([data-theme="dark"]) .premium-modal-content.fullscreen .content-course-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.12);
+}
+
+.content-course-card:hover {
+    border-color: rgba(0, 242, 254, 0.3);
+    background: rgba(30, 41, 59, 0.6);
+}
+
+/* Light mode: avoid "dirty gray" surfaces */
+html:not([data-theme="dark"]) .content-course-card:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 18px 40px -22px rgba(15, 23, 42, 0.25);
+}
+
+.content-course-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 3rem;
+}
+
+.content-course-flag {
+    font-size: 2rem;
+}
+
+.content-course-level {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 0.35rem 0.75rem;
+    background: var(--teacher-primary-glow);
+    color: var(--teacher-primary);
+    border-radius: 8px;
+}
+
+.content-course-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.02em;
+    color: var(--teacher-text);
+    line-height: 1.25;
+}
+
+.content-course-desc {
+    font-size: 0.9375rem;
+    color: var(--teacher-text-muted);
+    margin: 0;
+    line-height: 1.55;
+}
+
+.content-course-modules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--teacher-text-muted);
+}
+
+.content-course-modules span {
+    padding: 0.25rem 0.6rem;
+    background: var(--teacher-glass);
+    border-radius: 6px;
+}
+
+.content-course-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    padding: 0.875rem 1.25rem;
+    background: var(--teacher-gradient);
+    border: none;
+    border-radius: 12px;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.9375rem;
+    transition: all 0.25s ease;
+}
+
+.content-course-cta span {
+    color: inherit;
+}
+
+.content-course-card:hover .content-course-cta {
+    filter: brightness(1.08);
+}
+
+/* ===== Content Manager - Toolbar & Tabs ===== */
+.content-manager-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background: var(--teacher-card-bg);
+    border-bottom: 1px solid var(--teacher-glass-border);
+}
+
+html:not([data-theme="dark"]) .premium-modal-content.fullscreen .content-manager-toolbar {
+    background: #fafbfc;
+}
+
+.content-nav-back {
+    order: 1;
+}
+
+.content-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: var(--teacher-gradient);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 14px var(--teacher-primary-glow);
+}
+
+.content-add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--teacher-primary-glow);
+}
+
+.content-add-icon {
+    font-size: 1.25rem;
+    font-weight: 300;
+    line-height: 1;
+}
+
+.content-type-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: rgba(15, 23, 42, 0.5);
+    border-bottom: 1px solid var(--teacher-glass-border);
+}
+
+html:not([data-theme="dark"]) .content-type-nav {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.content-type-tab {
+    padding: 0.625rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    background: transparent;
+    color: var(--teacher-text-muted);
+    border: 1px solid var(--teacher-glass-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.content-type-tab:hover {
+    color: var(--teacher-text);
+    border-color: var(--teacher-primary);
+}
+
+.content-type-tab.active {
+    background: var(--teacher-primary-glow);
+    color: var(--teacher-primary);
+    border-color: rgba(0, 242, 254, 0.3);
+}
+
+/* Content Manager - Empty State V2 */
+.content-empty-state-v2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    min-height: 280px;
+}
+
+.content-empty-visual {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--teacher-primary-glow) 0%, transparent 100%);
+    border: 2px dashed rgba(0, 242, 254, 0.3);
+    margin-bottom: 1.5rem;
+}
+
+.content-empty-state-v2 h4 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem 0;
+    color: var(--teacher-text);
+}
+
+.content-empty-state-v2 p {
+    font-size: 0.9375rem;
+    color: var(--teacher-text-muted);
+    margin: 0 0 1.5rem 0;
+}
+
+.content-empty-cta {
+    padding: 0.75rem 1.5rem;
+    background: var(--teacher-gradient);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.content-empty-cta:hover {
+    transform: translateY(-2px);
+}
+
+.content-tabs-container {
+    background: var(--teacher-card-bg);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--teacher-glass-border);
+    padding: 1.25rem 2rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1.5rem;
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
+@media (max-width: 900px) {
+    .content-tabs-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+}
+
+[data-theme="light"] .content-tabs-container {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.content-tabs-scroll {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    flex: 1;
+    justify-content: center;
+}
+
 .content-tab-btn {
-    padding: 1.25rem 2.5rem;
-    border-radius: 16px;
-    font-weight: 800;
-    font-size: 1rem;
-    background: transparent;
+    padding: 1rem 2rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    background: var(--teacher-glass);
     color: var(--teacher-text-muted);
-    border: none;
+    border: 1px solid var(--teacher-glass-border);
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
+}
+
+.content-tab-btn:hover:not(.active) {
+    background: var(--teacher-glass);
+    color: var(--teacher-text);
+    border-color: var(--teacher-primary);
 }
 
 .content-tab-btn.active {
     color: var(--teacher-primary);
     background: rgba(0, 242, 254, 0.1);
     box-shadow: inset 0 0 0 1px rgba(0, 242, 254, 0.2);
+}
+
+/* Content Manager - Back Button */
+.content-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--teacher-glass);
+    border: 1px solid var(--teacher-glass-border);
+    border-radius: 12px;
+    color: var(--teacher-text-muted);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+}
+
+.content-back-btn:hover {
+    background: var(--teacher-primary-glow);
+    color: var(--teacher-primary);
+    border-color: rgba(0, 242, 254, 0.3);
+}
+
+/* Content Manager - Action Buttons */
+.content-action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Content Manager - Empty State */
+.content-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 3rem;
+    background: var(--teacher-card-bg);
+    border: 2px dashed var(--teacher-glass-border);
+    border-radius: 24px;
+    min-height: 320px;
+    text-align: center;
+}
+
+.content-empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.6;
+}
+
+.content-empty-state p {
+    font-size: 1.125rem;
+    color: var(--teacher-text-muted);
+    margin: 0 0 1.5rem 0;
+    font-weight: 500;
+}
+
+.content-empty-state .content-back-btn {
+    margin-top: 0.5rem;
+}
+
+/* Content Manager - Lessons View */
+.content-lessons-view {
+    padding: 2rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.content-lessons-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--teacher-text);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.content-lessons-table {
+    margin-top: 0.5rem;
+}
+
+/* Content Manager - Fullscreen Layout */
+.content-manager-fullscreen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Teacher Card Buttons (Content Manager & Tables) */
+.teacher-btn-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid transparent;
+}
+
+.teacher-btn-card.btn-outline {
+    background: transparent;
+    border-color: var(--teacher-primary);
+    color: var(--teacher-primary);
+}
+
+.teacher-btn-card.btn-outline:hover {
+    background: var(--teacher-primary-glow);
+    transform: translateY(-2px);
+}
+
+.teacher-btn-card.btn-indigo {
+    background: linear-gradient(135deg, var(--teacher-primary) 0%, var(--teacher-secondary) 100%);
+    color: white;
+    box-shadow: 0 4px 14px var(--teacher-primary-glow);
+}
+
+.teacher-btn-card.btn-indigo:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--teacher-primary-glow);
+    filter: brightness(1.1);
+}
+
+.teacher-btn-card.btn-primary {
+    background: var(--teacher-gradient);
+    color: white;
+    box-shadow: 0 4px 14px var(--teacher-primary-glow);
+}
+
+.teacher-btn-card.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--teacher-primary-glow);
+}
+
+/* Content Manager - Lessons Table (standalone when admin-panel not loaded) */
+.premium-modal-content.fullscreen .admin-table-container,
+.content-lessons-view .admin-table-container {
+    background: var(--teacher-card-bg);
+    border: 1px solid var(--teacher-glass-border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+}
+
+.premium-modal-content.fullscreen .admin-table,
+.content-lessons-view .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.premium-modal-content.fullscreen .admin-table thead,
+.content-lessons-view .admin-table thead {
+    background: rgba(0, 242, 254, 0.08);
+    border-bottom: 1px solid var(--teacher-glass-border);
+}
+
+.premium-modal-content.fullscreen .admin-table th,
+.content-lessons-view .admin-table th {
+    padding: 1rem 1.5rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--teacher-primary);
+    font-weight: 800;
+}
+
+.premium-modal-content.fullscreen .admin-table td,
+.content-lessons-view .admin-table td {
+    padding: 1.25rem 1.5rem;
+    color: var(--teacher-text);
+    border-bottom: 1px solid var(--teacher-glass-border);
+}
+
+.premium-modal-content.fullscreen .admin-table tbody tr:hover,
+.content-lessons-view .admin-table tbody tr:hover {
+    background: var(--teacher-glass);
+}
+
+.premium-modal-content.fullscreen .admin-table tbody tr:last-child td,
+.content-lessons-view .admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Course Card Footer (Content Manager) */
+.course-card-footer {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--teacher-glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.course-card-modules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.course-module-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.9rem;
+    background: var(--teacher-glass);
+    border: 1px solid var(--teacher-glass-border);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--teacher-text-muted);
+}
+
+.teacher-card.course-premium:hover .course-module-chip {
+    background: var(--teacher-primary-glow);
+    color: var(--teacher-primary);
+    border-color: rgba(0, 242, 254, 0.2);
+}
+
+.course-edit-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-end;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    background: var(--teacher-primary-glow);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    border-radius: 14px;
+    color: var(--teacher-primary);
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.teacher-card.course-premium:hover .course-edit-cta {
+    background: var(--teacher-gradient);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 14px var(--teacher-primary-glow);
 }
 
 .content-grid {
@@ -506,6 +1082,10 @@
     height: 100%;
     overflow-y: auto;
     background: radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.08), transparent 50%);
+}
+
+html:not([data-theme="dark"]) .premium-modal-content.fullscreen .content-scroll-area {
+    background: #f8fafc;
 }
 
 /* Utility to force horizontal flex */
@@ -554,6 +1134,24 @@
 
     .teacher-card {
         padding: 2rem;
+    }
+
+    .content-courses-view {
+        padding: 1.5rem;
+    }
+
+    .content-courses-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .content-manager-toolbar {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .content-type-nav {
+        padding: 0.75rem 1rem;
     }
 }
 
@@ -640,4 +1238,30 @@
 .premium-modal-close:hover {
     background: #ef4444;
     color: white;
+}
+
+/* Floating Add Button for Teacher Dashboard */
+.btn-float-add {
+    position: fixed;
+    bottom: 2rem;
+    right: 2.5rem;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--teacher-gradient);
+    color: white;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px var(--teacher-primary-glow);
+    cursor: pointer;
+    z-index: 1000;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-float-add:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(0, 180, 216, 0.4);
 }
