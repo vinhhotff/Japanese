@@ -19,6 +19,7 @@ import Quiz from './Quiz';
 import Pronunciation from './Pronunciation';
 import Shadowing from './Shadowing';
 import '../App.css';
+import '../styles/lesson-detail-premium.css';
 import FloatingCharacters from './FloatingCharacters';
 
 type LearningStep = 'learn' | 'practice' | 'test';
@@ -252,7 +253,30 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
   const isLocked = !hasAccess && !userIsAdmin && !userIsTeacher && !lesson.is_free;
 
   return (
-    <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+    <div className={`container lesson-detail-premium ${language === 'japanese' ? 'jp-theme' : 'cn-theme'}`} style={{ position: 'relative', zIndex: 1 }} data-language={language}>
+      {/* Cultural SVG Background Pattern */}
+      <svg className="cultural-pattern" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+        <defs>
+          {language === 'japanese' ? (
+            <>
+              <pattern id="sakura-pattern-lesson" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+                <circle cx="50" cy="50" r="3" fill="#ffc0cb" opacity="0.15" />
+                <circle cx="150" cy="100" r="2" fill="#ffb6c1" opacity="0.12" />
+                <path d="M 30 30 Q 35 25 40 30 T 50 30" stroke="#c41e3a" strokeWidth="0.5" fill="none" opacity="0.08" />
+              </pattern>
+            </>
+          ) : (
+            <>
+              <pattern id="chinese-pattern-lesson" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+                <circle cx="50" cy="50" r="3" fill="#dc143c" opacity="0.12" />
+                <rect x="80" y="80" width="40" height="40" fill="none" stroke="#dc143c" strokeWidth="0.5" opacity="0.08" />
+              </pattern>
+            </>
+          )}
+        </defs>
+        <rect width="100%" height="100%" fill={`url(#${language === 'japanese' ? 'sakura' : 'chinese'}-pattern-lesson)`} />
+      </svg>
+
       {isLocked && (
         <div style={{
           position: 'absolute',
@@ -363,97 +387,68 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
         </div>
       )}
       <FloatingCharacters language={language} count={10} />
-      <Link to={`/${language}/courses/${courseLevel}`} className="back-button">
-        <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Về danh sách bài học
-      </Link>
+      <div className="lesson-header-navigation">
+        <Link to={`/${language}/courses/${courseLevel}`} className="back-link-small">
+          <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Về danh sách bài học
+        </Link>
+      </div>
 
-      {/* Lesson Header */}
-      <div className="card" style={{
-        marginBottom: '2rem',
-        background: language === 'japanese'
-          ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
-          : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-        color: 'white',
-        border: 'none'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '2rem' }}>{language === 'japanese' ? '🇯🇵' : '🇨🇳'}</span>
-              <h1 style={{ fontSize: '2rem', margin: 0, color: 'white' }}>{lesson.title}</h1>
-            </div>
-            <p style={{ fontSize: '1.125rem', opacity: 0.9, marginBottom: '1rem' }}>{lesson.description}</p>
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', flexWrap: 'wrap' }}>
-              <div style={{
-                background: 'rgba(255,255,255,0.2)',
-                padding: '0.5rem 1rem',
-                borderRadius: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <span>📖</span>
-                <span>{lesson.vocabulary.length} từ vựng</span>
-              </div>
-              <div style={{
-                background: 'rgba(255,255,255,0.2)',
-                padding: '0.5rem 1rem',
-                borderRadius: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <span>{language === 'japanese' ? '㊗️' : '🈶'}</span>
-                <span>{lesson.kanji.length} {language === 'japanese' ? 'kanji' : 'hán tự'}</span>
-              </div>
-              <div style={{
-                background: 'rgba(255,255,255,0.2)',
-                padding: '0.5rem 1rem',
-                borderRadius: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <span>📝</span>
-                <span>{lesson.grammar.length} ngữ pháp</span>
-              </div>
-            </div>
-          </div>
-          <div style={{ textAlign: 'center', minWidth: '120px' }}>
-            <div style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 0.5rem',
-              fontSize: '2rem',
-              fontWeight: '700'
-            }}>
-              {progress}%
-            </div>
-            <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Hoàn thành</div>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div style={{
-          height: '8px',
-          background: 'rgba(255,255,255,0.2)',
-          borderRadius: '999px',
-          overflow: 'hidden'
+      {/* Lesson Header & Progress */}
+      <div className="lesson-detail-hero">
+        <div className="lesson-hero-card" style={{
+          background: language === 'japanese'
+            ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+            : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
         }}>
-          <div style={{
-            height: '100%',
-            width: `${progress}%`,
-            background: 'rgba(255,255,255,0.9)',
-            transition: 'width 0.5s ease'
-          }} />
+          <div className="lesson-hero-content">
+            <div className="hero-main-info">
+              <div className="hero-badge-row">
+                <span className="hero-lang-badge">{language === 'japanese' ? '🇯🇵 Japanese' : '🇨🇳 Chinese'}</span>
+                <span className="hero-level-badge">{courseLevel}</span>
+              </div>
+              <h1 className="hero-title">{lesson.title}</h1>
+              <p className="hero-description">{lesson.description}</p>
+
+              <div className="hero-stats-row">
+                <div className="hero-stat-item">
+                  <span className="stat-icon">📖</span>
+                  <span className="stat-text">{lesson.vocabulary.length} từ vựng</span>
+                </div>
+                <div className="hero-stat-item">
+                  <span className="stat-icon">{language === 'japanese' ? '㊗️' : '🈶'}</span>
+                  <span className="stat-text">{lesson.kanji.length} {language === 'japanese' ? 'kanji' : 'hán tự'}</span>
+                </div>
+                <div className="hero-stat-item">
+                  <span className="stat-icon">📝</span>
+                  <span className="stat-text">{lesson.grammar.length} ngữ pháp</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="progress-card-wrapper">
+              <div className="progress-card">
+                <div className="progress-circle-container">
+                  <svg className="progress-circle-svg" viewBox="0 0 100 100">
+                    <circle className="progress-circle-bg" cx="50" cy="50" r="45" />
+                    <circle
+                      className="progress-circle-fill"
+                      cx="50" cy="50" r="45"
+                      style={{ strokeDashoffset: 283 - (283 * progress) / 100 }}
+                    />
+                  </svg>
+                  <div className="progress-percentage">{progress}%</div>
+                </div>
+                <div className="progress-label">Hoàn thành</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="hero-progress-bar-container">
+            <div className="hero-progress-bar-fill" style={{ width: `${progress}%` }} />
+          </div>
         </div>
       </div>
 

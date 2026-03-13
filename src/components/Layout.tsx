@@ -22,10 +22,11 @@ const Layout = ({ children }: LayoutProps) => {
       background: 'var(--bg-color)', 
       minHeight: '100vh',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      overflow: 'visible'
     }}>
       <Header />
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, overflow: 'visible' }}>
         {children}
       </main>
       <Footer />

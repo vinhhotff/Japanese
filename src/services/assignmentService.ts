@@ -37,6 +37,17 @@ export const getAssignments = async (
   };
 };
 
+export const getTeacherAssignments = async (teacherId: string) => {
+  const { data, error } = await supabase
+    .from('assignments')
+    .select('*, lesson:lessons(title)')
+    .eq('created_by', teacherId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
 export const getAssignmentById = async (id: string) => {
   const { data, error } = await supabase
     .from('assignments')
@@ -46,7 +57,7 @@ export const getAssignmentById = async (id: string) => {
       questions:assignment_questions(*)
     `)
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
   return data;
@@ -71,7 +82,19 @@ export const createAssignment = async (assignment: {
     options?: string[];
     correct_answer?: string;
     points?: number;
+    attachment_urls?: string[];
+    audio_url?: string;
+    video_url?: string;
+    requires_file_upload?: boolean;
+    allowed_file_types?: string[];
   }>;
+  attachment_urls?: string[];
+  audio_url?: string;
+  video_url?: string;
+  rich_content?: any;
+  allow_file_upload?: boolean;
+  allowed_file_types?: string[];
+  max_file_size_mb?: number;
 }) => {
   const { questions, ...assignmentData } = assignment;
 
@@ -125,7 +148,17 @@ export const updateAssignment = async (id: string, updates: Partial<any>) => {
       .filter((q: any) => q && (q.question_text || '').trim())
       .map((q: any) => ({
         assignment_id: id,
-        ...q,
+        question_number: q.question_number,
+        question_text: q.question_text,
+        question_type: q.question_type,
+        options: q.options || [],
+        correct_answer: q.correct_answer || '',
+        points: q.points || 0,
+        attachment_urls: q.attachment_urls || [],
+        audio_url: q.audio_url || null,
+        video_url: q.video_url || null,
+        requires_file_upload: q.requires_file_upload || false,
+        allowed_file_types: q.allowed_file_types || [],
       }));
 
     if (validQuestions.length > 0) {
@@ -141,8 +174,70 @@ export const updateAssignment = async (id: string, updates: Partial<any>) => {
 };
 
 export const deleteAssignment = async (id: string) => {
-  const { error } = await supabase.from('assignments').delete().eq('id', id);
-  if (error) throw error;
+  try {
+    // Xóa theo thứ tự để tránh lỗi FK (nếu DB không dùng CASCADE)
+    // 1. Xóa assignment_answers trước
+    const { data: submissions } = await supabase
+      .from('assignment_submissions')
+      .select('id')
+      .eq('assignment_id', id);
+
+    const submissionIds = (submissions || []).map((s: any) => s.id);
+
+    if (submissionIds.length > 0) {
+      const { error: answersErr } = await supabase
+        .from('assignment_answers')
+        .delete()
+        .in('submission_id', submissionIds);
+      if (answersErr) {
+        console.error('Error deleting assignment_answers:', answersErr);
+        throw new Error(`Không thể xóa câu trả lời: ${answersErr.message}`);
+      }
+    }
+
+    // 2. Xóa assignment_submissions
+    const { error: subsErr } = await supabase
+      .from('assignment_submissions')
+      .delete()
+      .eq('assignment_id', id);
+    if (subsErr) {
+      console.error('Error deleting assignment_submissions:', subsErr);
+      throw new Error(`Không thể xóa bài nộp: ${subsErr.message}`);
+    }
+
+    // 3. Xóa assignment_questions
+    const { error: questionsErr } = await supabase
+      .from('assignment_questions')
+      .delete()
+      .eq('assignment_id', id);
+    if (questionsErr) {
+      console.error('Error deleting assignment_questions:', questionsErr);
+      throw new Error(`Không thể xóa câu hỏi: ${questionsErr.message}`);
+    }
+
+    // 4. Cuối cùng xóa assignment và kiểm tra thực sự xóa được
+    const { data: deletedAssignment, error } = await supabase
+      .from('assignments')
+      .delete()
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      console.error('Error deleting assignment:', error);
+      throw new Error(`Không thể xóa bài tập: ${error.message}. Có thể do thiếu quyền hoặc RLS policy chưa được cấu hình.`);
+    }
+
+    // Check if any row was actually deleted
+    if (!deletedAssignment || deletedAssignment.length === 0) {
+      throw new Error('Không thể xóa bài tập. Bạn có thể không có quyền xóa hoặc bài tập không tồn tại.');
+    }
+  } catch (error: any) {
+    // Re-throw với thông báo rõ ràng hơn
+    if (error.message) {
+      throw error;
+    }
+    throw new Error(`Lỗi khi xóa bài tập: ${error?.message || 'Lỗi không xác định'}`);
+  }
 };
 
 // ===== SUBMISSIONS (Student) =====
@@ -186,6 +281,7 @@ export const getSubmissionById = async (id: string) => {
     .select(`
       *,
       assignment:assignments(*),
+      profiles:user_id(id, full_name, email),
       answers:assignment_answers(
         *,
         question:assignment_questions(*)
@@ -246,18 +342,36 @@ export const saveAnswer = async (answer: {
   question_id: string;
   answer_text?: string;
   audio_url?: string;
+  file_urls?: string[];
+  video_url?: string;
+  file_metadata?: any;
 }) => {
-  // Upsert: update if exists, insert if not
-  const { data, error } = await supabase
+  // Find if exists
+  const { data: existing } = await supabase
     .from('assignment_answers')
-    .upsert(answer, {
-      onConflict: 'submission_id,question_id',
-    })
-    .select()
-    .single();
+    .select('id')
+    .eq('submission_id', answer.submission_id)
+    .eq('question_id', answer.question_id)
+    .maybeSingle();
 
-  if (error) throw error;
-  return data;
+  if (existing) {
+    const { data, error } = await supabase
+      .from('assignment_answers')
+      .update(answer)
+      .eq('id', existing.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('assignment_answers')
+      .insert(answer)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
 };
 
 export const getAnswersBySubmission = async (submissionId: string) => {
@@ -287,7 +401,8 @@ export const getAllSubmissions = async (
     .from('assignment_submissions')
     .select(`
       *,
-      assignment:assignments(*)
+      assignment:assignments(*),
+      profiles:user_id(id, full_name, email)
     `, { count: 'exact' })
     .order('submitted_at', { ascending: false });
 

@@ -4,7 +4,7 @@ import { addToNotebook, removeFromNotebook, getNotebookItems } from '../services
 import { Kanji } from '../types';
 import type { Language } from '../services/supabaseService.v2';
 import Pagination from './common/Pagination';
-import '../App.css';
+import '../styles/learning-sections-premium.css';
 
 interface KanjiSectionProps {
   kanji: Kanji[];
@@ -60,7 +60,7 @@ const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
     <div className="section-container kanji-section">
       <div className="section-header kanji-header">
         <div className="section-icon kanji-icon">
-          <svg style={{ width: '40px', height: '40px', color: 'var(--secondary-color)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg style={{ width: '40px', height: '40px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
         </div>
@@ -83,20 +83,20 @@ const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
                       title={notebookItems.has(k.id) ? "Xóa khỏi sổ tay" : "Lưu vào sổ tay"}
                       style={{
                         position: 'absolute',
-                        top: '-10px',
-                        right: '-10px',
-                        background: 'white',
-                        border: '2px solid var(--border-color)',
+                        top: '-15px',
+                        right: '-15px',
+                        background: 'var(--card-bg)',
+                        border: '1px solid var(--border-color)',
                         borderRadius: '50%',
-                        width: '32px',
-                        height: '32px',
+                        width: '36px',
+                        height: '36px',
                         cursor: 'pointer',
                         fontSize: '1rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: notebookItems.has(k.id) ? '#f59e0b' : '#cbd5e1',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        color: notebookItems.has(k.id) ? '#f59e0b' : 'var(--text-tertiary)',
+                        boxShadow: 'var(--shadow)',
                         zIndex: 2,
                         transition: 'all 0.2s'
                       }}
@@ -104,7 +104,7 @@ const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
                       {notebookItems.has(k.id) ? '⭐' : '☆'}
                     </button>
                   </div>
-                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', fontWeight: '900', color: 'var(--text-primary)' }}>
                     {k.meaning}
                   </h3>
                   {language === 'japanese' ? (
@@ -113,7 +113,7 @@ const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
                         <>
                           <div className="reading-group">
                             <div className="reading-label">Âm On (音読み)</div>
-                            <div className="reading-value">
+                            <div className="reading-value" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', justifyContent: 'center' }}>
                               {k.readings.onyomi && k.readings.onyomi.length > 0 ? (
                                 k.readings.onyomi.map((reading, idx) => (
                                   <span key={idx} className="reading-tag">{reading}</span>
@@ -125,7 +125,7 @@ const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
                           </div>
                           <div className="reading-group">
                             <div className="reading-label">Âm Kun (訓読み)</div>
-                            <div className="reading-value">
+                            <div className="reading-value" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', justifyContent: 'center' }}>
                               {k.readings.kunyomi && k.readings.kunyomi.length > 0 ? (
                                 k.readings.kunyomi.map((reading, idx) => (
                                   <span key={idx} className="reading-tag">{reading}</span>
@@ -156,28 +156,15 @@ const KanjiSection = ({ kanji, language }: KanjiSectionProps) => {
                           </div>
                         </div>
                       )}
-                      {(k.simplified || k.traditional) && (
-                        <div className="reading-group">
-                          <div className="reading-label">Dạng chữ</div>
-                          <div className="reading-value">
-                            {k.simplified && k.simplified !== k.character && (
-                              <span className="reading-tag">简: {k.simplified}</span>
-                            )}
-                            {k.traditional && k.traditional !== k.character && (
-                              <span className="reading-tag">繁: {k.traditional}</span>
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
-                  <div className="kanji-examples">
-                    <div className="examples-label">Ví dụ:</div>
+                  <div className="kanji-examples" style={{ marginTop: '1.5rem', textAlign: 'left' }}>
+                    <div className="examples-label" style={{ fontWeight: '800', marginBottom: '0.5rem', fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>Ví dụ:</div>
                     {k.examples.map((example, idx) => (
-                      <div key={idx} className="example-item">
-                        <span className="example-word">{example.word}</span>
-                        <span className="example-reading">({example.reading})</span>
-                        <span className="example-meaning">- {example.meaning}</span>
+                      <div key={idx} className="example-item" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', padding: '0.5rem', borderRadius: '8px', background: 'var(--bg-color)', border: '1px solid var(--border-color)' }}>
+                        <span className="example-word" style={{ fontWeight: '800', color: 'var(--text-primary)' }}>{example.word}</span>
+                        <span className="example-reading" style={{ color: 'var(--text-secondary)', marginLeft: '0.4rem' }}>({example.reading})</span>
+                        <span className="example-meaning" style={{ display: 'block', marginTop: '0.2rem', color: 'var(--text-secondary)' }}> {example.meaning}</span>
                       </div>
                     ))}
                   </div>

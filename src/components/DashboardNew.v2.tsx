@@ -498,8 +498,8 @@ const DashboardNew = () => {
           </div>
         </div>
 
-        {/* Language Switcher */}
-        <div className="language-switcher">
+        {/* Language Switcher - scoped class to avoid conflict with header */}
+        <div className="dashboard-language-switcher">
           <button
             className={`lang-switch-btn ${selectedLanguage === 'japanese' ? 'active' : ''}`}
             onClick={() => setSelectedLanguage('japanese')}
@@ -572,7 +572,7 @@ const DashboardNew = () => {
 
                 <button
                   className="class-enter-btn"
-                  onClick={() => navigate(`/${cls.language}/courses/${cls.level}`)}
+                  onClick={() => navigate(`/class/${cls.id}`)}
                 >
                   <span>Vào lớp học</span>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

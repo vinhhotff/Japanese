@@ -1,0 +1,454 @@
+/* styles/login-premium.css */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+.premium-login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background-color: var(--bg-color);
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    padding: 2rem;
+    transition: background-color 0.5s ease;
+}
+
+/* Base variables synced with app theme but optimized for Login */
+.premium-login-container {
+    --login-primary: #3b82f6;
+    --login-primary-glow: rgba(59, 130, 246, 0.4);
+    --login-jp-red: #c41e3a;
+    --login-card-bg: var(--card-bg);
+    --login-text: var(--text-primary);
+    --login-text-muted: var(--text-muted);
+}
+
+/* --- BACKGROUND DECORATION --- */
+.cultural-pattern {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.25;
+    /* Softer pattern */
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+.login-visual-background {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.blur-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.12;
+    /* Very soft */
+    z-index: 1;
+    animation: blobMove 25s infinite alternate ease-in-out;
+}
+
+.blob-1 {
+    width: 600px;
+    height: 600px;
+    background: var(--login-primary);
+    top: -150px;
+    left: -150px;
+}
+
+.blob-2 {
+    width: 450px;
+    height: 450px;
+    background: var(--login-jp-red);
+    bottom: -100px;
+    right: -100px;
+    animation-delay: -7s;
+}
+
+@keyframes blobMove {
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(80px, 120px) scale(1.1) rotate(15deg);
+    }
+}
+
+/* --- THE CARD --- */
+.premium-login-card {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 620px;
+    /* Increased from 540px */
+    background: var(--login-card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 40px;
+    /* More rounded */
+    padding: 5rem 4rem;
+    /* More spacious */
+    box-shadow:
+        0 40px 100px -20px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    animation: cardEntrance 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease;
+}
+
+[data-theme="dark"] .premium-login-card {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 40px 80px -12px rgba(0, 0, 0, 0.6);
+}
+
+.premium-login-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 40px 80px -12px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+}
+
+[data-theme="dark"] .premium-login-card:hover {
+    box-shadow: 0 50px 100px -12px rgba(0, 0, 0, 0.7);
+}
+
+@keyframes cardEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(60px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* --- HEADER --- */
+.premium-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+}
+
+.login-welcome-badge {
+    display: inline-flex;
+    padding: 0.6rem 1.5rem;
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--login-primary);
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.premium-header h1 {
+    font-size: 3.5rem;
+    /* Larger */
+    font-weight: 900;
+    /* Bolder */
+    color: var(--login-text);
+    margin: 0 0 1rem;
+    letter-spacing: -0.05em;
+    background: linear-gradient(135deg, var(--login-text) 0%, var(--login-primary) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.premium-header p {
+    color: var(--login-text-muted);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* --- THE FORM --- */
+.premium-form .form-group {
+    margin-bottom: 2.25rem;
+}
+
+.input-field-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.input-field-wrapper input {
+    width: 100%;
+    padding: 1.85rem 1.5rem 1rem 4rem;
+    background: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 22px;
+    color: var(--login-text);
+    font-size: 1.2rem;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+}
+
+.input-field-wrapper label {
+    position: absolute;
+    left: 3.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--login-text-muted);
+    font-size: 1.05rem;
+    font-weight: 500;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.field-icon {
+    position: absolute;
+    left: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    color: var(--login-text-muted);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Floating label logic (native CSS) */
+.input-field-wrapper input:focus+label,
+.input-field-wrapper input:not(:placeholder-shown)+label {
+    top: 0.9rem;
+    left: 3.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--login-primary);
+    transform: translateY(0);
+}
+
+.input-field-wrapper input:focus {
+    outline: none;
+    border-color: var(--login-primary);
+    box-shadow: 0 0 0 5px var(--login-primary-glow);
+    background: var(--card-bg);
+    transform: translateY(-2px);
+}
+
+.input-field-wrapper input:focus~.field-icon {
+    color: var(--login-primary);
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* --- THE BUTTON --- */
+.modern-submit-btn {
+    width: 100%;
+    padding: 1.35rem;
+    background: var(--login-primary);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+    box-shadow: 0 15px 30px -5px var(--login-primary-glow);
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-submit-btn:hover:not(:disabled) {
+    transform: translateY(-4px) scale(1.01);
+    background: #2563eb;
+    box-shadow: 0 20px 40px -5px var(--login-primary-glow);
+}
+
+.modern-submit-btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+}
+
+.modern-submit-btn span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.arrow-icon {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.modern-submit-btn:hover .arrow-icon {
+    transform: translateX(6px);
+}
+
+.modern-submit-btn:disabled {
+    background: var(--border-dark);
+    opacity: 0.7;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* --- FOOTER --- */
+.login-card-footer {
+    margin-top: 3rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.login-card-footer p {
+    color: var(--login-text-muted);
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.login-card-footer a {
+    color: var(--login-primary);
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.login-card-footer a:hover {
+    color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.social-login-separator {
+    position: relative;
+    margin-bottom: 2.5rem;
+    text-align: center;
+}
+
+.social-login-separator::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border-color);
+    z-index: 1;
+}
+
+.social-login-separator span {
+    position: relative;
+    z-index: 2;
+    background: var(--login-card-bg);
+    padding: 0 1.25rem;
+    color: var(--login-text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background-color 0.5s ease;
+}
+
+.back-home-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.75rem;
+    background: var(--bg-color);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    color: var(--login-text) !important;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.back-home-button:hover {
+    background: var(--card-bg-hover);
+    border-color: var(--login-text-muted);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    text-decoration: none !important;
+}
+
+.back-home-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ERROR MESSAGE */
+.premium-error {
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    padding: 1.25rem;
+    border-radius: 18px;
+    margin-bottom: 2.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    border: 2px solid rgba(239, 68, 68, 0.15);
+    animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+@keyframes shake {
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}
+
+/* --- LOADER --- */
+.login-spinner {
+    width: 24px;
+    height: 24px;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+    .premium-login-container {
+        padding: 1rem;
+    }
+
+    .premium-login-card {
+        padding: 3.5rem 1.5rem;
+        border-radius: 28px;
+    }
+
+    .premium-header h1 {
+        font-size: 2.5rem;
+    }
+
+    .modern-submit-btn {
+        padding: 1.1rem;
+        font-size: 1.1rem;
+    }
+}

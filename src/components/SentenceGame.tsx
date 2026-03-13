@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SentenceGame as SentenceGameType } from '../types';
-import '../App.css';
+import '../styles/learning-sections-premium.css';
 
 interface SentenceGameProps {
   sentences: SentenceGameType[];
@@ -33,7 +33,7 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
 
     const newSelected = [...selectedWords, word];
     const newAvailable = availableWords.filter((_, i) => i !== index);
-    
+
     setSelectedWords(newSelected);
     setAvailableWords(newAvailable);
   };
@@ -44,7 +44,7 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
     const word = selectedWords[index];
     const newSelected = selectedWords.filter((_, i) => i !== index);
     const newAvailable = [...availableWords, word];
-    
+
     setSelectedWords(newSelected);
     setAvailableWords(newAvailable);
   };
@@ -52,7 +52,7 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
   const checkAnswer = () => {
     if (!currentSentence) return;
 
-    const userOrder = selectedWords.map(word => 
+    const userOrder = selectedWords.map(word =>
       currentSentence.words.findIndex(w => w === word)
     );
     const isAnswerCorrect = JSON.stringify(userOrder) === JSON.stringify(currentSentence.correctOrder);
@@ -87,33 +87,28 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
   if (gameComplete) {
     const percentage = Math.round((score / sentences.length) * 100);
     const performanceClass = percentage >= 80 ? 'excellent' : percentage >= 60 ? 'good' : 'needs-improvement';
-    
+
     return (
-      <div className="game-container">
-        <div className="game-result">
-          <svg className="result-icon" style={{ width: '100px', height: '100px', color: '#10b981', margin: '0 auto 1.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h2>Hoàn thành xuất sắc!</h2>
-          <div className="score-display">
-            <div className="score-number">{score}/{sentences.length}</div>
-            <div className="score-label">Câu đúng</div>
-            <div className={`score-percentage ${performanceClass}`}>
-              {percentage}%
-            </div>
+      <div className="game-container game-result">
+        <svg className="result-icon" style={{ width: '100px', height: '100px', color: 'var(--success-color)', margin: '0 auto 1.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h2 style={{ color: 'var(--text-primary)', fontWeight: '900' }}>Hoàn thành bài tập!</h2>
+        <div className="score-display" style={{ margin: '2rem 0' }}>
+          <div className="score-number" style={{ fontSize: '3rem', fontWeight: '900', color: 'var(--primary-color)' }}>{score}/{sentences.length}</div>
+          <div className="score-label" style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>Câu đúng</div>
+          <div className={`score-percentage ${performanceClass}`} style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.5rem' }}>
+            {percentage}%
           </div>
-          <p className="result-message">
-            {percentage >= 80 ? 'Tuyệt vời! Bạn đã làm rất tốt! 🎉' : 
-             percentage >= 60 ? 'Khá tốt! Hãy thử lại để đạt điểm cao hơn! 👍' : 
-             'Cần luyện tập thêm. Đừng bỏ cuộc! 💪'}
-          </p>
-          <button className="btn btn-primary" onClick={resetGame}>
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            🔄 Chơi lại
-          </button>
         </div>
+        <p className="result-message" style={{ fontSize: '1.1rem', marginBottom: '2rem', color: 'var(--text-secondary)' }}>
+          {percentage >= 80 ? 'Tuyệt vời! Bạn đã làm rất tốt! 🎉' :
+            percentage >= 60 ? 'Khá tốt! Hãy thử lại để đạt điểm cao hơn! 👍' :
+              'Cần luyện tập thêm. Đừng bỏ cuộc! 💪'}
+        </p>
+        <button className="btn btn-primary" onClick={resetGame}>
+          🔄 Chơi lại
+        </button>
       </div>
     );
   }
@@ -124,44 +119,38 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
 
   return (
     <div className="game-container">
-      <div className="game-header">
-        <div className="game-progress">
-          <span>Câu {currentIndex + 1} / {sentences.length}</span>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${((currentIndex + 1) / sentences.length) * 100}%` }}
+      <div className="game-header" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="game-progress" style={{ flex: 1 }}>
+          <span style={{ fontWeight: '800', color: 'var(--text-primary)' }}>Câu {currentIndex + 1} / {sentences.length}</span>
+          <div className="progress-bar" style={{ height: '8px', background: 'var(--bg-secondary)', borderRadius: '4px', marginTop: '0.5rem', overflow: 'hidden' }}>
+            <div
+              className="progress-fill"
+              style={{ width: `${((currentIndex + 1) / sentences.length) * 100}%`, height: '100%', background: 'var(--primary-color)', transition: 'width 0.3s ease' }}
             ></div>
           </div>
         </div>
-        <div className="game-score">Điểm: {score}/{sentences.length}</div>
+        <div className="game-score" style={{ marginLeft: '2rem', fontWeight: '800', padding: '0.5rem 1rem', background: 'var(--bg-secondary)', borderRadius: '12px', color: 'var(--primary-color)' }}>Điểm: {score}/{sentences.length}</div>
       </div>
 
-      <div className="game-question">
+      <div className="game-question" style={{ marginBottom: '2rem' }}>
         <div className="question-translation">
-          <span className="question-label">Sắp xếp các từ để tạo thành câu:</span>
-          <div className="translation-text">{currentSentence.translation}</div>
+          <span className="question-label" style={{ fontWeight: '800', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em' }}>Sắp xếp các từ để tạo thành câu:</span>
+          <div className="translation-text" style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--text-primary)', marginTop: '0.5rem' }}>{currentSentence.translation}</div>
         </div>
         {showHint && currentSentence.hint && (
-          <div className="game-hint">
+          <div className="game-hint" style={{ marginTop: '1rem', padding: '1rem', background: 'var(--warning-light)', borderRadius: '12px', color: 'var(--warning-color)', fontWeight: '600', border: '1px solid var(--warning-color)' }}>
             💡 Gợi ý: {currentSentence.hint}
           </div>
         )}
       </div>
 
-      <div className="selected-words-container">
-        <div className="selected-label">
-          <svg style={{ width: '24px', height: '24px', color: '#ec4899' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
+      <div className="selected-words-container" style={{ marginBottom: '2rem' }}>
+        <div className="selected-label" style={{ fontWeight: '800', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           Câu của bạn:
         </div>
-        <div className="selected-words">
+        <div className="selected-words" style={{ minHeight: '80px', padding: '1rem', background: 'var(--bg-color)', border: '2px dashed var(--border-color)', borderRadius: '20px', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', justifyContent: 'center' }}>
           {selectedWords.length === 0 ? (
-            <div className="empty-slot">
-              <svg style={{ width: '32px', height: '32px', margin: '0 auto 0.5rem', color: '#9ca3af' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-              </svg>
+            <div className="empty-slot" style={{ color: 'var(--text-tertiary)', textAlign: 'center' }}>
               Nhấn vào các từ bên dưới để tạo câu
             </div>
           ) : (
@@ -172,21 +161,18 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
                 onClick={() => handleRemoveWord(index)}
               >
                 {word}
-                <span className="remove-icon">×</span>
+                <span className="remove-icon" style={{ marginLeft: '0.5rem', opacity: 0.6 }}>×</span>
               </button>
             ))
           )}
         </div>
       </div>
 
-      <div className="available-words-container">
-        <div className="available-label">
-          <svg style={{ width: '24px', height: '24px', color: '#ec4899' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
+      <div className="available-words-container" style={{ marginBottom: '2rem' }}>
+        <div className="available-label" style={{ fontWeight: '800', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em', marginBottom: '1rem' }}>
           Nhấn vào từ để thêm:
         </div>
-        <div className="available-words">
+        <div className="available-words" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
           {availableWords.map((word, index) => (
             <button
               key={index}
@@ -201,71 +187,38 @@ const SentenceGame = ({ sentences, onComplete }: SentenceGameProps) => {
       </div>
 
       {isCorrect !== null && (
-        <div className={`game-feedback ${isCorrect ? 'correct' : 'incorrect'}`}>
-          {isCorrect ? (
-            <>
-              <svg className="feedback-icon" style={{ width: '32px', height: '32px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="feedback-text">Chính xác! Câu đúng là: <strong>{currentSentence.sentence}</strong></span>
-            </>
-          ) : (
-            <>
-              <svg className="feedback-icon" style={{ width: '32px', height: '32px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="feedback-text">Chưa đúng! Câu đúng là: <strong>{currentSentence.sentence}</strong></span>
-            </>
-          )}
+        <div className={`game-feedback ${isCorrect ? 'correct' : 'incorrect'}`} style={{ padding: '1.5rem', borderRadius: '20px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', background: isCorrect ? 'var(--success-light)' : 'var(--danger-light)', border: `1px solid ${isCorrect ? 'var(--success-color)' : 'var(--danger-color)'}`, color: isCorrect ? 'var(--success-color)' : 'var(--danger-color)' }}>
+          <span className="feedback-text" style={{ fontWeight: '700' }}>{isCorrect ? 'Chính xác!' : 'Chưa đúng!'} Câu đúng là: <strong>{currentSentence.sentence}</strong></span>
         </div>
       )}
 
-      <div className="game-actions">
+      <div className="game-actions" style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
         {!showHint && currentSentence.hint && isCorrect === null && (
-          <button 
-            className="btn btn-outline" 
+          <button
+            className="btn btn-outline"
             onClick={() => setShowHint(true)}
           >
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
             Xem gợi ý
           </button>
         )}
         {isCorrect === null ? (
-          <button 
+          <button
             className="btn btn-primary"
             onClick={checkAnswer}
             disabled={selectedWords.length !== currentSentence.words.length}
           >
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Kiểm tra câu trả lời
+            Kiểm tra
           </button>
         ) : (
           <button className="btn btn-primary" onClick={nextSentence}>
-            {currentIndex < sentences.length - 1 ? (
-              <>
-                Câu tiếp theo
-                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M9 5l7 7-7 7" />
-                </svg>
-              </>
-            ) : (
-              <>
-                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M5 13l4 4L19 7" />
-                </svg>
-                Hoàn thành
-              </>
-            )}
+            {currentIndex < sentences.length - 1 ? 'Câu tiếp theo' : 'Hoàn thành'}
           </button>
         )}
       </div>
     </div>
   );
 };
+
 
 export default SentenceGame;
 

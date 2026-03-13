@@ -31,6 +31,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
   const [enrollCode, setEnrollCode] = useState('');
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState<string | null>(null);
+  const [switchingCourse, setSwitchingCourse] = useState(false);
   const itemsPerPage = 8;
 
   useEffect(() => {
@@ -90,28 +91,24 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
     }
   };
 
-  const loadLessons = async () => {
+  const loadLessons = async (isSwitching = false) => {
     try {
-      setLoading(true);
+      if (isSwitching) setSwitchingCourse(true);
+      else setLoading(true);
 
-      // 1. Fetch Course ID first (More reliable than querying lessons by level string)
+      // 1. Fetch Course ID first
       const { getCourseByLevel } = await import('../services/supabaseService');
       const targetLevel = (level || '').toUpperCase();
-      const course = await getCourseByLevel(language, targetLevel); // Returns course object directly
+      const course = await getCourseByLevel(language, targetLevel);
 
       let lessonsData = [];
 
       if (course) {
         setCourseInfo(course);
-        // 2. Fetch Lessons by Course ID
         const lessonsResult = await getLessons(course.id, undefined, undefined, 1, 1000);
         lessonsData = lessonsResult.data || [];
-        console.log(`Loaded ${lessonsData.length} lessons for Course: ${course.title} (${course.id})`);
-        console.log('Sample lesson data:', lessonsData[0]); // Check is_free here
       } else {
-        // Fallback: Try loading by level if course not found (legacy behavior)
         const targetLevel = (level || '').toUpperCase();
-        console.warn(`Course not found for ${targetLevel}, trying legacy fetch by level string`);
         const lessonsResult = await getLessons(undefined, language, targetLevel as any, 1, 1000);
         lessonsData = lessonsResult.data || [];
       }
@@ -148,11 +145,12 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
         });
 
       setLessons(lessonsOfLevel);
-      setCurrentPage(1); // Reset page when level changes
+      setCurrentPage(1);
     } catch (err) {
       console.error('Error loading lessons:', err);
     } finally {
       setLoading(false);
+      setSwitchingCourse(false);
     }
   };
 
@@ -500,7 +498,12 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
       </AnimatePresence>
 
       {/* Lessons List */}
-      <div style={{ display: 'grid', gap: '1.5rem', paddingBottom: '3rem' }}>
+      <div style={{ position: 'relative', display: 'grid', gap: '1.5rem', paddingBottom: '3rem' }}>
+        {switchingCourse && (
+          <div className="course-switch-overlay">
+            <div className="spinner-large"></div>
+          </div>
+        )}
         {currentItems.map((lesson, index) => {
           const progress = getLessonCompletionPercentage(lesson.id);
           const completed = isLessonCompleted(lesson.id);
@@ -511,8 +514,9 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
               className={`card locked-container ${isLocked ? 'is-premium-locked' : ''}`}
               style={{
                 padding: '2rem',
-                cursor: isLocked ? 'not-allowed' : 'pointer',
-                position: 'relative'
+                cursor: (isLocked || switchingCourse) ? 'not-allowed' : 'pointer',
+                position: 'relative',
+                opacity: switchingCourse ? 0.5 : 1
               }}
             >
               {/* Premium Blur Overlay for Locked Content */}
@@ -614,7 +618,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                   📖 {lesson.vocabCount} từ vựng
                 </div>
                 <div style={{ padding: '0.5rem 1rem', background: 'rgba(0,0,0,0.05)', borderRadius: '12px', fontSize: '0.9rem' }}>
-                  🈶 {lesson.kanjiCount} hán tự
+                  {language === 'japanese' ? '㊗️' : '🈶'} {lesson.kanjiCount} {language === 'japanese' ? 'kanji' : 'hán tự'}
                 </div>
                 <div style={{ padding: '0.5rem 1rem', background: 'rgba(0,0,0,0.05)', borderRadius: '12px', fontSize: '0.9rem' }}>
                   📝 {lesson.grammarCount} ngữ pháp
@@ -632,14 +636,14 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
           );
 
           return isLocked ? (
-            <div key={lesson.id} onClick={() => setShowTrialNotice(true)} style={{ opacity: 0.9 }}>
+            <div key={lesson.id} onClick={() => !switchingCourse && setShowTrialNotice(true)} style={{ opacity: 0.9 }}>
               {LessonCardContent}
             </div>
           ) : (
             <Link
               key={lesson.id}
-              to={`/${language}/lessons/${lesson.id}`}
-              style={{ textDecoration: 'none', color: 'inherit' }}
+              to={switchingCourse ? '#' : `/${language}/lessons/${lesson.id}`}
+              style={{ textDecoration: 'none', color: 'inherit', pointerEvents: switchingCourse ? 'none' : 'auto' }}
             >
               {LessonCardContent}
             </Link>

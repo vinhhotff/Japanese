@@ -49,6 +49,33 @@ export const uploadFile = async (
 };
 
 /**
+ * Upload video file
+ */
+export const uploadVideo = async (file: File): Promise<UploadResult> => {
+  return uploadFile(file, 'videos');
+};
+
+/**
+ * Upload document file
+ */
+export const uploadDocument = async (file: File): Promise<UploadResult> => {
+  return uploadFile(file, 'documents');
+};
+
+/**
+ * Get file type from mime type or extension
+ */
+export const getFileType = (file: File): 'image' | 'audio' | 'video' | 'document' | 'other' => {
+  if (file.type.startsWith('image/')) return 'image';
+  if (file.type.startsWith('audio/')) return 'audio';
+  if (file.type.startsWith('video/')) return 'video';
+  if (file.type === 'application/pdf' ||
+    file.type.includes('msword') ||
+    file.type.includes('officedocument')) return 'document';
+  return 'other';
+};
+
+/**
  * Upload audio file
  */
 export const uploadAudio = async (file: File): Promise<UploadResult> => {
@@ -66,7 +93,12 @@ export const uploadImage = async (file: File, folder?: string): Promise<UploadRe
  * Validate file type
  */
 export const validateFileType = (file: File, allowedTypes: string[]): boolean => {
-  return allowedTypes.includes(file.type);
+  return allowedTypes.some(type => {
+    if (type.endsWith('/*')) {
+      return file.type.startsWith(type.replace('/*', '/'));
+    }
+    return file.type === type;
+  });
 };
 
 /**
@@ -75,5 +107,16 @@ export const validateFileType = (file: File, allowedTypes: string[]): boolean =>
 export const validateFileSize = (file: File, maxSizeMB: number): boolean => {
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   return file.size <= maxSizeBytes;
+};
+
+/**
+ * Format file size into readable string
+ */
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 

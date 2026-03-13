@@ -19,16 +19,45 @@ const Leaderboard: React.FC = () => {
     const fetchLeaderboard = async () => {
         try {
             setLoading(true);
-            const { data, error } = await supabase
+
+            // Fetch top 10 from user_stats
+            const { data: statsData, error: statsError } = await supabase
                 .from('user_stats')
                 .select('user_id, total_points, level, current_streak')
                 .order('total_points', { ascending: false })
                 .limit(10);
 
-            if (error) throw error;
+            if (statsError) throw statsError;
 
-            // Note: In a real app, you'd join with profiles table for names/avatars
-            setTopUsers(data || []);
+            if (!statsData || statsData.length === 0) {
+                setTopUsers([]);
+                return;
+            }
+
+            // Extract user IDs to fetch profiles
+            const userIds = statsData.map(stat => stat.user_id);
+
+            // Fetch profiles
+            const { data: profilesData, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url')
+                .in('id', userIds);
+
+            if (profilesError) {
+                console.error("Error fetching profiles for leaderboard:", profilesError);
+            }
+
+            // Merge stats with profiles
+            const mergedData = statsData.map(stat => {
+                const profile = profilesData?.find(p => p.id === stat.user_id);
+                return {
+                    ...stat,
+                    full_name: profile?.full_name || `Học viên ${stat.user_id.substring(0, 5)}`,
+                    avatar_url: profile?.avatar_url
+                };
+            });
+
+            setTopUsers(mergedData);
         } catch (e) {
             console.error('Error fetching leaderboard:', e);
         } finally {
@@ -53,6 +82,10 @@ const Leaderboard: React.FC = () => {
 
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '2rem' }}>Đang tải...</div>
+            ) : topUsers.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                    Chưa có dữ liệu xếp hạng. Hãy là người đầu tiên!
+                </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {topUsers.map((item, index) => (
@@ -81,28 +114,33 @@ const Leaderboard: React.FC = () => {
                                 width: '40px',
                                 height: '40px',
                                 borderRadius: '12px',
-                                background: 'white',
+                                background: item.avatar_url ? 'transparent' : 'white',
                                 marginRight: '1rem',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: '1.2rem'
+                                fontSize: '1.2rem',
+                                overflow: 'hidden'
                             }}>
-                                👤
+                                {item.avatar_url ? (
+                                    <img src={item.avatar_url} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    '👤'
+                                )}
                             </div>
 
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 700, fontSize: '1rem' }}>
-                                    {item.user_id === user?.id ? 'Bạn (Học viên)' : `Học viên ${item.user_id.substring(0, 5)}...`}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 700, fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {item.user_id === user?.id ? (item.full_name + ' (Bạn)') : item.full_name}
                                 </div>
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                    Cấp độ {item.level} • {item.current_streak} ngày streak
+                                    Cấp độ {item.level || 1} • {item.current_streak || 0} ngày streak
                                 </div>
                             </div>
 
-                            <div style={{ textAlign: 'right' }}>
+                            <div style={{ textAlign: 'right', paddingLeft: '8px' }}>
                                 <div style={{ fontWeight: 800, color: 'var(--primary-color)', fontSize: '1.2rem' }}>
-                                    {item.total_points}
+                                    {item.total_points || 0}
                                 </div>
                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                     Điểm XP
@@ -124,14 +162,14 @@ const Leaderboard: React.FC = () => {
                         background: 'var(--primary-light)',
                         border: '2px solid var(--primary-color)'
                     }}>
-                        <div style={{ width: '32px', fontWeight: 800 }}>-</div>
+                        <div style={{ width: '32px', fontWeight: 800, color: 'var(--text-secondary)' }}>-</div>
                         <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'white', marginRight: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>👤</div>
                         <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 700 }}>Bạn</div>
-                            <div style={{ fontSize: '0.8rem' }}>Cấp độ {currentUserStats.level}</div>
+                            <div style={{ fontSize: '0.8rem' }}>Cấp độ {currentUserStats.level || 1}</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontWeight: 800, color: 'var(--primary-color)' }}>{currentUserStats.totalPoints}</div>
+                            <div style={{ fontWeight: 800, color: 'var(--primary-color)' }}>{currentUserStats.totalPoints || 0}</div>
                         </div>
                     </div>
                 </div>

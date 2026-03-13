@@ -11,6 +11,7 @@ import LessonListNew from './components/LessonListNew';
 import LessonDetail from './components/LessonDetail';
 import Dictionary from './components/Dictionary';
 import AllDictionary from './components/AllDictionary';
+import ClassDetail from './components/ClassDetail';
 import SavedWords from './components/SavedWords';
 import VocabularyPractice from './components/VocabularyPractice';
 import StudyProgress from './components/StudyProgress';
@@ -19,6 +20,8 @@ import SpacedRepetition from './components/SpacedRepetition';
 import Login from './components/Login';
 import Register from './components/Register';
 import TeacherDashboard from './components/TeacherDashboard';
+import SubmissionList from './components/SubmissionList';
+import GradingPage from './components/GradingPage';
 import AdminPanel from './components/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -28,6 +31,7 @@ import VoiceRecorder from './components/VoiceRecorder';
 import AssignmentList from './components/AssignmentList';
 import AssignmentDetail from './components/AssignmentDetail';
 import GradingInterface from './components/GradingInterface';
+import AssignmentForm from './components/AssignmentForm';
 import './styles/theme-variables.css';
 import './styles/custom-theme.css';
 import './styles/modern-effects.css';
@@ -153,10 +157,52 @@ function App() {
                   } />
 
                   {/* Assignment Routes */}
-                  <Route path="/assignments" element={<AssignmentList />} />
-                  <Route path="/assignments/:assignmentId" element={<AssignmentDetail />} />
-                  <Route path="/my-assignments" element={<AssignmentList />} />
+                  <Route path="/assignments" element={
+                    <ProtectedRoute>
+                      <AssignmentList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/assignments/:assignmentId" element={
+                    <ProtectedRoute>
+                      <AssignmentDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/homework/:assignmentId" element={
+                    <ProtectedRoute>
+                      <AssignmentDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/my-assignments" element={
+                    <ProtectedRoute>
+                      <AssignmentList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/teacher/assignments/new" element={
+                    <ProtectedRoute requireTeacher>
+                      <AssignmentForm />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/teacher/assignments/edit/:assignmentId" element={
+                    <ProtectedRoute requireTeacher>
+                      <AssignmentForm />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/teacher/submissions/:assignmentId" element={
+                    <ProtectedRoute requireTeacher>
+                      <SubmissionList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/teacher/grading/:submissionId" element={
+                    <ProtectedRoute requireTeacher>
+                      <GradingPage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/admin/grading/:submissionId" element={<GradingInterface />} />
+                  <Route path="/class/:classId" element={
+                    <ProtectedRoute>
+                      <ClassDetail />
+                    </ProtectedRoute>
+                  } />
 
                   <Route
                     path="/login"

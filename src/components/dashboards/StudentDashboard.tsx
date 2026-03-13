@@ -181,30 +181,56 @@ const StudentDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="assignment-list" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+          <div className="assignment-list" style={{ maxHeight: '400px', overflowY: 'auto' }}>
             {homework.length === 0 ? (
               <div className="text-center py-8 opacity-60">
+                <div className="text-4xl mb-2">🎉</div>
                 <p>Xuất sắc! Không có bài tập nào cần làm.</p>
+                <p className="text-xs mt-1">Hãy tham gia lớp học để nhận bài tập từ giáo viên.</p>
               </div>
             ) : (
               <ul className="space-y-3">
                 {homework.slice((homeworkPage - 1) * itemsPerPage, homeworkPage * itemsPerPage).map((hw: any) => (
-                  <li key={hw.id} className="p-3 rounded-xl bg-amber-50 border border-amber-100 hover:shadow-md transition-shadow relative group">
+                  <li key={hw.id} className={`p-4 rounded-xl border transition-all hover:shadow-lg relative group ${hw.source === 'assignment' ? 'bg-indigo-50 border-indigo-100' : 'bg-amber-50 border-amber-100'}`}>
                     <div className="flex justify-between items-start mb-1">
-                      <span className="font-bold text-slate-700 line-clamp-1">{hw.title}</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-700 line-clamp-1">{hw.title}</span>
+                          {hw.source === 'assignment' && (
+                            <span className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter">MEDIA</span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{hw.classes?.name || 'Lớp học'}</span>
+                      </div>
                     </div>
-                    <div className="text-xs text-amber-700 font-medium mb-2">
-                      Hạn: {new Date(hw.due_date).toLocaleDateString('vi-VN')}
+                    <div className="flex items-center gap-2 text-xs font-medium mb-3">
+                      <span className={hw.source === 'assignment' ? 'text-indigo-600' : 'text-amber-700'}>
+                        📅 Hạn: {new Date(hw.due_date).toLocaleDateString('vi-VN')}
+                      </span>
                     </div>
                     <RouterLink
                       to={`/homework/${hw.id}`}
-                      className="block text-center w-full py-1.5 bg-white border border-amber-200 text-amber-600 rounded-lg text-sm font-bold hover:bg-amber-500 hover:text-white transition-colors"
+                      className={`block text-center w-full py-2 rounded-lg text-sm font-bold transition-all shadow-sm ${hw.source === 'assignment'
+                          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          : 'bg-white border border-amber-200 text-amber-600 hover:bg-amber-500 hover:text-white'
+                        }`}
                     >
-                      Làm bài &rarr;
+                      {hw.source === 'assignment' ? '🚀 Bắt đầu Media Assignment' : '📝 Làm bài tập ngay &rarr;'}
                     </RouterLink>
                   </li>
                 ))}
               </ul>
+            )}
+            {homework.length > itemsPerPage && (
+              <div className="mt-4">
+                <Pagination
+                  currentPage={homeworkPage}
+                  totalPages={Math.ceil(homework.length / itemsPerPage)}
+                  onPageChange={setHomeworkPage}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={homework.length}
+                />
+              </div>
             )}
           </div>
         </div>

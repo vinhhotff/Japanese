@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { QuizQuestion, Vocabulary, Kanji, Grammar } from '../types';
-import '../App.css';
+import '../styles/learning-sections-premium.css';
 
 interface QuizProps {
   vocabulary: Vocabulary[];
@@ -40,7 +40,7 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
       }
       // Find the new index of correct answer after shuffle
       const correctIndex = shuffledOptions.findIndex(opt => opt === correctAnswer);
-      
+
       generated.push({
         id: `vocab-${vocab.id}`,
         question: `"${vocab.kanji || vocab.word}" (${vocab.hiragana}) có nghĩa là gì?`,
@@ -67,7 +67,7 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
       }
       // Find the new index of correct answer after shuffle
       const correctIndex = shuffledOptions.findIndex(opt => opt === correctAnswer);
-      
+
       generated.push({
         id: `kanji-${k.id}`,
         question: `Kanji "${k.character}" có nghĩa là gì?`,
@@ -94,7 +94,7 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
       }
       // Find the new index of correct answer after shuffle
       const correctIndex = shuffledOptions.findIndex(opt => opt === correctAnswer);
-      
+
       generated.push({
         id: `grammar-${g.id}`,
         question: `Mẫu câu "${g.pattern}" có nghĩa là gì?`,
@@ -154,11 +154,11 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
   if (quizComplete) {
     const percentage = Math.round((score / questions.length) * 100);
     const performanceClass = percentage >= 80 ? 'excellent' : percentage >= 60 ? 'good' : 'needs-improvement';
-    
+
     return (
       <div className="quiz-container">
-        <div className="quiz-result">
-          <svg className="result-icon" style={{ width: '100px', height: '100px', color: percentage >= 80 ? '#10b981' : percentage >= 60 ? '#f59e0b' : '#ef4444', margin: '0 auto 1.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <div className="quiz-result" style={{ textAlign: 'center' }}>
+          <svg className="result-icon" style={{ width: '100px', height: '100px', color: percentage >= 80 ? 'var(--success-color)' : percentage >= 60 ? 'var(--warning-color)' : 'var(--danger-color)', margin: '0 auto 1.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             {percentage >= 80 ? (
               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             ) : percentage >= 60 ? (
@@ -167,25 +167,22 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
               <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             )}
           </svg>
-          <h2>Hoàn thành Quiz!</h2>
-          <div className="score-display">
-            <div className="score-number">{score}/{questions.length}</div>
-            <div className="score-label">Câu đúng</div>
-            <div className={`score-percentage ${performanceClass}`}>
+          <h2 style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Kết quả Quiz</h2>
+          <div className="score-display" style={{ margin: '2rem 0' }}>
+            <div className="score-number" style={{ fontSize: '3rem', fontWeight: '900', color: 'var(--primary-color)' }}>{score}/{questions.length}</div>
+            <div className="score-label" style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>Câu đúng</div>
+            <div className={`score-percentage ${performanceClass}`} style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.5rem' }}>
               {percentage}%
             </div>
           </div>
-          <div className="result-message">
-            {percentage >= 80 
-              ? 'Xuất sắc! Bạn đã nắm vững kiến thức! 🎉' 
-              : percentage >= 60 
-              ? 'Tốt! Hãy tiếp tục cố gắng! 👍' 
-              : 'Hãy ôn lại và thử lại nhé! 📖'}
+          <div className="result-message" style={{ fontSize: '1.1rem', marginBottom: '2rem', color: 'var(--text-secondary)' }}>
+            {percentage >= 80
+              ? 'Xuất sắc! Bạn đã nắm vững kiến thức! 🎉'
+              : percentage >= 60
+                ? 'Tốt! Hãy tiếp tục cố gắng! 👍'
+                : 'Hãy ôn lại và thử lại nhé! 📖'}
           </div>
           <button className="btn btn-primary" onClick={resetQuiz}>
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
             Làm lại Quiz
           </button>
         </div>
@@ -208,37 +205,24 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
 
   return (
     <div className="quiz-container">
-      <div className="quiz-header">
-        <div className="quiz-progress">
-          <span>Câu {currentIndex + 1} / {questions.length}</span>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${progress}%` }}
+      <div className="quiz-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div className="quiz-progress" style={{ flex: 1 }}>
+          <span style={{ fontWeight: '800', color: 'var(--text-primary)' }}>Câu {currentIndex + 1} / {questions.length}</span>
+          <div className="progress-bar" style={{ height: '8px', background: 'var(--bg-secondary)', borderRadius: '4px', marginTop: '0.5rem', overflow: 'hidden' }}>
+            <div
+              className="progress-fill"
+              style={{ width: `${progress}%`, height: '100%', background: 'var(--primary-color)', transition: 'width 0.3s ease' }}
             ></div>
           </div>
         </div>
-        <div className="quiz-score">Điểm: {score}/{questions.length}</div>
+        <div className="quiz-score" style={{ marginLeft: '2rem', fontWeight: '800', color: 'var(--primary-color)' }}>Điểm: {score}/{questions.length}</div>
       </div>
 
-      <div className="quiz-question-card">
-        <div className="question-type-badge">
-          {current.type === 'vocabulary' ? (
-            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-          ) : current.type === 'kanji' ? (
-            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-          ) : (
-            <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          )}
+      <div className="quiz-question-card" style={{ marginBottom: '2rem', textAlign: 'center' }}>
+        <div className="question-type-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.4rem 0.8rem', borderRadius: '50px', fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '1rem' }}>
           {current.type === 'vocabulary' ? 'Từ vựng' : current.type === 'kanji' ? 'Kanji' : 'Ngữ pháp'}
         </div>
-        <h3 className="question-text">{current.question}</h3>
+        <h3 className="question-text" style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-primary)' }}>{current.question}</h3>
       </div>
 
       <div className="quiz-options">
@@ -260,18 +244,15 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
               className={className}
               onClick={() => handleAnswerSelect(index)}
               disabled={showResult}
+              style={{ position: 'relative' }}
             >
-              <span className="option-letter">{String.fromCharCode(65 + index)}</span>
-              <span className="option-text">{option}</span>
+              <span className="option-letter" style={{ width: '32px', height: '32px', background: 'var(--bg-secondary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', marginRight: '1rem' }}>{String.fromCharCode(65 + index)}</span>
+              <span className="option-text" style={{ flex: 1, textAlign: 'left', fontWeight: '600' }}>{option}</span>
               {showResult && index === current.correctAnswer && (
-                <svg className="option-icon" style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M5 13l4 4L19 7" />
-                </svg>
+                <span style={{ color: 'var(--success-color)', fontWeight: 'bold' }}>✓</span>
               )}
               {showResult && index === selectedAnswer && index !== current.correctAnswer && (
-                <svg className="option-icon" style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <span style={{ color: 'var(--danger-color)', fontWeight: 'bold' }}>✗</span>
               )}
             </button>
           );
@@ -279,52 +260,33 @@ const Quiz = ({ vocabulary, kanji, grammar, onComplete }: QuizProps) => {
       </div>
 
       {showResult && current.explanation && (
-        <div className="quiz-explanation">
-          <div className="explanation-label">
-            <svg style={{ width: '20px', height: '20px', display: 'inline', marginRight: '0.5rem' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
+        <div className="quiz-explanation" style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--bg-color)', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+          <div className="explanation-label" style={{ fontWeight: '800', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
             Giải thích:
           </div>
-          <div className="explanation-text">{current.explanation}</div>
+          <div className="explanation-text" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>{current.explanation}</div>
         </div>
       )}
 
-      <div className="quiz-actions">
+      <div className="quiz-actions" style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'center' }}>
         {!showResult ? (
-          <button 
-            className="btn btn-primary" 
+          <button
+            className="btn btn-primary"
             onClick={handleSubmit}
             disabled={selectedAnswer === null}
           >
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Kiểm tra câu trả lời
+            Kiểm tra
           </button>
         ) : (
           <button className="btn btn-primary" onClick={handleNext}>
-            {currentIndex < questions.length - 1 ? (
-              <>
-                Câu tiếp theo
-                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M9 5l7 7-7 7" />
-                </svg>
-              </>
-            ) : (
-              <>
-                <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                Xem kết quả
-              </>
-            )}
+            {currentIndex < questions.length - 1 ? 'Câu tiếp theo' : 'Xem kết quả'}
           </button>
         )}
       </div>
     </div>
   );
 };
+
 
 export default Quiz;
 
