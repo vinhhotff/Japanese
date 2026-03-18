@@ -59,7 +59,7 @@ const Header = () => {
           <svg className="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
-          <span className="logo-text">日本語学習</span>
+          <span className="logo-text">kurakura</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -88,6 +88,7 @@ const Header = () => {
           {/* Practice Dropdown */}
           <div className="nav-dropdown" ref={practiceMenuRef}>
             <button
+              type="button"
               className={`nav-link nav-dropdown-toggle ${showPracticeMenu || isActiveGroup(['/vocabulary-practice', '/spaced-repetition', '/kanji-writing']) ? 'active' : ''}`}
               onClick={() => {
                 setShowPracticeMenu(!showPracticeMenu);
@@ -130,6 +131,7 @@ const Header = () => {
           {/* AI Tools Dropdown */}
           <div className="nav-dropdown" ref={aiMenuRef}>
             <button
+              type="button"
               className={`nav-link nav-dropdown-toggle ${showAIMenu || isActiveGroup(['/ai-conversation', '/ai-roleplay', '/voice-recorder']) ? 'active' : ''}`}
               onClick={() => {
                 setShowAIMenu(!showAIMenu);
@@ -150,6 +152,7 @@ const Header = () => {
                 {/* Language Tabs */}
                 <div className="ai-tabs-switcher">
                   <button
+                    type="button"
                     className={`ai-tab-btn jp ${aiLangTab === 'japanese' ? 'active' : ''}`}
                     onClick={(e) => { e.stopPropagation(); setAiLangTab('japanese'); }}
                   >
@@ -157,6 +160,7 @@ const Header = () => {
                     <span>Tiếng Nhật</span>
                   </button>
                   <button
+                    type="button"
                     className={`ai-tab-btn cn ${aiLangTab === 'chinese' ? 'active' : ''}`}
                     onClick={(e) => { e.stopPropagation(); setAiLangTab('chinese'); }}
                   >
@@ -220,6 +224,7 @@ const Header = () => {
           {/* More Dropdown */}
           <div className="nav-dropdown" ref={moreMenuRef}>
             <button
+              type="button"
               className={`nav-link nav-dropdown-toggle ${showMoreMenu || isActiveGroup(['/saved-words', '/study-progress']) ? 'active' : ''}`}
               onClick={() => {
                 setShowMoreMenu(!showMoreMenu);
@@ -260,7 +265,7 @@ const Header = () => {
           <LanguageSwitcher />
 
           {/* Theme Toggle */}
-          <button className="theme-toggle" onClick={toggleTheme} title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}>
+          <button type="button" className="theme-toggle" onClick={toggleTheme} title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}>
             {theme === 'dark' ? (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -276,6 +281,7 @@ const Header = () => {
           {user && (
             <div className="user-menu" ref={userMenuRef}>
               <button
+                type="button"
                 className="user-menu-toggle"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
@@ -310,7 +316,7 @@ const Header = () => {
                     </Link>
                   )}
 
-                  <button className="user-menu-item danger" onClick={handleSignOut}>
+                  <button type="button" className="user-menu-item danger" onClick={handleSignOut}>
                     <svg className="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
@@ -334,6 +340,7 @@ const Header = () => {
 
           {/* Mobile Menu Toggle */}
           <button
+            type="button"
             className="mobile-menu-toggle"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
           >

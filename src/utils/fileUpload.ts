@@ -83,6 +83,13 @@ export const uploadAudio = async (file: File): Promise<UploadResult> => {
 };
 
 /**
+ * Upload audio file (optionally into a folder)
+ */
+export const uploadAudioToFolder = async (file: File, folder?: string): Promise<UploadResult> => {
+  return uploadFile(file, 'audio-files', folder);
+};
+
+/**
  * Upload image file
  */
 export const uploadImage = async (file: File, folder?: string): Promise<UploadResult> => {

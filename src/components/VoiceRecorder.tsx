@@ -1,13 +1,35 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import '../App.css';
+import { useAuth } from '../contexts/AuthContext';
+import { compareJapaneseText, isSpeechRecognitionSupported, startSpeechRecognition } from '../utils/speech';
+import { uploadAudioToFolder } from '../utils/fileUpload';
+import { supabase } from '../config/supabase';
 
 interface RecordingData {
   id: string;
   text: string;
   audioUrl: string;
   timestamp: Date;
-  score?: number;
+  // Technical metrics (not "pronunciation score")
+  durationSec?: number;
+  rms?: number;
+  speechDetected?: boolean;
+  // ASR + scoring
+  transcript?: string;
+  confidence?: number;
+  similarity?: number; // 0..100
+  match?: boolean;
+  differences?: string[];
+  cloudUrl?: string;
+}
+
+interface EvaluationResult {
+  transcript: string;
+  confidence: number;
+  similarity: number;
+  isMatch: boolean;
+  differences: string[];
 }
 
 interface PracticePhrase {
@@ -21,13 +43,70 @@ interface PracticePhrase {
 
 const VoiceRecorder = () => {
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const [selectedLanguage, setSelectedLanguage] = useState<'japanese' | 'chinese' | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordings, setRecordings] = useState<RecordingData[]>([]);
   const [selectedPhrase, setSelectedPhrase] = useState<PracticePhrase | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
+  const [recordingElapsedMs, setRecordingElapsedMs] = useState(0);
+  const [speakingSample, setSpeakingSample] = useState(false);
+  const [isRecognizing, setIsRecognizing] = useState(false);
+  const [isEvaluating, setIsEvaluating] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const stopRecognitionRef = useRef<null | (() => void)>(null);
+
+  const HISTORY_KEY = `speaking-practice-history:${user?.id || 'anon'}:${selectedLanguage || 'unknown'}`;
+
+  // Call Edge Function for server-side ASR + scoring (best effort)
+  const evaluateWithServer = useCallback(async (cloudUrl: string, targetText: string, targetLanguage: 'japanese' | 'chinese', userId: string, durationSec?: number): Promise<EvaluationResult | null> => {
+    try {
+      const edgeUrl = import.meta.env.VITE_SPEAKING_EVALUATE_URL;
+      const edgeKey = import.meta.env.VITE_SPEAKING_EVALUATE_KEY;
+
+      if (!edgeUrl || !edgeKey) {
+        console.warn('Edge function not configured, skipping server evaluation');
+        return null;
+      }
+
+      const response = await fetch(edgeUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${edgeKey}`,
+        },
+        body: JSON.stringify({
+          audioUrl: cloudUrl,
+          targetText,
+          targetLanguage,
+          userId,
+          durationSec,
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn('Edge function error:', response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        return {
+          transcript: data.data.transcript || '',
+          confidence: data.data.confidence || 0,
+          similarity: data.data.similarity || 0,
+          isMatch: data.data.isMatch || false,
+          differences: data.data.differences || [],
+        };
+      }
+      return null;
+    } catch (e) {
+      console.warn('Edge function call failed:', e);
+      return null;
+    }
+  }, []);
 
   // Handle language from URL parameter
   useEffect(() => {
@@ -137,11 +216,83 @@ const VoiceRecorder = () => {
     };
   }, [mediaRecorder]);
 
+  // Update live timer while recording
+  useEffect(() => {
+    if (!isRecording || !recordingStartedAt) return;
+    const t = window.setInterval(() => {
+      setRecordingElapsedMs(Date.now() - recordingStartedAt);
+    }, 100);
+    return () => window.clearInterval(t);
+  }, [isRecording, recordingStartedAt]);
+
+  // Stop any TTS on unmount
+  useEffect(() => {
+    return () => {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  // Load saved history
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as any[];
+      const restored: RecordingData[] = Array.isArray(parsed)
+        ? parsed.map((r) => ({
+          ...r,
+          timestamp: r.timestamp ? new Date(r.timestamp) : new Date(),
+          audioUrl: (typeof r.cloudUrl === 'string' && r.cloudUrl) ? r.cloudUrl : r.audioUrl,
+        }))
+        : [];
+      setRecordings(restored);
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [HISTORY_KEY]);
+
+  // Persist history
+  useEffect(() => {
+    try {
+      const serializable = recordings.map((r) => ({
+        ...r,
+        timestamp: r.timestamp?.toISOString?.() || new Date().toISOString(),
+      }));
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(serializable.slice(0, 50)));
+    } catch {
+      // ignore
+    }
+  }, [recordings, HISTORY_KEY]);
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       const chunks: Blob[] = [];
+
+      // Start speech recognition in parallel (if supported)
+      if (isSpeechRecognitionSupported() && selectedPhrase) {
+        try {
+          setIsRecognizing(true);
+          const stop = startSpeechRecognition(
+            selectedLanguage === 'japanese' ? 'ja-JP' : 'zh-CN',
+            (result) => {
+              // We'll attach transcript to the newest recording on stop
+              (stopRecognitionRef as any).current_last = result;
+            },
+            () => {
+              setIsRecognizing(false);
+            },
+            () => {
+              setIsRecognizing(false);
+            }
+          );
+          stopRecognitionRef.current = stop;
+        } catch {
+          setIsRecognizing(false);
+        }
+      }
 
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
@@ -149,16 +300,75 @@ const VoiceRecorder = () => {
         }
       };
 
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
         const url = URL.createObjectURL(blob);
+
+        const metrics = await analyzeRecordingAudio(blob);
+
+        // Stop recognition if still running
+        try {
+          stopRecognitionRef.current?.();
+        } catch {
+          // ignore
+        }
+        const asrResult = (stopRecognitionRef as any).current_last as { transcript: string; confidence: number } | undefined;
+        (stopRecognitionRef as any).current_last = undefined;
+
+        const expected = selectedPhrase?.text || '';
+        const actual = asrResult?.transcript || '';
+        const cmp = expected && actual
+          ? compareJapaneseText(expected, actual)
+          : { match: false, similarity: 0, differences: [] as string[] };
+
+        // Upload audio to Supabase Storage for persistent history (best-effort)
+        let cloudUrl: string | undefined;
+        try {
+          const file = new File([blob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
+          const folder = user?.id
+            ? `voice-recorder/${user.id}/${selectedLanguage || 'unknown'}`
+            : `voice-recorder/anon/${selectedLanguage || 'unknown'}`;
+          const up = await uploadAudioToFolder(file, folder);
+          if (up.url) cloudUrl = up.url;
+        } catch {
+          // ignore upload failures (offline / missing bucket / permissions)
+        }
+
+        // Try server-side ASR if cloud URL available and user logged in
+        let serverResult: EvaluationResult | null = null;
+        if (cloudUrl && user?.id && selectedPhrase && selectedLanguage) {
+          setIsEvaluating(true);
+          serverResult = await evaluateWithServer(
+            cloudUrl,
+            selectedPhrase.text,
+            selectedLanguage,
+            user.id,
+            metrics.durationSec
+          );
+          setIsEvaluating(false);
+        }
+
+        // Use server result if available, otherwise fallback to browser ASR
+        const finalTranscript = serverResult?.transcript || asrResult?.transcript || '';
+        const finalConfidence = serverResult?.confidence ?? asrResult?.confidence;
+        const finalSimilarity = serverResult?.similarity ?? cmp.similarity;
+        const finalMatch = serverResult?.isMatch ?? cmp.match;
+        const finalDifferences = serverResult?.differences ?? cmp.differences;
 
         const newRecording: RecordingData = {
           id: Date.now().toString(),
           text: selectedPhrase?.text || 'Recording',
-          audioUrl: url,
+          audioUrl: cloudUrl || url,
           timestamp: new Date(),
-          score: Math.floor(Math.random() * 30) + 70, // Mock score 70-100
+          durationSec: metrics.durationSec,
+          rms: metrics.rms,
+          speechDetected: metrics.speechDetected,
+          transcript: finalTranscript,
+          confidence: finalConfidence,
+          similarity: finalSimilarity,
+          match: finalMatch,
+          differences: finalDifferences,
+          cloudUrl,
         };
 
         setRecordings(prev => [newRecording, ...prev]);
@@ -168,9 +378,51 @@ const VoiceRecorder = () => {
       recorder.start();
       setMediaRecorder(recorder);
       setIsRecording(true);
+      setRecordingStartedAt(Date.now());
+      setRecordingElapsedMs(0);
     } catch (error) {
       console.error('Error accessing microphone:', error);
       alert('Không thể truy cập microphone. Vui lòng cho phép quyền truy cập.');
+    }
+  };
+
+  const analyzeRecordingAudio = async (blob: Blob): Promise<{
+    durationSec: number;
+    rms: number;
+    speechDetected: boolean;
+  }> => {
+    try {
+      const arrayBuffer = await blob.arrayBuffer();
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      const channelData = audioBuffer.getChannelData(0);
+
+      // Compute RMS (root mean square) as loudness proxy
+      let sumSquares = 0;
+      const step = Math.max(1, Math.floor(channelData.length / 50000)); // subsample for speed
+      let count = 0;
+      for (let i = 0; i < channelData.length; i += step) {
+        const s = channelData[i];
+        sumSquares += s * s;
+        count++;
+      }
+      const rms = Math.sqrt(sumSquares / Math.max(1, count));
+
+      const duration = audioBuffer.duration; // seconds
+
+      // Speech detected heuristic: non-trivial duration and not near-silence
+      const speechDetected = isFinite(rms) && duration >= 0.6 && rms >= 0.01;
+
+      try {
+        await audioCtx.close?.();
+      } catch {
+        // ignore
+      }
+
+      return { durationSec: duration, rms, speechDetected };
+    } catch (e) {
+      console.warn('Audio analysis failed.', e);
+      return { durationSec: 0, rms: 0, speechDetected: false };
     }
   };
 
@@ -178,6 +430,12 @@ const VoiceRecorder = () => {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
       setIsRecording(false);
+      setRecordingStartedAt(null);
+      try {
+        stopRecognitionRef.current?.();
+      } catch {
+        // ignore
+      }
     }
   };
 
@@ -198,18 +456,52 @@ const VoiceRecorder = () => {
     setRecordings(prev => prev.filter(r => r.id !== id));
   };
 
-  const getScoreColor = (score?: number) => {
-    if (!score) return '#9ca3af';
-    if (score >= 90) return '#10b981';
-    if (score >= 75) return '#f59e0b';
+  const formatMs = (ms: number) => {
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const formatSec = (sec?: number) => {
+    if (!sec || !isFinite(sec)) return '0:00';
+    const total = Math.floor(sec);
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const getSpeechBadge = (speechDetected?: boolean) => {
+    if (speechDetected === undefined) return { label: 'Chưa phân tích', color: '#9ca3af' };
+    if (!speechDetected) return { label: 'Không phát hiện giọng nói', color: '#ef4444' };
+    return { label: 'Có giọng nói', color: '#10b981' };
+  };
+
+  const getSimilarityColor = (similarity?: number) => {
+    if (similarity === undefined || similarity === null) return '#9ca3af';
+    if (similarity >= 90) return '#10b981';
+    if (similarity >= 75) return '#f59e0b';
     return '#ef4444';
   };
 
-  const getScoreLabel = (score?: number) => {
-    if (!score) return 'Chưa đánh giá';
-    if (score >= 90) return 'Xuất sắc';
-    if (score >= 75) return 'Tốt';
-    return 'Cần cải thiện';
+  const speakSample = async () => {
+    if (!selectedPhrase) return;
+    if (!('speechSynthesis' in window)) {
+      alert('Trình duyệt không hỗ trợ phát âm mẫu (TTS).');
+      return;
+    }
+    // Cancel any existing speech first for predictable behavior
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(selectedPhrase.text);
+    utter.lang = selectedLanguage === 'japanese' ? 'ja-JP' : 'zh-CN';
+    utter.rate = 0.9;
+    utter.pitch = 1.0;
+
+    utter.onstart = () => setSpeakingSample(true);
+    utter.onend = () => setSpeakingSample(false);
+    utter.onerror = () => setSpeakingSample(false);
+
+    window.speechSynthesis.speak(utter);
   };
 
   return (
@@ -332,7 +624,15 @@ const VoiceRecorder = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn-outline"
+                  onClick={speakSample}
+                  disabled={speakingSample || isRecording}
+                  style={{ padding: '1rem 1.5rem', fontSize: '1.05rem' }}
+                >
+                  {speakingSample ? 'Đang phát mẫu...' : 'Nghe mẫu'}
+                </button>
                 {!isRecording ? (
                   <button
                     className="btn btn-primary"
@@ -363,10 +663,19 @@ const VoiceRecorder = () => {
                     <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <rect x="6" y="6" width="12" height="12" fill="currentColor" />
                     </svg>
-                    Dừng ghi âm
+                    Dừng ghi âm ({formatMs(recordingElapsedMs)})
                   </button>
                 )}
               </div>
+              {isRecording && (
+                <div style={{ marginTop: '1rem', color: '#6b7280', fontSize: '0.95rem' }}>
+                  {isEvaluating && '⏳ Đang chấm bài (server-side ASR)...'}
+                  {isRecognizing && 'Đang nhận diện giọng nói... (ASR trình duyệt)'}
+                  {!isEvaluating && !isRecognizing && (isSpeechRecognitionSupported()
+                    ? 'ASR sẵn sàng (trình duyệt)'
+                    : 'Trình duyệt không hỗ trợ ASR, chỉ lưu audio')}
+                </div>
+              )}
             </div>
           )}
 
@@ -430,21 +739,52 @@ const VoiceRecorder = () => {
                         <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
                           {recording.timestamp.toLocaleString('vi-VN')}
                         </div>
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                          Thời lượng: <strong>{formatSec(recording.durationSec)}</strong>
+                          {typeof recording.rms === 'number' && isFinite(recording.rms) ? (
+                            <> • Âm lượng (RMS): <strong>{recording.rms.toFixed(3)}</strong></>
+                          ) : null}
+                        </div>
+                        {recording.transcript ? (
+                          <div style={{ fontSize: '0.875rem', color: '#374151', marginTop: '0.5rem' }}>
+                            Bạn nói (ASR): <strong>{recording.transcript}</strong>
+                            {typeof recording.confidence === 'number' ? (
+                              <> • Độ tin cậy: <strong>{Math.round(recording.confidence * 100)}%</strong></>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+                            Chưa có transcript (ASR)
+                          </div>
+                        )}
+                        {typeof recording.similarity === 'number' ? (
+                          <div style={{ fontSize: '0.875rem', marginTop: '0.35rem', color: getSimilarityColor(recording.similarity) }}>
+                            Độ giống câu mục tiêu: <strong>{recording.similarity}%</strong>
+                            {recording.match ? ' • Đạt' : ' • Chưa đạt'}
+                          </div>
+                        ) : null}
+                        {recording.differences && recording.differences.length > 0 ? (
+                          <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.35rem' }}>
+                            {recording.differences.map((d, i) => (
+                              <div key={i}>{d}</div>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                       <div style={{ textAlign: 'center', marginRight: '1rem' }}>
-                        <div style={{
-                          fontSize: '1.5rem',
-                          fontWeight: '700',
-                          color: getScoreColor(recording.score)
-                        }}>
-                          {recording.score}
-                        </div>
-                        <div style={{
-                          fontSize: '0.75rem',
-                          color: getScoreColor(recording.score)
-                        }}>
-                          {getScoreLabel(recording.score)}
-                        </div>
+                        {(() => {
+                          const badge = getSpeechBadge(recording.speechDetected);
+                          return (
+                            <>
+                              <div style={{ fontSize: '0.95rem', fontWeight: '800', color: badge.color }}>
+                                {badge.label}
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: badge.color }}>
+                                (chỉ số kỹ thuật)
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                       <button
                         onClick={() => deleteRecording(recording.id)}
@@ -478,9 +818,9 @@ const VoiceRecorder = () => {
               <div>
                 <h3 style={{ fontWeight: '700', color: 'var(--warning-color)', marginBottom: '0.5rem' }}>Mẹo luyện tập</h3>
                 <ul style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.8', paddingLeft: '1.25rem' }}>
-                  <li>Nghe kỹ phát âm mẫu trước khi ghi âm</li>
+                  <li>Bấm <strong>Nghe mẫu</strong> để nghe phát âm tham khảo (TTS)</li>
                   <li>Nói rõ ràng và với tốc độ vừa phải</li>
-                  <li>Luyện tập nhiều lần để cải thiện điểm số</li>
+                  <li>Ghi âm nhiều lần và so sánh bản ghi của chính bạn</li>
                   <li>Chú ý đến ngữ điệu và trọng âm</li>
                 </ul>
               </div>

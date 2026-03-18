@@ -1,26 +1,63 @@
 /* ===== ADMIN PANEL - PROFESSIONAL DESIGN ===== */
 
+/* Import teacher dashboard premium styles for consistent header */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Define admin CSS variables - MATCHING TEACHER DASHBOARD COLORS */
 .admin-panel {
+  --admin-primary: #00b4d8;
+  --admin-primary-glow: rgba(0, 180, 216, 0.25);
+  --admin-secondary: #3b82f6;
+  --admin-accent: #22c55e;
+  --admin-bg: #f8fafc;
+  --admin-card-bg: rgba(255, 255, 255, 0.95);
+  --admin-card-bg-hover: rgba(255, 255, 255, 1);
+  --admin-glass: rgba(0, 0, 0, 0.02);
+  --admin-glass-border: rgba(15, 23, 42, 0.08);
+  --admin-text: #0f172a;
+  --admin-text-muted: #475569;
+  --admin-gradient: linear-gradient(135deg, #00b4d8 0%, #3b82f6 100%);
+  --admin-surface: #ffffff;
+  --admin-shadow-premium: 0 18px 40px -18px rgba(15, 23, 42, 0.25);
+  
   min-height: 100vh;
-  background: var(--bg-color);
+  background: var(--admin-bg);
   position: relative;
+  font-family: 'Be Vietnam Pro', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Admin Header */
+/* Dark mode */
+[data-theme="dark"] .admin-panel {
+  --admin-primary: #00f2fe;
+  --admin-primary-glow: rgba(0, 242, 254, 0.3);
+  --admin-secondary: #4facfe;
+  --admin-accent: #22c55e;
+  --admin-bg: #0b1120;
+  --admin-card-bg: rgba(30, 41, 59, 0.7);
+  --admin-card-bg-hover: rgba(30, 41, 59, 0.9);
+  --admin-glass: rgba(255, 255, 255, 0.05);
+  --admin-glass-border: rgba(255, 255, 255, 0.1);
+  --admin-text: #f1f5f9;
+  --admin-text-muted: #cbd5e1;
+  --admin-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+  --admin-surface: #1e293b;
+  --admin-shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Admin Header - MATCHING TEACHER HEADER STYLE */
 .admin-header {
-  background: linear-gradient(135deg, #c41e3a 0%, #ff69b4 100%);
-  color: white;
-  padding: 1.5rem 2rem;
-  box-shadow: 0 4px 20px rgba(196, 30, 58, 0.2);
+  background: var(--admin-card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--admin-glass-border);
+  padding: 1rem 2rem;
   position: sticky;
   top: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
-}
-
-[data-theme="dark"] .admin-header {
-  background: linear-gradient(135deg, #dc2626 0%, #f472b6 100%);
-  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
 }
 
 .admin-header-content {
@@ -31,22 +68,147 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+  width: 100%;
 }
 
 .admin-title {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
 }
 
 .admin-title h1 {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 800;
+  letter-spacing: -0.03em;
+  background: var(--admin-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin: 0;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+}
+
+/* Admin tabs - MATCHING TEACHER HEADER BUTTONS */
+.admin-header-nav {
+  display: flex;
   gap: 0.75rem;
-  letter-spacing: -0.02em;
+  align-items: center;
+}
+
+.admin-header-btn {
+  padding: 0.7rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--admin-text-muted);
+  font-family: inherit;
+}
+
+[data-theme="dark"] .admin-header-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--admin-text-muted);
+}
+
+.admin-header-btn:hover {
+  background: var(--admin-primary-glow);
+  color: var(--admin-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--admin-primary-glow);
+}
+
+.admin-header-btn.active {
+  background: var(--admin-gradient);
+  color: white;
+  box-shadow: 0 8px 20px var(--admin-primary-glow);
+}
+
+.admin-header-btn.active:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+/* Logout button - danger style */
+.admin-header-btn.logout-btn {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.admin-header-btn.logout-btn:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+}
+
+/* Responsive Admin Header */
+@media (max-width: 768px) {
+  .admin-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .admin-header-content {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .admin-title {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .admin-title h1 {
+    font-size: 1.1rem;
+  }
+  
+  .admin-header-nav {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  
+  .admin-header-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 70px;
+    white-space: nowrap;
+  }
+}
+
+.admin-badge {
+  background: var(--admin-glass);
+  border: 1px solid var(--admin-glass-border);
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+}
+
+/* Legacy container - for backward compatibility */
+.admin-container {
+  min-height: 100vh;
+  background: var(--admin-bg);
+  position: relative;
+  font-family: 'Be Vietnam Pro', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .admin-title p {

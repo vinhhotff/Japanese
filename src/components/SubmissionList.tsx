@@ -20,6 +20,10 @@ const SubmissionList = () => {
     useEffect(() => {
         if (assignmentId && isTeacher) {
             loadData();
+        } else if (!assignmentId && isTeacher) {
+            setLoading(false);
+            setAssignment(null);
+            setSubmissions([]);
         }
     }, [assignmentId, isTeacher]);
 
@@ -58,8 +62,8 @@ const SubmissionList = () => {
                 className="teacher-header"
             >
                 <div className="teacher-title-area">
-                    <button onClick={() => navigate('/teacher')} className="content-back-btn mr-4" style={{ color: 'white' }}>
-                        &larr; Quay lại
+                    <button onClick={() => navigate('/teacher')} className="grading-back-btn light">
+                        ← Quay lại
                     </button>
                     <div>
                         <h1>📊 Danh sách bài nộp</h1>
@@ -77,40 +81,50 @@ const SubmissionList = () => {
             </motion.header>
 
             <main className="teacher-main-content">
-                <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <div className="submission-list-toolbar">
+                    <div className="submission-list-tabs" role="tablist" aria-label="Lọc bài nộp">
                         <button
+                            type="button"
+                            role="tab"
+                            aria-selected={filter === 'all'}
                             onClick={() => setFilter('all')}
-                            className={`px-4 py-2 rounded-lg font-bold transition-all ${filter === 'all' ? 'bg-white dark:bg-slate-700 shadow-sm text-teacher-primary' : 'text-slate-500'}`}
+                            className={filter === 'all' ? 'active' : ''}
                         >
                             Tất cả
                         </button>
                         <button
+                            type="button"
+                            role="tab"
+                            aria-selected={filter === 'submitted'}
                             onClick={() => setFilter('submitted')}
-                            className={`px-4 py-2 rounded-lg font-bold transition-all ${filter === 'submitted' ? 'bg-white dark:bg-slate-700 shadow-sm text-teacher-primary' : 'text-slate-500'}`}
+                            className={filter === 'submitted' ? 'active' : ''}
                         >
                             Đợi chấm
                         </button>
                         <button
+                            type="button"
+                            role="tab"
+                            aria-selected={filter === 'graded'}
                             onClick={() => setFilter('graded')}
-                            className={`px-4 py-2 rounded-lg font-bold transition-all ${filter === 'graded' ? 'bg-white dark:bg-slate-700 shadow-sm text-teacher-primary' : 'text-slate-500'}`}
+                            className={filter === 'graded' ? 'active' : ''}
                         >
                             Đã chấm
                         </button>
                     </div>
-                    <div className="text-slate-500 font-medium">
-                        Tổng cộng: <span className="text-teacher-primary font-bold">{filteredSubmissions.length}</span> bài nộp
+                    <div className="submission-list-count">
+                        Tổng cộng: <strong>{filteredSubmissions.length}</strong> bài nộp
                     </div>
                 </div>
 
                 <div className="admin-table-container">
                     {loading ? (
-                        <div className="py-20 text-center">
-                            <div className="animate-spin h-10 w-10 border-4 border-teacher-primary rounded-full border-t-transparent mx-auto"></div>
+                        <div className="submission-list-loading">
+                            <div className="submission-list-spinner" aria-hidden />
+                            <p className="submission-list-loading-text">Đang tải danh sách...</p>
                         </div>
                     ) : filteredSubmissions.length === 0 ? (
-                        <div className="py-20 text-center bg-slate-50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                            <p className="text-slate-500 font-medium">Chưa có bài nộp nào phù hợp với bộ lọc.</p>
+                        <div className="submission-list-empty">
+                            <p className="submission-list-empty-text">Chưa có bài nộp nào phù hợp với bộ lọc.</p>
                         </div>
                     ) : (
                         <table className="admin-table">

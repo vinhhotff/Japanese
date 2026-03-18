@@ -784,16 +784,30 @@ const AdminPanel = () => {
   };
 
   return (
-    <div className="admin-container">
+    <div className="admin-panel">
       <header className="admin-header">
-        <div className="admin-title">
-          <h1>Admin Panel</h1>
-          {viewMode === 'content' && <span className="text-sm font-normal ml-3 bg-blue-100 text-blue-600 px-2 py-1 rounded-full">{selectedLesson?.title}</span>}
-        </div>
-        <div className="admin-actions">
-          <button onClick={() => setViewMode('users')} className={`hover:bg-blue-50/10 ${viewMode === 'users' ? 'bg-blue-50/20 font-bold border-b-2 border-white' : ''}`}>Quản lý User</button>
-          <button onClick={handleBackToLanguages} className={`hover:bg-blue-50/10 ${viewMode !== 'users' ? 'bg-blue-50/20 font-bold border-b-2 border-white' : ''}`}>Quản lý Nội dung</button>
-          <button className="logout-btn" onClick={signOut}>Đăng xuất</button>
+        <div className="admin-header-content">
+          <div className="admin-title">
+            <h1>Admin Panel</h1>
+            {viewMode === 'content' && <span className="admin-badge">{selectedLesson?.title}</span>}
+          </div>
+          <nav className="admin-header-nav">
+            <button 
+              onClick={() => setViewMode('users')} 
+              className={`admin-header-btn ${viewMode === 'users' ? 'active' : ''}`}
+            >
+              Quản lý User
+            </button>
+            <button 
+              onClick={handleBackToLanguages} 
+              className={`admin-header-btn ${viewMode !== 'users' ? 'active' : ''}`}
+            >
+              Quản lý Nội dung
+            </button>
+            <button className="admin-header-btn logout-btn" onClick={signOut}>
+              Đăng xuất
+            </button>
+          </nav>
         </div>
       </header>
 

@@ -295,26 +295,32 @@ const AssignmentForm: React.FC = () => {
 
     return (
         <div className="assignment-form-container">
-            {/* High-End Header */}
+            {/* Enhanced Header with Better Layout */}
             <motion.header
                 initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="form-header-premium"
             >
-                <div>
-                    <h1 className="text-4xl font-black">
-                        {assignmentId ? 'Hiệu chỉnh Bài tập' : 'Thiết lập Bài tập mới'}
-                    </h1>
-                    <p className="text-slate-500 font-bold mt-2 flex items-center gap-2">
-                        <span>🛠️</span> Curriculum Architect / {category}
-                    </p>
+                <div className="header-content-wrapper">
+                    <div>
+                        <h1 className="form-title-main">
+                            {assignmentId ? 'Hiệu chỉnh Bài tập' : 'Thiết lập Bài tập mới'}
+                        </h1>
+                        <p className="form-subtitle">
+                            <span className="subtitle-icon">🛠️</span>
+                            <span>Curriculum Architect</span>
+                            <span className="subtitle-divider">•</span>
+                            <span className="subtitle-category">{category}</span>
+                        </p>
+                    </div>
+                    <button onClick={() => navigate(-1)} className="back-link-small">
+                        <span className="back-icon">←</span>
+                        <span>Trở lại</span>
+                    </button>
                 </div>
-                <button onClick={() => navigate(-1)} className="back-link-small">
-                    &larr; Trở lại
-                </button>
             </motion.header>
 
-            {/* Premium Tab Navigation */}
+            {/* Enhanced Tab Navigation */}
             <motion.nav
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -322,16 +328,18 @@ const AssignmentForm: React.FC = () => {
                 className="form-tabs-nav"
             >
                 {(['general', 'media', 'questions', 'settings'] as FormTab[]).map((tab, idx) => (
-                    <button
+                    <motion.button
                         key={tab}
                         className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
                         onClick={() => setActiveTab(tab)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                     >
-                        {tab === 'general' && <span>📑 Cơ bản</span>}
-                        {tab === 'media' && <span>🎬 Học liệu</span>}
-                        {tab === 'questions' && <span>❓ Câu hỏi</span>}
-                        {tab === 'settings' && <span>⚙️ Quy tắc</span>}
-                    </button>
+                        {tab === 'general' && <><span className="tab-icon">📑</span><span>Cơ bản</span></>}
+                        {tab === 'media' && <><span className="tab-icon">🎬</span><span>Học liệu</span></>}
+                        {tab === 'questions' && <><span className="tab-icon">❓</span><span>Câu hỏi</span></>}
+                        {tab === 'settings' && <><span className="tab-icon">⚙️</span><span>Quy tắc</span></>}
+                    </motion.button>
                 ))}
             </motion.nav>
 
@@ -352,12 +360,20 @@ const AssignmentForm: React.FC = () => {
                             className="form-section-premium"
                         >
                             <div className="section-label">
-                                <span className="icon">📑</span>
-                                <h2>Thông tin nền tảng</h2>
+                                <div className="icon-wrapper">
+                                    <span className="icon">📑</span>
+                                </div>
+                                <div>
+                                    <h2>Thông tin nền tảng</h2>
+                                    <p className="section-description">Thiết lập thông tin cơ bản cho bài tập</p>
+                                </div>
                             </div>
                             <div className="fields-grid-premium">
-                                <div className="field-group-premium" style={{ gridColumn: 'span 2' }}>
-                                    <label>Tiêu đề bài tập</label>
+                                <div className="field-group-premium field-group-full">
+                                    <label className="field-label">
+                                        <span className="label-icon">✏️</span>
+                                        Tiêu đề bài tập
+                                    </label>
                                     <input
                                         type="text"
                                         className="input-premium"
@@ -367,7 +383,10 @@ const AssignmentForm: React.FC = () => {
                                     />
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Danh mục bài tập</label>
+                                    <label className="field-label">
+                                        <span className="label-icon">📂</span>
+                                        Danh mục bài tập
+                                    </label>
                                     <select className="select-premium" value={category} onChange={e => setCategory(e.target.value)}>
                                         <option value="exercise">Bài tập luyện tập</option>
                                         <option value="quiz">Trắc nghiệm nhanh</option>
@@ -376,7 +395,10 @@ const AssignmentForm: React.FC = () => {
                                     </select>
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Lĩnh vực kiến thức</label>
+                                    <label className="field-label">
+                                        <span className="label-icon">🎯</span>
+                                        Lĩnh vực kiến thức
+                                    </label>
                                     <select className="select-premium" value={assignmentType} onChange={e => setAssignmentType(e.target.value as any)}>
                                         <option value="vocabulary">Từ vựng (Vocabulary)</option>
                                         <option value="grammar">Ngữ pháp (Grammar)</option>
@@ -387,19 +409,24 @@ const AssignmentForm: React.FC = () => {
                                     </select>
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Hệ ngôn ngữ</label>
+                                    <label className="field-label">
+                                        <span className="label-icon">🌐</span>
+                                        Hệ ngôn ngữ
+                                    </label>
                                     <select className="select-premium" value={language} onChange={e => setLanguage(e.target.value as any)}>
                                         <option value="japanese">Tiếng Nhật (JLPT System)</option>
                                         <option value="chinese">Tiếng Trung (HSK System)</option>
                                     </select>
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Độ khó & Trình độ</label>
-                                    <div className="flex gap-3">
+                                    <label className="field-label">
+                                        <span className="label-icon">📊</span>
+                                        Độ khó & Trình độ
+                                    </label>
+                                    <div className="flex gap-3 level-difficulty-group">
                                         <input
                                             type="text"
-                                            className="input-premium"
-                                            style={{ width: '100px' }}
+                                            className="input-premium level-input"
                                             value={level}
                                             onChange={e => setLevel(e.target.value)}
                                             placeholder="N5"
@@ -412,7 +439,10 @@ const AssignmentForm: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Gắn vào Lớp học (Tùy chọn)</label>
+                                    <label className="field-label">
+                                        <span className="label-icon">👥</span>
+                                        Gắn vào Lớp học <span className="optional-badge">(Tùy chọn)</span>
+                                    </label>
                                     <select className="select-premium" value={classId || ''} onChange={e => setClassId(e.target.value || null)}>
                                         <option value="">-- Không chọn lớp --</option>
                                         {classList.map(cls => (
@@ -421,7 +451,10 @@ const AssignmentForm: React.FC = () => {
                                     </select>
                                 </div>
                                 <div className="field-group-premium">
-                                    <label>Gắn vào Bài học (Tùy chọn)</label>
+                                    <label className="field-label">
+                                        <span className="label-icon">📚</span>
+                                        Gắn vào Bài học <span className="optional-badge">(Tùy chọn)</span>
+                                    </label>
                                     <select className="select-premium" value={lessonId || ''} onChange={e => setLessonId(e.target.value || null)}>
                                         <option value="">-- Không chọn bài học --</option>
                                         {lessonList.map(lesson => (
@@ -430,13 +463,16 @@ const AssignmentForm: React.FC = () => {
                                     </select>
                                 </div>
                             </div>
-                            <div className="field-group-premium mt-10">
-                                <label>Mô tả tổng quan cho học sinh</label>
+                            <div className="field-group-premium description-section">
+                                <label className="field-label">
+                                    <span className="label-icon">📝</span>
+                                    Mô tả tổng quan cho học sinh
+                                </label>
                                 <textarea
                                     className="textarea-premium"
                                     value={description}
                                     onChange={e => setDescription(e.target.value)}
-                                    rows={3}
+                                    rows={4}
                                     placeholder="Nêu rõ mục tiêu của bài tập và những gì học sinh cần chuẩn bị..."
                                 />
                             </div>
@@ -452,8 +488,13 @@ const AssignmentForm: React.FC = () => {
                             className="form-section-premium"
                         >
                             <div className="section-label">
-                                <span className="icon">🎬</span>
-                                <h2>Học liệu đính kèm</h2>
+                                <div className="icon-wrapper">
+                                    <span className="icon">🎬</span>
+                                </div>
+                                <div>
+                                    <h2>Học liệu đính kèm</h2>
+                                    <p className="section-description">Thêm audio, video và hình ảnh hỗ trợ</p>
+                                </div>
                             </div>
                             <div className="field-group-premium mb-10">
                                 <label>Hướng dẫn chi tiết (Yêu cầu làm bài)</label>
@@ -543,137 +584,183 @@ const AssignmentForm: React.FC = () => {
                             exit={{ opacity: 0, x: 20 }}
                             className="form-section-premium"
                         >
-                            <div className="flex justify-between items-center mb-10">
+                            <div className="questions-header">
                                 <div className="section-label mb-0">
-                                    <span className="icon">❓</span>
-                                    <h2>Cấu trúc câu hỏi ({questions.length})</h2>
+                                    <div className="icon-wrapper">
+                                        <span className="icon">❓</span>
+                                    </div>
+                                    <div>
+                                        <h2>Cấu trúc câu hỏi</h2>
+                                        <p className="section-description">{questions.length} câu hỏi đã được thêm</p>
+                                    </div>
                                 </div>
-                                <button onClick={addQuestion} className="teacher-btn btn-primary" style={{ padding: '0.6rem 1.5rem', width: 'auto' }}>
-                                    + Thêm câu hỏi mới
-                                </button>
+                                <motion.button 
+                                    onClick={addQuestion} 
+                                    className="add-question-btn"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    <span className="add-icon">+</span>
+                                    <span>Thêm câu hỏi mới</span>
+                                </motion.button>
                             </div>
 
-                            <div className="space-y-8">
+                            <div className="questions-list">
                                 {questions.map((q, idx) => (
                                     <motion.div
                                         key={idx}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: idx * 0.05 }}
-                                        className="question-item-premium"
+                                        className="question-card"
                                     >
-                                        <div className="question-top-bar">
-                                            <div className="flex items-center gap-5">
-                                                <span className="q-number-premium">{q.question_number}</span>
-                                                <select
-                                                    className="select-premium py-2"
-                                                    style={{ width: '220px', background: 'var(--asgn-glass)' }}
-                                                    value={q.question_type}
-                                                    onChange={e => updateQuestion(idx, { question_type: e.target.value as any })}
+                                        {/* Question Header */}
+                                        <div className="question-card-header">
+                                            <div className="question-number-badge">{q.question_number}</div>
+                                            <div className="question-type-selector">
+                                                <button
+                                                    type="button"
+                                                    className={`type-btn ${q.question_type === 'multiple_choice' ? 'active' : ''}`}
+                                                    onClick={() => updateQuestion(idx, { question_type: 'multiple_choice' })}
                                                 >
-                                                    <option value="multiple_choice">Trắc nghiệm MC</option>
-                                                    <option value="short_answer">Trả lời ngắn</option>
-                                                    <option value="essay">Tự luận / Dịch thuật</option>
-                                                    <option value="audio_response">Giao tiếp / Ghi âm</option>
-                                                </select>
+                                                    <span className="type-icon">📋</span>
+                                                    <span>Trắc nghiệm</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`type-btn ${q.question_type === 'short_answer' ? 'active' : ''}`}
+                                                    onClick={() => updateQuestion(idx, { question_type: 'short_answer' })}
+                                                >
+                                                    <span className="type-icon">✏️</span>
+                                                    <span>Ngắn</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`type-btn ${q.question_type === 'essay' ? 'active' : ''}`}
+                                                    onClick={() => updateQuestion(idx, { question_type: 'essay' })}
+                                                >
+                                                    <span className="type-icon">📝</span>
+                                                    <span>Tự luận</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`type-btn ${q.question_type === 'audio_response' ? 'active' : ''}`}
+                                                    onClick={() => updateQuestion(idx, { question_type: 'audio_response' })}
+                                                >
+                                                    <span className="type-icon">🎤</span>
+                                                    <span>Ghi âm</span>
+                                                </button>
                                             </div>
                                             <button
-                                                className="teacher-btn btn-danger"
-                                                style={{ padding: '0.4rem 1.2rem', width: 'auto', fontSize: '0.8rem' }}
+                                                type="button"
+                                                className="question-remove-btn"
                                                 onClick={() => removeQuestion(idx)}
+                                                title="Xóa câu hỏi"
                                             >
-                                                🗑️ Gỡ bỏ
+                                                🗑️
                                             </button>
                                         </div>
 
-                                        <div className="field-group-premium mb-8">
-                                            <label>Yêu cầu câu hỏi</label>
-                                            <textarea
-                                                className="textarea-premium"
-                                                value={q.question_text}
-                                                onChange={e => updateQuestion(idx, { question_text: e.target.value })}
-                                                rows={2}
-                                                placeholder="VD: Chọn đáp án đúng nhất hoặc dịch câu sau..."
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                        {/* Question Text */}
+                                        <div className="question-card-body">
                                             <div className="field-group-premium">
-                                                <label>Hình ảnh minh họa</label>
-                                                <div className="flex gap-4 overflow-x-auto py-2">
-                                                    <div className="media-zone-premium" style={{ width: '100px', height: '100px', padding: 0 }} onClick={() => qImageRefs.current[idx]?.click()}>
-                                                        🖼️
-                                                        <input type="file" ref={el => qImageRefs.current[idx] = el} hidden accept="image/*" onChange={e => handleFileUpload(e, 'question', idx)} />
-                                                    </div>
-                                                    {q.attachment_urls.map((url, iIdx) => (
-                                                        <div key={iIdx} className="media-item-premium" style={{ width: '100px', height: '100px' }}>
-                                                            <img src={url} alt="Q" />
-                                                            <button className="delete-media-btn" onClick={() => removeQuestionMedia(idx, 'image', iIdx)} style={{ width: '24px', height: '24px', fontSize: '1rem' }}>&times;</button>
+                                                <label>Câu hỏi</label>
+                                                <textarea
+                                                    className="textarea-premium"
+                                                    value={q.question_text}
+                                                    onChange={e => updateQuestion(idx, { question_text: e.target.value })}
+                                                    rows={2}
+                                                    placeholder="Nhập nội dung câu hỏi..."
+                                                />
+                                            </div>
+
+                                            {/* Media Attachments */}
+                                            <div className="question-media-row">
+                                                <div className="field-group-premium">
+                                                    <label>Hình ảnh</label>
+                                                    <div className="media-mini-uploader">
+                                                        <div className="media-mini-add" onClick={() => qImageRefs.current[idx]?.click()}>
+                                                            <span>+</span>
+                                                            <input type="file" ref={el => qImageRefs.current[idx] = el} hidden accept="image/*" onChange={e => handleFileUpload(e, 'question', idx)} />
                                                         </div>
-                                                    ))}
+                                                        {q.attachment_urls.map((url, iIdx) => (
+                                                            <div key={iIdx} className="media-mini-item">
+                                                                <img src={url} alt="Q" />
+                                                                <button type="button" className="media-mini-remove" onClick={() => removeQuestionMedia(idx, 'image', iIdx)}>&times;</button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="field-group-premium">
+                                                    <label>Audio</label>
+                                                    {!q.audio_url ? (
+                                                        <div className="media-mini-add wide" onClick={() => qAudioRefs.current[idx]?.click()}>
+                                                            <span>🎵</span>
+                                                            <span>Tải audio</span>
+                                                            <input type="file" ref={el => qAudioRefs.current[idx] = el} hidden accept="audio/*" onChange={e => handleFileUpload(e, 'question', idx)} />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="audio-ready">
+                                                            <span>🎵</span>
+                                                            <span>Đã sẵn sàng</span>
+                                                            <button type="button" onClick={() => removeQuestionMedia(idx, 'audio')}>Gỡ</button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
-                                            <div className="field-group-premium">
-                                                <label>Audio câu hỏi</label>
-                                                {!q.audio_url ? (
-                                                    <div className="media-zone-premium" style={{ height: '100px', padding: 0 }} onClick={() => qAudioRefs.current[idx]?.click()}>
-                                                        🎵 Tải lên âm thanh câu hỏi
-                                                        <input type="file" ref={el => qAudioRefs.current[idx] = el} hidden accept="audio/*" onChange={e => handleFileUpload(e, 'question', idx)} />
-                                                    </div>
-                                                ) : (
-                                                    <div className="stat-card" style={{ padding: '1rem', background: 'var(--asgn-glass)', margin: 0 }}>
-                                                        <div className="stat-icon" style={{ width: '32px', height: '32px', fontSize: '1rem' }}>🎵</div>
-                                                        <div className="stat-content">
-                                                            <p className="text-[10px] uppercase font-black">Ready</p>
-                                                            <button onClick={() => removeQuestionMedia(idx, 'audio')} className="text-[10px] text-red-500 underline">Gỡ</button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
 
-                                        {q.question_type === 'multiple_choice' && (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                                {q.options.map((opt, oIdx) => (
-                                                    <div key={oIdx} className="field-group-premium">
-                                                        <label className="text-[10px]">Tùy chọn {oIdx + 1}</label>
-                                                        <div className="flex gap-2">
-                                                            <input
-                                                                type="text"
-                                                                className="input-premium py-2 text-sm"
-                                                                value={opt}
-                                                                onChange={e => {
-                                                                    const newOpts = [...q.options];
-                                                                    newOpts[oIdx] = e.target.value;
-                                                                    updateQuestion(idx, { options: newOpts });
-                                                                }}
-                                                                placeholder={`Phương án ${oIdx + 1}`}
-                                                            />
-                                                            <button
-                                                                className={`teacher-btn ${q.correct_answer === opt ? 'btn-primary' : 'btn-secondary'}`}
-                                                                style={{ padding: '0 1rem', width: 'auto', fontSize: '0.75rem' }}
-                                                                onClick={() => updateQuestion(idx, { correct_answer: opt })}
-                                                            >
-                                                                {q.correct_answer === opt ? '✓' : 'O'}
-                                                            </button>
-                                                        </div>
+                                            {/* Options (only for multiple choice) */}
+                                            {q.question_type === 'multiple_choice' && (
+                                                <div className="question-options">
+                                                    <label>Các lựa chọn</label>
+                                                    <div className="options-grid">
+                                                        {q.options.map((opt, oIdx) => (
+                                                            <div key={oIdx} className={`option-item ${q.correct_answer === opt ? 'is-correct' : ''}`}>
+                                                                <span className="option-letter">{String.fromCharCode(65 + oIdx)}</span>
+                                                                <input
+                                                                    type="text"
+                                                                    className="option-input"
+                                                                    value={opt}
+                                                                    onChange={e => {
+                                                                        const newOpts = [...q.options];
+                                                                        newOpts[oIdx] = e.target.value;
+                                                                        updateQuestion(idx, { options: newOpts });
+                                                                    }}
+                                                                    placeholder={`Lựa chọn ${oIdx + 1}`}
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    className={`option-check ${q.correct_answer === opt ? 'checked' : ''}`}
+                                                                    onClick={() => updateQuestion(idx, { correct_answer: opt })}
+                                                                    title="Đánh dấu đáp án đúng"
+                                                                >
+                                                                    {q.correct_answer === opt ? '✓' : ''}
+                                                                </button>
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                                </div>
+                                            )}
 
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                            <div className="field-group-premium">
-                                                <label className="text-[10px]">Gợi ý (Hint)</label>
-                                                <input type="text" className="input-premium py-2 text-sm" value={q.hint || ''} onChange={e => updateQuestion(idx, { hint: e.target.value })} />
-                                            </div>
-                                            <div className="field-group-premium">
-                                                <label className="text-[10px]">Điểm</label>
-                                                <input type="number" className="input-premium py-2 text-sm" value={q.points} onChange={e => updateQuestion(idx, { points: Number(e.target.value) })} />
-                                            </div>
-                                            <div className="field-group-premium flex flex-row items-center gap-3 pt-6">
-                                                <input type="checkbox" className="w-5 h-5 accent-teal-500" checked={q.requires_file_upload} onChange={e => updateQuestion(idx, { requires_file_upload: e.target.checked })} />
-                                                <label className="mb-0 text-[10px]">Cần nộp tệp?</label>
+                                            {/* Question Footer: Points, Hint, File Upload */}
+                                            <div className="question-card-footer">
+                                                <div className="field-group-premium compact">
+                                                    <label>Điểm</label>
+                                                    <input type="number" className="input-premium" value={q.points} onChange={e => updateQuestion(idx, { points: Number(e.target.value) })} />
+                                                </div>
+                                                <div className="field-group-premium compact flex-1">
+                                                    <label>Gợi ý</label>
+                                                    <input type="text" className="input-premium" value={q.hint || ''} onChange={e => updateQuestion(idx, { hint: e.target.value })} placeholder="Gợi ý (tùy chọn)" />
+                                                </div>
+                                                <label className="file-upload-toggle">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={q.requires_file_upload}
+                                                        onChange={e => updateQuestion(idx, { requires_file_upload: e.target.checked })}
+                                                    />
+                                                    <span className="toggle-switch"></span>
+                                                    <span className="toggle-label">Nộp tệp</span>
+                                                </label>
                                             </div>
                                         </div>
                                     </motion.div>
@@ -691,52 +778,92 @@ const AssignmentForm: React.FC = () => {
                             className="form-section-premium"
                         >
                             <div className="section-label">
-                                <span className="icon">⚙️</span>
-                                <h2>Cấu hình & Quy tắc công khai</h2>
-                            </div>
-                            <div className="fields-grid-premium">
-                                <div className="field-group-premium">
-                                    <label>Hạn chót hoàn thành</label>
-                                    <input type="date" className="input-premium" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+                                <div className="icon-wrapper">
+                                    <span className="icon">⚙️</span>
                                 </div>
-                                <div className="field-group-premium">
-                                    <label>Giới hạn thời gian (Phút)</label>
-                                    <input type="number" className="input-premium" value={durationMinutes} onChange={e => setDurationMinutes(Number(e.target.value))} />
-                                    <span className="text-xs opacity-50">Để 0 nếu không muốn giới hạn</span>
-                                </div>
-                                <div className="field-group-premium">
-                                    <label>Tổng điểm tối đa</label>
-                                    <input type="number" className="input-premium" value={maxScore} onChange={e => setMaxScore(Number(e.target.value))} />
-                                </div>
-                                <div className="field-group-premium">
-                                    <label>Điểm vượt qua (Passing)</label>
-                                    <input type="number" className="input-premium" value={passingScore} onChange={e => setPassingScore(Number(e.target.value))} />
+                                <div>
+                                    <h2>Cấu hình & Quy tắc công khai</h2>
+                                    <p className="section-description">Thiết lập thời gian, điểm số và quyền truy cập</p>
                                 </div>
                             </div>
-                            <div className="flex gap-10 mt-12 bg-slate-900/50 p-10 rounded-[30px] border border-white/5">
-                                <div className="flex items-center gap-4">
-                                    <input
-                                        type="checkbox"
-                                        className="w-8 h-8 accent-teal-500"
-                                        checked={isPublished}
-                                        onChange={e => setIsPublished(e.target.checked)}
-                                    />
-                                    <div>
-                                        <p className="font-bold">Công khai ngay lập tức</p>
-                                        <p className="text-xs opacity-60">Học sinh sẽ thấy bài tập này trong danh sách</p>
+
+                            {/* Settings Grid - 2 columns */}
+                            <div className="settings-grid">
+                                {/* Time Settings */}
+                                <div className="settings-card">
+                                    <div className="settings-card-header">
+                                        <span className="settings-card-icon">⏰</span>
+                                        <h3>Thời gian</h3>
+                                    </div>
+                                    <div className="settings-card-body">
+                                        <div className="field-group-premium">
+                                            <label>Hạn chót hoàn thành</label>
+                                            <input type="date" className="input-premium" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+                                        </div>
+                                        <div className="field-group-premium">
+                                            <label>Giới hạn thời gian (Phút)</label>
+                                            <input type="number" className="input-premium" value={durationMinutes} onChange={e => setDurationMinutes(Number(e.target.value))} />
+                                            <span className="input-hint">Để 0 nếu không muốn giới hạn</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <input
-                                        type="checkbox"
-                                        className="w-8 h-8 accent-teal-500"
-                                        checked={allowFileUpload}
-                                        onChange={e => setAllowFileUpload(e.target.checked)}
-                                    />
-                                    <div>
-                                        <p className="font-bold">Cho phép gửi tệp đính kèm</p>
-                                        <p className="text-xs opacity-60">Học sinh có thể tải lên tệp zip/pdf bổ sung</p>
+
+                                {/* Score Settings */}
+                                <div className="settings-card">
+                                    <div className="settings-card-header">
+                                        <span className="settings-card-icon">📊</span>
+                                        <h3>Điểm số</h3>
                                     </div>
+                                    <div className="settings-card-body">
+                                        <div className="score-inputs-row">
+                                            <div className="field-group-premium">
+                                                <label>Tổng điểm</label>
+                                                <input type="number" className="input-premium" value={maxScore} onChange={e => setMaxScore(Number(e.target.value))} />
+                                            </div>
+                                            <div className="field-group-premium">
+                                                <label>Điểm đạt</label>
+                                                <input type="number" className="input-premium" value={passingScore} onChange={e => setPassingScore(Number(e.target.value))} />
+                                            </div>
+                                        </div>
+                                        <div className="score-preview-bar">
+                                            <div className="score-bar-fill" style={{ width: `${Math.min(100, (passingScore / maxScore) * 100)}%` }}></div>
+                                            <span className="score-bar-label">{Math.round((passingScore / maxScore) * 100)}% để đạt</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Public Rules */}
+                            <div className="settings-rules-card">
+                                <div className="settings-card-header">
+                                    <span className="settings-card-icon">🔐</span>
+                                    <h3>Quy tắc & Quyền truy cập</h3>
+                                </div>
+                                <div className="settings-rules-grid">
+                                    <label className="rule-toggle">
+                                        <input
+                                            type="checkbox"
+                                            checked={isPublished}
+                                            onChange={e => setIsPublished(e.target.checked)}
+                                        />
+                                        <span className="rule-toggle-switch"></span>
+                                        <div className="rule-toggle-content">
+                                            <span className="rule-toggle-title">Công khai ngay lập tức</span>
+                                            <span className="rule-toggle-desc">Học sinh sẽ thấy bài tập này trong danh sách</span>
+                                        </div>
+                                    </label>
+                                    <label className="rule-toggle">
+                                        <input
+                                            type="checkbox"
+                                            checked={allowFileUpload}
+                                            onChange={e => setAllowFileUpload(e.target.checked)}
+                                        />
+                                        <span className="rule-toggle-switch"></span>
+                                        <div className="rule-toggle-content">
+                                            <span className="rule-toggle-title">Cho phép gửi tệp đính kèm</span>
+                                            <span className="rule-toggle-desc">Học sinh có thể tải lên tệp zip/pdf bổ sung</span>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
                         </motion.div>
@@ -744,24 +871,39 @@ const AssignmentForm: React.FC = () => {
                 </AnimatePresence>
             </motion.div>
 
-            {/* Premium Action Bar */}
+            {/* Enhanced Action Bar */}
             <motion.div
-                initial={{ y: 100 }}
-                animate={{ y: 0 }}
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
                 className="action-bar-premium"
             >
-                <div className="hidden-mobile">
-                    <p className="text-asgn-text font-bold">Xác nhận thiết lập Curriculum</p>
-                    <p className="text-asgn-text-muted text-xs">Mọi thay đổi sẽ ảnh hưởng đến tất cả học sinh đang theo học</p>
+                <div className="action-bar-content">
+                    <div className="action-bar-info">
+                        <p className="action-bar-title">Xác nhận thiết lập Curriculum</p>
+                        <p className="action-bar-subtitle">Mọi thay đổi sẽ ảnh hưởng đến tất cả học sinh đang theo học</p>
+                    </div>
+                    <motion.button
+                        className="save-btn-premium"
+                        onClick={handleSave}
+                        disabled={saving}
+                        whileHover={{ scale: saving ? 1 : 1.05 }}
+                        whileTap={{ scale: saving ? 1 : 0.95 }}
+                    >
+                        {saving ? (
+                            <>
+                                <span className="spinner"></span>
+                                <span>Đang đồng bộ hóa...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span>{assignmentId ? '💾' : '🚀'}</span>
+                                <span>{assignmentId ? 'Cập nhật giáo trình' : 'Phát hành bài tập'}</span>
+                            </>
+                        )}
+                    </motion.button>
                 </div>
-                <button
-                    className="save-btn-premium"
-                    onClick={handleSave}
-                    disabled={saving}
-                >
-                    {saving ? '📦 Đang đồng bộ hóa...' : assignmentId ? 'Cập nhật giáo trình' : '🚀 Phát hành bài tập'}
-                </button>
-            </motion.div >
+            </motion.div>
         </div >
     );
 };

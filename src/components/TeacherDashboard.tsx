@@ -94,7 +94,29 @@ const TeacherDashboard = () => {
             });
 
             const resolvedCourses = Array.from(courseMap.values());
-            setMyAssignments(resolvedCourses);
+            
+            // 3. Load lesson counts for each course
+            const coursesWithLessons = await Promise.all(
+                resolvedCourses.map(async (course: any) => {
+                    try {
+                        const lessons = await getLessons(course.id);
+                        return {
+                            ...course,
+                            lessonCount: lessons?.length || 0,
+                            lessons: lessons || []
+                        };
+                    } catch (e) {
+                        console.error(`Error loading lessons for course ${course.id}:`, e);
+                        return {
+                            ...course,
+                            lessonCount: 0,
+                            lessons: []
+                        };
+                    }
+                })
+            );
+            
+            setMyAssignments(coursesWithLessons);
             setClasses(classesData || []);
             setHomeworkList(hwData || []);
             setAssignmentsList(asgData || []);
@@ -212,11 +234,17 @@ const TeacherDashboard = () => {
         setContentViewMode('lessons');
         setLoadingContent(true);
         try {
-            const list = await getLessons(course.id);
-            list.sort((a: any, b: any) => a.lesson_number - b.lesson_number);
+            // Use cached lessons if available, otherwise fetch
+            let list = course.lessons || [];
+            if (list.length === 0 && course.id) {
+                list = await getLessons(course.id);
+            }
+            list.sort((a: any, b: any) => (a.lesson_number || 0) - (b.lesson_number || 0));
             setContentData(list);
         } catch (e) {
+            console.error('Error loading lessons:', e);
             showToast('Lỗi tải bài học', 'error');
+            setContentData([]);
         } finally {
             setLoadingContent(false);
         }
@@ -612,8 +640,8 @@ const TeacherDashboard = () => {
                             </p>
                             <button
                                 onClick={handleOpenContentManager}
-                                className="teacher-btn"
-                                style={{ background: 'white', color: 'var(--teacher-surface)', fontSize: '1.2rem', padding: '1.2rem 3rem' }}
+                                className="teacher-btn btn-primary"
+                                style={{ fontSize: '1.2rem', padding: '1.2rem 3rem' }}
                             >
                                 Bắt đầu chỉnh sửa ngay ✨
                             </button>
@@ -648,9 +676,9 @@ const TeacherDashboard = () => {
                                 <h3>🏫 Tạo lớp học mới</h3>
                                 <button onClick={() => setShowCreateModal(false)} className="premium-modal-close">✕</button>
                             </div>
-                            <div className="premium-modal-body" style={{ padding: '3rem' }}>
-                                <div className="space-y-8">
-                                    <div className="teacher-form-group">
+                            <div className="premium-modal-body create-class-modal-body">
+                                <div className="create-class-form-content">
+                                    <div className="teacher-form-group create-class-form-group">
                                         <label className="teacher-label">Tên lớp học</label>
                                         <input
                                             type="text"
@@ -660,7 +688,7 @@ const TeacherDashboard = () => {
                                             placeholder="VD: N5 Cấp tốc - Tối 2-4-6"
                                         />
                                     </div>
-                                    <div className="teacher-form-group">
+                                    <div className="teacher-form-group create-class-form-group">
                                         <label className="teacher-label">Lựa chọn Giáo trình</label>
                                         <select
                                             value={newClassLevel}
@@ -678,9 +706,9 @@ const TeacherDashboard = () => {
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="flex gap-4 pt-6">
-                                        <button onClick={() => setShowCreateModal(false)} className="teacher-btn btn-secondary" style={{ flex: 1 }}>Hủy</button>
-                                        <button onClick={handleCreateClass} className="teacher-btn btn-primary" style={{ flex: 2 }}>Xác nhận tạo lớp</button>
+                                    <div className="create-class-actions">
+                                        <button onClick={() => setShowCreateModal(false)} className="teacher-btn btn-secondary">Hủy</button>
+                                        <button onClick={handleCreateClass} className="teacher-btn btn-primary">Xác nhận tạo lớp</button>
                                     </div>
                                 </div>
                             </div>
@@ -821,21 +849,21 @@ const TeacherDashboard = () => {
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             className="premium-modal-content fullscreen"
                         >
-                            <div className="premium-modal-header" style={{ borderRadius: 0, padding: '1.5rem 3rem', background: 'var(--teacher-surface)', borderBottom: '1px solid var(--teacher-glass-border)' }}>
-                                <div className="teacher-title-area">
-                                    <div className="teacher-logo-icon" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>✏️</div>
-                                    <div>
-                                        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Content Manager</h3>
-                                        <div className="flex gap-2 mt-1">
-                                            {selectedContentCourse && <span className="teacher-badge" style={{ background: 'var(--teacher-primary-glow)', color: 'var(--teacher-primary)', borderColor: 'transparent' }}>{selectedContentCourse.title}</span>}
+                            <div className="premium-modal-header">
+                                <div className="teacher-title-area" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: 0 }}>
+                                    <div className="teacher-logo-icon" style={{ width: '48px', height: '48px', fontSize: '1.5rem', flexShrink: 0 }}>✏️</div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <h3 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>Content Manager</h3>
+                                        <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+                                            {selectedContentCourse && <span className="teacher-badge" style={{ background: 'var(--teacher-primary-glow)', color: 'var(--teacher-primary)', borderColor: 'transparent', marginRight: '0.5rem' }}>{selectedContentCourse.title}</span>}
                                             {selectedContentLesson && <span className="teacher-badge" style={{ background: 'var(--teacher-secondary-glow)', color: 'var(--teacher-secondary)', borderColor: 'transparent' }}>Bài {selectedContentLesson.lesson_number}: {selectedContentLesson.title}</span>}
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowContentModal(false)} className="premium-modal-close" style={{ background: 'var(--teacher-glass)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                                <button onClick={() => setShowContentModal(false)} className="premium-modal-close">✕</button>
                             </div>
 
-                            <div className="premium-modal-body" style={{ height: 'calc(100% - 80px)', overflowY: 'hidden', padding: 0 }}>
+                            <div className="premium-modal-body" style={{ padding: 0 }}>
                                 {contentViewMode === 'courses' && (
                                     <div className="content-courses-view">
                                         <header className="content-courses-header">
@@ -865,6 +893,11 @@ const TeacherDashboard = () => {
                                                     <div className="content-course-modules">
                                                         <span>Từ vựng</span><span>Kanji</span><span>Ngữ pháp</span>
                                                     </div>
+                                                    {course.lessonCount !== undefined && (
+                                                        <div className="content-course-lesson-count">
+                                                            <span className="lesson-count-badge">{course.lessonCount} bài học</span>
+                                                        </div>
+                                                    )}
                                                     <div className="content-course-cta">
                                                         Chỉnh sửa nội dung
                                                         <motion.span animate={{ x: [0, 4, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>→</motion.span>
@@ -951,6 +984,58 @@ const TeacherDashboard = () => {
                                                     >
                                                         + Thêm bản ghi đầu tiên
                                                     </button>
+                                                </div>
+                                            ) : activeContentTab === 'vocabulary' ? (
+                                                <div className="content-table-container" style={{ padding: '2rem 3rem' }}>
+                                                    <table className="content-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style={{ width: '60px' }}>STT</th>
+                                                                <th>Từ vựng</th>
+                                                                <th>Furigana</th>
+                                                                <th>Nghĩa</th>
+                                                                <th>Ví dụ</th>
+                                                                <th style={{ width: '150px' }}>Hành động</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {contentData.map((item, idx) => (
+                                                                <tr key={item.id || idx}>
+                                                                    <td className="text-center font-mono text-slate-400">#{idx + 1}</td>
+                                                                    <td>
+                                                                        <span className="font-bold text-lg">{item.word || 'N/A'}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span className="font-mono text-sm text-teacher-primary">{item.furigana || '-'}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span className="text-teacher-secondary">{item.meaning || '-'}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span className="text-sm italic text-slate-500">{item.example_sentence || '-'}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div className="flex gap-2">
+                                                                            <button
+                                                                                onClick={() => { setEditingContentItem(item); setShowAdminForm(true); }}
+                                                                                className="teacher-btn btn-secondary"
+                                                                                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                                                                            >
+                                                                                ✏️ Sửa
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleDeleteContent(item.id)}
+                                                                                className="teacher-btn btn-danger"
+                                                                                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                                                                            >
+                                                                                🗑️ Xóa
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             ) : (
                                                 <div className="content-grid" style={{ padding: '2rem 3rem' }}>

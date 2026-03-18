@@ -276,12 +276,12 @@ export const getMySubmissions = async (
 };
 
 export const getSubmissionById = async (id: string) => {
-  const { data, error } = await supabase
+  // First, get submission with answers from the new table (assignment_answers)
+  const { data: submissionWithNewAnswers, error } = await supabase
     .from('assignment_submissions')
     .select(`
       *,
       assignment:assignments(*),
-      profiles:user_id(id, full_name, email),
       answers:assignment_answers(
         *,
         question:assignment_questions(*)
@@ -291,7 +291,59 @@ export const getSubmissionById = async (id: string) => {
     .single();
 
   if (error) throw error;
-  return data;
+  if (!submissionWithNewAnswers) return null;
+
+  // Check if we have answers from the new table, otherwise fall back to JSONB (old model)
+  let answers = submissionWithNewAnswers.answers || [];
+  const hasNewAnswers = Array.isArray(answers) && answers.length > 0 && answers[0]?.question_id;
+
+  if (!hasNewAnswers && submissionWithNewAnswers.answers) {
+    // Old model: answers is JSONB in submission.answers, map to new format for compatibility
+    // The JSONB likely contains { question_id, answer_text, ... } or similar
+    const jsonbAnswers = submissionWithNewAnswers.answers as any[];
+    if (Array.isArray(jsonbAnswers) && jsonbAnswers.length > 0) {
+      // Map old format to new format for GradingInterface compatibility
+      const { data: questions } = await supabase
+        .from('assignment_questions')
+        .select('*')
+        .eq('assignment_id', submissionWithNewAnswers.assignment_id);
+
+      answers = jsonbAnswers.map((ans: any, idx: number) => {
+        // Find matching question by various possible fields
+        const q = questions?.find((q: any) =>
+          q.id === ans.question_id ||
+          q.question_text === ans.question_text ||
+          q.question_text === ans.question
+        );
+        // Handle various possible field names for student's answer
+        const studentAnswer = ans.answer_text || ans.answer || ans.response || ans.text || ans.content || '';
+        return {
+          id: ans.id || `temp-${idx}`,
+          question_id: ans.question_id || q?.id || ans.questionId,
+          answer_text: studentAnswer,
+          points_earned: ans.points_earned || ans.score || 0,
+          feedback: ans.feedback || '',
+          is_correct: ans.is_correct ?? ans.correct,
+          question: q || { question_text: ans.question_text || ans.question || `Câu hỏi ${idx + 1}` },
+        };
+      });
+    }
+  }
+
+  (submissionWithNewAnswers as any).answers = answers;
+
+  // Load profile
+  if (submissionWithNewAnswers.user_id) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .eq('id', submissionWithNewAnswers.user_id)
+      .maybeSingle();
+    (submissionWithNewAnswers as any).profiles = profile ?? null;
+  } else {
+    (submissionWithNewAnswers as any).profiles = null;
+  }
+  return submissionWithNewAnswers;
 };
 
 export const createSubmission = async (submission: {
@@ -388,6 +440,8 @@ export const getAnswersBySubmission = async (submissionId: string) => {
 };
 
 // ===== GRADING (Teacher/Admin) =====
+// Note: assignment_submissions.user_id references auth.users(id), not public.profiles,
+// so we cannot embed profiles via PostgREST. We fetch profiles separately and merge.
 export const getAllSubmissions = async (
   assignmentId?: string,
   status?: SubmissionStatus,
@@ -401,8 +455,7 @@ export const getAllSubmissions = async (
     .from('assignment_submissions')
     .select(`
       *,
-      assignment:assignments(*),
-      profiles:user_id(id, full_name, email)
+      assignment:assignments(*)
     `, { count: 'exact' })
     .order('submitted_at', { ascending: false });
 
@@ -414,8 +467,25 @@ export const getAllSubmissions = async (
   const { data, error, count } = await query;
   if (error) throw error;
 
+  const rows = data || [];
+  const userIds = [...new Set(rows.map((r: any) => r.user_id).filter(Boolean))];
+  let profileMap: Record<string, { id: string; full_name: string | null; email: string | null }> = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', userIds);
+    if (profiles) {
+      profileMap = Object.fromEntries(profiles.map((p: any) => [p.id, p]));
+    }
+  }
+  const dataWithProfiles = rows.map((r: any) => ({
+    ...r,
+    profiles: r.user_id ? profileMap[r.user_id] ?? null : null,
+  }));
+
   return {
-    data: data || [],
+    data: dataWithProfiles,
     total: count || 0,
     page,
     pageSize,
