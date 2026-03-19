@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getLessonById, getSentenceGames, getRoleplayScenarios } from '../services/supabaseService.v2';
 import { transformLessonFromDB } from '../utils/dataTransform';
 import { Lesson, RoleplayScenario } from '../types';
@@ -30,6 +30,7 @@ interface LessonDetailProps {
 
 const LessonDetail = ({ language }: LessonDetailProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { lessonId } = useParams<{ lessonId: string }>();
   const [currentStep, setCurrentStep] = useState<LearningStep>('learn');
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -140,7 +141,8 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
           loadProgress();
         });
       } else {
-        setHasAccess(false);
+        // No user - check if lesson is free
+        setHasAccess(transformed.is_free || false);
         loadProgress();
       }
     } catch (err: any) {
@@ -155,7 +157,14 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
   const { isAdmin: userIsAdmin, isTeacher: userIsTeacher } = useAuth();
 
   const handleJoinByCode = async () => {
-    if (!currentLoggedInUser || !enrollCode.trim()) return;
+    // Require login
+    if (!currentLoggedInUser) {
+      const currentUrl = window.location.href;
+      navigate(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+      return;
+    }
+    
+    if (!enrollCode.trim()) return;
 
     try {
       setIsEnrolling(true);
@@ -250,7 +259,11 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
   const totalItems = lesson.vocabulary.length + lesson.kanji.length + lesson.grammar.length;
   const progress = Math.round((completedSteps.size / 6) * 100); // 6 main activities
 
-  const isLocked = !hasAccess && !userIsAdmin && !userIsTeacher && !lesson.is_free;
+  // For guests (not logged in): can access if lesson is_free
+  // For logged in users: can access if hasAccess or isAdmin or isTeacher
+  const isLocked = user ? 
+    (!hasAccess && !userIsAdmin && !userIsTeacher && !lesson.is_free) :
+    (!lesson.is_free);
 
   return (
     <div className={`container lesson-detail-premium ${language === 'japanese' ? 'jp-theme' : 'cn-theme'}`} style={{ position: 'relative', zIndex: 1 }} data-language={language}>
@@ -364,20 +377,43 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
               textAlign: 'center'
             }}>
               <p style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Hoặc bạn có thể mua lẻ khóa học này</p>
-              <Link
-                to={`/${language}/courses`}
-                style={{
-                  display: 'block',
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  background: 'var(--success-color)',
-                  color: 'white',
-                  textDecoration: 'none',
-                  fontWeight: '700'
-                }}
-              >
-                🛒 Mua khóa học
-              </Link>
+              {user ? (
+                <Link
+                  to={`/${language}/courses/${courseLevel}`}
+                  style={{
+                    display: 'block',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    background: 'var(--success-color)',
+                    color: 'white',
+                    textDecoration: 'none',
+                    fontWeight: '700'
+                  }}
+                >
+                  🛒 Mua khóa học
+                </Link>
+              ) : (
+                <button
+                  onClick={() => {
+                    sessionStorage.setItem('pendingPurchase', 'true');
+                    navigate(`/login?redirect=${encodeURIComponent(window.location.href)}`);
+                  }}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    background: 'var(--success-color)',
+                    color: 'white',
+                    textDecoration: 'none',
+                    fontWeight: '700',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🛒 Mua khóa học
+                </button>
+              )}
             </div>
           </div>
 

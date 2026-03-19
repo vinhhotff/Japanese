@@ -55,21 +55,15 @@ function App() {
                   {/* Home */}
                   <Route path="/" element={<DashboardNew />} />
 
-                  {/* Japanese Learning Routes - Protected with Enrollment */}
+                  {/* Japanese Learning Routes - Public for browsing, purchase requires login */}
                   <Route path="/japanese/courses" element={
-                    <ProtectedRoute>
-                      <CourseList language="japanese" />
-                    </ProtectedRoute>
+                    <CourseList language="japanese" />
                   } />
                   <Route path="/japanese/courses/:level" element={
-                    <ProtectedRoute>
-                      <LessonListNew language="japanese" />
-                    </ProtectedRoute>
+                    <LessonListNew language="japanese" />
                   } />
                   <Route path="/japanese/lessons/:lessonId" element={
-                    <ProtectedRoute>
-                      <LessonDetail language="japanese" />
-                    </ProtectedRoute>
+                    <LessonDetail language="japanese" />
                   } />
                   <Route path="/japanese/dictionary" element={<Dictionary language="japanese" />} />
                   <Route path="/japanese/saved-words" element={<SavedWords language="japanese" />} />
@@ -94,21 +88,15 @@ function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* Chinese Learning Routes - Protected with Enrollment */}
+                  {/* Chinese Learning Routes - Public for browsing, purchase requires login */}
                   <Route path="/chinese/courses" element={
-                    <ProtectedRoute>
-                      <CourseList language="chinese" />
-                    </ProtectedRoute>
+                    <CourseList language="chinese" />
                   } />
                   <Route path="/chinese/courses/:level" element={
-                    <ProtectedRoute>
-                      <LessonListNew language="chinese" />
-                    </ProtectedRoute>
+                    <LessonListNew language="chinese" />
                   } />
                   <Route path="/chinese/lessons/:lessonId" element={
-                    <ProtectedRoute>
-                      <LessonDetail language="chinese" />
-                    </ProtectedRoute>
+                    <LessonDetail language="chinese" />
                   } />
                   <Route path="/chinese/dictionary" element={<Dictionary language="chinese" />} />
                   <Route path="/chinese/saved-words" element={<SavedWords language="chinese" />} />
@@ -239,14 +227,10 @@ function App() {
 
                   {/* Legacy redirects for backward compatibility - Also protected */}
                   <Route path="/courses" element={
-                    <ProtectedRoute>
-                      <AllCourses />
-                    </ProtectedRoute>
+                    <AllCourses />
                   } />
                   <Route path="/courses/:level" element={
-                    <ProtectedRoute>
-                      <LessonListNew language="japanese" />
-                    </ProtectedRoute>
+                    <LessonListNew language="japanese" />
                   } />
                   <Route path="/lessons/:lessonId" element={
                     <ProtectedRoute>

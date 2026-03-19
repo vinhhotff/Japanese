@@ -18,6 +18,7 @@ import { getAllUserRoles, assignRole, assignTeacherToCourse, removeRole, getUser
 import AdminHelpGuide from './AdminHelpGuide';
 import Pagination from './common/Pagination';
 import '../App.css';
+import '../styles/admin-panel.css';
 import '../styles/admin-panel-complete.css';
 import '../styles/admin-help-guide.css';
 
@@ -712,8 +713,6 @@ const AdminPanel = () => {
                                       setUserEmailInput(userRole.email);
                                       setSelectedRole(userRole.role);
                                       setUserActiveTab('roles');
-                                      // Scroll smoothly to top of form
-                                      window.scrollTo({ top: 0, behavior: 'smooth' });
                                     }}
                                     className="btn-action edit"
                                     title="Chỉnh sửa quyền"

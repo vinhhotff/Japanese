@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../utils/logger';
 import FloatingElements from './FloatingElements';
@@ -12,6 +12,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,19 +46,9 @@ const Login = () => {
 
       logger.log('User signed in:', { email: user.email, role });
 
-      // Redirect based on role
-      switch (role) {
-        case 'admin':
-          navigate('/');
-          break;
-        case 'teacher':
-          navigate('/teacher-dashboard'); // Assuming this route exists or will exist
-          break;
-        case 'student':
-        default:
-          navigate('/');
-          break;
-      }
+      // Redirect based on role or redirect URL
+      const targetUrl = redirectUrl || (role === 'admin' ? '/' : role === 'teacher' ? '/teacher-dashboard' : '/');
+      navigate(targetUrl);
 
     } catch (err: any) {
       setError(err.message || 'Có lỗi xảy ra');

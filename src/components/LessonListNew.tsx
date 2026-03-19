@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../config/supabase';
@@ -18,6 +18,7 @@ interface LessonListNewProps {
 
 const LessonListNew = ({ language }: LessonListNewProps) => {
   const { level } = useParams<{ level: string }>();
+  const navigate = useNavigate();
   const { user, isAdmin, isTeacher } = useAuth();
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,10 +39,25 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
     checkAccessAndLoad();
   }, [level, language, user]);
 
-  const checkAccessAndLoad = async () => {
-    if (!user) return;
+  // Check if user just logged in and redirect back to purchase
+  useEffect(() => {
+    const pendingPurchase = sessionStorage.getItem('pendingPurchase');
+    if (user && pendingPurchase) {
+      sessionStorage.removeItem('pendingPurchase');
+      setShowPurchaseModal(true);
+    }
+  }, [user]);
 
+  const checkAccessAndLoad = async () => {
     setCheckingAccess(true);
+
+    // If no user, they can only view free lessons
+    if (!user) {
+      setHasAccess(false);
+      setCheckingAccess(false);
+      await loadLessons();
+      return;
+    }
 
     // Admin and Teacher have full access
     if (isAdmin || isTeacher) {
@@ -84,8 +100,12 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
       await loadLessons();
     } finally {
       setCheckingAccess(false);
-      // Show trial notice if user has no access and is not an admin/teacher
-      if (!isAdmin && !isTeacher) {
+      // Show trial notice if user has no access and is not an admin/teacher/guest
+      // Guest users can see free lessons, so we don't show trial notice by default
+      if (!user && !isAdmin && !isTeacher) {
+        // For guests, don't show trial notice automatically
+        // They can click on locked lessons to see purchase options
+      } else if (!hasAccess && !isAdmin && !isTeacher) {
         setShowTrialNotice(true);
       }
     }
@@ -156,17 +176,25 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
 
   const currentItems = lessons.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  if (checkingAccess || loading) {
+  if (loading) {
     return (
       <div className="container" style={{ textAlign: 'center', paddingTop: '4rem' }}>
         <div style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-          {checkingAccess ? 'Đang kiểm tra quyền truy cập...' : 'Đang tải bài học...'}
+          Đang tải bài học...
         </div>
       </div>
     );
   }
 
   const handleBuyCourse = () => {
+    // If user not logged in, redirect to login then back to purchase
+    if (!user) {
+      // Save pending purchase in sessionStorage
+      sessionStorage.setItem('pendingPurchase', 'true');
+      const currentUrl = window.location.href;
+      navigate(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+      return;
+    }
     setShowPurchaseModal(true);
   };
 
