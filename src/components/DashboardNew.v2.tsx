@@ -2,14 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../config/supabase';
-import { getCourses, getLessons, PaginatedResponse } from '../services/supabaseService.v2';
-import { getProgressStats, getUserProgress } from '../services/progressService';
+import { getCourses, PaginatedResponse } from '../services/supabaseService.v2';
 import { useAuth } from '../contexts/AuthContext';
 import { getStudentClasses, joinClass, createClass, getAllClasses } from '../services/classService';
 import FloatingElements from './FloatingElements';
 import Leaderboard from './Leaderboard';
 import { getUserBadges } from '../services/badgeService';
 import '../styles/dashboard-v2.css';
+import '../styles/skeleton.css';
 
 type Language = 'japanese' | 'chinese';
 
@@ -38,9 +38,8 @@ const DashboardNew = () => {
   const navigate = useNavigate();
 
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('japanese');
-  const [japaneseCourses, setJapaneseCourses] = useState<any[]>([]);
+      const [japaneseCourses, setJapaneseCourses] = useState<any[]>([]);
   const [chineseCourses, setChineseCourses] = useState<any[]>([]);
-  const [progressByLevel, setProgressByLevel] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   // Enrollment State
@@ -170,84 +169,8 @@ const DashboardNew = () => {
         }
       }
 
-      // 3. Progress calculation DISABLED for performance
-      // This was fetching 1000+ lessons and is very slow
-      // Progress display is already removed from UI, so this is not needed
-      /*
-      (async () => {
-        try {
-          const fetchLessonsSafe = async (lang: string) => {
-            try {
-              // Fetch max 1000 lessons - potential optimization needed on backend later
-              return await getLessons(undefined, lang as any, undefined, 1, 1000);
-            } catch (e) {
-              console.error(`Error fetching ${lang} lessons:`, e);
-              return { data: [], total: 0, page: 1, pageSize: 1000, totalPages: 0 } as PaginatedResponse<any>;
-            }
-          };
-
-          const [jpLessons, cnLessons] = await Promise.all([
-            fetchLessonsSafe('japanese'),
-            fetchLessonsSafe('chinese')
-          ]);
-
-          const allLessons = [...(jpLessons.data || []), ...(cnLessons.data || [])];
-
-          // Calculate stats
-          const totalByLevel: Record<string, number> = {};
-          const lessonLevelMap: Record<string, string> = {};
-
-          allLessons.forEach((l: any) => {
-            if (l.level) {
-              if (!totalByLevel[l.level]) totalByLevel[l.level] = 0;
-              totalByLevel[l.level]++;
-              lessonLevelMap[l.id] = l.level;
-            }
-          });
-
-          const userProgress = getUserProgress();
-          const completedByLevel: Record<string, number> = {};
-
-          if (userProgress && userProgress.lessons) {
-            Object.values(userProgress.lessons).forEach((p: any) => {
-              if (p.completedAt) {
-                const level = lessonLevelMap[p.lessonId];
-                if (level) {
-                  if (!completedByLevel[level]) completedByLevel[level] = 0;
-                  completedByLevel[level]++;
-                }
-              }
-            });
-          }
-
-          const newProgress: Record<string, number> = {};
-          const allLevels = [
-            'N5', 'N4', 'N3', 'N2', 'N1',
-            'HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'
-          ];
-
-          allLevels.forEach(level => {
-            const total = totalByLevel[level] || 0;
-            const completed = completedByLevel[level] || 0;
-            newProgress[level] = total > 0 ? Math.round((completed / total) * 100) : 0;
-          });
-
-          setProgressByLevel(newProgress);
-        } catch (err) {
-          console.warn('Background progress calculation failed', err);
-        }
-      })();
-      */
-      console.log('✅ Skipping progress calculation for performance');
-
     } catch (err: any) {
-      console.error('❌ Error loading data:', err);
-      console.error('Error details:', {
-        message: err.message,
-        stack: err.stack,
-        name: err.name
-      });
-      // Only set error if we haven't stopped loading yet
+      console.error('Error loading data:', err);
       setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu.');
       setLoading(false);
     } finally {
@@ -369,9 +292,9 @@ const DashboardNew = () => {
   if (authLoading) {
     return (
       <div className="dashboard-v2-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Đang kiểm tra đăng nhập...</p>
+        <div className="auth-checking-skeleton">
+          <div className="auth-checking-skeleton__spinner"></div>
+          <div className="skeleton auth-checking-skeleton__text"></div>
         </div>
       </div>
     );
@@ -380,23 +303,52 @@ const DashboardNew = () => {
   if (loading) {
     return (
       <div className="dashboard-v2-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Đang tải dữ liệu khóa học...</p>
+        <div className="dashboard-skeleton">
+          {/* Hero Section Skeleton */}
+          <div className="dashboard-skeleton__hero">
+            <div className="dashboard-skeleton__hero-left">
+              <div className="skeleton dashboard-skeleton__badge"></div>
+              <div className="skeleton dashboard-skeleton__title"></div>
+              <div className="skeleton dashboard-skeleton__subtitle"></div>
+            </div>
+            <div className="dashboard-skeleton__hero-right">
+              <div className="skeleton dashboard-skeleton__lang-btn"></div>
+              <div className="skeleton dashboard-skeleton__lang-btn"></div>
+            </div>
+          </div>
+
+          {/* Levels Grid Skeleton */}
+          <div className="dashboard-skeleton__levels-grid">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="dashboard-skeleton__level-card">
+                <div className="dashboard-skeleton__level-header">
+                  <div className="skeleton dashboard-skeleton__level-badge"></div>
+                  <div className="dashboard-skeleton__level-info">
+                    <div className="skeleton dashboard-skeleton__level-name"></div>
+                    <div className="skeleton dashboard-skeleton__level-desc"></div>
+                  </div>
+                </div>
+                <div className="skeleton" style={{ height: '40px', width: '100%', marginTop: '1rem' }}></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Features Grid Skeleton */}
+          <div className="dashboard-skeleton__features-grid">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="dashboard-skeleton__feature-card">
+                <div className="skeleton dashboard-skeleton__icon"></div>
+                <div className="skeleton dashboard-skeleton__feature-title"></div>
+                <div className="skeleton dashboard-skeleton__feature-desc"></div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   const currentCourses = selectedLanguage === 'japanese' ? japaneseCourses : chineseCourses;
-
-  console.log('Rendering with:', {
-    selectedLanguage,
-    japaneseCoursesLength: japaneseCourses.length,
-    chineseCoursesLength: chineseCourses.length,
-    currentCoursesLength: currentCourses.length,
-    loading
-  });
 
   const levelInfo: Record<string, LevelInfo> = {
     'N5': { level: 'N5', name: 'Sơ cấp', description: 'Nền tảng cơ bản', icon: '🌸' },
@@ -651,22 +603,6 @@ const DashboardNew = () => {
                   <div className="card-body">
                     <h3 className="level-name">{info?.name || group.level}</h3>
                     <p className="level-desc">{info?.description || 'Khóa học'}</p>
-
-                    {/* Stats Removed as per Step Id 239 */}
-
-                    {/* Stats Removed as per Step Id 239 */}
-
-                    {/* 
-                  <div className="level-progress">
-                    <div className="progress-info">
-                      <span className="progress-label">Tiến độ</span>
-                      <span className="progress-percent">{progressByLevel[group.level] || 0}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${progressByLevel[group.level] || 0}%`, background: levelColors[group.level] }}></div>
-                    </div>
-                  </div> 
-                  */}
                   </div>
 
                   <div className="card-footer">
@@ -712,6 +648,32 @@ const DashboardNew = () => {
                   <div>
                     <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Sổ tay cá nhân</h4>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Xem lại từ vựng và ngữ pháp đã lưu</p>
+                  </div>
+                  <div style={{ marginLeft: 'auto', fontSize: '1.2rem' }}>→</div>
+                </div>
+              </Link>
+            </div>
+
+            <div style={{ marginTop: '1rem' }}>
+              <Link to="/forum" style={{ textDecoration: 'none' }}>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: '2px solid var(--border-color)', borderRadius: '20px' }}>
+                  <div style={{ fontSize: '2rem' }}>💬</div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Diễn đàn học tập</h4>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Hỏi đáp, chia sẻ kiến thức cùng cộng đồng</p>
+                  </div>
+                  <div style={{ marginLeft: 'auto', fontSize: '1.2rem' }}>→</div>
+                </div>
+              </Link>
+            </div>
+
+            <div style={{ marginTop: '1rem' }}>
+              <Link to="/peer-matching" style={{ textDecoration: 'none' }}>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: '2px solid var(--border-color)', borderRadius: '20px' }}>
+                  <div style={{ fontSize: '2rem' }}>🤝</div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Tìm bạn học cùng trình độ</h4>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Kết nối với học viên cùng trình độ để học tập</p>
                   </div>
                   <div style={{ marginLeft: 'auto', fontSize: '1.2rem' }}>→</div>
                 </div>

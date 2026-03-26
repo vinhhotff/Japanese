@@ -113,7 +113,7 @@ const AdminForm = ({ type, item, courses, lessons, currentLanguage, currentCours
   // If AdminForm is opened from a specific lesson (Teacher Content Manager),
   // always keep the selected lesson_id in sync to avoid forcing user re-select.
   useEffect(() => {
-    if (currentLesson?.id && (!formData.lesson_id || formData.lesson_id === '')) {
+    if (currentLesson?.id) {
       setFormData((prev: any) => ({
         ...prev,
         lesson_id: currentLesson.id,
@@ -121,7 +121,7 @@ const AdminForm = ({ type, item, courses, lessons, currentLanguage, currentCours
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentLesson?.id]);
+  }, [currentLesson?.id, currentLesson?.language]);
 
   // Parse JSON từ AI và đổ vào form tương ứng
   const handleParseAiJson = () => {
@@ -1067,30 +1067,42 @@ Ví dụ:
                 <label>
                   Bài học *
                 </label>
-                <select
-                  value={formData.lesson_id}
-                  onChange={(e) => setFormData({ ...formData, lesson_id: e.target.value })}
-                  required
-                  disabled={!!currentLesson}
-                >
-                  <option value="">Chọn bài học</option>
-                  {effectiveLessons
-                    .filter((l: any) => {
-                      // Filter lessons by language
-                      const lessonCourse = courses.find((c: any) => c.id === l.course_id);
-                      // If lesson has no course_id (passed via currentLesson), fall back to lesson.language
-                      const lang = lessonCourse?.language || l.language;
-                      return lang === (formData.language || 'japanese');
-                    })
-                    .map((l: any) => {
-                      const course = courses.find((c: any) => c.id === l.course_id);
-                      return (
-                        <option key={l.id} value={l.id}>
-                          {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
-                        </option>
-                      );
-                    })}
-                </select>
+                {currentLesson ? (
+                  <div className="admin-input-static" style={{
+                    background: 'var(--teacher-secondary-glow, rgba(0, 242, 254, 0.1))',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--teacher-secondary, #00f2fe)',
+                    color: 'var(--text-primary)',
+                    fontWeight: 600
+                  }}>
+                    Bài {currentLesson.lesson_number}: {currentLesson.title}
+                  </div>
+                ) : (
+                  <select
+                    value={formData.lesson_id}
+                    onChange={(e) => setFormData({ ...formData, lesson_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Chọn bài học</option>
+                    {effectiveLessons
+                      .filter((l: any) => {
+                        // Filter lessons by language
+                        const lessonCourse = courses.find((c: any) => c.id === l.course_id);
+                        // If lesson has no course_id (passed via currentLesson), fall back to lesson.language
+                        const lang = lessonCourse?.language || l.language;
+                        return lang === (formData.language || 'japanese');
+                      })
+                      .map((l: any) => {
+                        const course = courses.find((c: any) => c.id === l.course_id);
+                        return (
+                          <option key={l.id} value={l.id}>
+                            {course ? `[${course.title} - ${course.level}] ${l.title}` : l.title}
+                          </option>
+                        );
+                      })}
+                  </select>
+                )}
                 {effectiveLessons.filter((l: any) => {
                   const lessonCourse = courses.find((c: any) => c.id === l.course_id);
                   const lang = lessonCourse?.language || l.language;

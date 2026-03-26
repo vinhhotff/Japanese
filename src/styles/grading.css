@@ -1,24 +1,17 @@
-/* ===== GRADING INTERFACE - HIGH-END PREMIUM DESIGN ===== */
+/* ===== GRADING INTERFACE - UNIFIED THEME ===== */
 
 :root {
-  --grade-primary: #8b5cf6;
-  --grade-primary-glow: rgba(139, 92, 246, 0.3);
-  --grade-gradient: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
-  --grade-bg: #0f172a;
-  --grade-card-bg: rgba(30, 41, 59, 0.7);
-  --grade-glass: rgba(255, 255, 255, 0.03);
-  --grade-glass-border: rgba(255, 255, 255, 0.08);
-  --grade-text: #f8fafc;
-  --grade-text-muted: #94a3b8;
+  --grade-primary-glow: rgba(185, 28, 44, 0.2);
+  --grade-gradient: linear-gradient(135deg, var(--jp-primary, #b91c2c) 0%, var(--jp-accent, #ec4899) 100%);
 }
 
-[data-theme="light"] {
-  --grade-bg: #f8fafc;
-  --grade-card-bg: rgba(255, 255, 255, 0.8);
-  --grade-glass: rgba(0, 0, 0, 0.02);
-  --grade-glass-border: rgba(0, 0, 0, 0.08);
-  --grade-text: #0f172a;
-  --grade-text-muted: #64748b;
+[data-language="chinese"] {
+  --grade-primary-glow: rgba(185, 28, 28, 0.2);
+  --grade-gradient: linear-gradient(135deg, var(--cn-primary, #b91c1c) 0%, var(--cn-secondary, #fbbf24) 100%);
+}
+
+[data-theme="dark"] {
+  --grade-primary-glow: rgba(220, 38, 38, 0.25);
 }
 
 .grading-container {
@@ -26,25 +19,25 @@
   margin: 0 auto;
   padding: 3rem 2rem 10rem 2rem;
   font-family: 'Outfit', 'Inter', sans-serif;
-  color: var(--grade-text);
+  color: var(--text-primary);
 }
 
-/* Header Section */
+/* ===== HEADER ===== */
 .grading-header {
   margin-bottom: 3.5rem;
 }
 
 .header-content {
-  background: var(--grade-card-bg);
+  background: var(--card-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--grade-glass-border);
+  border: 1px solid var(--border-color);
   border-radius: 32px;
   padding: 3rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
   position: relative;
   overflow: hidden;
 }
@@ -75,13 +68,13 @@
 .student-info {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--grade-text-muted);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-/* Score Circle - Ultra Premium */
+/* ===== SCORE CIRCLE ===== */
 .score-circle {
   width: 160px;
   height: 160px;
@@ -91,8 +84,8 @@
   justify-content: center;
   position: relative;
   padding: 8px;
-  background: var(--grade-glass-border);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  background: var(--border-color);
+  box-shadow: var(--shadow-lg);
   z-index: 1;
 }
 
@@ -100,12 +93,12 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: #1e293b;
+  background: var(--card-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--grade-glass-border);
+  border: 1px solid var(--border-color);
 }
 
 .score-value {
@@ -121,10 +114,10 @@
 .score-max {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--grade-text-muted);
+  color: var(--text-secondary);
 }
 
-/* Answer Cards */
+/* ===== ANSWER CARDS ===== */
 .answers-grading {
   display: flex;
   flex-direction: column;
@@ -133,10 +126,10 @@
 }
 
 .answer-grading-card {
-  background: var(--grade-card-bg);
+  background: var(--card-bg);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  border: 1px solid var(--grade-glass-border);
+  border: 1px solid var(--border-color);
   border-radius: 35px;
   padding: 3.5rem;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
@@ -144,8 +137,13 @@
 
 .answer-grading-card:hover {
   transform: translateY(-8px);
-  border-color: var(--grade-primary);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+  border-color: var(--jp-primary, #b91c2c);
+  box-shadow: 0 25px 60px rgba(185, 28, 44, 0.12);
+}
+
+[data-language="chinese"] .answer-grading-card:hover {
+  border-color: var(--cn-primary, #b91c1c);
+  box-shadow: 0 25px 60px rgba(185, 28, 28, 0.12);
 }
 
 .answer-header {
@@ -154,25 +152,29 @@
   align-items: center;
   margin-bottom: 2.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--grade-glass-border);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .answer-number {
   font-size: 1.25rem;
   font-weight: 900;
-  color: var(--grade-primary);
+  color: var(--jp-primary, #b91c2c);
   background: var(--grade-primary-glow);
   padding: 0.6rem 1.5rem;
   border-radius: 16px;
 }
 
+[data-language="chinese"] .answer-number {
+  color: var(--cn-primary, #b91c1c);
+}
+
 .points-input {
   width: 100px;
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.5);
-  border: 2px solid var(--grade-glass-border);
+  background: var(--input-bg);
+  border: 2px solid var(--border-color);
   border-radius: 16px;
-  color: var(--grade-text);
+  color: var(--text-primary);
   font-size: 1.5rem;
   font-weight: 900;
   text-align: center;
@@ -180,13 +182,17 @@
 }
 
 .points-input:focus {
-  border-color: var(--grade-primary);
-  background: rgba(15, 23, 42, 0.8);
+  border-color: var(--jp-primary, #b91c2c);
+  background: var(--card-bg);
   outline: none;
   box-shadow: 0 0 0 5px var(--grade-primary-glow);
 }
 
-/* Displays */
+[data-language="chinese"] .points-input:focus {
+  border-color: var(--cn-primary, #b91c1c);
+}
+
+/* ===== DISPLAYS ===== */
 .question-display,
 .answer-display {
   margin-bottom: 2rem;
@@ -199,22 +205,23 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--grade-text-muted);
+  color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 
 .answer-content {
   padding: 1.5rem;
-  background: rgba(15, 23, 42, 0.3);
-  border: 1px solid var(--grade-glass-border);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 20px;
   font-size: 1.1rem;
   line-height: 1.7;
+  color: var(--text-primary);
 }
 
 .correct-answer-display {
-  background: rgba(16, 185, 129, 0.05);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(5, 150, 105, 0.05);
+  border: 1px solid rgba(5, 150, 105, 0.2);
   border-radius: 20px;
   padding: 1.5rem;
   margin: 2rem 0;
@@ -223,7 +230,7 @@
   align-items: center;
 }
 
-/* Summary Panel */
+/* ===== SUMMARY PANEL ===== */
 .grading-summary {
   background: var(--grade-gradient);
   border-radius: 35px;
@@ -260,7 +267,7 @@
   font-size: 1.5rem;
 }
 
-/* Sticky Action Bar */
+/* ===== STICKY ACTION BAR ===== */
 .grading-actions {
   position: fixed;
   bottom: 2rem;
@@ -268,17 +275,17 @@
   transform: translateX(-50%);
   width: calc(100% - 4rem);
   max-width: 1400px;
-  background: var(--grade-card-bg);
+  background: var(--card-bg);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  border: 1px solid var(--grade-glass-border);
+  border: 1px solid var(--border-color);
   border-radius: 30px;
   padding: 1.5rem 3rem;
   display: flex;
   justify-content: flex-end;
   gap: 1.5rem;
   z-index: 1000;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-lg);
 }
 
 .btn-grading {
@@ -303,16 +310,16 @@
 }
 
 .btn-grading.outline {
-  background: var(--grade-glass);
-  border: 1px solid var(--grade-glass-border);
-  color: var(--grade-text);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .btn-grading.outline:hover {
-  background: var(--grade-glass-border);
+  background: var(--border-color);
 }
 
-/* Responsive */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 992px) {
   .grading-summary {
     grid-template-columns: 1fr;

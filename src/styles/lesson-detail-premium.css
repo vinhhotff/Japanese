@@ -42,10 +42,14 @@
 
 .back-link-small:hover {
     background: var(--bg-secondary);
-    border-color: var(--primary-color);
+    border-color: var(--jp-primary);
     color: var(--text-primary);
     transform: translateX(-6px);
     box-shadow: var(--shadow-md);
+}
+
+[data-language="chinese"] .back-link-small:hover {
+    border-color: var(--cn-primary);
 }
 
 .lesson-detail-hero {
@@ -286,4 +290,272 @@
     .hero-description {
         font-size: 1.1rem;
     }
+}
+
+/* ===== LEARNING STEP BUTTONS ===== */
+.lesson-detail-premium .learning-step-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.lesson-detail-premium .step-card {
+    cursor: pointer;
+    border-radius: 24px;
+    padding: 2rem;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    text-align: center;
+}
+
+.lesson-detail-premium .step-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.lesson-detail-premium .step-card.active {
+    border-width: 3px;
+    box-shadow: var(--shadow-lg);
+}
+
+.lesson-detail-premium .step-card.active.jp-theme {
+    border-color: var(--jp-primary);
+    background: rgba(185, 28, 44, 0.08);
+}
+
+.lesson-detail-premium .step-card.active.cn-theme {
+    border-color: var(--cn-primary);
+    background: rgba(185, 28, 28, 0.08);
+}
+
+.lesson-detail-premium .step-card .step-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 0.5rem;
+    color: var(--text-secondary);
+    stroke-width: 1.5;
+}
+
+.lesson-detail-premium .step-card.active .step-icon {
+    color: inherit;
+}
+
+.lesson-detail-premium .step-card .step-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.lesson-detail-premium .step-card.active .step-title {
+    color: inherit;
+}
+
+.lesson-detail-premium .step-card .step-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.lesson-detail-premium .step-complete-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--success-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* ===== TAB BUTTONS ===== */
+.lesson-detail-premium .tab-buttons {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.lesson-detail-premium .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.lesson-detail-premium .btn-primary {
+    background: var(--jp-primary);
+    color: white;
+    border-color: var(--jp-primary);
+    box-shadow: 0 4px 12px rgba(185, 28, 44, 0.25);
+}
+
+.lesson-detail-premium .jp-theme .btn-primary {
+    background: var(--jp-primary);
+    border-color: var(--jp-primary);
+}
+
+.lesson-detail-premium .cn-theme .btn-primary {
+    background: var(--cn-primary);
+    border-color: var(--cn-primary);
+}
+
+.lesson-detail-premium .btn-outline {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.lesson-detail-premium .btn-outline:hover {
+    border-color: var(--jp-primary);
+    background: var(--bg-secondary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.lesson-detail-premium .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(185, 28, 44, 0.35);
+}
+
+/* ===== SECTION CONTAINER ===== */
+.lesson-detail-premium .section-container {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.lesson-detail-premium .section-content {
+    position: relative;
+}
+
+.lesson-detail-premium .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.lesson-detail-premium .empty-state::before {
+    content: '📭';
+    display: block;
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+/* ===== COMPLETE BUTTON ===== */
+.lesson-detail-premium .complete-section-btn {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.lesson-detail-premium .complete-section-btn .btn-primary {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    box-shadow: 0 8px 20px rgba(185, 28, 44, 0.25);
+}
+
+.lesson-detail-premium .complete-section-btn .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(185, 28, 44, 0.35);
+}
+
+/* ===== DARK MODE ADJUSTMENTS ===== */
+[data-theme="dark"] .lesson-detail-premium .step-card {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .lesson-detail-premium .step-card:hover {
+    background: rgba(30, 41, 59, 0.8);
+}
+
+[data-theme="dark"] .lesson-detail-premium .section-container {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .lesson-detail-premium .btn-outline {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .lesson-detail-premium .btn-outline:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(220, 38, 38, 0.5);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+    .lesson-detail-premium .learning-step-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .lesson-detail-premium .step-card {
+        padding: 1.5rem;
+    }
+
+    .lesson-detail-premium .tab-buttons {
+        flex-direction: column;
+    }
+
+    .lesson-detail-premium .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .lesson-detail-premium .section-container {
+        padding: 1.5rem;
+    }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.lesson-detail-premium .section-container {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.lesson-detail-premium .step-card {
+    animation: fadeInUp 0.3s ease-out;
+    animation-fill-mode: both;
+}
+
+.lesson-detail-premium .step-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.lesson-detail-premium .step-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.lesson-detail-premium .step-card:nth-child(3) {
+    animation-delay: 0.3s;
 }

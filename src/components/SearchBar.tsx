@@ -29,18 +29,18 @@ const SearchBar = ({ vocabulary, kanji, grammar, onResultClick }: SearchBarProps
 
     const lowerTerm = term.toLowerCase();
 
-    const vocabResults = vocabulary.filter(v => 
+    const vocabResults = vocabulary.filter(v =>
       v.word.toLowerCase().includes(lowerTerm) ||
-      v.hiragana.toLowerCase().includes(lowerTerm) ||
-      v.kanji?.toLowerCase().includes(lowerTerm) ||
+      (v.hiragana && v.hiragana.toLowerCase().includes(lowerTerm)) ||
+      (v.kanji && v.kanji.toLowerCase().includes(lowerTerm)) ||
       v.meaning.toLowerCase().includes(lowerTerm)
     );
 
     const kanjiResults = kanji.filter(k =>
       k.character.includes(term) ||
       k.meaning.toLowerCase().includes(lowerTerm) ||
-      k.readings.onyomi.some(r => r.toLowerCase().includes(lowerTerm)) ||
-      k.readings.kunyomi.some(r => r.toLowerCase().includes(lowerTerm))
+      (k.readings?.onyomi || []).some(r => r.toLowerCase().includes(lowerTerm)) ||
+      (k.readings?.kunyomi || []).some(r => r.toLowerCase().includes(lowerTerm))
     );
 
     const grammarResults = grammar.filter(g =>

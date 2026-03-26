@@ -9,7 +9,14 @@ const SupabaseDebug = () => {
       const url = import.meta.env.VITE_SUPABASE_URL;
       const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      const checks = {
+      const checks: {
+        hasUrl: boolean;
+        hasKey: boolean;
+        urlValue: string;
+        keyLength: number;
+        keyFormat: boolean;
+        connectionTest?: string;
+      } = {
         hasUrl: !!url,
         hasKey: !!key,
         urlValue: url || 'MISSING',

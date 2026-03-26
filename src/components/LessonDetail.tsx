@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getLessonById, getSentenceGames, getRoleplayScenarios } from '../services/supabaseService.v2';
 import { transformLessonFromDB } from '../utils/dataTransform';
 import { Lesson, RoleplayScenario } from '../types';
-import { getLessonProgress, updateLessonProgress } from '../services/progressService';
+import { getLessonProgress, updateLessonProgress, syncProgressFromCloud } from '../services/progressService';
 import { useAuth } from '../contexts/AuthContext';
 import { getStudentClasses, joinClass } from '../services/classService';
 import { supabase } from '../config/supabase';
@@ -18,8 +18,10 @@ import Quiz from './Quiz';
 
 import Pronunciation from './Pronunciation';
 import Shadowing from './Shadowing';
-import '../App.css';
+import '../styles/core.css';
+import '../styles/lesson-shared.css';
 import '../styles/lesson-detail-premium.css';
+import '../styles/skeleton.css';
 import FloatingCharacters from './FloatingCharacters';
 
 type LearningStep = 'learn' | 'practice' | 'test';
@@ -135,10 +137,10 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
           })));
         }
 
-        // Background sync progress
-        import('../services/progressService').then(m => m.syncProgressFromCloud(user!.id)).then(() => {
-          loadProgress();
-        });
+        // Background sync progress (non-blocking, debounced)
+        syncProgressFromCloud(user!.id).then((synced) => {
+          if (synced) loadProgress();
+        }).catch(console.error);
       } else {
         setHasAccess(false);
         loadProgress();
@@ -232,8 +234,73 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
 
   if (loading) {
     return (
-      <div className="container">
-        <div className="loading">Đang tải bài học...</div>
+      <div className="lesson-detail-skeleton">
+        {/* Back Link Skeleton */}
+        <div className="skeleton lesson-detail-skeleton__back"></div>
+
+        {/* Hero Section Skeleton */}
+        <div className="lesson-detail-skeleton__hero">
+          <div className="lesson-detail-skeleton__hero-info">
+            <div className="lesson-detail-skeleton__badges">
+              <div className="skeleton lesson-detail-skeleton__hero-badge"></div>
+              <div className="skeleton lesson-detail-skeleton__hero-badge"></div>
+            </div>
+            <div className="skeleton lesson-detail-skeleton__hero-title"></div>
+            <div className="skeleton lesson-detail-skeleton__hero-desc"></div>
+            <div className="lesson-detail-skeleton__hero-stats">
+              <div className="lesson-detail-skeleton__stat">
+                <div className="skeleton lesson-detail-skeleton__stat-icon"></div>
+                <div className="skeleton lesson-detail-skeleton__stat-text"></div>
+              </div>
+              <div className="lesson-detail-skeleton__stat">
+                <div className="skeleton lesson-detail-skeleton__stat-icon"></div>
+                <div className="skeleton lesson-detail-skeleton__stat-text"></div>
+              </div>
+              <div className="lesson-detail-skeleton__stat">
+                <div className="skeleton lesson-detail-skeleton__stat-icon"></div>
+                <div className="skeleton lesson-detail-skeleton__stat-text"></div>
+              </div>
+            </div>
+          </div>
+          <div className="lesson-detail-skeleton__progress">
+            <div className="skeleton lesson-detail-skeleton__progress-value"></div>
+            <div className="skeleton lesson-detail-skeleton__progress-label"></div>
+          </div>
+        </div>
+
+        {/* Steps Skeleton */}
+        <div className="lesson-detail-skeleton__steps">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="lesson-detail-skeleton__step">
+              <div className="skeleton lesson-detail-skeleton__step-icon"></div>
+              <div className="lesson-detail-skeleton__step-content">
+                <div className="skeleton lesson-detail-skeleton__step-title"></div>
+                <div className="skeleton lesson-detail-skeleton__step-desc"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tabs Skeleton */}
+        <div className="lesson-detail-skeleton__tabs">
+          <div className="skeleton lesson-detail-skeleton__tab"></div>
+          <div className="skeleton lesson-detail-skeleton__tab"></div>
+          <div className="skeleton lesson-detail-skeleton__tab"></div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="lesson-detail-skeleton__content">
+          <div className="skeleton lesson-detail-skeleton__content-title"></div>
+          <div className="lesson-detail-skeleton__content-grid">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="lesson-detail-skeleton__content-item">
+                <div className="skeleton lesson-detail-skeleton__content-kanji"></div>
+                <div className="skeleton lesson-detail-skeleton__content-item-title"></div>
+                <div className="skeleton lesson-detail-skeleton__content-item-desc"></div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -400,8 +467,8 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
       <div className="lesson-detail-hero">
         <div className="lesson-hero-card" style={{
           background: language === 'japanese'
-            ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
-            : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            ? 'linear-gradient(135deg, var(--jp-primary) 0%, var(--jp-primary-dark) 100%)'
+            : 'linear-gradient(135deg, var(--cn-primary) 0%, var(--cn-primary-dark) 100%)',
         }}>
           <div className="lesson-hero-content">
             <div className="hero-main-info">
@@ -453,177 +520,78 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
       </div>
 
       {/* Learning Path - 3 Main Steps */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="learning-step-grid">
         <button
           onClick={() => setCurrentStep('learn')}
-          className="card"
+          className={`step-card ${currentStep === 'learn' ? 'active' : ''} ${language === 'japanese' ? 'jp-theme' : 'cn-theme'}`}
           style={{
-            cursor: 'pointer',
-            border: currentStep === 'learn'
-              ? `3px solid ${language === 'japanese' ? '#8b5cf6' : '#ef4444'}`
-              : '2px solid var(--border-color)',
-            background: currentStep === 'learn'
-              ? (language === 'japanese' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)')
-              : 'var(--card-bg)',
-            transition: 'all 0.2s',
-            position: 'relative'
+            color: currentStep === 'learn'
+              ? (language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)')
+              : 'inherit'
           }}
         >
           {completedSteps.has('learn-vocab') && completedSteps.has('learn-kanji') && completedSteps.has('learn-grammar') && (
-            <div style={{
-              position: 'absolute',
-              top: '0.5rem',
-              right: '0.5rem',
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'var(--success-color)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              ✓
-            </div>
+            <div className="step-complete-badge">✓</div>
           )}
-          <svg style={{
-            width: '48px',
-            height: '48px',
-            margin: '0 auto 0.5rem',
-            color: currentStep === 'learn'
-              ? (language === 'japanese' ? '#8b5cf6' : '#ef4444')
-              : 'var(--text-secondary)',
-            strokeWidth: '1.5'
-          }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg className="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: '700',
-            marginBottom: '0.25rem',
-            color: currentStep === 'learn'
-              ? (language === 'japanese' ? '#8b5cf6' : '#ef4444')
-              : 'var(--text-primary)'
-          }}>
-            Bước 1: Học
-          </h3>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          <h3 className="step-title">Bước 1: Học</h3>
+          <p className="step-description">
             Từ vựng, {language === 'japanese' ? 'Kanji' : 'Hán tự'}, Ngữ pháp
           </p>
         </button>
 
         <button
           onClick={() => setCurrentStep('practice')}
-          className="card"
+          className={`step-card ${currentStep === 'practice' ? 'active' : ''} ${language === 'japanese' ? 'jp-theme' : 'cn-theme'}`}
           style={{
-            cursor: 'pointer',
-            border: currentStep === 'practice'
-              ? `3px solid ${language === 'japanese' ? '#10b981' : '#f59e0b'}`
-              : '2px solid var(--border-color)',
+            color: currentStep === 'practice'
+              ? (language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)')
+              : 'inherit',
+            borderColor: currentStep === 'practice'
+              ? (language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)')
+              : undefined,
             background: currentStep === 'practice'
-              ? (language === 'japanese' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)')
-              : 'var(--card-bg)',
-            transition: 'all 0.2s',
-            position: 'relative'
+              ? (language === 'japanese' ? 'rgba(185, 28, 44, 0.08)' : 'rgba(185, 28, 28, 0.08)')
+              : undefined
           }}
         >
           {completedSteps.has('practice-listening') && (
-            <div style={{
-              position: 'absolute',
-              top: '0.5rem',
-              right: '0.5rem',
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'var(--success-color)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              ✓
-            </div>
+            <div className="step-complete-badge">✓</div>
           )}
-          <svg style={{
-            width: '48px',
-            height: '48px',
-            margin: '0 auto 0.5rem',
-            color: currentStep === 'practice'
-              ? (language === 'japanese' ? '#10b981' : '#f59e0b')
-              : 'var(--text-secondary)',
-            strokeWidth: '1.5'
-          }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg className="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: '700',
-            marginBottom: '0.25rem',
-            color: currentStep === 'practice'
-              ? (language === 'japanese' ? '#10b981' : '#f59e0b')
-              : 'var(--text-primary)'
-          }}>
-            Bước 2: Luyện tập
-          </h3>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          <h3 className="step-title">Bước 2: Luyện tập</h3>
+          <p className="step-description">
             Nghe, Nói, Flashcard, Game
           </p>
         </button>
 
         <button
           onClick={() => setCurrentStep('test')}
-          className="card"
+          className={`step-card ${currentStep === 'test' ? 'active' : ''} ${language === 'japanese' ? 'jp-theme' : 'cn-theme'}`}
           style={{
-            cursor: 'pointer',
-            border: currentStep === 'test'
-              ? `3px solid ${language === 'japanese' ? '#3b82f6' : '#ec4899'}`
-              : '2px solid var(--border-color)',
+            color: currentStep === 'test'
+              ? (language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)')
+              : 'inherit',
+            borderColor: currentStep === 'test'
+              ? (language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)')
+              : undefined,
             background: currentStep === 'test'
-              ? (language === 'japanese' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)')
-              : 'var(--card-bg)',
-            transition: 'all 0.2s',
-            position: 'relative'
+              ? (language === 'japanese' ? 'rgba(185, 28, 44, 0.08)' : 'rgba(185, 28, 28, 0.08)')
+              : undefined
           }}
         >
           {completedSteps.has('test-quiz') && (
-            <div style={{
-              position: 'absolute',
-              top: '0.5rem',
-              right: '0.5rem',
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'var(--success-color)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              ✓
-            </div>
+            <div className="step-complete-badge">✓</div>
           )}
-          <svg style={{
-            width: '48px',
-            height: '48px',
-            margin: '0 auto 0.5rem',
-            color: currentStep === 'test'
-              ? (language === 'japanese' ? '#3b82f6' : '#ec4899')
-              : 'var(--text-secondary)',
-            strokeWidth: '1.5'
-          }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <svg className="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: '700',
-            marginBottom: '0.25rem',
-            color: currentStep === 'test'
-              ? (language === 'japanese' ? '#3b82f6' : '#ec4899')
-              : 'var(--text-primary)'
-          }}>
-            Bước 3: Kiểm tra
-          </h3>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          <h3 className="step-title">Bước 3: Kiểm tra</h3>
+          <p className="step-description">
             Quiz tổng hợp
           </p>
         </button>
@@ -632,7 +600,7 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
       {/* Step Content */}
       {currentStep === 'learn' && (
         <div>
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <div className="tab-buttons">
             <button
               onClick={() => setLearnTab('vocab')}
               className={learnTab === 'vocab' ? 'btn btn-primary' : 'btn btn-outline'}
@@ -660,11 +628,10 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
             <div>
               <VocabularySection vocabulary={lesson.vocabulary} language={language} />
               {!completedSteps.has('learn-vocab') && (
-                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                <div className="complete-section-btn">
                   <button
                     className="btn btn-primary"
                     onClick={() => markStepComplete('learn-vocab')}
-                    style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}
                   >
                     ✓ Đã học xong từ vựng
                   </button>
@@ -676,11 +643,10 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
             <div>
               <KanjiSection kanji={lesson.kanji} language={language} />
               {!completedSteps.has('learn-kanji') && (
-                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                <div className="complete-section-btn">
                   <button
                     className="btn btn-primary"
                     onClick={() => markStepComplete('learn-kanji')}
-                    style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}
                   >
                     ✓ Đã học xong {language === 'japanese' ? 'Kanji' : 'Hán tự'}
                   </button>
@@ -692,11 +658,10 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
             <div>
               <GrammarSection grammar={lesson.grammar} />
               {!completedSteps.has('learn-grammar') && (
-                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                <div className="complete-section-btn">
                   <button
                     className="btn btn-primary"
                     onClick={() => markStepComplete('learn-grammar')}
-                    style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}
                   >
                     ✓ Đã học xong Ngữ pháp
                   </button>
@@ -709,7 +674,7 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
 
       {currentStep === 'practice' && (
         <div>
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <div className="tab-buttons">
             <button
               onClick={() => setPracticeTab('listening')}
               className={practiceTab === 'listening' ? 'btn btn-primary' : 'btn btn-outline'}
@@ -737,11 +702,10 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
             <div>
               <ListeningSection listening={lesson.listening} />
               {!completedSteps.has('practice-listening') && lesson.listening.length > 0 && (
-                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                <div className="complete-section-btn">
                   <button
                     className="btn btn-primary"
                     onClick={() => markStepComplete('practice-listening')}
-                    style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}
                   >
                     ✓ Hoàn thành bài nghe
                   </button>

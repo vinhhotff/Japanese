@@ -18,6 +18,11 @@ export interface UserProgress {
 
 const PROGRESS_KEY = 'user-learning-progress';
 
+// Sync state management to prevent loops
+let lastSyncTime = 0;
+let syncInProgress = false;
+const SYNC_COOLDOWN_MS = 5000; // Minimum 5 seconds between syncs
+
 // Lấy toàn bộ tiến độ (ưu tiên local, sau đó đồng bộ cloud)
 export const getUserProgress = (): UserProgress => {
   const saved = localStorage.getItem(PROGRESS_KEY);
@@ -37,36 +42,62 @@ const saveUserProgress = (progress: UserProgress) => {
   localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
 };
 
-// Đồng bộ từ Cloud về Local
-export const syncProgressFromCloud = async (userId: string) => {
-  const { data, error } = await supabase
-    .from('user_learning_progress')
-    .select('*')
-    .eq('user_id', userId);
-
-  if (error) {
-    console.error('Error syncing from cloud:', error);
-    return;
+// Đồng bộ từ Cloud về Local (với debounce)
+export const syncProgressFromCloud = async (userId: string): Promise<boolean> => {
+  // Prevent rapid re-syncs
+  const now = Date.now();
+  if (syncInProgress) {
+    console.log('⏳ Sync already in progress, skipping...');
+    return false;
+  }
+  
+  if (now - lastSyncTime < SYNC_COOLDOWN_MS) {
+    console.log('⏳ Sync cooldown active, skipping...');
+    return false;
   }
 
-  if (data) {
-    const localProgress = getUserProgress();
-    data.forEach((item: any) => {
-      localProgress.lessons[item.lesson_id] = {
-        lessonId: item.lesson_id,
-        completedSteps: item.completed_steps || [],
-        lastStudied: item.last_studied_at,
-        totalSteps: 6, // Default
-        completedAt: item.completed_at
-      };
-    });
+  syncInProgress = true;
+  lastSyncTime = now;
 
-    // Recalculate stats
-    const lessons = Object.values(localProgress.lessons);
-    localProgress.totalLessonsStarted = lessons.length;
-    localProgress.totalLessonsCompleted = lessons.filter(l => l.completedAt).length;
+  try {
+    const { data, error } = await supabase
+      .from('user_learning_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .limit(500); // Limit to prevent loading too much data
 
-    saveUserProgress(localProgress);
+    if (error) {
+      console.error('Error syncing from cloud:', error);
+      return false;
+    }
+
+    if (data && data.length > 0) {
+      const localProgress = getUserProgress();
+      data.forEach((item: any) => {
+        localProgress.lessons[item.lesson_id] = {
+          lessonId: item.lesson_id,
+          completedSteps: item.completed_steps || [],
+          lastStudied: item.last_studied_at,
+          totalSteps: 6, // Default
+          completedAt: item.completed_at
+        };
+      });
+
+      // Recalculate stats
+      const lessons = Object.values(localProgress.lessons);
+      localProgress.totalLessonsStarted = lessons.length;
+      localProgress.totalLessonsCompleted = lessons.filter(l => l.completedAt).length;
+
+      saveUserProgress(localProgress);
+      console.log('✅ Progress synced from cloud');
+    }
+    
+    return true;
+  } catch (e) {
+    console.error('Failed to sync from cloud:', e);
+    return false;
+  } finally {
+    syncInProgress = false;
   }
 };
 

@@ -11,6 +11,8 @@ import FloatingCharacters from './FloatingCharacters';
 import Pagination from './common/Pagination';
 import '../styles/custom-theme.css';
 import '../styles/premium-features.css';
+import '../styles/lesson-list-premium.css';
+import '../styles/skeleton.css';
 
 interface LessonListNewProps {
   language: Language;
@@ -158,9 +160,47 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
 
   if (checkingAccess || loading) {
     return (
-      <div className="container" style={{ textAlign: 'center', paddingTop: '4rem' }}>
-        <div style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-          {checkingAccess ? 'Đang kiểm tra quyền truy cập...' : 'Đang tải bài học...'}
+      <div className="lesson-list-skeleton">
+        {/* Header Skeleton */}
+        <div className="lesson-list-skeleton__header">
+          <div className="skeleton lesson-list-skeleton__lang-icon"></div>
+          <div className="lesson-list-skeleton__header-info">
+            <div className="skeleton lesson-list-skeleton__header-badge"></div>
+            <div className="skeleton lesson-list-skeleton__header-title"></div>
+            <div className="lesson-list-skeleton__header-stats">
+              <div className="skeleton lesson-list-skeleton__stat"></div>
+              <div className="skeleton lesson-list-skeleton__stat"></div>
+              <div className="skeleton lesson-list-skeleton__stat"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Info Box Skeleton */}
+        <div className="lesson-list-skeleton__info-box">
+          <div className="skeleton lesson-list-skeleton__info-icon"></div>
+          <div className="lesson-list-skeleton__info-content">
+            <div className="skeleton lesson-list-skeleton__info-title"></div>
+            <div className="skeleton lesson-list-skeleton__info-text"></div>
+            <div className="skeleton lesson-list-skeleton__info-text"></div>
+          </div>
+        </div>
+
+        {/* Lesson Cards Skeleton */}
+        <div className="lesson-list-skeleton__grid">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="lesson-list-skeleton__card">
+              <div className="skeleton lesson-list-skeleton__card-number"></div>
+              <div className="lesson-list-skeleton__card-content">
+                <div className="skeleton lesson-list-skeleton__card-title"></div>
+                <div className="skeleton lesson-list-skeleton__card-desc"></div>
+                <div className="lesson-list-skeleton__card-stats">
+                  <div className="skeleton lesson-list-skeleton__card-stat"></div>
+                  <div className="skeleton lesson-list-skeleton__card-stat"></div>
+                  <div className="skeleton lesson-list-skeleton__card-stat"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -230,17 +270,6 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
 
   // We no longer block the whole component if !hasAccess. 
   // Instead we render the list with locks.
-
-  if (loading) { // checkingAccess is less blocking now, we just want to load content
-    // ... keep loading spinner
-    return (
-      <div className="container" style={{ textAlign: 'center', paddingTop: '4rem' }}>
-        <div style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-          Đang tải bài học...
-        </div>
-      </div>
-    );
-  }
 
   // Remove the "Access Denied" block entirely. Use it for "Premium Content" state inside render.
 
@@ -356,7 +385,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
         borderRadius: '16px',
         padding: '1.5rem',
         marginBottom: '2rem',
-        border: `2px solid ${language === 'japanese' ? '#8b5cf6' : '#ef4444'}`,
+        border: `2px solid ${language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)'}`,
         boxShadow: 'var(--shadow-md)'
       }}>
         <div style={{ display: 'flex', alignItems: 'start', gap: '1rem', flexWrap: 'wrap' }}>
@@ -690,8 +719,8 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                 overflow: 'hidden',
                 background: 'var(--card-bg, #ffffff)',
                 border: language === 'japanese'
-                  ? '2px solid var(--primary-color, #ffb7c5)'
-                  : '2px solid var(--secondary-color, #ff4444)',
+                  ? '2px solid var(--jp-primary)'
+                  : '2px solid var(--cn-primary)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)'
               }}
               onClick={(e) => e.stopPropagation()}
@@ -701,8 +730,8 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                 height: '8px',
                 width: '100%',
                 background: language === 'japanese'
-                  ? 'linear-gradient(90deg, #ffb7c5, #ff8fa3)'
-                  : 'linear-gradient(90deg, #ff4444, #cc0000)'
+                  ? 'linear-gradient(90deg, var(--jp-primary), var(--jp-primary-light))'
+                  : 'linear-gradient(90deg, var(--cn-primary), var(--cn-primary-light))'
               }} />
 
               {/* Decorative Background Pattern */}
@@ -730,12 +759,12 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                   width: '72px',
                   height: '72px',
                   borderRadius: '24px',
-                  background: language === 'japanese' ? 'rgba(255, 183, 197, 0.15)' : 'rgba(255, 68, 68, 0.15)',
+                  background: language === 'japanese' ? 'rgba(185, 28, 44, 0.1)' : 'rgba(185, 28, 28, 0.1)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 1.5rem',
-                  color: language === 'japanese' ? '#ff8fa3' : '#ff4444'
+                  color: language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)'
                 }}>
                   <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
@@ -773,7 +802,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                   <span style={{
                     fontSize: '0.85rem',
                     fontWeight: 700,
-                    color: language === 'japanese' ? '#ff8fa3' : '#ff4444',
+                    color: language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)',
                     marginRight: '8px'
                   }}>
                     {courseInfo.level}
@@ -813,13 +842,13 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                   gap: '12px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--success-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                     </div>
                     <span>Toàn bộ bài học</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--success-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                     </div>
                     <span>Sử dụng trọn đời</span>
@@ -852,14 +881,14 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                       padding: '1rem',
                       borderRadius: '18px',
                       border: 'none',
-                      background: language === 'japanese' ? '#ff8fa3' : '#ff4444',
+                      background: language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)',
                       color: '#ffffff',
                       fontWeight: 700,
                       cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
                       transition: 'all 0.2s',
                       boxShadow: language === 'japanese'
-                        ? '0 10px 15px -3px rgba(255, 143, 163, 0.3)'
-                        : '0 10px 15px -3px rgba(255, 68, 68, 0.3)'
+                        ? '0 10px 15px -3px rgba(185, 28, 44, 0.3)'
+                        : '0 10px 15px -3px rgba(185, 28, 28, 0.3)'
                     }}
                   >
                     {isProcessingPayment ? 'Đang chuyển...' : 'Thanh toán'}

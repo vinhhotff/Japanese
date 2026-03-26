@@ -477,7 +477,7 @@ const AssignmentForm: React.FC = () => {
                                             <input type="file" ref={audioInputRef} hidden accept="audio/*" onChange={e => handleFileUpload(e, 'assignment')} />
                                         </div>
                                     ) : (
-                                        <div className="stat-card" style={{ padding: '1.5rem', background: 'var(--asgn-glass)' }}>
+                                        <div className="stat-card" style={{ padding: '1.25rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
                                             <div className="stat-icon" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>🎵</div>
                                             <div className="stat-content">
                                                 <h4 className="text-xs uppercase mb-1">Audio File</h4>
@@ -501,7 +501,7 @@ const AssignmentForm: React.FC = () => {
                                             <input type="file" ref={videoInputRef} hidden accept="video/*" onChange={e => handleFileUpload(e, 'assignment')} />
                                         </div>
                                     ) : !videoUrl.includes('youtube') && (
-                                        <div className="stat-card" style={{ padding: '1.5rem', background: 'var(--asgn-glass)' }}>
+                                        <div className="stat-card" style={{ padding: '1.25rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
                                             <div className="stat-icon" style={{ width: '40px', height: '40px', fontSize: '1.2rem' }}>📹</div>
                                             <div className="stat-content">
                                                 <h4 className="text-xs uppercase mb-1">Video Direct Link</h4>
@@ -553,7 +553,7 @@ const AssignmentForm: React.FC = () => {
                                 </button>
                             </div>
 
-                            <div className="space-y-8">
+                            <div className="space-y-4">
                                 {questions.map((q, idx) => (
                                     <motion.div
                                         key={idx}
@@ -567,7 +567,7 @@ const AssignmentForm: React.FC = () => {
                                                 <span className="q-number-premium">{q.question_number}</span>
                                                 <select
                                                     className="select-premium py-2"
-                                                    style={{ width: '220px', background: 'var(--asgn-glass)' }}
+                                                    style={{ width: '220px' }}
                                                     value={q.question_type}
                                                     onChange={e => updateQuestion(idx, { question_type: e.target.value as any })}
                                                 >
@@ -621,7 +621,7 @@ const AssignmentForm: React.FC = () => {
                                                         <input type="file" ref={el => qAudioRefs.current[idx] = el} hidden accept="audio/*" onChange={e => handleFileUpload(e, 'question', idx)} />
                                                     </div>
                                                 ) : (
-                                                    <div className="stat-card" style={{ padding: '1rem', background: 'var(--asgn-glass)', margin: 0 }}>
+                                                    <div className="stat-card" style={{ padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', margin: 0 }}>
                                                         <div className="stat-icon" style={{ width: '32px', height: '32px', fontSize: '1rem' }}>🎵</div>
                                                         <div className="stat-content">
                                                             <p className="text-[10px] uppercase font-black">Ready</p>
@@ -672,7 +672,7 @@ const AssignmentForm: React.FC = () => {
                                                 <input type="number" className="input-premium py-2 text-sm" value={q.points} onChange={e => updateQuestion(idx, { points: Number(e.target.value) })} />
                                             </div>
                                             <div className="field-group-premium flex flex-row items-center gap-3 pt-6">
-                                                <input type="checkbox" className="w-5 h-5 accent-teal-500" checked={q.requires_file_upload} onChange={e => updateQuestion(idx, { requires_file_upload: e.target.checked })} />
+                                <input type="checkbox" className="w-5 h-5" style={{ accentColor: 'var(--jp-primary, #b91c2c)' }} checked={q.requires_file_upload} onChange={e => updateQuestion(idx, { requires_file_upload: e.target.checked })} />
                                                 <label className="mb-0 text-[10px]">Cần nộp tệp?</label>
                                             </div>
                                         </div>
@@ -713,11 +713,12 @@ const AssignmentForm: React.FC = () => {
                                     <input type="number" className="input-premium" value={passingScore} onChange={e => setPassingScore(Number(e.target.value))} />
                                 </div>
                             </div>
-                            <div className="flex gap-10 mt-12 bg-slate-900/50 p-10 rounded-[30px] border border-white/5">
-                                <div className="flex items-center gap-4">
+                            <div className="settings-toggle-section mt-8">
+                                <div className="settings-toggle-item">
                                     <input
                                         type="checkbox"
-                                        className="w-8 h-8 accent-teal-500"
+                                        className="w-5 h-5"
+                                        style={{ accentColor: 'var(--jp-primary, #b91c2c)' }}
                                         checked={isPublished}
                                         onChange={e => setIsPublished(e.target.checked)}
                                     />
@@ -726,10 +727,11 @@ const AssignmentForm: React.FC = () => {
                                         <p className="text-xs opacity-60">Học sinh sẽ thấy bài tập này trong danh sách</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4">
+                                <div className="settings-toggle-item">
                                     <input
                                         type="checkbox"
-                                        className="w-8 h-8 accent-teal-500"
+                                        className="w-5 h-5"
+                                        style={{ accentColor: 'var(--jp-primary, #b91c2c)' }}
                                         checked={allowFileUpload}
                                         onChange={e => setAllowFileUpload(e.target.checked)}
                                     />

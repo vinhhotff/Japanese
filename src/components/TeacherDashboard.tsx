@@ -887,23 +887,19 @@ const TeacherDashboard = () => {
                                                     <tr>
                                                         <th style={{ width: '100px' }}>STT</th>
                                                         <th>Tên bài học</th>
-                                                        <th className="text-right">Hành động</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {contentData.map(lesson => (
-                                                        <tr key={lesson.id}>
+                                                        <tr
+                                                            key={lesson.id}
+                                                            onClick={() => handleSelectContentLesson(lesson)}
+                                                            style={{ cursor: 'pointer' }}
+                                                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,242,254,0.06)')}
+                                                            onMouseLeave={e => (e.currentTarget.style.background = '')}
+                                                        >
                                                             <td className="font-mono text-slate-400">#{lesson.lesson_number}</td>
                                                             <td className="font-bold">{lesson.title}</td>
-                                                            <td className="text-right">
-                                                                <button
-                                                                    onClick={() => handleSelectContentLesson(lesson)}
-                                                                    className="teacher-btn-card btn-outline"
-                                                                    style={{ display: 'inline-flex', width: 'auto', padding: '0.5rem 1.5rem' }}
-                                                                >
-                                                                    Quản lý nội dung &rarr;
-                                                                </button>
-                                                            </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -926,7 +922,7 @@ const TeacherDashboard = () => {
                                             </button>
                                         </div>
                                         <nav className="content-type-nav">
-                                            {['vocabulary', 'kanji', 'grammar', 'listening', 'games', 'roleplay'].map(tab => (
+                                            {(['vocabulary', 'kanji', 'grammar', 'listening'] as TabType[]).map(tab => (
                                                 <button
                                                     key={tab}
                                                     onClick={() => handleTabChange(tab as TabType)}
