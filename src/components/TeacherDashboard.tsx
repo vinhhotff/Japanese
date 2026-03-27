@@ -83,7 +83,29 @@ const TeacherDashboard = () => {
             });
 
             const resolvedCourses = Array.from(courseMap.values());
-            setMyAssignments(resolvedCourses);
+            
+            // 3. Load lesson counts for each course
+            const coursesWithLessons = await Promise.all(
+                resolvedCourses.map(async (course: any) => {
+                    try {
+                        const lessons = await getLessons(course.id);
+                        return {
+                            ...course,
+                            lessonCount: lessons?.length || 0,
+                            lessons: lessons || []
+                        };
+                    } catch (e) {
+                        console.error(`Error loading lessons for course ${course.id}:`, e);
+                        return {
+                            ...course,
+                            lessonCount: 0,
+                            lessons: []
+                        };
+                    }
+                })
+            );
+            
+            setMyAssignments(coursesWithLessons);
             setClasses(classesData || []);
             setHomeworkList(hwData || []);
             setAssignmentsList(asgData || []);
@@ -161,8 +183,12 @@ const TeacherDashboard = () => {
         setContentViewMode('lessons');
         setLoadingContent(true);
         try {
-            const list = await getLessons(course.id);
-            list.sort((a: any, b: any) => a.lesson_number - b.lesson_number);
+            // Use cached lessons if available, otherwise fetch
+            let list = course.lessons || [];
+            if (list.length === 0 && course.id) {
+                list = await getLessons(course.id);
+            }
+            list.sort((a: any, b: any) => (a.lesson_number || 0) - (b.lesson_number || 0));
             setContentData(list);
         } catch (e) { showToast('Lỗi tải bài học', 'error'); }
         finally { setLoadingContent(false); }

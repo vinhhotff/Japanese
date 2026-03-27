@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { getSubmissionById } from '../services/assignmentService';
 import GradingInterface from './GradingInterface';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
-import '../styles/teacher-dashboard-premium.css';
+import '../styles/grading.css';
 
 const GradingPage = () => {
     const { submissionId } = useParams<{ submissionId: string }>();
@@ -36,57 +35,63 @@ const GradingPage = () => {
     };
 
     if (!isTeacher) {
-        return <div className="p-8 text-center text-red-500 font-bold">Bạn không có quyền truy cập trang này.</div>;
+        return (
+            <div style={{ 
+                padding: '2rem', 
+                textAlign: 'center', 
+                color: '#ef4444', 
+                fontWeight: 'bold',
+                fontFamily: "'Outfit', 'Inter', system-ui, sans-serif"
+            }}>
+                Bạn không có quyền truy cập trang này.
+            </div>
+        );
     }
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-vh-100 bg-slate-50 dark:bg-slate-900">
-                <div className="animate-spin h-12 w-12 border-4 border-teacher-primary rounded-full border-t-transparent"></div>
+            <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                minHeight: '100vh',
+                background: '#f8fafc',
+                fontFamily: "'Outfit', 'Inter', system-ui, sans-serif"
+            }}>
+                <div style={{ 
+                    width: '48px', 
+                    height: '48px', 
+                    border: '4px solid #e2e8f0', 
+                    borderTopColor: '#00b4d8',
+                    borderRadius: '50%',
+                    animation: 'spin 0.8s linear infinite'
+                }}></div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
         );
     }
 
     if (!submission) {
-        return <div className="p-8 text-center">Không tìm thấy bài nộp (ID: {submissionId})</div>;
+        return (
+            <div style={{ 
+                padding: '2rem', 
+                textAlign: 'center',
+                fontFamily: "'Outfit', 'Inter', system-ui, sans-serif"
+            }}>
+                Không tìm thấy bài nộp (ID: {submissionId})
+            </div>
+        );
     }
 
     return (
-        <div className="teacher-dashboard-container">
-            <motion.header
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="teacher-header"
-                style={{ marginBottom: '2rem' }}
-            >
-                <div className="teacher-title-area">
-                    <button
-                        onClick={() => navigate(`/teacher/submissions/${submission.assignment_id}`)}
-                        className="content-back-btn mr-4"
-                        style={{ color: 'white' }}
-                    >
-                        &larr; Quay lại danh sách
-                    </button>
-                    <div>
-                        <h1>📝 Chấm điểm bài làm</h1>
-                        <span className="teacher-badge">
-                            Học sinh: {submission.profiles?.full_name || submission.profiles?.email || 'Chưa rõ'}
-                        </span>
-                    </div>
-                </div>
-            </motion.header>
-
-            <main className="teacher-main-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                <GradingInterface
-                    submission={submission}
-                    assignment={submission.assignment}
-                    onGradeComplete={() => {
-                        showToast('Hoàn thành chấm điểm', 'success');
-                        navigate(`/teacher/submissions/${submission.assignment_id}`);
-                    }}
-                />
-            </main>
-        </div>
+        <GradingInterface
+            submission={submission}
+            assignment={submission.assignment}
+            onGradeComplete={() => {
+                showToast('Hoàn tất chấm điểm', 'success');
+                navigate(`/teacher/submissions/${submission.assignment_id}`);
+            }}
+        />
     );
 };
 

@@ -276,7 +276,8 @@ export const getMySubmissions = async (
 };
 
 export const getSubmissionById = async (id: string) => {
-  const { data, error } = await supabase
+  // First, get submission with answers from the new table (assignment_answers)
+  const { data: submissionWithNewAnswers, error } = await supabase
     .from('assignment_submissions')
     .select(`
       *,
@@ -398,6 +399,8 @@ export const getAnswersBySubmission = async (submissionId: string) => {
 };
 
 // ===== GRADING (Teacher/Admin) =====
+// Note: assignment_submissions.user_id references auth.users(id), not public.profiles,
+// so we cannot embed profiles via PostgREST. We fetch profiles separately and merge.
 export const getAllSubmissions = async (
   assignmentId?: string,
   status?: SubmissionStatus,

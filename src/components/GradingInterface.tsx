@@ -303,7 +303,7 @@ const GradingInterface = ({ submission: propSubmission, assignment: propAssignme
           onClick={handleSubmitGrade}
           disabled={grading}
         >
-          {grading ? '♾️ Đang xử lý...' : '✅ Hoàn tất chấm điểm'}
+          {grading ? 'Đang xử lý...' : 'Hoàn tất chấm điểm'}
         </button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../config/supabase';
@@ -20,6 +20,7 @@ interface LessonListNewProps {
 
 const LessonListNew = ({ language }: LessonListNewProps) => {
   const { level } = useParams<{ level: string }>();
+  const navigate = useNavigate();
   const { user, isAdmin, isTeacher } = useAuth();
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,7 +168,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
 
   const currentItems = lessons.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  if (checkingAccess || loading) {
+  if (loading) {
     return (
       <div className="lesson-list-skeleton">
         {/* Header Skeleton */}

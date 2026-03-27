@@ -1,26 +1,119 @@
 /* ===== ADMIN PANEL - PROFESSIONAL DESIGN ===== */
 
+/* Import teacher dashboard premium styles for consistent header */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Define admin CSS variables - MATCHING TEACHER DASHBOARD COLORS */
 .admin-panel {
+  --admin-primary: #ff6b9d;
+  --admin-primary-glow: rgba(255, 107, 157, 0.3);
+  --admin-secondary: #3b82f6;
+  --admin-accent: #22c55e;
+  --admin-bg: #f8fafc;
+  --admin-card-bg: rgba(255, 255, 255, 0.95);
+  --admin-card-bg-hover: rgba(255, 255, 255, 1);
+  --admin-glass: rgba(0, 0, 0, 0.02);
+  --admin-glass-border: rgba(15, 23, 42, 0.08);
+  --admin-text: #0f172a;
+  --admin-text-muted: #475569;
+  --admin-gradient: linear-gradient(135deg, #ff6b9d 0%, #c084fc 100%);
+  --admin-surface: #ffffff;
+  --admin-shadow-premium: 0 18px 40px -18px rgba(15, 23, 42, 0.25);
+  
   min-height: 100vh;
-  background: var(--bg-color);
+  background: var(--admin-bg);
   position: relative;
+  font-family: 'Be Vietnam Pro', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Admin Header */
+/* Dark mode */
+[data-theme="dark"] .admin-panel {
+  --admin-primary: #ff9ece;
+  --admin-primary-glow: rgba(255, 158, 206, 0.35);
+  --admin-secondary: #4facfe;
+  --admin-accent: #22c55e;
+  --admin-bg: #0b1120;
+  --admin-card-bg: rgba(30, 41, 59, 0.7);
+  --admin-card-bg-hover: rgba(30, 41, 59, 0.9);
+  --admin-glass: rgba(255, 255, 255, 0.05);
+  --admin-glass-border: rgba(255, 255, 255, 0.1);
+  --admin-text: #f1f5f9;
+  --admin-text-muted: #cbd5e1;
+  --admin-gradient: linear-gradient(135deg, #ff9ece 0%, #c084fc 100%);
+  --admin-surface: #1e293b;
+  --admin-shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Prevent auto-scroll to footer on page load */
+html {
+  scroll-behavior: auto !important;
+}
+
+/* Only show focus outline when user actually tabs */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--admin-primary);
+  outline-offset: 2px;
+}
+
+/* Define admin CSS variables - MATCHING TEACHER DASHBOARD COLORS */
+.admin-panel {
+  --admin-primary: #ff6b9d;
+  --admin-primary-glow: rgba(255, 107, 157, 0.3);
+  --admin-secondary: #3b82f6;
+  --admin-accent: #22c55e;
+  --admin-bg: #f8fafc;
+  --admin-card-bg: rgba(255, 255, 255, 0.95);
+  --admin-card-bg-hover: rgba(255, 255, 255, 1);
+  --admin-glass: rgba(0, 0, 0, 0.02);
+  --admin-glass-border: rgba(15, 23, 42, 0.08);
+  --admin-text: #0f172a;
+  --admin-text-muted: #475569;
+  --admin-gradient: linear-gradient(135deg, #ff6b9d 0%, #c084fc 100%);
+  --admin-surface: #ffffff;
+  --admin-shadow-premium: 0 18px 40px -18px rgba(15, 23, 42, 0.25);
+  
+  min-height: 100vh;
+  background: var(--admin-bg);
+  position: relative;
+  font-family: 'Be Vietnam Pro', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Dark mode */
+[data-theme="dark"] .admin-panel {
+  --admin-primary: #ff9ece;
+  --admin-primary-glow: rgba(255, 158, 206, 0.35);
+  --admin-secondary: #4facfe;
+  --admin-accent: #22c55e;
+  --admin-bg: #0b1120;
+  --admin-card-bg: rgba(30, 41, 59, 0.7);
+  --admin-card-bg-hover: rgba(30, 41, 59, 0.9);
+  --admin-glass: rgba(255, 255, 255, 0.05);
+  --admin-glass-border: rgba(255, 255, 255, 0.1);
+  --admin-text: #f1f5f9;
+  --admin-text-muted: #cbd5e1;
+  --admin-gradient: linear-gradient(135deg, #ff9ece 0%, #c084fc 100%);
+  --admin-surface: #1e293b;
+  --admin-shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Admin Header - MATCHING TEACHER HEADER STYLE */
 .admin-header {
-  background: linear-gradient(135deg, #c41e3a 0%, #ff69b4 100%);
-  color: white;
-  padding: 1.5rem 2rem;
-  box-shadow: 0 4px 20px rgba(196, 30, 58, 0.2);
+  background: var(--admin-card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--admin-glass-border);
+  padding: 1rem 2rem;
   position: sticky;
   top: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
-}
-
-[data-theme="dark"] .admin-header {
-  background: linear-gradient(135deg, #dc2626 0%, #f472b6 100%);
-  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
 }
 
 .admin-header-content {
@@ -31,22 +124,294 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+  width: 100%;
 }
 
 .admin-title {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
 }
 
 .admin-title h1 {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 800;
+  letter-spacing: -0.03em;
+  background: var(--admin-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin: 0;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+}
+
+/* Admin tabs - MATCHING TEACHER HEADER BUTTONS */
+.admin-header-nav {
+  display: flex;
   gap: 0.75rem;
-  letter-spacing: -0.02em;
+  align-items: center;
+}
+
+.admin-header-btn {
+  padding: 0.7rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--admin-text-muted);
+  font-family: inherit;
+}
+
+[data-theme="dark"] .admin-header-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--admin-text-muted);
+}
+
+.admin-header-btn:hover {
+  background: var(--admin-primary-glow);
+  color: var(--admin-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--admin-primary-glow);
+}
+
+.admin-header-btn.active {
+  background: var(--admin-gradient);
+  color: white;
+  box-shadow: 0 8px 20px var(--admin-primary-glow);
+}
+
+.admin-header-btn.active:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+/* Logout button - danger style */
+.admin-header-btn.logout-btn {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.admin-header-btn.logout-btn:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+}
+
+/* Responsive Admin Header */
+@media (max-width: 768px) {
+  .admin-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .admin-header-content {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .admin-title {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .admin-title h1 {
+    font-size: 1.1rem;
+  }
+  
+  .admin-header-nav {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  
+  .admin-header-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 70px;
+    white-space: nowrap;
+  }
+
+  /* Table header - keep title and count on same line */
+  .admin-table-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .admin-table-header .admin-title {
+    justify-content: flex-start;
+    width: auto;
+  }
+  
+  .admin-table-header .admin-count {
+    white-space: nowrap;
+  }
+  
+  /* Table wrapper - prevent horizontal scroll */
+  .admin-table-wrapper {
+    overflow-x: visible;
+  }
+  
+  .admin-table {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .admin-table thead {
+    display: none;
+  }
+  
+  .admin-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .admin-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--card-bg);
+  }
+  
+  .admin-table td {
+    padding: 0.5rem;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .admin-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+  }
+  
+  .admin-table td[data-label="Hành động"],
+  .admin-table td[data-label="Quản lý"] {
+    justify-content: center;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.5rem;
+  }
+  
+  /* Course card buttons - same row */
+  .course-card .action-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .course-card .action-buttons button,
+  .course-card .action-buttons a {
+    flex: 0 0 auto;
+    min-width: auto;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+.admin-badge {
+  background: var(--admin-glass);
+  border: 1px solid var(--admin-glass-border);
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+}
+
+/* Table header styles */
+.admin-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-table-header .admin-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-count {
+  background: var(--admin-gradient);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Course card actions - same row */
+.course-card .course-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.course-card .course-actions button,
+.course-card .course-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+/* Format hint styling with color */
+.format-hint pre {
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.1) 0%, rgba(192, 132, 252, 0.1) 100%);
+  border: 1px solid rgba(255, 107, 157, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  overflow-x: auto;
+}
+
+[data-theme="dark"] .format-hint pre {
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.15) 0%, rgba(192, 132, 252, 0.15) 100%);
+  border-color: rgba(255, 107, 157, 0.3);
+}
+
+/* Legacy container - for backward compatibility */
+.admin-container {
+  min-height: 100vh;
+  background: var(--admin-bg);
+  position: relative;
+  font-family: 'Be Vietnam Pro', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .admin-title p {
@@ -815,7 +1180,93 @@
   }
 
   .admin-table-container {
-    overflow-x: auto;
+    overflow-x: visible;
+  }
+
+  /* Table - card style */
+  .admin-table {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .admin-table thead {
+    display: none;
+  }
+  
+  .admin-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .admin-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--card-bg);
+  }
+  
+  .admin-table td {
+    padding: 0.5rem;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+  
+  .admin-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    min-width: 100px;
+  }
+  
+  .admin-table td[data-label="Hành động"],
+  .admin-table td[data-label="Quản lý nội dung"],
+  .admin-table td[data-label="Quản lý"] {
+    justify-content: center;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  /* Make sure the label and content don't overlap */
+  .admin-table td[data-label="Quản lý"]::before {
+    display: none;
+  }
+  
+  .admin-table td[data-label="Quản lý"] span,
+  .admin-table td[data-label="Quản lý"] button {
+    width: 100%;
+    text-align: center;
+  }
+  
+  /* Course cards */
+  .course-card {
+    padding: 1.25rem !important;
+  }
+  
+  .course-card .course-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  
+  /* Manage content button */
+  .manage-content-btn {
+    width: auto !important;
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
   }
 
   .admin-modal {

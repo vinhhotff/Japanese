@@ -125,6 +125,14 @@
   margin-bottom: 0;
 }
 
+.section-label.mb-0 {
+    margin-bottom: 0;
+}
+
+.icon-wrapper {
+    flex-shrink: 0;
+}
+
 .section-label .icon {
   width: 48px;
   height: 48px;
@@ -187,6 +195,18 @@
 .textarea-premium::placeholder {
   color: var(--text-tertiary);
   font-weight: 400;
+}
+
+[data-theme="dark"] .input-premium,
+[data-theme="dark"] .select-premium,
+[data-theme="dark"] .textarea-premium {
+    background: rgba(15, 23, 42, 0.4);
+}
+
+[data-theme="light"] .input-premium,
+[data-theme="light"] .select-premium,
+[data-theme="light"] .textarea-premium {
+    background: rgba(255, 255, 255, 0.8);
 }
 
 .input-premium:focus,
@@ -380,6 +400,24 @@
 .save-btn-premium:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.save-btn-premium:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 .back-link-small {

@@ -3,56 +3,8 @@
 /* Import fonts for better typography */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
 
-:root {
-  /* Japanese Theme Colors - Soft Sakura & Traditional Red */
-  --jp-primary: #b91c2c;
-  /* Softer Japanese red */
-  --jp-primary-light: #dc2626;
-  /* Lighter for light theme */
-  --jp-primary-dark: #991b1b;
-  /* Darker for dark theme */
-  --jp-secondary: #f472b6;
-  /* Soft sakura pink */
-  --jp-accent: #ec4899;
-  /* Medium pink */
-  --jp-sakura: #fce7f3;
-  /* Very light sakura */
-  --jp-dark: #7f1d1d;
-  /* Deep red */
-
-  /* Chinese Theme Colors - Imperial Red & Gold */
-  --cn-primary: #b91c1c;
-  /* Softer Chinese red */
-  --cn-primary-light: #dc2626;
-  /* Lighter for light theme */
-  --cn-primary-dark: #991b1b;
-  /* Darker for dark theme */
-  --cn-secondary: #fbbf24;
-  /* Soft imperial gold */
-  --cn-gold: #fde047;
-  /* Light gold */
-  --cn-jade: #10b981;
-  /* Jade green */
-  --cn-dark: #7f1d1d;
-  /* Deep red */
-}
-
-[data-theme="dark"] {
-  /* Dark theme adjustments for better visibility - softer colors */
-  --jp-primary: #dc2626;
-  /* Softer red for dark theme - less glare */
-  --jp-primary-light: #ef4444;
-  --jp-secondary: #ec4899;
-  /* Softer pink for dark theme */
-  --jp-accent: #f472b6;
-
-  --cn-primary: #dc2626;
-  /* Softer red for dark theme - less glare */
-  --cn-primary-light: #ef4444;
-  --cn-secondary: #f59e0b;
-  /* Softer gold for dark theme */
-  --cn-gold: #fbbf24;
-}
+/* Theme colors are now unified in theme-variables.css */
+/* Japanese = Red primary, Chinese = Gold primary */
 
 /* ===== CONTAINER ===== */
 .dashboard-v2-container {
@@ -164,27 +116,27 @@
 [data-language="japanese"] .hero-badge {
   border-color: var(--jp-primary);
   color: var(--jp-primary);
-  background: rgba(185, 28, 44, 0.05);
+  background: rgba(220, 38, 38, 0.08);
 }
 
 [data-theme="dark"] [data-language="japanese"] .hero-badge {
-  background: rgba(220, 38, 38, 0.12);
+  background: rgba(220, 38, 38, 0.15);
   border-color: var(--jp-primary);
   color: var(--jp-primary);
-  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.15);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.2);
 }
 
 [data-language="chinese"] .hero-badge {
   border-color: var(--cn-primary);
   color: var(--cn-primary);
-  background: rgba(185, 28, 28, 0.05);
+  background: rgba(245, 158, 11, 0.08);
 }
 
 [data-theme="dark"] [data-language="chinese"] .hero-badge {
-  background: rgba(220, 38, 38, 0.12);
+  background: rgba(245, 158, 11, 0.15);
   border-color: var(--cn-primary);
   color: var(--cn-primary);
-  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.15);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
 }
 
 .hero-title {
@@ -305,18 +257,18 @@
 [data-language="chinese"] .title-main {
   font-family: 'Noto Sans SC', sans-serif;
   color: var(--cn-primary);
-  text-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
+  text-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
   animation: titleSlideIn 1s ease-out;
 }
 
 [data-theme="dark"] [data-language="chinese"] .title-main {
-  color: #ff6b6b;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ffd700 50%, #ff6b6b 100%);
+  color: #fcd34d;
+  background: linear-gradient(135deg, #fcd34d 0%, #fef3c7 50%, #fcd34d 100%);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 2px 8px rgba(255, 107, 107, 0.3));
+  filter: drop-shadow(0 2px 8px rgba(252, 211, 77, 0.3));
   animation: titleSlideIn 1s ease-out, gradientFlow 5s ease 1s infinite;
 }
 
@@ -324,25 +276,25 @@
 
   0%,
   100% {
-    filter: drop-shadow(0 1px 6px rgba(220, 38, 38, 0.2));
+    filter: drop-shadow(0 1px 6px rgba(245, 158, 11, 0.2));
   }
 
   50% {
-    filter: drop-shadow(0 2px 8px rgba(220, 38, 38, 0.3));
+    filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.3));
   }
 }
 
 /* Fallback for browsers that don't support background-clip */
 @supports not (background-clip: text) {
   [data-language="chinese"] .title-main {
-    color: #dc143c;
+    color: #f59e0b;
     filter: none;
     animation: titleSlideIn 1s ease-out;
   }
 
   [data-theme="dark"] [data-language="chinese"] .title-main {
-    color: #ff6b6b;
-    filter: drop-shadow(0 2px 8px rgba(255, 107, 107, 0.3));
+    color: #fcd34d;
+    filter: drop-shadow(0 2px 8px rgba(252, 211, 77, 0.3));
   }
 }
 
@@ -423,8 +375,8 @@
 }
 
 [data-language="chinese"] .title-highlight {
-  color: #dc143c;
-  background: linear-gradient(135deg, #dc143c 0%, #ffd700 50%, #dc143c 100%);
+  color: #f59e0b;
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -433,13 +385,13 @@
 }
 
 [data-theme="dark"] [data-language="chinese"] .title-highlight {
-  color: #ff6b6b;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ffd700 50%, #ff6b6b 100%);
+  color: #fcd34d;
+  background: linear-gradient(135deg, #fcd34d 0%, #fef3c7 50%, #fcd34d 100%);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 2px 6px rgba(255, 107, 107, 0.3));
+  filter: drop-shadow(0 2px 6px rgba(252, 211, 77, 0.3));
 }
 
 /* Fallback for browsers that don't support background-clip - title-highlight */
@@ -453,11 +405,11 @@
   }
 
   [data-language="chinese"] .title-highlight {
-    color: #dc143c;
+    color: #f59e0b;
   }
 
   [data-theme="dark"] [data-language="chinese"] .title-highlight {
-    color: #ff6b6b;
+    color: #fcd34d;
   }
 }
 
@@ -601,7 +553,7 @@
 
 [data-language="chinese"] .lang-switch-btn.active {
   border-color: var(--cn-primary);
-  background: linear-gradient(135deg, rgba(220, 20, 60, 0.1), rgba(255, 215, 0, 0.1));
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.15));
 }
 
 .switch-flag {
@@ -625,7 +577,7 @@
 
 [data-language="chinese"] .lang-switch-btn.active .switch-flag {
   background: linear-gradient(135deg, var(--cn-primary), var(--cn-secondary));
-  box-shadow: 0 8px 24px rgba(220, 20, 60, 0.4);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
 }
 
 .switch-info {
@@ -1404,7 +1356,7 @@
 
 [data-language="chinese"] .feature-card:hover {
   border-color: var(--cn-primary);
-  box-shadow: 0 16px 48px rgba(220, 20, 60, 0.2);
+  box-shadow: 0 16px 48px rgba(245, 158, 11, 0.2);
 }
 
 [data-theme="dark"] .feature-card {

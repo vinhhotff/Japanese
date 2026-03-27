@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getLessonById, getSentenceGames, getRoleplayScenarios } from '../services/supabaseService.v2';
 import { transformLessonFromDB } from '../utils/dataTransform';
 import { Lesson, RoleplayScenario } from '../types';
