@@ -415,20 +415,21 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
         </div>
         <div className="lang-selection">
           <button
+            type="button"
             onClick={() => navigate('/japanese/kanji-writing')}
             className="feature-card feature-card-japanese"
           >
-            <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: '800' }}>
+            <div className="lang-card-badge lang-card-badge--jp" aria-hidden>
               JP
             </div>
-
             <h3>Luyện Viết Kanji (JLPT)</h3>
           </button>
           <button
+            type="button"
             onClick={() => navigate('/chinese/hanzi-writing')}
             className="feature-card feature-card-chinese"
           >
-            <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: '800' }}>
+            <div className="lang-card-badge lang-card-badge--cn" aria-hidden>
               CN
             </div>
             <h3>Luyện Viết Hán Tự (HSK)</h3>

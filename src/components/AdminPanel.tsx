@@ -776,7 +776,7 @@ const AdminPanel = () => {
               💰 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.price || 0)}
             </div>
             <div className="course-card-footer">
-              <button className="admin-btn-manage" onClick={e => e.stopPropagation()}>
+              <button className="admin-btn-manage" onClick={e => { e.stopPropagation(); handleSelectLesson(course); }}>
                 📚 Xem bài học
               </button>
               <div className="course-card-actions" onClick={e => e.stopPropagation()}>

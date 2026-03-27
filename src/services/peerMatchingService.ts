@@ -67,37 +67,47 @@ export interface PeerChatMessage {
 export const getPeerProfile = async (userId: string): Promise<PeerProfile | null> => {
   const { data, error } = await supabase
     .from('peer_profiles')
-    .select(`
-      *,
-      profiles(email, full_name, avatar_url)
-    `)
+    .select('*')
     .eq('user_id', userId)
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  if (!data) return null;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, full_name, avatar_url')
+    .eq('id', userId)
+    .maybeSingle();
+
+  return { ...data, profiles: profile };
 };
 
 export const getOrCreatePeerProfile = async (userId: string): Promise<PeerProfile> => {
-  let { data, error } = await supabase
+  const { data: existing, error } = await supabase
     .from('peer_profiles')
-    .select(`
-      *,
-      profiles(email, full_name, avatar_url)
-    `)
+    .select('*')
     .eq('user_id', userId)
     .maybeSingle();
 
   if (error) throw error;
+
+  let data = existing;
 
   if (!data) {
     const { data: newProfile, error: createError } = await supabase
       .from('peer_profiles')
-      .insert({ user_id: userId, display_name: '', language: 'japanese', study_level: 'N5', study_goal: 'jlpt', available_days: [], available_hours: '', timezone: 'Asia/Ho_Chi_Minh' })
-      .select(`
-        *,
-        profiles(email, full_name, avatar_url)
-      `)
+      .insert({
+        user_id: userId,
+        display_name: '',
+        language: 'japanese',
+        study_level: 'N5',
+        study_goal: 'jlpt',
+        available_days: [],
+        available_hours: '',
+        timezone: 'Asia/Ho_Chi_Minh',
+      })
+      .select('*')
       .limit(1)
       .maybeSingle();
 
@@ -105,7 +115,13 @@ export const getOrCreatePeerProfile = async (userId: string): Promise<PeerProfil
     data = newProfile;
   }
 
-  return data;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, full_name, avatar_url')
+    .eq('id', userId)
+    .maybeSingle();
+
+  return { ...(data as PeerProfile), profiles: profile };
 };
 
 export const updatePeerProfile = async (userId: string, updates: Partial<Omit<PeerProfile, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'profiles'>>): Promise<PeerProfile> => {
@@ -113,15 +129,19 @@ export const updatePeerProfile = async (userId: string, updates: Partial<Omit<Pe
     .from('peer_profiles')
     .update(updates)
     .eq('user_id', userId)
-    .select(`
-      *,
-      profiles(email, full_name, avatar_url)
-    `)
+    .select('*')
     .limit(1)
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, full_name, avatar_url')
+    .eq('id', userId)
+    .maybeSingle();
+
+  return { ...(data as PeerProfile), profiles: profile };
 };
 
 export const browsePeers = async (filters?: {
@@ -131,11 +151,8 @@ export const browsePeers = async (filters?: {
 }): Promise<PeerProfile[]> => {
   let query = supabase
     .from('peer_profiles')
-    .select(`
-      *,
-      profiles(email, full_name, avatar_url)
-    `)
-    .neq('user_id', '') // Exclude empty entries
+    .select('*')
+    .neq('user_id', '')
     .order('is_online', { ascending: false })
     .order('updated_at', { ascending: false });
 
@@ -151,7 +168,18 @@ export const browsePeers = async (filters?: {
 
   const { data, error } = await query.limit(50);
   if (error) throw error;
-  return data || [];
+  if (!data || data.length === 0) return [];
+
+  const userIds = data.map(p => p.user_id);
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, avatar_url')
+    .in('id', userIds);
+
+  const profileMap: Record<string, { email: string; full_name?: string; avatar_url?: string }> = {};
+  profiles?.forEach(p => { profileMap[p.id] = p; });
+
+  return data.map(p => ({ ...p, profiles: profileMap[p.user_id] }));
 };
 
 // === MATCH REQUESTS ===
@@ -159,31 +187,65 @@ export const browsePeers = async (filters?: {
 export const getSentMatchRequests = async (userId: string): Promise<PeerMatchRequest[]> => {
   const { data, error } = await supabase
     .from('peer_match_requests')
-    .select(`
-      *,
-      from_profile:profiles!peer_match_requests_from_user_id_fkey(email, full_name, avatar_url),
-      to_profile:profiles!peer_match_requests_to_user_id_fkey(email, full_name, avatar_url)
-    `)
+    .select('*')
     .eq('from_user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  if (!data || data.length === 0) return [];
+
+  const otherIds = data.map(r => r.to_user_id);
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, avatar_url')
+    .in('id', otherIds);
+
+  const profileMap: Record<string, { email: string; full_name?: string; avatar_url?: string }> = {};
+  profiles?.forEach(p => { profileMap[p.id] = p; });
+
+  const { data: myProfile } = await supabase
+    .from('profiles')
+    .select('email, full_name, avatar_url')
+    .eq('id', userId)
+    .maybeSingle();
+
+  return data.map(r => ({
+    ...r,
+    from_profile: myProfile,
+    to_profile: profileMap[r.to_user_id],
+  }));
 };
 
 export const getReceivedMatchRequests = async (userId: string): Promise<PeerMatchRequest[]> => {
   const { data, error } = await supabase
     .from('peer_match_requests')
-    .select(`
-      *,
-      from_profile:profiles!peer_match_requests_from_user_id_fkey(email, full_name, avatar_url),
-      to_profile:profiles!peer_match_requests_to_user_id_fkey(email, full_name, avatar_url)
-    `)
+    .select('*')
     .eq('to_user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  if (!data || data.length === 0) return [];
+
+  const otherIds = data.map(r => r.from_user_id);
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, avatar_url')
+    .in('id', otherIds);
+
+  const profileMap: Record<string, { email: string; full_name?: string; avatar_url?: string }> = {};
+  profiles?.forEach(p => { profileMap[p.id] = p; });
+
+  const { data: myProfile } = await supabase
+    .from('profiles')
+    .select('email, full_name, avatar_url')
+    .eq('id', userId)
+    .maybeSingle();
+
+  return data.map(r => ({
+    ...r,
+    from_profile: profileMap[r.from_user_id],
+    to_profile: myProfile,
+  }));
 };
 
 export const sendMatchRequest = async (request: {
@@ -233,17 +295,34 @@ export const cancelMatchRequest = async (requestId: string): Promise<void> => {
 export const getActiveMatches = async (userId: string): Promise<PeerMatchRequest[]> => {
   const { data, error } = await supabase
     .from('peer_match_requests')
-    .select(`
-      *,
-      from_profile:profiles!peer_match_requests_from_user_id_fkey(email, full_name, avatar_url),
-      to_profile:profiles!peer_match_requests_to_user_id_fkey(email, full_name, avatar_url)
-    `)
+    .select('*')
     .eq('status', 'accepted')
     .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
     .order('updated_at', { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  if (!data || data.length === 0) return [];
+
+  const otherIds = data.map(r => r.from_user_id === userId ? r.to_user_id : r.from_user_id);
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, avatar_url')
+    .in('id', otherIds);
+
+  const profileMap: Record<string, { email: string; full_name?: string; avatar_url?: string }> = {};
+  profiles?.forEach(p => { profileMap[p.id] = p; });
+
+  const { data: myProfile } = await supabase
+    .from('profiles')
+    .select('email, full_name, avatar_url')
+    .eq('id', userId)
+    .maybeSingle();
+
+  return data.map(r => ({
+    ...r,
+    from_profile: myProfile,
+    to_profile: profileMap[r.from_user_id === userId ? r.to_user_id : r.from_user_id],
+  }));
 };
 
 // === PEER CHAT ===
@@ -251,16 +330,24 @@ export const getActiveMatches = async (userId: string): Promise<PeerMatchRequest
 export const getPeerChatMessages = async (matchId: string, limit = 50): Promise<PeerChatMessage[]> => {
   const { data, error } = await supabase
     .from('peer_chat_messages')
-    .select(`
-      *,
-      profiles(email, full_name, avatar_url)
-    `)
+    .select('*')
     .eq('match_id', matchId)
     .order('created_at', { ascending: true })
     .limit(limit);
 
   if (error) throw error;
-  return data || [];
+  if (!data || data.length === 0) return [];
+
+  const senderIds = data.map(m => m.sender_id);
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, avatar_url')
+    .in('id', senderIds);
+
+  const profileMap: Record<string, { email: string; full_name?: string; avatar_url?: string }> = {};
+  profiles?.forEach(p => { profileMap[p.id] = p; });
+
+  return data.map(m => ({ ...m, profiles: profileMap[m.sender_id] }));
 };
 
 export const sendPeerChatMessage = async (message: {
@@ -271,15 +358,19 @@ export const sendPeerChatMessage = async (message: {
   const { data, error } = await supabase
     .from('peer_chat_messages')
     .insert(message)
-    .select(`
-      *,
-      profiles(email, full_name, avatar_url)
-    `)
+    .select('*')
     .limit(1)
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, full_name, avatar_url')
+    .eq('id', message.sender_id)
+    .maybeSingle();
+
+  return { ...(data as PeerChatMessage), profiles: profile };
 };
 
 // === REAL-TIME PRESENCE ===

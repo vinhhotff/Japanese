@@ -909,6 +909,20 @@
   margin: 0 0 0.5rem 0;
 }
 .peer-empty-state p { font-size: 0.9rem; margin: 0; }
+/* Setup Error Banner */
+.peer-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1.5px solid #fca5a5;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
 /* Responsive */
 @media (max-width: 640px) {
   .peer-chat-overlay { align-items: flex-end; }

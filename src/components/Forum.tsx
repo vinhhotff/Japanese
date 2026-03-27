@@ -29,6 +29,8 @@ export default function Forum() {
   const [newPostContent, setNewPostContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const [forumLoadError, setForumLoadError] = useState<string | null>(null);
+  const [categoriesEmptyHint, setCategoriesEmptyHint] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -42,6 +44,8 @@ export default function Forum() {
 
   const loadData = async () => {
     setLoading(true);
+    setForumLoadError(null);
+    setCategoriesEmptyHint(false);
     try {
       const [cats, recents] = await Promise.all([
         getForumCategories(),
@@ -51,16 +55,48 @@ export default function Forum() {
       setRecentPosts(recents);
       setPosts([]);
 
+      if (cats.length === 0) {
+        setCategoriesEmptyHint(true);
+      }
+
       if (cats.length > 0 && !selectedCategory) {
         const allPosts = await getForumPosts();
         setPosts(allPosts);
       }
     } catch (err) {
       console.error('Failed to load forum data:', err);
+      const msg =
+        err instanceof Error ? err.message : 'Không tải được dữ liệu diễn đàn.';
+      setForumLoadError(msg);
     } finally {
       setLoading(false);
     }
   };
+
+  /** Mở modal: tải lại danh mục (tránh RLS/cache lúc mới seed). */
+  useEffect(() => {
+    if (!showCreateModal) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const cats = await getForumCategories();
+        if (!cancelled) {
+          setCategories(cats);
+          setForumLoadError(null);
+          setCategoriesEmptyHint(cats.length === 0);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setForumLoadError(
+            e instanceof Error ? e.message : 'Không tải được chủ đề.'
+          );
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [showCreateModal]);
 
   const handleCategoryClick = async (category: ForumCategory) => {
     setSelectedCategory(category.id);
@@ -158,6 +194,19 @@ export default function Forum() {
 
   return (
     <div className="forum-page">
+      {forumLoadError && (
+        <div className="forum-banner forum-banner--error" role="alert">
+          <strong>Không tải được diễn đàn:</strong> {forumLoadError}
+        </div>
+      )}
+      {categoriesEmptyHint && !forumLoadError && (
+        <div className="forum-banner forum-banner--warn">
+          Chưa có chủ đề từ API. Nếu SQL Editor đã có dữ liệu, hãy chạy policy RLS trong{' '}
+          <code className="forum-banner-code">supabase/forum_categories_rls.sql</code>{' '}
+          rồi tải lại trang.
+        </div>
+      )}
+
       {/* Header */}
       <div className="forum-page-header">
         <div>
@@ -394,27 +443,67 @@ export default function Forum() {
       {/* Create Post Modal */}
       {showCreateModal && (
         <div className="forum-modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="forum-modal" onClick={e => e.stopPropagation()}>
+          <div
+            className="forum-modal forum-modal--create"
+            onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-labelledby="forum-create-post-title"
+          >
             <div className="forum-modal-header">
-              <h2 className="forum-modal-title">📝 Tạo bài viết mới</h2>
-              <button className="forum-modal-close" onClick={() => setShowCreateModal(false)}>
+              <h2 id="forum-create-post-title" className="forum-modal-title">
+                Tạo bài viết mới
+              </h2>
+              <button
+                type="button"
+                className="forum-modal-close"
+                onClick={() => setShowCreateModal(false)}
+                aria-label="Đóng"
+              >
                 &times;
               </button>
             </div>
             <form onSubmit={handleCreatePost}>
               <div className="forum-form-group">
-                <label className="forum-form-label">Chủ đề *</label>
-                <select
-                  className="forum-form-select"
-                  value={selectedCategory}
-                  onChange={e => setSelectedCategory(e.target.value)}
-                  required
+                <label className="forum-form-label" id="forum-category-label">
+                  Chủ đề *
+                </label>
+                <div
+                  className="forum-category-picker"
+                  role="listbox"
+                  aria-labelledby="forum-category-label"
                 >
-                  <option value="">-- Chọn chủ đề --</option>
                   {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                    <button
+                      key={cat.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedCategory === cat.id}
+                      className={`forum-category-chip${selectedCategory === cat.id ? ' selected' : ''}`}
+                      style={
+                        {
+                          '--chip-accent': cat.color,
+                        } as React.CSSProperties
+                      }
+                      onClick={() => setSelectedCategory(cat.id)}
+                    >
+                      <span className="forum-category-chip-icon" aria-hidden>
+                        {cat.icon}
+                      </span>
+                      <span className="forum-category-chip-text">
+                        <span className="forum-category-chip-name">{cat.name}</span>
+                        {cat.description ? (
+                          <span className="forum-category-chip-desc">{cat.description}</span>
+                        ) : null}
+                      </span>
+                    </button>
                   ))}
-                </select>
+                </div>
+                {categories.length === 0 && (
+                  <p className="forum-form-hint">
+                    Đang không có chủ đề. Kiểm tra RLS và chạy{' '}
+                    <code>supabase/forum_categories_rls.sql</code> trên Supabase nếu cần.
+                  </p>
+                )}
               </div>
               <div className="forum-form-group">
                 <label className="forum-form-label">Tiêu đề *</label>

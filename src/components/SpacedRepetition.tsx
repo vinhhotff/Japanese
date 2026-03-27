@@ -212,19 +212,21 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
         </div>
         <div className="lang-selection">
           <button
+            type="button"
             onClick={() => navigate('/japanese/spaced-repetition')}
             className="feature-card feature-card-japanese"
           >
-            <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: '800' }}>
+            <div className="lang-card-badge lang-card-badge--jp" aria-hidden>
               JP
             </div>
             <h3>Tiếng Nhật (JLPT)</h3>
           </button>
           <button
+            type="button"
             onClick={() => navigate('/chinese/spaced-repetition')}
             className="feature-card feature-card-chinese"
           >
-            <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: '800' }}>
+            <div className="lang-card-badge lang-card-badge--cn" aria-hidden>
               CN
             </div>
             <h3>Tiếng Trung (HSK)</h3>

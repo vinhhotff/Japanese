@@ -869,8 +869,8 @@ const TeacherDashboard = () => {
                             <div className="td-cm-topbar-left">
                                 <div style={{ fontSize: '1.1rem' }}>✏️</div>
                                 <div>
-                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Content Manager</div>
-                                    <div style={{ fontSize: '0.725rem', color: 'var(--t-text-muted)' }}>
+                                    <div className="td-cm-overlay-brand-title">Content Manager</div>
+                                    <div className="td-cm-overlay-brand-sub">
                                         {selectedContentCourse?.title || 'Chọn khóa học'}
                                     </div>
                                 </div>
@@ -881,7 +881,7 @@ const TeacherDashboard = () => {
                                 </button>
                             </div>
                         </div>
-                        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                        <div className="td-cm-scroll">
                             {renderContentManager()}
                         </div>
                     </motion.div>

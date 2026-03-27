@@ -28,6 +28,8 @@
   /* Background Colors */
   --bg-color: #fafafa; /* Neutral 50 - very clean light gray */
   --bg-secondary: #f4f4f5; /* Zinc 100 */
+  --bg-primary: #fafafa; /* alias: surfaces that expect --bg-primary */
+  --bg-tertiary: #e4e4e7; /* subtle control / muted surface */
   --card-bg: #ffffff;
   --card-bg-hover: #f9fafb;
   
@@ -84,6 +86,8 @@
   /* Background Colors - Darker for better dark mode */
   --bg-color: #0a0f1e;
   --bg-secondary: #111827;
+  --bg-primary: #0a0f1e;
+  --bg-tertiary: #1e293b;
   --card-bg: #1e293b;
   --card-bg-hover: #334155;
   

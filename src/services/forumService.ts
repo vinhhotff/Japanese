@@ -7,6 +7,7 @@ export interface ForumCategory {
   description: string;
   icon: string;
   color: string;
+  order_index?: number;
   post_count?: number;
   created_at: string;
 }
@@ -48,16 +49,108 @@ export interface ForumReply {
   };
 }
 
+/** PostgREST chỉ embed được khi có FK trong DB; nhiều project thiếu FK user_id → profiles → PGRST200. */
+type ProfileRow = {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+function toProfileFields(row: ProfileRow | undefined): ForumPost['profiles'] {
+  if (!row) return undefined;
+  return {
+    email: row.email || '',
+    full_name: row.full_name || undefined,
+    avatar_url: row.avatar_url || undefined,
+  };
+}
+
+async function fetchProfilesMap(userIds: string[]): Promise<Map<string, ProfileRow>> {
+  const unique = [...new Set(userIds.filter(Boolean))];
+  if (unique.length === 0) return new Map();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, avatar_url')
+    .in('id', unique);
+  if (error || !data) return new Map();
+  const m = new Map<string, ProfileRow>();
+  for (const row of data as ProfileRow[]) {
+    m.set(row.id, row);
+  }
+  return m;
+}
+
+async function attachProfilesToPosts(posts: ForumPost[]): Promise<ForumPost[]> {
+  if (posts.length === 0) return posts;
+  const map = await fetchProfilesMap(posts.map(p => p.user_id));
+  return posts.map(p => ({
+    ...p,
+    profiles: toProfileFields(map.get(p.user_id)),
+  }));
+}
+
+async function attachProfilesToReplies(replies: ForumReply[]): Promise<ForumReply[]> {
+  if (replies.length === 0) return replies;
+  const map = await fetchProfilesMap(replies.map(r => r.user_id));
+  return replies.map(r => ({
+    ...r,
+    profiles: toProfileFields(map.get(r.user_id)),
+  }));
+}
+
 // === CATEGORIES ===
 
+/** Trùng tên (do seed nhiều lần): giữ bản có order_index nhỏ nhất. */
+function dedupeForumCategories(rows: ForumCategory[]): ForumCategory[] {
+  const byName = new Map<string, ForumCategory>();
+  for (const row of rows) {
+    const existing = byName.get(row.name);
+    if (!existing) {
+      byName.set(row.name, row);
+      continue;
+    }
+    const oi = row.order_index ?? 999;
+    const exOi = existing.order_index ?? 999;
+    if (oi < exOi) byName.set(row.name, row);
+  }
+  return Array.from(byName.values()).sort(
+    (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)
+  );
+}
+
 export const getForumCategories = async (): Promise<ForumCategory[]> => {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('forum_categories')
     .select('*')
     .order('order_index', { ascending: true });
 
-  if (error) throw error;
-  return data || [];
+  if (error) {
+    const code = (error as { code?: string }).code;
+    const msg = (error.message || '').toLowerCase();
+    if (
+      code === '42703' ||
+      code === 'PGRST204' ||
+      msg.includes('order_index') ||
+      msg.includes('column')
+    ) {
+      const retry = await supabase
+        .from('forum_categories')
+        .select('*')
+        .order('created_at', { ascending: true });
+      data = retry.data;
+      error = retry.error;
+    }
+  }
+
+  if (error) {
+    throw new Error(
+      error.message ||
+        'Không tải được danh mục diễn đàn. Kiểm tra RLS (policy SELECT) hoặc kết nối Supabase.'
+    );
+  }
+
+  return dedupeForumCategories((data || []) as ForumCategory[]);
 };
 
 export const getCategoryById = async (id: string): Promise<ForumCategory | null> => {
@@ -78,7 +171,6 @@ export const getForumPosts = async (categoryId?: string): Promise<ForumPost[]> =
     .from('forum_posts')
     .select(`
       *,
-      profiles(email, full_name, avatar_url),
       forum_categories(*)
     `)
     .order('is_pinned', { ascending: false })
@@ -91,7 +183,7 @@ export const getForumPosts = async (categoryId?: string): Promise<ForumPost[]> =
 
   const { data, error } = await query;
   if (error) throw error;
-  return data || [];
+  return attachProfilesToPosts((data || []) as ForumPost[]);
 };
 
 export const getRecentForumPosts = async (limit = 5): Promise<ForumPost[]> => {
@@ -99,7 +191,6 @@ export const getRecentForumPosts = async (limit = 5): Promise<ForumPost[]> => {
     .from('forum_posts')
     .select(`
       *,
-      profiles(email, full_name, avatar_url),
       forum_categories(id, name, icon, color)
     `)
     .order('last_reply_at', { ascending: false })
@@ -107,7 +198,7 @@ export const getRecentForumPosts = async (limit = 5): Promise<ForumPost[]> => {
     .limit(limit);
 
   if (error) throw error;
-  return data || [];
+  return attachProfilesToPosts((data || []) as ForumPost[]);
 };
 
 export const getForumPostById = async (id: string): Promise<ForumPost | null> => {
@@ -115,7 +206,6 @@ export const getForumPostById = async (id: string): Promise<ForumPost | null> =>
     .from('forum_posts')
     .select(`
       *,
-      profiles(email, full_name, avatar_url),
       forum_categories(*)
     `)
     .eq('id', id)
@@ -129,9 +219,11 @@ export const getForumPostById = async (id: string): Promise<ForumPost | null> =>
       .from('forum_posts')
       .update({ views: (data.views || 0) + 1 })
       .eq('id', id);
+    const [withProfile] = await attachProfilesToPosts([data as ForumPost]);
+    return withProfile;
   }
 
-  return data;
+  return null;
 };
 
 export const createForumPost = async (post: {
@@ -145,14 +237,15 @@ export const createForumPost = async (post: {
     .insert(post)
     .select(`
       *,
-      profiles(email, full_name, avatar_url),
       forum_categories(*)
     `)
     .limit(1)
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  if (!data) throw new Error('Không tạo được bài viết.');
+  const [withProfile] = await attachProfilesToPosts([data as ForumPost]);
+  return withProfile;
 };
 
 export const updateForumPost = async (id: string, updates: Partial<{
@@ -183,7 +276,6 @@ export const searchForumPosts = async (query: string): Promise<ForumPost[]> => {
     .from('forum_posts')
     .select(`
       *,
-      profiles(email, full_name, avatar_url),
       forum_categories(id, name, icon, color)
     `)
     .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
@@ -191,7 +283,7 @@ export const searchForumPosts = async (query: string): Promise<ForumPost[]> => {
     .limit(20);
 
   if (error) throw error;
-  return data || [];
+  return attachProfilesToPosts((data || []) as ForumPost[]);
 };
 
 // === REPLIES ===
@@ -199,16 +291,13 @@ export const searchForumPosts = async (query: string): Promise<ForumPost[]> => {
 export const getForumReplies = async (postId: string): Promise<ForumReply[]> => {
   const { data, error } = await supabase
     .from('forum_replies')
-    .select(`
-      *,
-      profiles(email, full_name, avatar_url)
-    `)
+    .select('*')
     .eq('post_id', postId)
     .order('is_accepted', { ascending: false })
     .order('created_at', { ascending: true });
 
   if (error) throw error;
-  return data || [];
+  return attachProfilesToReplies((data || []) as ForumReply[]);
 };
 
 export const createForumReply = async (reply: {
@@ -219,10 +308,7 @@ export const createForumReply = async (reply: {
   const { data: replyData, error: replyError } = await supabase
     .from('forum_replies')
     .insert(reply)
-    .select(`
-      *,
-      profiles(email, full_name, avatar_url)
-    `)
+    .select('*')
     .limit(1)
     .maybeSingle();
 
@@ -243,7 +329,9 @@ export const createForumReply = async (reply: {
     })
     .eq('id', reply.post_id);
 
-  return replyData;
+  if (!replyData) throw new Error('Không tạo được phản hồi.');
+  const [withProfile] = await attachProfilesToReplies([replyData as ForumReply]);
+  return withProfile;
 };
 
 export const updateForumReply = async (id: string, content: string): Promise<ForumReply> => {
@@ -251,15 +339,14 @@ export const updateForumReply = async (id: string, content: string): Promise<For
     .from('forum_replies')
     .update({ content })
     .eq('id', id)
-    .select(`
-      *,
-      profiles(email, full_name, avatar_url)
-    `)
+    .select('*')
     .limit(1)
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  if (!data) throw new Error('Không cập nhật được phản hồi.');
+  const [withProfile] = await attachProfilesToReplies([data as ForumReply]);
+  return withProfile;
 };
 
 export const deleteForumReply = async (id: string, postId: string): Promise<void> => {
@@ -291,5 +378,7 @@ export const toggleAcceptReply = async (replyId: string, isAccepted: boolean): P
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  if (!data) throw new Error('Không tìm thấy phản hồi.');
+  const [withProfile] = await attachProfilesToReplies([data as ForumReply]);
+  return withProfile;
 };

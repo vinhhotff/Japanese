@@ -67,6 +67,7 @@ export default function PeerMatching() {
 
   // Setup form
   const [setupLoading, setSetupLoading] = useState(false);
+  const [setupError, setSetupError] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -213,6 +214,7 @@ export default function PeerMatching() {
     e.preventDefault();
     if (!user) return;
     setSetupLoading(true);
+    setSetupError('');
     try {
       const updated = await updatePeerProfile(user.id, {
         display_name: myProfile.display_name || '',
@@ -227,8 +229,9 @@ export default function PeerMatching() {
       setMyProfile(updated);
       setActiveTab('browse');
       handleBrowse();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Save profile failed:', err);
+      setSetupError(err?.message || 'Lưu thất bại. Vui lòng thử lại.');
     } finally {
       setSetupLoading(false);
     }
@@ -714,6 +717,16 @@ export default function PeerMatching() {
                 onChange={e => setMyProfile({ ...myProfile, available_hours: e.target.value })}
               />
             </div>
+
+            {setupError && (
+              <div className="peer-error-banner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                {setupError}
+              </div>
+            )}
+
             <div className="peer-setup-actions">
               <button type="button" className="peer-skip-btn" onClick={() => setActiveTab('browse')}>
                 Bỏ qua

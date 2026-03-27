@@ -472,7 +472,7 @@ CREATE TABLE IF NOT EXISTS forum_categories (
 CREATE TABLE IF NOT EXISTS forum_posts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     category_id UUID REFERENCES forum_categories(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL,
+    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     views INTEGER DEFAULT 0,
@@ -487,7 +487,7 @@ CREATE TABLE IF NOT EXISTS forum_posts (
 CREATE TABLE IF NOT EXISTS forum_replies (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     post_id UUID REFERENCES forum_posts(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL,
+    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     is_accepted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -720,8 +720,9 @@ CREATE POLICY "payments_select" ON payments FOR SELECT USING (auth.uid() = user_
 -- user_courses: users see own access
 CREATE POLICY "user_courses_select" ON user_courses FOR SELECT USING (auth.uid() = user_id);
 
--- user_stats: users manage own
+-- user_stats: users manage own; public read for leaderboard (top N / rankings)
 CREATE POLICY "user_stats_all" ON user_stats FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "user_stats_select_leaderboard" ON user_stats FOR SELECT USING (true);
 
 -- user_learning_progress: users manage own
 CREATE POLICY "user_learning_progress_all" ON user_learning_progress FOR ALL USING (auth.uid() = user_id);

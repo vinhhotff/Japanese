@@ -255,6 +255,136 @@
   background-clip: text;
 }
 
+/* ----- Màn chọn ngôn ngữ (Kanji / SRS / …): tránh .header từ App.css (card trắng) che theme ----- */
+.container[data-language="both"] {
+  position: relative;
+  min-height: min(calc(100vh - 5rem), 920px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+  box-sizing: border-box;
+}
+
+.container[data-language="both"] .header {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0 0.5rem 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.container[data-language="both"] .header h1 {
+  font-size: clamp(1.75rem, 5vw, 3.25rem);
+  margin-bottom: 0.75rem;
+}
+
+.container[data-language="both"] .header p {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+}
+
+[data-theme="dark"] .container[data-language="both"] .header p {
+  color: var(--text-secondary);
+}
+
+/* Nút feature-card: reset button + giữ nền/border theo theme */
+.lang-selection button.feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  font-family: inherit;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--card-bg, #ffffff);
+  border: 2px solid var(--border-color, #e4e4e7);
+  border-radius: 28px;
+  padding: 2.5rem 1.75rem;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s ease,
+    border-color 0.25s ease;
+  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.07));
+}
+
+[data-theme="dark"] .lang-selection button.feature-card {
+  background: var(--card-bg, #1e293b);
+  border-color: var(--border-color, #334155);
+}
+
+.lang-selection button.feature-card:focus {
+  outline: none;
+}
+
+.lang-selection button.feature-card:focus-visible {
+  outline: 3px solid var(--jp-primary, #dc2626);
+  outline-offset: 3px;
+}
+
+[data-theme="dark"] .lang-selection button.feature-card:focus-visible {
+  outline-color: var(--jp-primary-light, #f87171);
+}
+
+/* Badge JP / CN (thay inline style) */
+.lang-card-badge {
+  font-size: clamp(2.75rem, 8vw, 4rem);
+  font-weight: 800;
+  margin-bottom: 1rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  user-select: none;
+}
+
+.lang-card-badge--jp {
+  background: linear-gradient(135deg, var(--jp-primary, #dc2626) 0%, var(--jp-secondary, #f472b6) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .lang-card-badge--jp {
+  background: linear-gradient(135deg, #ff8fa3 0%, #fda4af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lang-card-badge--cn {
+  background: linear-gradient(135deg, var(--cn-primary, #d97706) 0%, var(--cn-secondary, #10b981) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .lang-card-badge--cn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@media (max-width: 640px) {
+  .container[data-language="both"] {
+    min-height: auto;
+    justify-content: flex-start;
+    padding-top: 1.25rem;
+  }
+
+  .lang-selection {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .lang-selection button.feature-card {
+    padding: 2rem 1.25rem;
+  }
+}
+
 /* ===== LEVEL GRID ===== */
 .level-grid {
   display: grid;
