@@ -5,6 +5,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './Toast';
 import '../styles/grading.css';
 
+const GRADE_LABELS: Record<string, { label: string; emoji: string }> = {
+  multiple_choice: { label: 'Trắc nghiệm MC', emoji: '❓' },
+  short_answer: { label: 'Trả lời ngắn', emoji: '✏️' },
+  essay: { label: 'Tự luận / Dịch thuật', emoji: '📝' },
+  audio_response: { label: 'Giao tiếp / Ghi âm', emoji: '🎤' },
+};
+
 interface GradingInterfaceProps {
   submission?: any;
   assignment?: any;
@@ -13,7 +20,6 @@ interface GradingInterfaceProps {
 
 const GradingInterface = ({ submission: propSubmission, assignment: propAssignment, onGradeComplete }: GradingInterfaceProps) => {
   const { submissionId: paramSubmissionId } = useParams<{ submissionId: string }>();
-  // Use prop ID if available, else param ID
   const effectiveId = propSubmission?.id || paramSubmissionId;
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -24,11 +30,7 @@ const GradingInterface = ({ submission: propSubmission, assignment: propAssignme
   const [grading, setGrading] = useState(false);
   const [totalScore, setTotalScore] = useState(0);
   const [feedback, setFeedback] = useState('');
-  const [answerGrades, setAnswerGrades] = useState<Record<string, {
-    points: number;
-    feedback: string;
-    isCorrect?: boolean;
-  }>>({});
+  const [answerGrades, setAnswerGrades] = useState<Record<string, { points: number; feedback: string; isCorrect?: boolean }>>({});
 
   useEffect(() => {
     if (propSubmission) {
@@ -39,7 +41,6 @@ const GradingInterface = ({ submission: propSubmission, assignment: propAssignme
   }, [paramSubmissionId, propSubmission]);
 
   const initGrades = (data: any) => {
-    // Initialize answer grades
     const grades: Record<string, any> = {};
     data.answers?.forEach((answer: any) => {
       grades[answer.id] = {
@@ -76,48 +77,32 @@ const GradingInterface = ({ submission: propSubmission, assignment: propAssignme
   const handleAnswerGradeChange = (answerId: string, field: 'points' | 'feedback' | 'isCorrect', value: any) => {
     const updated = {
       ...answerGrades,
-      [answerId]: {
-        ...answerGrades[answerId],
-        [field]: value,
-      },
+      [answerId]: { ...answerGrades[answerId], [field]: value },
     };
     setAnswerGrades(updated);
     calculateTotal(updated);
   };
 
   const handleSubmitGrade = async () => {
-    if (!user) {
-      showToast('Vui lòng đăng nhập', 'error');
-      return;
-    }
-
-    if (!confirm('Xác nhận chấm điểm và gửi kết quả cho học viên?')) {
-      return;
-    }
-
+    if (!user) { showToast('Vui lòng đăng nhập', 'error'); return; }
+    if (!confirm('Xác nhận chấm điểm và gửi kết quả cho học viên?')) return;
     try {
       setGrading(true);
-
       const answersData = Object.entries(answerGrades).map(([answerId, grade]) => ({
         answer_id: answerId,
         points_earned: grade.points,
         feedback: grade.feedback,
         is_correct: grade.isCorrect,
       }));
-
       await gradeSubmission(effectiveId!, {
         score: totalScore,
-        feedback: feedback,
+        feedback,
         graded_by: user.id,
         answers: answersData,
       });
-
       showToast('Đã chấm điểm thành công! ✨', 'success');
-      if (onGradeComplete) {
-        onGradeComplete();
-      } else {
-        navigate('/admin/submissions');
-      }
+      if (onGradeComplete) onGradeComplete();
+      else navigate(-1);
     } catch (error) {
       console.error('Error grading:', error);
       showToast('Lỗi khi chấm điểm', 'error');
@@ -128,166 +113,193 @@ const GradingInterface = ({ submission: propSubmission, assignment: propAssignme
 
   if (loading) {
     return (
-      <div className="grading-loading">
-        <div className="spinner"></div>
-        <p>Đang tải bài làm...</p>
+      <div className="gd-wrap">
+        <div className="gd-loading">
+          <div className="gd-spinner" />
+          <span className="gd-loading-text">Đang tải bài làm...</span>
+        </div>
       </div>
     );
   }
 
   if (!submission) {
     return (
-      <div className="grading-not-found">
-        <h2>Không tìm thấy bài làm</h2>
-        <button onClick={() => navigate(-1)} className="btn btn-primary">
-          Quay lại
-        </button>
+      <div className="gd-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+          <h2 style={{ fontWeight: 800, marginBottom: '1rem' }}>Không tìm thấy bài làm</h2>
+          <button className="gd-btn gd-btn-secondary" onClick={() => navigate(-1)}>← Quay lại</button>
+        </div>
       </div>
     );
   }
 
   const maxScore = submission.assignment?.max_score || 100;
-  const percentage = Math.round((totalScore / maxScore) * 100);
+  const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+  const gradeLabel = percentage >= 90 ? 'Xuất sắc 💎' : percentage >= 80 ? 'Giỏi 🥇' : percentage >= 70 ? 'Khá 🥈' : percentage >= 60 ? 'Trung bình 🥉' : 'Cần cố gắng 🚩';
 
   return (
-    <div className="grading-container">
-      {/* Header */}
-      <div className="grading-header">
-        <button onClick={() => navigate(-1)} className="btn-grading outline mb-8">
-          ← Quay lại danh sách
-        </button>
-        <div className="header-content">
+    <div className="gd-wrap">
+      {/* Topbar */}
+      <header className="gd-topbar">
+        <div className="gd-topbar-left">
+          <button className="td-btn-ghost" onClick={() => navigate(-1)} title="Quay lại" style={{ border: 'none', background: 'var(--t-bg)', width: 36, height: 36 }}>←</button>
           <div>
-            <h1>Chấm bài: {submission.assignment?.title}</h1>
-            <div className="student-info">
-              <span>👤 Học viên: {submission.profiles?.full_name || submission.user_id}</span>
-              <span className="opacity-30">|</span>
-              <span>📅 Nộp lúc: {new Date(submission.submitted_at).toLocaleString('vi-VN')}</span>
+            <div className="gd-topbar-title">Chấm bài</div>
+            <div className="gd-topbar-sub">{submission.assignment?.title}</div>
+          </div>
+        </div>
+        <div className="gd-topbar-actions">
+          <span style={{ fontSize: '0.8rem', color: 'var(--t-text-muted)' }}>
+            {submission.profiles?.full_name || submission.profiles?.email || '—'}
+          </span>
+        </div>
+      </header>
+
+      {/* Page */}
+      <div className="gd-page">
+
+        {/* Score Header Card */}
+        <div className="gd-score-card">
+          <div className="gd-score-info">
+            <h1>{submission.assignment?.title}</h1>
+            <div className="gd-score-meta">
+              <span>👤 {submission.profiles?.full_name || '—'}</span>
+              <span>📅 Nộp: {submission.submitted_at ? new Date(submission.submitted_at).toLocaleString('vi-VN') : '—'}</span>
+              <span>Điểm: <strong style={{ color: 'var(--t-primary)' }}>{totalScore} / {maxScore}</strong></span>
             </div>
           </div>
-          <div className="score-preview">
-            <div className="score-circle" style={{
-              background: `conic-gradient(#8b5cf6 ${percentage * 3.6}deg, rgba(255,255,255,0.1) 0deg)`
-            }}>
-              <div className="score-inner">
-                <div className="score-value">{totalScore}</div>
-                <div className="score-max">/{maxScore}</div>
-              </div>
+          <div
+            className="gd-score-ring"
+            style={{ '--pct': percentage } as React.CSSProperties}
+          >
+            <div className="gd-score-inner">
+              <div className="val">{percentage}%</div>
+              <div className="max">/100</div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Answers Grading */}
-      <div className="answers-grading">
-        {submission.answers?.map((answer: any, index: number) => {
-          const question = answer.question;
-          const maxPoints = question?.points || 10;
-          const currentGrade = answerGrades[answer.id] || { points: 0, feedback: '' };
+        {/* Summary */}
+        <div className="gd-summary">
+          <div className="gd-summary-grid">
+            <div className="gd-summary-item">
+              <span className="gd-summary-label">Tổng điểm</span>
+              <span className="gd-summary-value">{totalScore}/{maxScore}</span>
+            </div>
+            <div className="gd-summary-item">
+              <span className="gd-summary-label">Tỷ lệ</span>
+              <span className="gd-summary-value">{percentage}%</span>
+            </div>
+            <div className="gd-summary-item">
+              <span className="gd-summary-label">Xếp loại</span>
+              <span className="gd-summary-value" style={{ fontSize: '1rem' }}>{gradeLabel}</span>
+            </div>
+          </div>
+        </div>
 
-          return (
-            <div key={answer.id} className="answer-grading-card">
-              <div className="answer-header">
-                <div className="answer-number">Câu {index + 1}</div>
-                <div className="answer-points-input">
-                  <input
-                    type="number"
-                    min="0"
-                    max={maxPoints}
-                    value={currentGrade.points}
-                    onChange={(e) => handleAnswerGradeChange(answer.id, 'points', Number(e.target.value))}
-                    className="points-input"
-                  />
-                  <span className="ml-4 font-bold opacity-60">/ {maxPoints} điểm</span>
-                </div>
-              </div>
+        {/* Answers */}
+        <div className="gd-section">
+          <div className="gd-section-title">Câu trả lời ({submission.answers?.length || 0})</div>
 
-              <div className="question-display">
-                <strong>Câu hỏi</strong>
-                <div className="text-xl font-medium">{question?.question_text}</div>
-              </div>
+          {submission.answers?.map((answer: any, index: number) => {
+            const question = answer.question;
+            const maxPoints = question?.points || 10;
+            const currentGrade = answerGrades[answer.id] || { points: 0, feedback: '', isCorrect: false };
+            const typeInfo = question?.question_type ? (GRADE_LABELS[question.question_type] || { label: question.question_type, emoji: '❓' }) : null;
 
-              <div className="answer-display">
-                <strong>Câu trả lời của học viên</strong>
-                <div className="answer-content">
-                  {answer.answer_text || <em className="no-answer opacity-40">Chưa trả lời</em>}
-                </div>
-              </div>
-
-              {question?.correct_answer && (
-                <div className="correct-answer-display">
-                  <div>
-                    <strong>Đáp án đúng</strong>
-                    <div className="text-emerald-500 font-bold">{question.correct_answer}</div>
+            return (
+              <div key={answer.id} className="gd-question-card">
+                {/* Head */}
+                <div className="gd-question-head">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span className="gd-question-num">Câu {index + 1}</span>
+                    {typeInfo && (
+                      <span className="gd-question-type">{typeInfo.emoji} {typeInfo.label}</span>
+                    )}
                   </div>
-                  <label className="flex items-center gap-3 cursor-pointer p-4 bg-emerald-500/10 rounded-2xl hover:bg-emerald-500/20 transition-all">
+                  <div className="gd-question-score">
                     <input
-                      type="checkbox"
-                      className="w-6 h-6 accent-emerald-500"
-                      checked={currentGrade.isCorrect || false}
-                      onChange={(e) => handleAnswerGradeChange(answer.id, 'isCorrect', e.target.checked)}
+                      type="number"
+                      min={0}
+                      max={maxPoints}
+                      value={currentGrade.points}
+                      onChange={e => handleAnswerGradeChange(answer.id, 'points', Number(e.target.value))}
                     />
-                    <span className="font-bold text-emerald-500">Đánh dấu đúng</span>
-                  </label>
+                    <span>/ {maxPoints} điểm</span>
+                  </div>
                 </div>
-              )}
 
-              <div className="feedback-input mt-8">
-                <strong>💬 Nhận xét chi tiết</strong>
-                <textarea
-                  value={currentGrade.feedback}
-                  onChange={(e) => handleAnswerGradeChange(answer.id, 'feedback', e.target.value)}
-                  placeholder="Nhận xét, gợi ý cải thiện cho câu này..."
-                  rows={3}
-                  className="w-full mt-4 p-6 bg-slate-900/50 border border-white/10 rounded-3xl outline-none focus:border-purple-500 transition-all text-white"
-                />
+                {/* Question */}
+                <div className="gd-question-body">
+                  <div className="gd-question-label">Yêu cầu</div>
+                  <div className="gd-question-text">{question?.question_text || '—'}</div>
+                </div>
+
+                {/* Student Answer */}
+                <div className="gd-question-body">
+                  <div className="gd-question-label">Câu trả lời</div>
+                  <div className={`gd-answer-box ${!answer.answer_text ? 'empty' : ''}`}>
+                    {answer.answer_text || 'Chưa trả lời'}
+                  </div>
+                </div>
+
+                {/* Correct Answer */}
+                {question?.correct_answer && (
+                  <div className="gd-correct-box">
+                    <div>
+                      <div className="gd-question-label" style={{ marginBottom: '0.25rem' }}>Đáp án đúng</div>
+                      <div className="gd-correct-text">{question.correct_answer}</div>
+                    </div>
+                    <button
+                      className={`gd-correct-check ${currentGrade.isCorrect ? 'checked' : ''}`}
+                      onClick={() => handleAnswerGradeChange(answer.id, 'isCorrect', !currentGrade.isCorrect)}
+                    >
+                      {currentGrade.isCorrect ? '✓ Đúng' : 'Mark đúng'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Per-question Feedback */}
+                <div className="gd-question-body" style={{ marginBottom: 0 }}>
+                  <div className="gd-feedback-label">💬 Nhận xét câu này</div>
+                  <textarea
+                    className="gd-feedback-input"
+                    value={currentGrade.feedback}
+                    onChange={e => handleAnswerGradeChange(answer.id, 'feedback', e.target.value)}
+                    placeholder="Nhận xét, gợi ý cải thiện cho câu này..."
+                    rows={2}
+                  />
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Overall Feedback */}
-      <div className="answer-grading-card mb-16">
-        <h3 className="text-2xl font-black mb-8">📝 Nhận xét tổng quan giáo trình</h3>
-        <textarea
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-          placeholder="Nhận xét tổng quan về bài làm của học viên..."
-          rows={6}
-          className="w-full p-8 bg-slate-900/50 border border-white/10 rounded-[40px] outline-none focus:border-purple-500 transition-all text-white text-lg"
-        />
-      </div>
-
-      {/* Summary */}
-      <div className="grading-summary">
-        <div className="summary-item">
-          <span className="summary-label">Tổng kết điểm</span>
-          <span className="summary-value">{totalScore} / {maxScore}</span>
+            );
+          })}
         </div>
-        <div className="summary-item">
-          <span className="summary-label">Tỷ lệ hoàn thành</span>
-          <span className="summary-value">{percentage}%</span>
-        </div>
-        <div className="summary-item">
-          <span className="summary-label">Xếp loại năng lực</span>
-          <div className="summary-grade">
-            {percentage >= 90 ? 'Xuất sắc 💎' : percentage >= 80 ? 'Giỏi 🥇' : percentage >= 70 ? 'Khá 🥈' : percentage >= 60 ? 'Trung bình 🥉' : 'Cần cố gắng 🚩'}
-          </div>
+
+        {/* Overall Feedback */}
+        <div className="gd-overall-card">
+          <div className="gd-overall-label">📝 Nhận xét tổng quan</div>
+          <textarea
+            className="gd-feedback-input"
+            value={feedback}
+            onChange={e => setFeedback(e.target.value)}
+            placeholder="Nhận xét tổng quan về bài làm của học viên..."
+            rows={4}
+          />
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="grading-actions">
+      {/* Action Bar */}
+      <div className="gd-action-bar">
         <button
-          className="btn-grading outline"
+          className="gd-btn gd-btn-secondary"
           onClick={() => navigate(-1)}
           disabled={grading}
         >
           Hủy bỏ
         </button>
         <button
-          className="btn-grading primary"
+          className="gd-btn gd-btn-primary"
           onClick={handleSubmitGrade}
           disabled={grading}
         >

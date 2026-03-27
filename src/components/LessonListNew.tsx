@@ -41,32 +41,43 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
   }, [level, language, user]);
 
   const checkAccessAndLoad = async () => {
-    if (!user) return;
-
     setCheckingAccess(true);
+
+    let courseId: string | null = null;
+
+    // Load lessons first (this sets courseInfo in state)
+    const loadedCourse = await loadLessons();
+    courseId = loadedCourse?.id || null;
 
     // Admin and Teacher have full access
     if (isAdmin || isTeacher) {
       setHasAccess(true);
-      await loadLessons();
       setCheckingAccess(false);
       return;
     }
 
-    // Check access from both purchased courses and class enrollments
+    // Check access for logged-in users
+    if (!user) {
+      setHasAccess(false);
+      setShowTrialNotice(true);
+      setCheckingAccess(false);
+      return;
+    }
+
     try {
-      // 1. Check user_courses (Direct purchase)
+      // 1. Check user_courses (Direct purchase) using courseId from loaded data
       const { data: courseAccess } = await supabase
         .from('user_courses')
         .select('id')
         .eq('user_id', user.id)
-        .eq('course_id', courseInfo?.id)
+        .eq('course_id', courseId)
         .eq('status', 'active')
         .maybeSingle();
 
       if (courseAccess) {
         setHasAccess(true);
-        await loadLessons();
+        setShowTrialNotice(false);
+        setCheckingAccess(false);
         return;
       }
 
@@ -78,22 +89,19 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
       );
 
       setHasAccess(isEnrolled);
-      await loadLessons();
+      if (!isEnrolled) {
+        setShowTrialNotice(true);
+      }
     } catch (error) {
       console.error('Error checking access:', error);
       setHasAccess(false);
-      // Still load lessons even on error - show them with locks
-      await loadLessons();
+      setShowTrialNotice(true);
     } finally {
       setCheckingAccess(false);
-      // Show trial notice if user has no access and is not an admin/teacher
-      if (!isAdmin && !isTeacher) {
-        setShowTrialNotice(true);
-      }
     }
   };
 
-  const loadLessons = async (isSwitching = false) => {
+  const loadLessons = async (isSwitching = false): Promise<any> => {
     try {
       if (isSwitching) setSwitchingCourse(true);
       else setLoading(true);
@@ -103,14 +111,13 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
       const targetLevel = (level || '').toUpperCase();
       const course = await getCourseByLevel(language, targetLevel);
 
-      let lessonsData = [];
+      let lessonsData: any[] = [];
 
       if (course) {
         setCourseInfo(course);
         const lessonsResult = await getLessons(course.id, undefined, undefined, 1, 1000);
         lessonsData = lessonsResult.data || [];
       } else {
-        const targetLevel = (level || '').toUpperCase();
         const lessonsResult = await getLessons(undefined, language, targetLevel as any, 1, 1000);
         lessonsData = lessonsResult.data || [];
       }
@@ -148,8 +155,10 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
 
       setLessons(lessonsOfLevel);
       setCurrentPage(1);
+      return course || null;
     } catch (err) {
       console.error('Error loading lessons:', err);
+      return null;
     } finally {
       setLoading(false);
       setSwitchingCourse(false);
@@ -207,36 +216,128 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
   }
 
   const handleBuyCourse = () => {
+    // Already have access
+    if (hasAccess) return;
+
+    // Not logged in: redirect to login
+    if (!user) {
+      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+
+    // Free courses: enroll directly without showing modal
+    if (courseInfo && courseInfo.price === 0) {
+      enrollFreeCourse();
+      return;
+    }
     setShowPurchaseModal(true);
+  };
+
+  const enrollFreeCourse = async () => {
+    if (!user || !courseInfo) return;
+
+    // Check if already enrolled
+    if (hasAccess) {
+      setShowPurchaseModal(false);
+      return;
+    }
+
+    try {
+      setIsProcessingPayment(true);
+      const { supabase } = await import('../config/supabase');
+
+      // Check existing enrollment
+      const { data: existing } = await supabase
+        .from('user_courses')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('course_id', courseInfo.id)
+        .maybeSingle();
+
+      if (existing) {
+        setHasAccess(true);
+        setShowTrialNotice(false);
+        setShowPurchaseModal(false);
+        return;
+      }
+
+      // Insert user_courses for free courses
+      const { error } = await supabase
+        .from('user_courses')
+        .insert({
+          user_id: user.id,
+          course_id: courseInfo.id,
+          status: 'active',
+          purchased_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      setHasAccess(true);
+      setShowTrialNotice(false);
+      setShowPurchaseModal(false);
+      alert('Chúc mừng! Bạn đã đăng ký khóa học miễn phí thành công.');
+    } catch (err) {
+      console.error('Enroll free course error:', err);
+      alert('Đã xảy ra lỗi. Vui lòng thử lại.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   const handleConfirmPurchase = async () => {
     if (!courseInfo) return;
 
+    // Free courses: enroll directly
+    if (courseInfo.price === 0) {
+      enrollFreeCourse();
+      return;
+    }
+
+    // If not logged in, redirect to login first
+    if (!user) {
+      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+
     try {
       setIsProcessingPayment(true);
+      const { data: sessionData } = await import('../config/supabase').then(m => m.supabase.auth.getSession());
+      const token = sessionData.session?.access_token;
+
+      if (!token) {
+        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        return;
+      }
+
+      const returnUrl = `${window.location.origin}/payment/success`;
+      const cancelUrl = `${window.location.origin}/${language}/courses/${level}`;
+
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await import('../config/supabase').then(m => m.supabase.auth.getSession())).data.session?.access_token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           courseId: courseInfo.id,
-          returnUrl: window.location.href,
-          cancelUrl: window.location.href
+          returnUrl,
+          cancelUrl
         })
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        alert(data?.error || 'Lỗi tạo link thanh toán. Vui lòng thử lại.');
+        return;
+      }
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
-        alert('Lỗi tạo link thanh toán');
+        alert(data?.error || 'Lỗi tạo link thanh toán. Vui lòng thử lại.');
       }
     } catch (error) {
       console.error('Buy error:', error);
-      alert('Đã xảy ra lỗi khi tạo đơn hàng');
+      alert('Đã xảy ra lỗi khi tạo đơn hàng. Vui lòng thử lại.');
     } finally {
       setIsProcessingPayment(false);
     }
@@ -506,22 +607,59 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                 </svg>
               </div>
               <div className="premium-title">
-                <span className="premium-badge" style={{ color: 'rgba(255,255,255,0.5)' }}>Tiếp cận giới hạn</span>
-                <h3>Nâng cấp Premium</h3>
+                <span className="premium-badge" style={{ color: 'rgba(255,255,255,0.5)' }}>{user ? 'Tiếp cận giới hạn' : 'Truy cập bài học'}</span>
+                <h3>{user ? 'Nâng cấp Premium' : 'Đăng nhập để học'}</h3>
               </div>
             </div>
 
             <p className="premium-description">
-              Bạn đang xem các bài học thử miễn phí. Hãy đăng ký ngay để mở khóa toàn bộ nội dung và bài tập!
+              {user
+                ? courseInfo?.price === 0
+                  ? 'Khóa học này MIỄN PHÍ! Nhấn nút bên dưới để đăng ký ngay.'
+                  : 'Bạn đang xem các bài học thử miễn phí. Hãy đăng ký ngay để mở khóa toàn bộ nội dung và bài tập!'
+                : 'Xem trước một số bài học miễn phí. Đăng nhập hoặc tạo tài khoản để truy cập toàn bộ khóa học.'
+              }
             </p>
 
-            <button
-              onClick={handleBuyCourse}
-              className="premium-action-btn"
-              style={{ background: 'white', color: 'black', boxShadow: 'none' }}
-            >
-              Mở khóa toàn bộ
-            </button>
+            {user ? (
+              courseInfo?.price === 0 ? (
+                <button
+                  onClick={enrollFreeCourse}
+                  disabled={isProcessingPayment}
+                  className="premium-action-btn"
+                  style={{ background: 'var(--success-color)', color: 'white', boxShadow: 'none' }}
+                >
+                  {isProcessingPayment ? 'Đang đăng ký...' : 'Đăng ký miễn phí ngay'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleBuyCourse}
+                  className="premium-action-btn"
+                  style={{ background: 'white', color: 'black', boxShadow: 'none' }}
+                >
+                  Mở khóa toàn bộ
+                </button>
+              )
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  state={{ from: window.location.pathname }}
+                  className="premium-action-btn"
+                  style={{ background: 'white', color: 'black', boxShadow: 'none', display: 'block', textAlign: 'center', textDecoration: 'none' }}
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to="/register"
+                  state={{ from: window.location.pathname }}
+                  className="premium-action-btn"
+                  style={{ background: 'rgba(255,255,255,0.15)', color: 'white', boxShadow: 'none', display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: '0.75rem', border: '1.5px solid rgba(255,255,255,0.3)' }}
+                >
+                  Tạo tài khoản miễn phí
+                </Link>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -759,17 +897,31 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                   width: '72px',
                   height: '72px',
                   borderRadius: '24px',
-                  background: language === 'japanese' ? 'rgba(185, 28, 44, 0.1)' : 'rgba(185, 28, 28, 0.1)',
+                  background: courseInfo.price === 0
+                    ? 'rgba(16, 185, 129, 0.1)'
+                    : (language === 'japanese' ? 'rgba(185, 28, 44, 0.1)' : 'rgba(185, 28, 28, 0.1)'),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 1.5rem',
-                  color: language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)'
+                  color: courseInfo.price === 0
+                    ? 'var(--success-color)'
+                    : (language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)')
                 }}>
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                    <line x1="1" y1="10" x2="23" y2="10" />
-                  </svg>
+                  {courseInfo.price === 0 ? (
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                      <rect x="2" y="7" width="20" height="5"></rect>
+                      <line x1="12" y1="22" x2="12" y2="7"></line>
+                      <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                      <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                    </svg>
+                  ) : (
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                      <line x1="1" y1="10" x2="23" y2="10" />
+                    </svg>
+                  )}
                 </div>
 
                 <h2 style={{
@@ -778,7 +930,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                   marginBottom: '0.5rem',
                   color: 'var(--text-primary, #111827)'
                 }}>
-                  {language === 'japanese' ? 'Tiếp tục học tập?' : 'Bắt đầu ngay?'}
+                  {courseInfo.price === 0 ? 'Đăng ký miễn phí' : (language === 'japanese' ? 'Tiếp tục học tập?' : 'Bắt đầu ngay?')}
                 </h2>
                 <p style={{
                   color: 'var(--text-secondary, #4b5563)',
@@ -786,7 +938,9 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                   fontSize: '1rem',
                   lineHeight: 1.5
                 }}>
-                  Đăng ký khóa học để mở khóa toàn bộ nội dung bài học và bài tập đặc sắc.
+                  {courseInfo.price === 0
+                    ? 'Khóa học này hoàn toàn miễn phí. Nhấn "Đăng ký" để bắt đầu học ngay!'
+                    : 'Đăng ký khóa học để mở khóa toàn bộ nội dung bài học và bài tập đặc sắc.'}
                 </p>
 
                 {/* Course Badge */}
@@ -813,23 +967,40 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                 </div>
 
                 {/* Price Display */}
-                <div style={{
-                  background: 'var(--bg-secondary, #f9fafb)',
-                  padding: '1.5rem',
-                  borderRadius: '24px',
-                  marginBottom: '2rem',
-                  border: '1px solid var(--border-color, #f3f4f6)'
-                }}>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--text-muted, #6b7280)', marginBottom: '0.25rem' }}>Số tiền thanh toán</div>
+                {courseInfo.price === 0 ? (
                   <div style={{
-                    fontSize: '2.25rem',
-                    fontWeight: 900,
-                    color: 'var(--text-primary, #111827)',
-                    letterSpacing: '-0.02em'
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    padding: '1.5rem',
+                    borderRadius: '24px',
+                    marginBottom: '2rem',
+                    border: '1px solid var(--success-color)'
                   }}>
-                    {formatCurrency(courseInfo.price || 0)}
+                    <div style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--success-color)', letterSpacing: '-0.02em' }}>
+                      MIỄN PHÍ
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--success-color)', marginTop: '0.25rem', fontWeight: 600 }}>
+                      Không cần thanh toán
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div style={{
+                    background: 'var(--bg-secondary, #f9fafb)',
+                    padding: '1.5rem',
+                    borderRadius: '24px',
+                    marginBottom: '2rem',
+                    border: '1px solid var(--border-color, #f3f4f6)'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted, #6b7280)', marginBottom: '0.25rem' }}>Số tiền thanh toán</div>
+                    <div style={{
+                      fontSize: '2.25rem',
+                      fontWeight: 900,
+                      color: 'var(--text-primary, #111827)',
+                      letterSpacing: '-0.02em'
+                    }}>
+                      {formatCurrency(courseInfo.price || 0)}
+                    </div>
+                  </div>
+                )}
 
                 {/* Benefits List */}
                 <div style={{
@@ -851,49 +1022,87 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                     <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--success-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                     </div>
-                    <span>Sử dụng trọn đời</span>
+                    <span>{courseInfo.price === 0 ? 'Miễn phí vĩnh viễn' : 'Sử dụng trọn đời'}</span>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <button
-                    onClick={() => setShowPurchaseModal(false)}
-                    className="modal-btn-secondary"
-                    style={{
-                      padding: '1rem',
-                      borderRadius: '18px',
-                      border: '1.5px solid var(--border-color, #e5e7eb)',
-                      background: 'transparent',
-                      color: 'var(--text-secondary, #4b5563)',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    Xem thêm
-                  </button>
-                  <button
-                    onClick={handleConfirmPurchase}
-                    disabled={isProcessingPayment}
-                    className="modal-btn-primary"
-                    style={{
-                      padding: '1rem',
-                      borderRadius: '18px',
-                      border: 'none',
-                      background: language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)',
-                      color: '#ffffff',
-                      fontWeight: 700,
-                      cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.2s',
-                      boxShadow: language === 'japanese'
-                        ? '0 10px 15px -3px rgba(185, 28, 44, 0.3)'
-                        : '0 10px 15px -3px rgba(185, 28, 28, 0.3)'
-                    }}
-                  >
-                    {isProcessingPayment ? 'Đang chuyển...' : 'Thanh toán'}
-                  </button>
-                </div>
+                {courseInfo.price === 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button
+                      onClick={handleConfirmPurchase}
+                      disabled={isProcessingPayment}
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '18px',
+                        border: 'none',
+                        background: 'var(--success-color)',
+                        color: '#ffffff',
+                        fontWeight: 700,
+                        fontSize: '1rem',
+                        cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)'
+                      }}
+                    >
+                      {isProcessingPayment ? 'Đang đăng ký...' : 'Đăng ký miễn phí ngay'}
+                    </button>
+                    <button
+                      onClick={() => setShowPurchaseModal(false)}
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '18px',
+                        border: '1.5px solid var(--border-color, #e5e7eb)',
+                        background: 'transparent',
+                        color: 'var(--text-secondary, #4b5563)',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Đóng
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <button
+                      onClick={() => setShowPurchaseModal(false)}
+                      className="modal-btn-secondary"
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '18px',
+                        border: '1.5px solid var(--border-color, #e5e7eb)',
+                        background: 'transparent',
+                        color: 'var(--text-secondary, #4b5563)',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Xem thêm
+                    </button>
+                    <button
+                      onClick={handleConfirmPurchase}
+                      disabled={isProcessingPayment}
+                      className="modal-btn-primary"
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '18px',
+                        border: 'none',
+                        background: language === 'japanese' ? 'var(--jp-primary)' : 'var(--cn-primary)',
+                        color: '#ffffff',
+                        fontWeight: 700,
+                        cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s',
+                        boxShadow: language === 'japanese'
+                          ? '0 10px 15px -3px rgba(185, 28, 44, 0.3)'
+                          : '0 10px 15px -3px rgba(185, 28, 28, 0.3)'
+                      }}
+                    >
+                      {isProcessingPayment ? 'Đang chuyển...' : 'Thanh toán'}
+                    </button>
+                  </div>
+                )}
 
                 {/* Secure Payment Note */}
                 <div style={{

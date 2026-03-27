@@ -477,6 +477,110 @@ const DashboardNew = () => {
         </div>
       </div>
 
+      {/* Welcome Section for All Users */}
+      {(
+        <section className="welcome-section" style={{
+          background: 'var(--card-bg)',
+          borderRadius: '24px',
+          padding: '2.5rem',
+          marginBottom: '2rem',
+          boxShadow: 'var(--shadow-lg)',
+          border: '1px solid var(--border-color)'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
+              Chào mừng đến với Nihongo & Hanyu Learning!
+            </h2>
+            <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
+              Ứng dụng học tiếng Nhật (JLPT) và tiếng Trung (HSK) trực tuyến với AI thông minh.
+              Hàng ngàn bài học, từ vựng, ngữ pháp và luyện nói cùng AI.
+            </p>
+          </div>
+
+          {/* How it works */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.25rem', color: 'var(--text-primary)', textAlign: 'center' }}>
+              Cách thức hoạt động
+            </h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '1rem'
+            }}>
+              {[
+                { icon: '👤', title: 'Đăng ký miễn phí', desc: 'Tạo tài khoản trong 30 giây' },
+                { icon: '📚', title: 'Xem bài miễn phí', desc: 'Mỗi cấp độ có bài dùng thử' },
+                { icon: '💳', title: 'Mua khóa học', desc: 'Thanh toán qua PayOS an toàn' },
+                { icon: '🎯', title: 'Học với AI', desc: 'Luyện nói, phát âm cùng AI' },
+              ].map((step, i) => (
+                <div key={i} style={{
+                  background: 'var(--bg-secondary)',
+                  borderRadius: '16px',
+                  padding: '1.25rem',
+                  textAlign: 'center',
+                  border: '1px solid var(--border-color)'
+                }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>{step.icon}</div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '0.35rem', color: 'var(--text-primary)' }}>{step.title}</h4>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Pricing info */}
+          <div style={{
+            background: 'linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark, #7c3aed) 100%)',
+            borderRadius: '20px',
+            padding: '1.75rem',
+            color: 'white',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+              💰 Mỗi khóa học chỉ từ 199.000đ
+            </h3>
+            <p style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '1.25rem' }}>
+              Sử dụng trọn đời • Cập nhật miễn phí • Hỗ trợ 24/7
+            </p>
+            {!user && (
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link
+                  to="/register"
+                  style={{
+                    display: 'inline-block',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '12px',
+                    background: 'white',
+                    color: 'var(--primary-color)',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  Tạo tài khoản miễn phí
+                </Link>
+                <Link
+                  to="/login"
+                  style={{
+                    display: 'inline-block',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.15)',
+                    color: 'white',
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                    border: '1.5px solid rgba(255,255,255,0.3)'
+                  }}
+                >
+                  Đăng nhập
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* My Classes Section */}
       {myClasses.length > 0 && (
         <section className="my-classes-section">
@@ -620,10 +724,10 @@ const DashboardNew = () => {
         </div>
       </div>
 
-      {/* Gamification & Community Section */}
-      <section style={{ maxWidth: '1200px', margin: '4rem auto', padding: '0 20px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', alignItems: 'start' }}>
-          <div>
+      {/* Gamification & Community Section — grid uses CSS so narrow viewports stack full-width (avoid 1fr+350px starving main column) */}
+      <section className="dashboard-community-section">
+        <div className="dashboard-community-grid">
+          <div className="dashboard-community-main">
             <div className="section-title" style={{ textAlign: 'left', margin: '0 0 24px 0' }}>
               <h2 style={{ fontSize: '1.8rem' }}>Hoạt động học tập</h2>
               <p>Duy trì chuỗi học tập để nhận nhiều điểm thưởng hơn!</p>
@@ -642,40 +746,40 @@ const DashboardNew = () => {
             </div>
 
             <div style={{ marginTop: '2rem' }}>
-              <Link to="/notebook" style={{ textDecoration: 'none' }}>
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: '2px solid var(--border-color)', borderRadius: '20px' }}>
-                  <div style={{ fontSize: '2rem' }}>📔</div>
-                  <div>
+              <Link to="/notebook" style={{ textDecoration: 'none' }} className="dashboard-community-link">
+                <div className="card dashboard-community-quick-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: '2px solid var(--border-color)', borderRadius: '20px' }}>
+                  <div style={{ fontSize: '2rem', flexShrink: 0 }}>📔</div>
+                  <div className="dashboard-community-quick-text">
                     <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Sổ tay cá nhân</h4>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Xem lại từ vựng và ngữ pháp đã lưu</p>
                   </div>
-                  <div style={{ marginLeft: 'auto', fontSize: '1.2rem' }}>→</div>
+                  <div style={{ marginLeft: 'auto', fontSize: '1.2rem', flexShrink: 0 }}>→</div>
                 </div>
               </Link>
             </div>
 
             <div style={{ marginTop: '1rem' }}>
-              <Link to="/forum" style={{ textDecoration: 'none' }}>
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: '2px solid var(--border-color)', borderRadius: '20px' }}>
-                  <div style={{ fontSize: '2rem' }}>💬</div>
-                  <div>
+              <Link to="/forum" style={{ textDecoration: 'none' }} className="dashboard-community-link">
+                <div className="card dashboard-community-quick-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: '2px solid var(--border-color)', borderRadius: '20px' }}>
+                  <div style={{ fontSize: '2rem', flexShrink: 0 }}>💬</div>
+                  <div className="dashboard-community-quick-text">
                     <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Diễn đàn học tập</h4>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Hỏi đáp, chia sẻ kiến thức cùng cộng đồng</p>
                   </div>
-                  <div style={{ marginLeft: 'auto', fontSize: '1.2rem' }}>→</div>
+                  <div style={{ marginLeft: 'auto', fontSize: '1.2rem', flexShrink: 0 }}>→</div>
                 </div>
               </Link>
             </div>
 
             <div style={{ marginTop: '1rem' }}>
-              <Link to="/peer-matching" style={{ textDecoration: 'none' }}>
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: '2px solid var(--border-color)', borderRadius: '20px' }}>
-                  <div style={{ fontSize: '2rem' }}>🤝</div>
-                  <div>
+              <Link to="/peer-matching" style={{ textDecoration: 'none' }} className="dashboard-community-link">
+                <div className="card dashboard-community-quick-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: '2px solid var(--border-color)', borderRadius: '20px' }}>
+                  <div style={{ fontSize: '2rem', flexShrink: 0 }}>🤝</div>
+                  <div className="dashboard-community-quick-text">
                     <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Tìm bạn học cùng trình độ</h4>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Kết nối với học viên cùng trình độ để học tập</p>
                   </div>
-                  <div style={{ marginLeft: 'auto', fontSize: '1.2rem' }}>→</div>
+                  <div style={{ marginLeft: 'auto', fontSize: '1.2rem', flexShrink: 0 }}>→</div>
                 </div>
               </Link>
             </div>
@@ -717,7 +821,7 @@ const DashboardNew = () => {
             )}
           </div>
 
-          <div>
+          <div className="dashboard-community-sidebar">
             <Leaderboard />
           </div>
         </div>

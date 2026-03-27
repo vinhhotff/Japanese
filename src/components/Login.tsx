@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { logger } from '../utils/logger';
 import FloatingElements from './FloatingElements';
 import '../styles/login-premium.css';
 
@@ -27,36 +26,37 @@ const Login = () => {
         return;
       }
 
-      // Wait a bit for user state to update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // AuthContext handles role detection from DB via onAuthStateChange
+      // Poll sessionStorage for confirmed role (AuthContext updates it after DB query)
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      const maxWait = 5000;
+      const interval = 300;
+      let waited = 0;
 
-      const user = result.data?.user;
-      if (!user) {
-        setError('Không thể lấy thông tin user');
-        setLoading(false);
-        return;
+      while (waited < maxWait) {
+        await new Promise(resolve => setTimeout(resolve, interval));
+        waited += interval;
+        const confirmedRole = sessionStorage.getItem('user_role') as 'admin' | 'teacher' | 'student' | null;
+        if (confirmedRole && confirmedRole !== 'student') {
+          switch (confirmedRole) {
+            case 'admin':
+              navigate('/');
+              return;
+            case 'teacher':
+              navigate('/teacher-dashboard');
+              return;
+          }
+        }
+        // Also check if role has been set (any non-default value)
+        if (confirmedRole) {
+          // Role confirmed (could be 'student')
+          navigate(redirect || '/');
+          return;
+        }
       }
 
-      // Check role from metadata or email pattern (consistent with AuthContext)
-      const role = user.user_metadata?.role ||
-        (user.email?.toLowerCase().includes('admin') ? 'admin' :
-          (user.email?.toLowerCase().includes('teacher') ? 'teacher' : 'student'));
-
-      logger.log('User signed in:', { email: user.email, role });
-
-      // Redirect based on role
-      switch (role) {
-        case 'admin':
-          navigate('/');
-          break;
-        case 'teacher':
-          navigate('/teacher-dashboard'); // Assuming this route exists or will exist
-          break;
-        case 'student':
-        default:
-          navigate('/');
-          break;
-      }
+      // Fallback: just go home after timeout
+      navigate(redirect || '/');
 
     } catch (err: any) {
       setError(err.message || 'Có lỗi xảy ra');

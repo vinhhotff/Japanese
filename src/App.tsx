@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Suspense, lazy, useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './components/Toast';
@@ -17,6 +17,8 @@ import SavedWords from './components/SavedWords';
 import StudyProgress from './components/StudyProgress';
 import Login from './components/Login';
 import Register from './components/Register';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentCancel from './components/PaymentCancel';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import NotebookView from './components/NotebookView';
@@ -51,6 +53,16 @@ const Forum = lazy(() => import('./components/Forum'));
 const ForumPost = lazy(() => import('./components/ForumPost'));
 const PeerMatching = lazy(() => import('./components/PeerMatching'));
 
+// Scroll to top on route change
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [pathname]);
+  return null;
+}
+
 // Loading fallback for lazy components
 const PageLoader = () => (
   <div style={{
@@ -80,28 +92,21 @@ function App() {
         <AuthProvider>
           <ToastProvider>
             <Router>
+              <ScrollToTop />
               <Layout>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     {/* Home */}
                     <Route path="/" element={<DashboardNew />} />
 
-                    {/* Japanese Learning Routes - Protected with Enrollment */}
-                    <Route path="/japanese/courses" element={
-                      <ProtectedRoute>
-                        <CourseList language="japanese" />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/japanese/courses/:level" element={
-                      <ProtectedRoute>
-                        <LessonListNew language="japanese" />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/japanese/lessons/:lessonId" element={
-                      <ProtectedRoute>
-                        <LessonDetail language="japanese" />
-                      </ProtectedRoute>
-                    } />
+                    {/* Payment Routes (Public - accessible after returning from PayOS) */}
+                    <Route path="/payment/success" element={<PaymentSuccess />} />
+                    <Route path="/payment/cancel" element={<PaymentCancel />} />
+
+                    {/* Japanese Learning Routes */}
+                    <Route path="/japanese/courses" element={<CourseList language="japanese" />} />
+                    <Route path="/japanese/courses/:level" element={<LessonListNew language="japanese" />} />
+                    <Route path="/japanese/lessons/:lessonId" element={<LessonDetail language="japanese" />} />
                     <Route path="/japanese/dictionary" element={<Dictionary language="japanese" />} />
                     <Route path="/japanese/saved-words" element={<SavedWords language="japanese" />} />
                     <Route path="/japanese/vocabulary-practice" element={
@@ -125,22 +130,10 @@ function App() {
                       </ProtectedRoute>
                     } />
 
-                    {/* Chinese Learning Routes - Protected with Enrollment */}
-                    <Route path="/chinese/courses" element={
-                      <ProtectedRoute>
-                        <CourseList language="chinese" />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/chinese/courses/:level" element={
-                      <ProtectedRoute>
-                        <LessonListNew language="chinese" />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/chinese/lessons/:lessonId" element={
-                      <ProtectedRoute>
-                        <LessonDetail language="chinese" />
-                      </ProtectedRoute>
-                    } />
+                    {/* Chinese Learning Routes */}
+                    <Route path="/chinese/courses" element={<CourseList language="chinese" />} />
+                    <Route path="/chinese/courses/:level" element={<LessonListNew language="chinese" />} />
+                    <Route path="/chinese/lessons/:lessonId" element={<LessonDetail language="chinese" />} />
                     <Route path="/chinese/dictionary" element={<Dictionary language="chinese" />} />
                     <Route path="/chinese/saved-words" element={<SavedWords language="chinese" />} />
                     <Route path="/chinese/vocabulary-practice" element={

@@ -1799,3 +1799,580 @@
 .class-enter-btn:active {
   transform: scale(0.98);
 }
+
+/* ===== COMPREHENSIVE RESPONSIVE FIXES ===== */
+
+/* Extra large screens */
+@media (max-width: 1400px) {
+  .hero-header {
+    padding: 3.5rem 2rem 2.5rem;
+    max-width: 1000px;
+  }
+
+  .courses-section {
+    padding: 2.5rem 1.5rem;
+    max-width: 1000px;
+  }
+
+  .levels-grid {
+    max-width: 1000px;
+  }
+
+  .level-card {
+    border-radius: 24px;
+  }
+
+  .level-badge {
+    width: 56px;
+    height: 56px;
+  }
+
+  .switch-flag {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+    border-radius: 12px;
+  }
+
+  .switch-name {
+    font-size: 1.25rem;
+  }
+}
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .dashboard-v2-container {
+    padding-bottom: 3rem;
+  }
+
+  .hero-header {
+    padding: 3rem 1.5rem 2rem;
+    max-width: 100%;
+  }
+
+  .title-main {
+    font-size: 4rem;
+  }
+
+  .title-sub {
+    font-size: 1.1rem;
+  }
+
+  .hero-description {
+    font-size: 0.9375rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .courses-section {
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+  }
+
+  .levels-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    padding: 1rem 0 2rem;
+    max-width: 100%;
+  }
+
+  .section-title h2 {
+    font-size: 2rem;
+  }
+
+  .section-title p {
+    font-size: 1rem;
+  }
+
+  .dashboard-language-switcher {
+    gap: 0.75rem;
+  }
+
+  .lang-switch-btn {
+    padding: 0.75rem 1rem;
+    border-radius: 16px;
+  }
+
+  .switch-flag {
+    width: 44px;
+    height: 44px;
+    font-size: 1.125rem;
+    border-radius: 10px;
+  }
+
+  .switch-name {
+    font-size: 1.125rem;
+  }
+
+  .switch-label,
+  .switch-count {
+    font-size: 0.8rem;
+  }
+
+  /* Level card adjustments */
+  .level-badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+  }
+
+  .badge-level {
+    font-size: 1rem;
+  }
+
+  .level-icon-large {
+    font-size: 2rem;
+  }
+
+  .level-name {
+    font-size: 1.25rem;
+  }
+
+  .card-header {
+    padding: 2rem 1.25rem 0.5rem;
+  }
+
+  .card-body {
+    padding: 0.75rem 1.25rem 1.5rem;
+  }
+}
+
+/* Mobile landscape / small tablets */
+@media (max-width: 768px) {
+  .hero-header {
+    padding: 2rem 1.25rem 1.5rem;
+  }
+
+  .hero-badge {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .title-main {
+    font-size: 2.75rem;
+    letter-spacing: -0.01em;
+  }
+
+  .title-sub {
+    font-size: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .title-highlight {
+    display: block;
+  }
+
+  .hero-description {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .hero-content {
+    margin-bottom: 2rem;
+  }
+
+  .courses-section {
+    padding: 1.5rem 1rem;
+  }
+
+  .section-title {
+    margin-bottom: 2rem;
+  }
+
+  .section-title h2 {
+    font-size: 1.5rem;
+  }
+
+  .section-title p {
+    font-size: 0.875rem;
+  }
+
+  .levels-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0.5rem 0 1.5rem;
+  }
+
+  .dashboard-language-switcher {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+  }
+
+  .lang-switch-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.625rem 0.875rem;
+  }
+
+  .switch-flag {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .switch-info {
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+  }
+
+  .switch-name {
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .switch-label {
+    font-size: 0.75rem;
+  }
+
+  .switch-count {
+    display: none;
+  }
+
+  /* Level card */
+  .card-header {
+    padding: 1.5rem 1rem 0.5rem;
+  }
+
+  .card-body {
+    padding: 0.5rem 1rem 1.25rem;
+  }
+
+  .level-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+  }
+
+  .badge-level {
+    font-size: 0.9rem;
+  }
+
+  .level-icon-large {
+    font-size: 1.75rem;
+  }
+
+  .level-name {
+    font-size: 1.125rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .level-description {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .card-footer {
+    padding: 0.75rem 1rem;
+  }
+
+  .level-stat-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 8px;
+  }
+
+  .my-classes-section {
+    padding: 0 1rem;
+    margin: 4rem auto 2rem;
+  }
+
+  .my-classes-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .hero-header {
+    padding: 1.5rem 1rem 1.25rem;
+  }
+
+  .hero-badge {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+  }
+
+  .title-main {
+    font-size: 2rem;
+    letter-spacing: -0.01em;
+    padding: 0.25rem 0;
+  }
+
+  .title-sub {
+    font-size: 0.9rem;
+    gap: 0.5rem;
+  }
+
+  .title-text,
+  .title-highlight {
+    display: block;
+    font-size: 1rem;
+  }
+
+  .hero-description {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .hero-content {
+    margin-bottom: 1.5rem;
+  }
+
+  .courses-section {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .section-title {
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title h2 {
+    font-size: 1.25rem;
+  }
+
+  .section-title p {
+    font-size: 0.8rem;
+  }
+
+  .levels-grid {
+    gap: 0.75rem;
+  }
+
+  .level-card {
+    border-radius: 20px;
+  }
+
+  .card-header {
+    padding: 1.25rem 0.875rem 0.5rem;
+  }
+
+  .card-body {
+    padding: 0.5rem 0.875rem 1rem;
+  }
+
+  .level-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+  }
+
+  .badge-level {
+    font-size: 0.8rem;
+  }
+
+  .level-icon-large {
+    font-size: 1.5rem;
+  }
+
+  .level-name {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .level-description {
+    font-size: 0.75rem;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+
+  .level-stats {
+    gap: 0.375rem;
+    flex-wrap: wrap;
+  }
+
+  .level-stat {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+  }
+
+  .card-footer {
+    padding: 0.5rem 0.875rem;
+  }
+
+  .level-stat-btn {
+    padding: 0.4rem 0.625rem;
+    font-size: 0.7rem;
+    border-radius: 8px;
+  }
+
+  .level-stat-btn span:last-child {
+    display: none;
+  }
+
+  .my-classes-section {
+    margin: 3rem auto 1.5rem;
+    padding: 0 0.75rem;
+  }
+
+  .my-classes-title {
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .classes-container-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 360px) {
+  .title-main {
+    font-size: 1.75rem;
+  }
+
+  .hero-header {
+    padding: 1.25rem 0.75rem 1rem;
+  }
+
+  .level-badge {
+    width: 40px;
+    height: 40px;
+  }
+
+  .level-name {
+    font-size: 0.9rem;
+  }
+}
+
+/* Fix overflow issues */
+@media (max-width: 768px) {
+  .dashboard-v2-container {
+    overflow-x: hidden;
+  }
+
+  .hero-title {
+    overflow-wrap: break-word;
+    word-break: keep-all;
+  }
+
+  .title-main {
+    overflow-wrap: break-word;
+  }
+
+  .courses-section,
+  .hero-header,
+  .my-classes-section,
+  .welcome-section {
+    overflow-x: hidden;
+  }
+
+  .level-card,
+  .dashboard-class-card {
+    overflow: hidden;
+  }
+
+  .float-char {
+    display: none;
+  }
+}
+
+/* Landscape mobile */
+@media (max-height: 500px) and (max-width: 900px) {
+  .hero-header {
+    padding: 1.5rem 1rem 1rem;
+  }
+
+  .title-main {
+    font-size: 2rem;
+  }
+
+  .hero-content {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Improve level cards on medium screens */
+@media (min-width: 481px) and (max-width: 768px) {
+  .levels-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.875rem;
+  }
+
+  .level-description {
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Welcome section responsive */
+@media (max-width: 768px) {
+  .welcome-section {
+    padding: 1.5rem 1rem;
+    border-radius: 20px;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-section {
+    padding: 1.25rem 0.875rem;
+    border-radius: 16px;
+    margin-bottom: 1.25rem;
+  }
+}
+
+/* Community / gamification: desktop = main + sidebar; narrow = single full-width column (fixes 1fr+350px eating the main column) */
+.dashboard-community-section {
+  max-width: 1200px;
+  margin: 4rem auto;
+  padding: 0 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-community-grid {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 350px);
+}
+
+.dashboard-community-main,
+.dashboard-community-sidebar {
+  min-width: 0;
+  width: 100%;
+}
+
+.dashboard-community-link {
+  display: block;
+  width: 100%;
+}
+
+.dashboard-community-quick-card {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+.dashboard-community-quick-text {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .dashboard-community-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-community-section {
+    padding: 0 12px;
+    margin: 2.5rem auto;
+  }
+}

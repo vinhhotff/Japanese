@@ -31,7 +31,7 @@ interface LessonDetailProps {
 }
 
 const LessonDetail = ({ language }: LessonDetailProps) => {
-  const { user } = useAuth();
+  const { user, isAdmin, isTeacher } = useAuth();
   const { lessonId } = useParams<{ lessonId: string }>();
   const [currentStep, setCurrentStep] = useState<LearningStep>('learn');
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -45,6 +45,7 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
   const [enrollCode, setEnrollCode] = useState('');
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState<string | null>(null);
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
 
   // Sub-tabs for each step
   const [learnTab, setLearnTab] = useState<'vocab' | 'kanji' | 'grammar'>('vocab');
@@ -57,15 +58,13 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
   }, [lessonId, user]);
 
   const loadLessonAndCheckAccess = async () => {
+    if (!lessonId) return;
+
     try {
       setLoading(true);
       setCheckingAccess(true);
 
-      // Fetch lesson data first or in parallel? 
-      // We need course_id from lesson to check specific course access.
-      // But we can check class enrollments even without lesson data.
-
-      const lessonData = await getLessonById(lessonId!);
+      const lessonData = await getLessonById(lessonId);
       if (!lessonData) {
         setLoading(false);
         setCheckingAccess(false);
@@ -76,76 +75,81 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
       setLesson(transformed);
       setCourseLevel(transformed.level);
 
-      // Parallelize checks that depend on having the lesson/user
-      const checks = [];
+      // Always load games and scenarios
+      const [gamesResult, scenariosResult] = await Promise.all([
+        getSentenceGames(lessonId, language, 1, 100),
+        getRoleplayScenarios(lessonId, language, 1, 100),
+      ]);
 
-      if (user) {
-        // 1. Check direct purchase
-        checks.push(
+      setSentenceGames(gamesResult.data || []);
+      if (scenariosResult.data) {
+        setRoleplayScenarios(scenariosResult.data.map((s: any) => ({
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          scenario: s.scenario,
+          characterA: s.character_a,
+          characterB: s.character_b,
+          characterAScript: s.character_a_script || [],
+          characterBScript: s.character_b_script || [],
+          characterACorrectAnswers: s.character_a_correct_answers || [],
+          characterBCorrectAnswers: s.character_b_correct_answers || [],
+          vocabularyHints: s.vocabulary_hints || [],
+          grammarPoints: s.grammar_points || [],
+          difficulty: s.difficulty || 'medium',
+          imageUrl: s.image_url,
+          enableScoring: s.enable_scoring || false,
+        })));
+      }
+
+      // Determine access: Admins/Teachers always have access
+      if (isAdmin || isTeacher) {
+        setHasAccess(true);
+      } else if (transformed.is_free) {
+        // Free lessons accessible to everyone (including guests)
+        setHasAccess(true);
+      } else if (!user) {
+        // Guest trying to access paid lesson - show login modal
+        setHasAccess(false);
+        setShowEnrollModal(true);
+      } else {
+        // Logged-in student: check purchase or enrollment
+        const [courseAccess, enrollments] = await Promise.all([
           supabase
             .from('user_courses')
             .select('id')
             .eq('user_id', user.id)
             .eq('course_id', lessonData.course_id)
             .eq('status', 'active')
-            .maybeSingle()
-            .then(({ data }) => !!data)
-        );
+            .maybeSingle(),
+          getStudentClasses(user.id),
+        ]);
 
-        // 2. Check class enrollments
-        checks.push(
-          getStudentClasses(user.id).then(enrollments =>
-            enrollments.some((e: any) =>
-              e.classes?.id === lessonData.course_id || (
-                e.classes?.language === language &&
-                (e.classes?.level || '').toUpperCase() === (transformed.level || '').toUpperCase()
-              )
-            )
+        const hasPurchased = !!courseAccess;
+        const isEnrolled = enrollments.some((e: any) =>
+          e.classes?.id === lessonData.course_id || (
+            e.classes?.language === language &&
+            (e.classes?.level || '').toUpperCase() === (transformed.level || '').toUpperCase()
           )
         );
 
-        // 3. Load additional content
-        checks.push(getSentenceGames(lessonId!, language, 1, 100).then(res => res.data || []));
-        checks.push(getRoleplayScenarios(lessonId!, language, 1, 100).then(res => res.data || []));
-
-        const [hasPurchased, isEnrolled, gamesData, scenariosData]: [boolean, boolean, any[], any[]] = await Promise.all(checks) as any;
-
-        if (userIsAdmin || userIsTeacher || hasPurchased || isEnrolled) {
+        if (hasPurchased || isEnrolled) {
           setHasAccess(true);
         } else {
           setHasAccess(false);
+          setShowEnrollModal(true);
         }
-
-        setSentenceGames(gamesData || []);
-        if (scenariosData) {
-          setRoleplayScenarios(scenariosData.map((s: any) => ({
-            id: s.id,
-            title: s.title,
-            description: s.description,
-            scenario: s.scenario,
-            characterA: s.character_a,
-            characterB: s.character_b,
-            characterAScript: s.character_a_script || [],
-            characterBScript: s.character_b_script || [],
-            characterACorrectAnswers: s.character_a_correct_answers || [],
-            characterBCorrectAnswers: s.character_b_correct_answers || [],
-            vocabularyHints: s.vocabulary_hints || [],
-            grammarPoints: s.grammar_points || [],
-            difficulty: s.difficulty || 'medium',
-            imageUrl: s.image_url,
-            enableScoring: s.enable_scoring || false,
-          })));
-        }
-
-        // Background sync progress (non-blocking, debounced)
-        syncProgressFromCloud(user!.id).then((synced) => {
-          if (synced) loadProgress();
-        }).catch(console.error);
-      } else {
-        setHasAccess(false);
-        loadProgress();
       }
-    } catch (err: any) {
+
+      // Sync progress for logged-in users
+      if (user) {
+        syncProgressFromCloud(user.id).then((synced) => {
+          if (synced) loadProgress();
+        }).catch(() => { });
+      }
+
+      loadProgress();
+    } catch (err) {
       console.error('Error loading lesson:', err);
     } finally {
       setLoading(false);
@@ -153,16 +157,13 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
     }
   };
 
-  const currentLoggedInUser = user;
-  const { isAdmin: userIsAdmin, isTeacher: userIsTeacher } = useAuth();
-
   const handleJoinByCode = async () => {
-    if (!currentLoggedInUser || !enrollCode.trim()) return;
+    if (!user || !enrollCode.trim()) return;
 
     try {
       setIsEnrolling(true);
       setEnrollError(null);
-      await joinClass(currentLoggedInUser.id, enrollCode.trim().toUpperCase());
+      await joinClass(user.id, enrollCode.trim().toUpperCase());
       // Refresh access
       await loadLessonAndCheckAccess();
       setEnrollCode('');
@@ -171,48 +172,6 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
       setEnrollError(err.message || 'Mã không hợp lệ hoặc đã hết hạn');
     } finally {
       setIsEnrolling(false);
-    }
-  };
-
-  const loadLesson = async () => {
-    try {
-      setLoading(true);
-      const lessonData = await getLessonById(lessonId!);
-
-      if (lessonData) {
-        const transformed = transformLessonFromDB(lessonData);
-        setLesson(transformed);
-        setCourseLevel(transformed.level);
-
-        const gamesResult = await getSentenceGames(lessonId!, language, 1, 100);
-        setSentenceGames(gamesResult.data || []);
-
-        const scenariosResult = await getRoleplayScenarios(lessonId!, language, 1, 100);
-        const scenarios = scenariosResult.data;
-        if (scenarios) {
-          setRoleplayScenarios(scenarios.map((s: any) => ({
-            id: s.id,
-            title: s.title,
-            description: s.description,
-            scenario: s.scenario,
-            characterA: s.character_a,
-            characterB: s.character_b,
-            characterAScript: s.character_a_script || [],
-            characterBScript: s.character_b_script || [],
-            characterACorrectAnswers: s.character_a_correct_answers || [],
-            characterBCorrectAnswers: s.character_b_correct_answers || [],
-            vocabularyHints: s.vocabulary_hints || [],
-            grammarPoints: s.grammar_points || [],
-            difficulty: s.difficulty || 'medium',
-            imageUrl: s.image_url,
-            enableScoring: s.enable_scoring || false,
-          })));
-        }
-      }
-    } catch (err: any) {
-      console.error('Error loading lesson:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -317,7 +276,7 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
   const totalItems = lesson.vocabulary.length + lesson.kanji.length + lesson.grammar.length;
   const progress = Math.round((completedSteps.size / 6) * 100); // 6 main activities
 
-  const isLocked = !hasAccess && !userIsAdmin && !userIsTeacher && !lesson.is_free;
+  const isLocked = !hasAccess && !lesson.is_free;
 
   return (
     <div className={`container lesson-detail-premium ${language === 'japanese' ? 'jp-theme' : 'cn-theme'}`} style={{ position: 'relative', zIndex: 1 }} data-language={language}>
@@ -374,7 +333,10 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
             marginBottom: '2rem',
             lineHeight: '1.6'
           }}>
-            Bài học này thuộc chương trình Premium. Hãy nhập mã tham gia từ giáo viên hoặc mua khóa học để mở khóa toàn bộ nội dung.
+            {user
+              ? 'Bài học này thuộc chương trình Premium. Hãy nhập mã tham gia từ giáo viên hoặc mua khóa học để mở khóa toàn bộ nội dung.'
+              : 'Hãy đăng nhập hoặc tạo tài khoản để truy cập bài học này. Bạn có thể xem trước một số bài học miễn phí.'
+            }
           </p>
 
           <div style={{
@@ -386,69 +348,115 @@ const LessonDetail = ({ language }: LessonDetailProps) => {
             boxShadow: 'var(--shadow-lg)',
             border: '1px solid var(--border-color)'
           }}>
-            <h4 style={{ margin: '0 0 1rem 0', textAlign: 'left', fontWeight: '700' }}>🔑 Nhập mã tham gia</h4>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-              <input
-                type="text"
-                value={enrollCode}
-                onChange={(e) => setEnrollCode(e.target.value.toUpperCase())}
-                placeholder="VD: JP-N5-XXXXXX"
-                style={{
-                  flex: 1,
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-color)',
-                  outline: 'none',
-                  fontWeight: '600'
-                }}
-              />
-              <button
-                onClick={handleJoinByCode}
-                disabled={isEnrolling || !enrollCode.trim()}
-                style={{
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: 'var(--primary-color)',
-                  color: 'white',
-                  fontWeight: '700',
-                  cursor: 'pointer'
-                }}
-              >
-                {isEnrolling ? '...' : 'Gửi'}
-              </button>
-            </div>
-            {enrollError && (
-              <p style={{ color: 'var(--danger-color)', fontSize: '0.85rem', marginBottom: '1rem', textAlign: 'left' }}>
-                {enrollError}
-              </p>
-            )}
+            {!user ? (
+              <>
+                <h4 style={{ margin: '0 0 1rem 0', textAlign: 'center', fontWeight: '700' }}>🔑 Đăng nhập để tiếp tục</h4>
+                <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                  Đăng nhập để truy cập bài học này và theo dõi tiến độ học tập của bạn.
+                </p>
+                <Link
+                  to="/login"
+                  state={{ from: `/japanese/lessons/${lessonId}` }}
+                  style={{
+                    display: 'block',
+                    padding: '0.875rem',
+                    borderRadius: '10px',
+                    background: 'var(--primary-color)',
+                    color: 'white',
+                    textDecoration: 'none',
+                    fontWeight: '700',
+                    fontSize: '1rem',
+                    marginBottom: '1rem',
+                    textAlign: 'center'
+                  }}
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to="/register"
+                  state={{ from: `/japanese/lessons/${lessonId}` }}
+                  style={{
+                    display: 'block',
+                    padding: '0.875rem',
+                    borderRadius: '10px',
+                    border: '1.5px solid var(--primary-color)',
+                    color: 'var(--primary-color)',
+                    textDecoration: 'none',
+                    fontWeight: '700',
+                    fontSize: '1rem',
+                    textAlign: 'center'
+                  }}
+                >
+                  Tạo tài khoản miễn phí
+                </Link>
+              </>
+            ) : (
+              <>
+                <h4 style={{ margin: '0 0 1rem 0', textAlign: 'left', fontWeight: '700' }}>🔑 Nhập mã tham gia</h4>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <input
+                    type="text"
+                    value={enrollCode}
+                    onChange={(e) => setEnrollCode(e.target.value.toUpperCase())}
+                    placeholder="VD: JP-N5-XXXXXX"
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color)',
+                      outline: 'none',
+                      fontWeight: '600'
+                    }}
+                  />
+                  <button
+                    onClick={handleJoinByCode}
+                    disabled={isEnrolling || !enrollCode.trim()}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'var(--primary-color)',
+                      color: 'white',
+                      fontWeight: '700',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {isEnrolling ? '...' : 'Gửi'}
+                  </button>
+                </div>
+                {enrollError && (
+                  <p style={{ color: 'var(--danger-color)', fontSize: '0.85rem', marginBottom: '1rem', textAlign: 'left' }}>
+                    {enrollError}
+                  </p>
+                )}
 
-            <div style={{
-              marginTop: '1.5rem',
-              paddingTop: '1.5rem',
-              borderTop: '1px solid var(--border-color)',
-              textAlign: 'center'
-            }}>
-              <p style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Hoặc bạn có thể mua lẻ khóa học này</p>
-              <Link
-                to={`/${language}/courses`}
-                style={{
-                  display: 'block',
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  background: 'var(--success-color)',
-                  color: 'white',
-                  textDecoration: 'none',
-                  fontWeight: '700'
-                }}
-              >
-                🛒 Mua khóa học
-              </Link>
-            </div>
+                <div style={{
+                  marginTop: '1.5rem',
+                  paddingTop: '1.5rem',
+                  borderTop: '1px solid var(--border-color)',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Hoặc bạn có thể mua lẻ khóa học này</p>
+                  <Link
+                    to={`/${language}/courses`}
+                    style={{
+                      display: 'block',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      background: 'var(--success-color)',
+                      color: 'white',
+                      textDecoration: 'none',
+                      fontWeight: '700'
+                    }}
+                  >
+                    🛒 Mua khóa học
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
 
-          <Link to={`/${language}/courses`} style={{ marginTop: '2rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>
+          <Link to={`/${language}/courses/${courseLevel}`} style={{ marginTop: '2rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>
             ← Quay lại danh sách bài học
           </Link>
         </div>
