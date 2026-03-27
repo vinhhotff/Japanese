@@ -293,16 +293,16 @@ export const getSubmissionById = async (id: string) => {
   if (error) throw error;
 
   // Fetch profile separately
-  if (data?.user_id) {
+  if (submissionWithNewAnswers?.user_id) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, full_name, email')
-      .eq('id', data.user_id)
+      .eq('id', submissionWithNewAnswers.user_id)
       .single();
-    (data as any).profiles = profile || null;
+    (submissionWithNewAnswers as any).profiles = profile || null;
   }
 
-  return data;
+  return submissionWithNewAnswers;
 };
 
 export const createSubmission = async (submission: {

@@ -590,13 +590,11 @@ const AssignmentForm: React.FC = () => {
                                         className="question-card"
                                     >
                                         <div className="question-top-bar">
-                                            <div className="flex items-center gap-5">
-                                                <span className="q-number-premium">{q.question_number}</span>
-                                                <select
-                                                    className="select-premium py-2"
-                                                    style={{ width: '220px' }}
-                                                    value={q.question_type}
-                                                    onChange={e => updateQuestion(idx, { question_type: e.target.value as any })}
+                                            <div className="flex items-center gap-3">
+                                                <button
+                                                    type="button"
+                                                    className={`type-btn ${q.question_type === 'multiple_choice' ? 'active' : ''}`}
+                                                    onClick={() => updateQuestion(idx, { question_type: 'multiple_choice' })}
                                                 >
                                                     <span className="type-icon">📋</span>
                                                     <span>Trắc nghiệm</span>
@@ -728,8 +726,9 @@ const AssignmentForm: React.FC = () => {
                                                             </button>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            )}
+                                                ))}
+                                            </div>
+                                        )}
 
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                             <div className="field-group-premium">
