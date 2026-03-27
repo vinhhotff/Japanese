@@ -11,6 +11,7 @@ export interface SavedWord {
   meanings: string[];
   savedAt: string; // ISO date string
   type: 'word' | 'kanji';
+  language?: 'japanese' | 'chinese';
 }
 
 const SAVED_WORDS_KEY = 'japanese_saved_words';

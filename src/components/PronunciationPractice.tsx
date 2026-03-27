@@ -53,7 +53,7 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
 
     // Simple similarity check
     const similarity = calculateSimilarity(spokenText, target);
-    const hiraganaMatch = spokenText.includes(targetHiragana);
+    const hiraganaMatch = current.hiragana ? spokenText.includes(current.hiragana) : false;
 
     let calculatedScore = 0;
     let feedbackText = '';

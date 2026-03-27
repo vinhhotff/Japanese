@@ -81,7 +81,7 @@ const DictionaryResult = memo(({ item, index, speakingId, onSpeak, onAddToLesson
               <span style={{ 
                 fontSize: '3rem', 
                 fontWeight: '800', 
-                color: isChinese ? '#ef4444' : '#8b5cf6',
+                color: isChinese ? 'var(--cn-primary, #b91c1c)' : 'var(--jp-primary, #b91c2c)',
                 lineHeight: 1
               }}>
                 {isChinese ? hanzi : (japanese?.word || '')}

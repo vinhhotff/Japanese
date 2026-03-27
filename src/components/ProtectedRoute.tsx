@@ -2,6 +2,7 @@ import { ReactNode, useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { hasJoinedAnyClass, joinClass } from '../services/classService';
+import '../styles/skeleton.css';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -75,10 +76,11 @@ const ProtectedRoute = ({
     }
   };
 
-  if (loading) {
+  if (loading || checkingEnrollment) {
     return (
-      <div className="loading-container">
-        <div className="loading">Đang tải...</div>
+      <div className="auth-checking-skeleton">
+        <div className="auth-checking-skeleton__spinner"></div>
+        <div className="skeleton auth-checking-skeleton__text"></div>
       </div>
     );
   }

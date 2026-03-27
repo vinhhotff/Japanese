@@ -212,19 +212,21 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
         </div>
         <div className="lang-selection">
           <button
+            type="button"
             onClick={() => navigate('/japanese/spaced-repetition')}
             className="feature-card feature-card-japanese"
           >
-            <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: '800' }}>
+            <div className="lang-card-badge lang-card-badge--jp" aria-hidden>
               JP
             </div>
             <h3>Tiếng Nhật (JLPT)</h3>
           </button>
           <button
+            type="button"
             onClick={() => navigate('/chinese/spaced-repetition')}
             className="feature-card feature-card-chinese"
           >
-            <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: '800' }}>
+            <div className="lang-card-badge lang-card-badge--cn" aria-hidden>
               CN
             </div>
             <h3>Tiếng Trung (HSK)</h3>
@@ -318,28 +320,20 @@ const SpacedRepetition = ({ language }: SpacedRepetitionProps) => {
         </div>
 
         {/* Session Stats Summary */}
-        <div className="stats-card" style={{
-          background: 'white',
-          padding: '2rem',
-          borderRadius: '16px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          maxWidth: '500px',
-          margin: '2rem auto',
-          textAlign: 'center'
-        }}>
-          <h3>Thống kê phiên học</h3>
+        <div className="stats-card" style={{ maxWidth: '500px', margin: '2rem auto', textAlign: 'center' }}>
+          <h3 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Thống kê phiên học</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
-            <div style={{ padding: '1rem', background: '#ecfdf5', borderRadius: '12px', color: '#059669' }}>
+            <div style={{ padding: '1rem', background: 'var(--success-light)', borderRadius: '12px', color: 'var(--success-color)' }}>
               <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{sessionStats.correct}</div>
               <div>Đã thuộc</div>
             </div>
-            <div style={{ padding: '1rem', background: '#fef2f2', borderRadius: '12px', color: '#dc2626' }}>
+            <div style={{ padding: '1rem', background: 'var(--danger-light)', borderRadius: '12px', color: 'var(--danger-color)' }}>
               <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{sessionStats.incorrect}</div>
               <div>Chưa thuộc</div>
             </div>
           </div>
-          <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
-            <p style={{ color: '#64748b' }}>Tổng số từ ôn tập: {sessionStats.correct + sessionStats.incorrect}</p>
+          <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+            <p style={{ color: 'var(--text-secondary)' }}>Tổng số từ ôn tập: {sessionStats.correct + sessionStats.incorrect}</p>
           </div>
         </div>
 

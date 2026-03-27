@@ -276,12 +276,12 @@ export const getMySubmissions = async (
 };
 
 export const getSubmissionById = async (id: string) => {
-  const { data, error } = await supabase
+  // First, get submission with answers from the new table (assignment_answers)
+  const { data: submissionWithNewAnswers, error } = await supabase
     .from('assignment_submissions')
     .select(`
       *,
       assignment:assignments(*),
-      profiles:user_id(id, full_name, email),
       answers:assignment_answers(
         *,
         question:assignment_questions(*)
@@ -291,7 +291,18 @@ export const getSubmissionById = async (id: string) => {
     .single();
 
   if (error) throw error;
-  return data;
+
+  // Fetch profile separately
+  if (submissionWithNewAnswers?.user_id) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .eq('id', submissionWithNewAnswers.user_id)
+      .single();
+    (submissionWithNewAnswers as any).profiles = profile || null;
+  }
+
+  return submissionWithNewAnswers;
 };
 
 export const createSubmission = async (submission: {
@@ -388,6 +399,8 @@ export const getAnswersBySubmission = async (submissionId: string) => {
 };
 
 // ===== GRADING (Teacher/Admin) =====
+// Note: assignment_submissions.user_id references auth.users(id), not public.profiles,
+// so we cannot embed profiles via PostgREST. We fetch profiles separately and merge.
 export const getAllSubmissions = async (
   assignmentId?: string,
   status?: SubmissionStatus,
@@ -399,11 +412,7 @@ export const getAllSubmissions = async (
 
   let query = supabase
     .from('assignment_submissions')
-    .select(`
-      *,
-      assignment:assignments(*),
-      profiles:user_id(id, full_name, email)
-    `, { count: 'exact' })
+    .select('*, assignment:assignments(*)', { count: 'exact' })
     .order('submitted_at', { ascending: false });
 
   if (assignmentId) query = query.eq('assignment_id', assignmentId);
@@ -414,8 +423,25 @@ export const getAllSubmissions = async (
   const { data, error, count } = await query;
   if (error) throw error;
 
+  // Fetch profiles separately to avoid FK relationship issues
+  const submissions = data || [];
+  if (submissions.length > 0) {
+    const userIds = [...new Set(submissions.map((s: any) => s.user_id).filter(Boolean))];
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', userIds);
+
+    const profileMap: Record<string, any> = {};
+    (profilesData || []).forEach((p: any) => { profileMap[p.id] = p; });
+
+    submissions.forEach((s: any) => {
+      s.profiles = profileMap[s.user_id] || null;
+    });
+  }
+
   return {
-    data: data || [],
+    data: submissions,
     total: count || 0,
     page,
     pageSize,

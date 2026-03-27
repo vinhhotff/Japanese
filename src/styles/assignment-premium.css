@@ -34,20 +34,20 @@
 }
 
 .submission-content-box {
-    background: rgba(15, 23, 42, 0.6);
+    background: var(--bg-secondary);
     border-radius: 24px;
     padding: 2.5rem;
     font-size: 1.2rem;
     line-height: 1.8;
-    color: #e2e8f0;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
     min-height: 150px;
 }
 
 /* Grading Section */
 .grading-form-premium {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 32px;
     padding: 3.5rem;
     margin-top: 3rem;
@@ -82,21 +82,21 @@
 
 .premium-input,
 .premium-textarea {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 1.25rem;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 1.1rem;
     transition: all 0.2s ease;
 }
 
 .premium-input:focus,
 .premium-textarea:focus {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: #6366f1;
+    background: var(--card-bg);
+    border-color: var(--jp-primary, #b91c2c);
     outline: none;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 4px rgba(185, 28, 44, 0.15);
 }
 
 .score-pill-large {
@@ -123,7 +123,7 @@
 .teacher-avatar-placeholder {
     width: 60px;
     height: 60px;
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    background: linear-gradient(135deg, var(--jp-primary, #b91c2c) 0%, var(--jp-accent, #ec4899) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -142,12 +142,12 @@
 .student-name-premium {
     font-size: 1.4rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
 }
 
 .submitted-at-premium {
     font-size: 0.9rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .action-buttons-row {
@@ -156,7 +156,7 @@
 }
 
 .btn-premium-save {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    background: linear-gradient(135deg, var(--jp-primary, #b91c2c) 0%, var(--jp-accent, #ec4899) 100%);
     color: white;
     padding: 0.75rem 2.5rem;
     border-radius: 14px;
@@ -171,23 +171,23 @@
 
 .btn-premium-save:hover {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 15px 30px rgba(185, 28, 44, 0.35);
 }
 
 .btn-premium-cancel {
-    background: rgba(255, 255, 255, 0.05);
-    color: #94a3b8;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
     padding: 0.75rem 2rem;
     border-radius: 14px;
     font-weight: 700;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .btn-premium-cancel:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #f8fafc;
+    background: var(--border-color);
+    color: var(--text-primary);
 }
 
 /* =========================================
@@ -208,16 +208,16 @@
 .header-text-premium h1 {
     font-size: 2.5rem;
     font-weight: 900;
-    color: #fff;
+    color: var(--text-primary);
     margin-bottom: 1rem;
-    background: linear-gradient(to right, #2dd4bf, #818cf8);
+    background: linear-gradient(135deg, var(--jp-primary, #b91c2c), var(--jp-accent, #ec4899));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .header-text-premium p {
-    color: #cbd5e1;
+    color: var(--text-secondary);
     font-size: 1.125rem;
 }
 
@@ -225,17 +225,17 @@
     display: flex;
     flex-wrap: wrap;
     gap: 1.5rem;
-    background: rgba(15, 23, 42, 0.5);
+    background: var(--bg-secondary);
     padding: 1.5rem;
     border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
 }
 
 .meta-item-premium {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: #cbd5e1;
+    color: var(--text-secondary);
 }
 
 .meta-icon-premium {
@@ -248,18 +248,18 @@
 }
 
 .meta-icon-premium.teal {
-    background: rgba(20, 184, 166, 0.2);
-    color: #2dd4bf;
+    background: rgba(185, 28, 44, 0.1);
+    color: var(--jp-primary, #b91c2c);
 }
 
 .meta-icon-premium.indigo {
-    background: rgba(99, 102, 241, 0.2);
-    color: #818cf8;
+    background: rgba(185, 28, 44, 0.1);
+    color: var(--jp-primary, #b91c2c);
 }
 
 .meta-icon-premium.pink {
-    background: rgba(236, 72, 153, 0.2);
-    color: #f472b6;
+    background: rgba(236, 72, 153, 0.1);
+    color: var(--jp-secondary, #f472b6);
 }
 
 .question-list-premium {
@@ -291,7 +291,7 @@
 .question-number-premium {
     width: 3rem;
     height: 3rem;
-    background: linear-gradient(135deg, #2dd4bf, #6366f1);
+    background: linear-gradient(135deg, var(--jp-primary, #b91c2c), var(--jp-accent, #ec4899));
     border-radius: 0.75rem;
     display: flex;
     align-items: center;
@@ -303,24 +303,24 @@
 }
 
 .question-label-premium {
-    color: white;
+    color: var(--text-secondary);
     font-weight: bold;
-    opacity: 0.6;
+    opacity: 0.8;
 }
 
 .question-points-premium {
     padding: 0.5rem 1rem;
-    background: #1e293b;
+    background: var(--bg-secondary);
     border-radius: 0.5rem;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     font-weight: bold;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
 }
 
 .question-text-premium {
     font-size: 1.25rem;
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 500;
     line-height: 1.625;
 }
@@ -370,28 +370,29 @@
     border-radius: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
 }
 
 .option-item-premium:hover {
-    background: rgba(30, 41, 59, 1);
+    background: var(--card-bg);
+    border-color: var(--jp-primary, #b91c2c);
 }
 
 .option-item-premium.selected {
-    border-color: #6366f1;
-    background: rgba(99, 102, 241, 0.2);
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+    border-color: var(--jp-primary, #b91c2c);
+    background: rgba(185, 28, 44, 0.08);
+    box-shadow: 0 0 20px rgba(185, 28, 44, 0.12);
 }
 
 .option-radio-premium {
     width: 1.25rem;
     height: 1.25rem;
-    accent-color: #6366f1;
+    accent-color: var(--jp-primary, #b91c2c);
 }
 
 .option-text-premium {
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 1.125rem;
     font-weight: 500;
 }
@@ -411,12 +412,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(15, 23, 42, 0.9);
+    background: var(--card-bg);
     backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     padding: 1rem;
     border-radius: 1.5rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--shadow-lg);
 }
 
 .btn-large {

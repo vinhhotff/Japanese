@@ -69,24 +69,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       timerStarted = true;
       console.time('SupabaseRoleQuery');
       
-      const fetchPromise = supabase
-        .from('user_roles')
-        .select('role')
-        .eq('email', email)
-        .maybeSingle()
-        .then(({ data, error }) => {
-          if (timerStarted) {
-            try {
-              console.timeEnd('SupabaseRoleQuery');
-            } catch (e) {
-              // Ignore timer errors if already ended
+      const fetchPromise = Promise.resolve(
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('email', email)
+          .maybeSingle()
+          .then(({ data, error }) => {
+            if (timerStarted) {
+              try {
+                console.timeEnd('SupabaseRoleQuery');
+              } catch (e) {
+                // Ignore timer errors if already ended
+              }
+              timerStarted = false;
             }
-            timerStarted = false;
-          }
-          if (error) throw error;
-          // If no data found, they are a STUDENT (confirmed)
-          return (data?.role as UserRole) || 'student';
-        })
+            if (error) throw error;
+            // If no data found, they are a STUDENT (confirmed)
+            return (data?.role as UserRole) || 'student';
+          })
+      );
+
+      fetchPromise
         .catch((err) => {
           if (timerStarted) {
             try {
@@ -221,8 +225,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Clear local state first
       setSession(null);
       setUser(null);
-      setProfile(null);
-      setProfile(null);
       setProfile(null);
       updateUserRole('student');
       roleCheckCompleted.current = false; // Reset check flag

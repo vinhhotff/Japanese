@@ -8,7 +8,7 @@ import '../styles/teacher-dashboard-premium.css';
 
 const SubmissionList = () => {
     const { assignmentId } = useParams<{ assignmentId: string }>();
-    const { user, isTeacher } = useAuth();
+    const { isTeacher } = useAuth();
     const { showToast } = useToast();
     const navigate = useNavigate();
 
@@ -18,9 +18,7 @@ const SubmissionList = () => {
     const [filter, setFilter] = useState<'all' | 'submitted' | 'graded'>('all');
 
     useEffect(() => {
-        if (assignmentId && isTeacher) {
-            loadData();
-        }
+        if (assignmentId && isTeacher) loadData();
     }, [assignmentId, isTeacher]);
 
     const loadData = async () => {
@@ -46,81 +44,100 @@ const SubmissionList = () => {
     });
 
     if (!isTeacher) {
-        return <div className="p-8 text-center text-red-500 font-bold">Bạn không có quyền truy cập trang này.</div>;
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                <div className="td-empty">
+                    <span className="td-empty-icon">🔒</span>
+                    <h3>Không có quyền truy cập</h3>
+                    <Link to="/" className="td-btn td-btn-primary" style={{ margin: '0 auto' }}>Về trang chủ</Link>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div className="teacher-dashboard-container">
-            {/* Premium Header */}
-            <motion.header
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="teacher-header"
-            >
-                <div className="teacher-title-area">
-                    <button onClick={() => navigate('/teacher')} className="content-back-btn mr-4" style={{ color: 'white' }}>
-                        &larr; Quay lại
-                    </button>
+        <div className="td-wrap">
+            {/* Topbar */}
+            <header className="td-topbar">
+                <Link to="/" className="td-logo">
+                    <div className="td-logo-icon">🎓</div>
                     <div>
-                        <h1>📊 Danh sách bài nộp</h1>
-                        <span className="teacher-badge">Bài tập: {assignment?.title || 'Đang tải...'}</span>
+                        <div className="td-logo-text">Teacher Panel</div>
+                        <div className="td-logo-sub">Quản lý giảng dạy</div>
                     </div>
-                </div>
-                <div className="teacher-actions">
+                </Link>
+
+                <nav className="td-topnav">
+                    <button className="td-nav-btn active">📚 Quản lý</button>
+                </nav>
+
+                <div className="td-topbar-actions">
                     <button
-                        onClick={() => navigate(`/teacher/assignments/edit/${assignmentId}`)}
-                        className="teacher-btn-secondary"
+                        className="td-btn td-btn-secondary"
+                        style={{ height: '36px', padding: '0 0.875rem', fontSize: '0.8rem' }}
+                        onClick={() => navigate(-1)}
                     >
-                        ✏️ Chỉnh sửa bài tập
+                        ← Quay lại
+                    </button>
+                    <button
+                        className="td-btn td-btn-primary"
+                        style={{ height: '36px', padding: '0 0.875rem', fontSize: '0.8rem' }}
+                        onClick={() => navigate(`/teacher/assignments/edit/${assignmentId}`)}
+                    >
+                        ✏️ Chỉnh sửa
                     </button>
                 </div>
-            </motion.header>
+            </header>
 
-            <main className="teacher-main-content">
-                <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                        <button
-                            onClick={() => setFilter('all')}
-                            className={`px-4 py-2 rounded-lg font-bold transition-all ${filter === 'all' ? 'bg-white dark:bg-slate-700 shadow-sm text-teacher-primary' : 'text-slate-500'}`}
-                        >
-                            Tất cả
-                        </button>
-                        <button
-                            onClick={() => setFilter('submitted')}
-                            className={`px-4 py-2 rounded-lg font-bold transition-all ${filter === 'submitted' ? 'bg-white dark:bg-slate-700 shadow-sm text-teacher-primary' : 'text-slate-500'}`}
-                        >
-                            Đợi chấm
-                        </button>
-                        <button
-                            onClick={() => setFilter('graded')}
-                            className={`px-4 py-2 rounded-lg font-bold transition-all ${filter === 'graded' ? 'bg-white dark:bg-slate-700 shadow-sm text-teacher-primary' : 'text-slate-500'}`}
-                        >
-                            Đã chấm
-                        </button>
-                    </div>
-                    <div className="text-slate-500 font-medium">
-                        Tổng cộng: <span className="text-teacher-primary font-bold">{filteredSubmissions.length}</span> bài nộp
-                    </div>
+            {/* Page */}
+            <main className="td-page">
+                {/* Header */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--t-text)', margin: '0 0 0.375rem' }}>
+                        📊 Danh sách bài nộp
+                    </h1>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--t-text-secondary)', margin: 0 }}>
+                        Bài tập: <strong>{assignment?.title || 'Đang tải...'}</strong>
+                    </p>
                 </div>
 
-                <div className="admin-table-container">
-                    {loading ? (
-                        <div className="py-20 text-center">
-                            <div className="animate-spin h-10 w-10 border-4 border-teacher-primary rounded-full border-t-transparent mx-auto"></div>
-                        </div>
-                    ) : filteredSubmissions.length === 0 ? (
-                        <div className="py-20 text-center bg-slate-50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                            <p className="text-slate-500 font-medium">Chưa có bài nộp nào phù hợp với bộ lọc.</p>
-                        </div>
-                    ) : (
+                {/* Filter Tabs + Count */}
+                <div className="td-section-head">
+                    <div className="td-cm-tabs">
+                        {(['all', 'submitted', 'graded'] as const).map(f => (
+                            <button
+                                key={f}
+                                className={`td-cm-tab ${filter === f ? 'active' : ''}`}
+                                onClick={() => setFilter(f)}
+                            >
+                                {f === 'all' ? '📋 Tất cả' : f === 'submitted' ? '📥 Đợi chấm' : '✅ Đã chấm'}
+                            </button>
+                        ))}
+                    </div>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--t-text-secondary)', fontWeight: 600 }}>
+                        {filteredSubmissions.length} / {submissions.length} bài nộp
+                    </span>
+                </div>
+
+                {/* Table */}
+                {loading ? (
+                    <div className="td-loading"><div className="td-spinner" /><span className="td-loading-text">Đang tải...</span></div>
+                ) : filteredSubmissions.length === 0 ? (
+                    <div className="td-empty" style={{ marginTop: '1rem' }}>
+                        <span className="td-empty-icon">📭</span>
+                        <h3>Không có bài nộp nào</h3>
+                        <p>Chưa có bài nộp phù hợp với bộ lọc hiện tại.</p>
+                    </div>
+                ) : (
+                    <div className="td-cm-table-card">
                         <table className="admin-table">
                             <thead>
                                 <tr>
                                     <th>Học sinh</th>
                                     <th>Trạng thái</th>
-                                    <th>Điểm số</th>
+                                    <th>Điểm</th>
                                     <th>Ngày nộp</th>
-                                    <th className="text-right">Hành động</th>
+                                    <th style={{ textAlign: 'right' }}>Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -131,47 +148,48 @@ const SubmissionList = () => {
                                             initial={{ opacity: 0, x: -10 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             exit={{ opacity: 0, scale: 0.95 }}
-                                            transition={{ delay: idx * 0.05 }}
+                                            transition={{ delay: idx * 0.04 }}
                                         >
                                             <td>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-teacher-primary text-white rounded-full flex items-center justify-center font-bold">
+                                                <div className="td-student-row">
+                                                    <div className="td-student-avatar">
                                                         {(sub.profiles?.full_name || sub.profiles?.email || '?')[0].toUpperCase()}
                                                     </div>
-                                                    <div>
-                                                        <div className="font-bold">{sub.profiles?.full_name || 'Chưa đặt tên'}</div>
-                                                        <div className="text-xs text-slate-500">{sub.profiles?.email}</div>
+                                                    <div className="td-student-info">
+                                                        <div className="td-student-name">
+                                                            {sub.profiles?.full_name || 'Chưa đặt tên'}
+                                                        </div>
+                                                        <div className="td-student-email">{sub.profiles?.email}</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
-                                                <span className={`status-badge status-${sub.status}`}>
+                                                <span className={`td-cm-chip ${sub.status === 'graded' ? '' : sub.status === 'submitted' ? 'jp' : ''}`}
+                                                    style={sub.status === 'submitted' ? { background: 'var(--t-amber-bg)', color: 'var(--t-text)', borderColor: 'rgba(245,158,11,0.2)' } :
+                                                        sub.status === 'graded' ? { background: 'var(--t-green-bg)', color: 'var(--t-green)', borderColor: 'rgba(16,185,129,0.2)' } : {}}>
                                                     {sub.status === 'submitted' ? '📥 Đợi chấm' :
                                                         sub.status === 'graded' ? '✅ Đã chấm' :
                                                             sub.status === 'returned' ? '📬 Đã trả' : sub.status}
                                                 </span>
                                             </td>
                                             <td>
-                                                <div className="font-mono font-bold text-lg">
-                                                    {sub.score !== null ? `${sub.score}/${assignment?.max_score || 100}` : '---'}
-                                                </div>
+                                                <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1.1rem' }}>
+                                                    {sub.score !== null ? `${sub.score}/${assignment?.max_score || 100}` : '—'}
+                                                </span>
                                             </td>
-                                            <td className="text-slate-500 font-medium">
+                                            <td style={{ fontSize: '0.825rem', color: 'var(--t-text-secondary)', whiteSpace: 'nowrap' }}>
                                                 {sub.submitted_at ? new Date(sub.submitted_at).toLocaleString('vi-VN', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                }) : '---'}
+                                                    day: '2-digit', month: '2-digit', year: 'numeric',
+                                                    hour: '2-digit', minute: '2-digit'
+                                                }) : '—'}
                                             </td>
-                                            <td className="text-right">
+                                            <td style={{ textAlign: 'right' }}>
                                                 <button
+                                                    className="td-btn td-btn-primary"
+                                                    style={{ height: '34px', padding: '0 0.875rem', fontSize: '0.8rem' }}
                                                     onClick={() => navigate(`/teacher/grading/${sub.id}`)}
-                                                    className="teacher-btn-card btn-primary"
-                                                    style={{ width: 'auto', padding: '0.4rem 1.2rem' }}
                                                 >
-                                                    {sub.status === 'graded' ? 'Sửa điểm' : 'Chấm bài'} &rarr;
+                                                    {sub.status === 'graded' ? 'Sửa điểm' : 'Chấm bài'} →
                                                 </button>
                                             </td>
                                         </motion.tr>
@@ -179,8 +197,8 @@ const SubmissionList = () => {
                                 </AnimatePresence>
                             </tbody>
                         </table>
-                    )}
-                </div>
+                    </div>
+                )}
             </main>
         </div>
     );

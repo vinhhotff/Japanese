@@ -114,7 +114,7 @@ const Pronunciation = ({ vocabulary }: PronunciationProps) => {
     <div className="section-container pronunciation-section">
       <div className="section-header">
         <div className="section-icon">
-          <svg style={{ width: '40px', height: '40px', color: '#8b5cf6' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg style={{ width: '40px', height: '40px', color: 'var(--jp-primary, #b91c2c)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
         </div>
@@ -171,7 +171,7 @@ const Pronunciation = ({ vocabulary }: PronunciationProps) => {
           )}
 
           {loadingAI && (
-            <div style={{ marginTop: '1.5rem', textAlign: 'center', color: 'var(--primary-color)' }}>
+            <div style={{ marginTop: '1.5rem', textAlign: 'center', color: 'var(--jp-primary, #b91c2c)' }}>
               <div className="spinner" style={{ margin: '0 auto 0.5rem' }}></div>
               <p style={{ fontSize: '0.9rem' }}>AI đang phân tích phát âm của bạn...</p>
             </div>
@@ -181,9 +181,9 @@ const Pronunciation = ({ vocabulary }: PronunciationProps) => {
             <div className="ai-feedback-container" style={{
               marginTop: '1.5rem',
               padding: '1.5rem',
-              background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+              background: 'var(--bg-secondary)',
               borderRadius: '20px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--border-color)',
               animation: 'slideUp 0.4s ease-out'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
@@ -191,33 +191,33 @@ const Pronunciation = ({ vocabulary }: PronunciationProps) => {
                   width: '50px',
                   height: '50px',
                   borderRadius: '50%',
-                  background: 'var(--primary-color)',
+                  background: 'var(--jp-primary, #b91c2c)',
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 800,
                   fontSize: '1.2rem',
-                  boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)'
+                  boxShadow: '0 4px 10px rgba(185, 28, 44, 0.3)'
                 }}>
                   {aiFeedback.score}
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '1px' }}>AI Đánh giá</div>
-                  <div style={{ fontWeight: 600 }}>{aiFeedback.score >= 80 ? 'Rất tuyệt vời!' : aiFeedback.score >= 50 ? 'Khá tốt!' : 'Cần cố gắng thêm'}</div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--jp-primary, #b91c2c)', textTransform: 'uppercase', letterSpacing: '1px' }}>AI Đánh giá</div>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{aiFeedback.score >= 80 ? 'Rất tuyệt vời!' : aiFeedback.score >= 50 ? 'Khá tốt!' : 'Cần cố gắng thêm'}</div>
                 </div>
               </div>
 
-              <p style={{ margin: '0 0 1rem 0', lineHeight: 1.5 }}>{aiFeedback.feedback}</p>
+              <p style={{ margin: '0 0 1rem 0', lineHeight: 1.5, color: 'var(--text-primary)' }}>{aiFeedback.feedback}</p>
 
               {aiFeedback.tips && (
                 <div style={{
                   padding: '1rem',
-                  background: 'white',
+                  background: 'var(--card-bg)',
                   borderRadius: '12px',
                   fontSize: '0.9rem',
                   color: 'var(--text-secondary)',
-                  borderLeft: '4px solid var(--primary-color)'
+                  borderLeft: '4px solid var(--jp-primary, #b91c2c)'
                 }}>
                   <strong>Mẹo:</strong> {aiFeedback.tips}
                 </div>

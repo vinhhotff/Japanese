@@ -105,11 +105,18 @@
 
 /* Gradient text effect */
 .gradient-text {
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  background: linear-gradient(135deg, var(--jp-primary) 0%, var(--jp-accent) 50%, var(--jp-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: gradientShift 3s ease infinite;
+  background-size: 200% 200%;
+}
+
+[data-language="chinese"] .gradient-text {
+  background: linear-gradient(135deg, var(--cn-primary) 0%, var(--cn-secondary) 50%, var(--cn-gold) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
   background-size: 200% 200%;
 }
 
@@ -127,18 +134,23 @@
   position: relative;
   border: 2px solid transparent;
   background: linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
-              linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899) border-box;
+              linear-gradient(135deg, var(--jp-primary), var(--jp-accent), var(--jp-secondary)) border-box;
   animation: neonPulse 2s ease-in-out infinite;
+}
+
+[data-language="chinese"] .neon-border {
+  background: linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
+              linear-gradient(135deg, var(--cn-primary), var(--cn-secondary), var(--cn-gold)) border-box;
 }
 
 @keyframes neonPulse {
   0%, 100% {
-    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5),
-                0 0 10px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 5px rgba(185, 28, 44, 0.4),
+                0 0 10px rgba(185, 28, 44, 0.2);
   }
   50% {
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.7),
-                0 0 20px rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 10px rgba(185, 28, 44, 0.6),
+                0 0 20px rgba(185, 28, 44, 0.4);
   }
 }
 
