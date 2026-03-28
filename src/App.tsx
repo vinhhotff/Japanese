@@ -53,6 +53,10 @@ const Forum = lazy(() => import('./components/Forum'));
 const ForumPost = lazy(() => import('./components/ForumPost'));
 const PeerMatching = lazy(() => import('./components/PeerMatching'));
 
+// Dynamic base path from env — empty string for root (Vercel), '/Japanese' for GitHub Pages
+// MUST match vite base in vite.config.ts
+const BASE_PATH = (import.meta as any).env?.VITE_BASE_PATH || '';
+
 // Scroll to top on route change
 
 function ScrollToTop() {
@@ -60,6 +64,16 @@ function ScrollToTop() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
   }, [pathname]);
+  return null;
+}
+
+// Redirect to base path if BASE_PATH is set (e.g. /Japanese/)
+function RootRedirect() {
+  useEffect(() => {
+    if (BASE_PATH && window.location.pathname === '/') {
+      window.location.href = BASE_PATH + '/';
+    }
+  }, []);
   return null;
 }
 
@@ -93,6 +107,7 @@ function App() {
           <ToastProvider>
             <Router>
               <ScrollToTop />
+              <RootRedirect />
               <Layout>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>

@@ -7,13 +7,15 @@
       // GitHub Pages SPA fallback: redirect all 404s to index.html
       // so that React Router can handle the routing.
       //
-      // The key is using the ABSOLUTE path /Japanese/index.html so the redirect
-      // ALWAYS lands on the correct index.html, regardless of which route
-      // triggered the 404 (e.g. /Japanese/register → /Japanese/index.html).
-      //
-      // If the site is at root instead, update base to '' and path to '/index.html'.
+      // Auto-detects the base path from the current URL pathname:
+      // - Vercel (root): /register → base="/" → redirect to /index.html
+      // - GitHub Pages (/Japanese/): /Japanese/register → base="/Japanese/" → redirect to /Japanese/index.html
       sessionStorage.redirect = window.location.href;
-      window.location.href = '/Japanese/index.html';
+      const pathParts = window.location.pathname.split('/');
+      // Remove the last segment (the "file" that was 404), keep the rest as base
+      pathParts.pop();
+      const base = pathParts.join('/') || '/';
+      window.location.href = base + '/index.html';
     </script>
   </head>
   <body>
