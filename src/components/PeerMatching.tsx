@@ -590,7 +590,6 @@ export default function PeerMatching() {
                         className="peer-chat-btn"
                         style={{ flex: 1 }}
                         onClick={() => {
-                          // Find the peer profile from the match
                           const peerUserId = match.from_user_id === user.id ? match.to_user_id : match.from_user_id;
                           const peerProfile: PeerProfile = {
                             id: peerUserId,
@@ -605,7 +604,7 @@ export default function PeerMatching() {
                             is_online: false,
                             created_at: '',
                             updated_at: '',
-                            profiles: other || undefined,
+                            profiles: other ? { email: other.email || '', full_name: other.full_name, avatar_url: other.avatar_url } : undefined,
                           };
                           setChatPeer(peerProfile);
                         }}
