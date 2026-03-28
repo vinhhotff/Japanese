@@ -619,7 +619,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  background: var(--t-bg);
+  background: var(--t-card);
   color: var(--t-text);
 }
 
