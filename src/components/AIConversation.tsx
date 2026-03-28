@@ -353,7 +353,7 @@ const AIConversation = () => {
   // Continue dialog
   if (showContinueDialog && savedConversation) {
     return (
-      <div className="container">
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         <div className="card" style={{ maxWidth: '500px', margin: '2rem auto', padding: '2rem', textAlign: 'center' }}>
           <h2 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>💬 Tiếp tục cuộc trò chuyện?</h2>
           <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)' }}>
@@ -370,7 +370,7 @@ const AIConversation = () => {
 
   if (!selectedLanguage) {
     return (
-      <div className="container" data-language="both">
+      <div className="container" data-language="both" style={{ position: 'relative', zIndex: 1 }}>
         <div className="header">
           <h1>
             <span className="title-highlight">Nhập vai cùng AI</span>
@@ -421,7 +421,7 @@ const AIConversation = () => {
 
   if (!selectedScenario) {
     return (
-      <div className="container" data-language={selectedLanguage}>
+      <div className="container" data-language={selectedLanguage} style={{ position: 'relative', zIndex: 1 }}>
         <div className="header">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
             <button className="btn btn-outline" onClick={() => setSelectedLanguage(null)} style={{ padding: '0.5rem 1rem' }}>
@@ -449,7 +449,7 @@ const AIConversation = () => {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '1200px' }}>
+    <div className="container" style={{ maxWidth: '1200px', position: 'relative', zIndex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <button className="btn btn-outline" onClick={resetConversation}>
           <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
