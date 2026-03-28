@@ -201,6 +201,7 @@ export const getSentMatchRequests = async (userId: string): Promise<PeerMatchReq
     .from('peer_match_requests')
     .select('*')
     .eq('from_user_id', userId)
+    .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -252,6 +253,7 @@ export const getReceivedMatchRequests = async (userId: string): Promise<PeerMatc
     .from('peer_match_requests')
     .select('*')
     .eq('to_user_id', userId)
+    .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
