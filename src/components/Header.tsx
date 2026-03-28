@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import LanguageSwitcher from './LanguageSwitcher';
 import './Header.css';
 
 const Header = () => {
@@ -275,9 +274,6 @@ const Header = () => {
 
         {/* Header Actions */}
         <div className="header-actions">
-          {/* Language Switcher */}
-          <LanguageSwitcher />
-
           {/* Theme Toggle */}
           <button type="button" className="theme-toggle" onClick={toggleTheme} title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}>
             {theme === 'dark' ? (

@@ -2444,18 +2444,25 @@
   font-size: 0.875rem;
   color: var(--admin-text-secondary, #64748b);
 }
-.format-hint pre {
-  background: var(--admin-card, #ffffff);
+.format-hint pre,
+.format-hint-pre {
+  background: var(--admin-bg, #f8fafc);
   border: 1px solid var(--admin-border, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
   color: var(--admin-text, #0f172a);
+  margin-top: 0.5rem;
 }
 [data-theme="dark"] .format-hint {
   background: rgba(255,255,255,0.03);
   border-color: var(--admin-border, #334155);
   color: var(--admin-text-secondary, #94a3b8);
 }
-[data-theme="dark"] .format-hint pre {
-  background: rgba(0,0,0,0.3);
+[data-theme="dark"] .format-hint pre,
+[data-theme="dark"] .format-hint-pre {
+  background: rgba(0,0,0,0.25);
   border-color: var(--admin-border, #334155);
   color: var(--admin-text, #f1f5f9);
 }
@@ -2469,9 +2476,38 @@
   font-size: 0.875rem;
   color: var(--admin-text, #0f172a);
 }
+.format-example pre {
+  background: var(--admin-bg, #f8fafc);
+  border: 1px solid var(--admin-border, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  color: var(--admin-text, #0f172a);
+  margin-top: 0.5rem;
+}
+.format-example .format-note {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #1e40af;
+}
 [data-theme="dark"] .format-example {
-  background: rgba(59, 130, 246, 0.08);
+  background: var(--admin-card, #1e293b);
   color: var(--admin-text, #f1f5f9);
+}
+[data-theme="dark"] .format-example pre {
+  background: rgba(0,0,0,0.25);
+  border-color: var(--admin-border, #334155);
+  color: var(--admin-text, #f1f5f9);
+}
+[data-theme="dark"] .format-example .format-note {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
 }
 
 /* ---- Keyboard Shortcut ---- */
