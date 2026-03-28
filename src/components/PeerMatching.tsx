@@ -66,8 +66,6 @@ export default function PeerMatching() {
   const [chatInput, setChatInput] = useState('');
   const [sendingMsg, setSendingMsg] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const isChatInitialized = useRef(false); // Track if chat is initialized to prevent duplicates
-  const addedMessageIds = useRef<Set<string>>(new Set()); // Track added message IDs
 
   // Setup form
   const [setupLoading, setSetupLoading] = useState(false);
@@ -83,29 +81,25 @@ export default function PeerMatching() {
     };
   }, [user]);
 
-  // Track current match ID for subscription
-  const currentMatchIdRef = useRef<string | null>(null);
+  // Chat state
+  const [currentMatchId, setCurrentMatchId] = useState<string | null>(null);
+  const chatChannelRef = useRef<any>(null);
 
+  // Load chat when peer is selected
   useEffect(() => {
-    // Only load chat when chatPeer changes to a non-null value (not on mount)
-    if (!chatPeer) return;
+    if (!chatPeer || !user) {
+      setCurrentMatchId(null);
+      setChatMessages([]);
+      return;
+    }
 
-    // Reset tracking variables when switching peers
-    isChatInitialized.current = false;
-    addedMessageIds.current = new Set();
-    setChatMessages([]);
-    currentMatchIdRef.current = null;
-
-    // First find the match, then load messages
     const loadChatForPeer = async () => {
-      if (!user) return;
       try {
-        // Find the match between current user and chat peer
         const match = await getMatchByUserIds(user.id, chatPeer.user_id);
         if (match) {
-          currentMatchIdRef.current = match.id;
-          isChatInitialized.current = true;
-          loadChat(match.id);
+          setCurrentMatchId(match.id);
+          const msgs = await getPeerChatMessages(match.id);
+          setChatMessages(msgs);
         }
       } catch (err) {
         console.error('Failed to find match for chat:', err);
@@ -114,61 +108,65 @@ export default function PeerMatching() {
 
     loadChatForPeer();
 
-    // Cleanup function
     return () => {
-      currentMatchIdRef.current = null;
-      isChatInitialized.current = false;
+      setCurrentMatchId(null);
     };
-  }, [chatPeer]);
+  }, [chatPeer, user]);
 
-  // Real-time subscription for new messages
+  // Subscribe to real-time messages
   useEffect(() => {
-    if (!chatPeer || !user) return;
+    if (!currentMatchId || !user) {
+      // Cleanup channel if no match
+      if (chatChannelRef.current) {
+        supabase.removeChannel(chatChannelRef.current);
+        chatChannelRef.current = null;
+      }
+      return;
+    }
 
-    const matchId = currentMatchIdRef.current;
-    if (!matchId) return;
+    // Remove old channel
+    if (chatChannelRef.current) {
+      supabase.removeChannel(chatChannelRef.current);
+    }
 
     const channel = supabase
-      .channel(`chat:${matchId}`)
+      .channel(`peer-chat-${currentMatchId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'peer_chat_messages',
-          filter: `match_id=eq.${matchId}`,
+          filter: `match_id=eq.${currentMatchId}`,
         },
-        async (payload) => {
+        (payload) => {
           const newMsg = payload.new as PeerChatMessage;
 
-          // Skip if this is our own message (already added via handleSendMessage)
+          // Skip our own messages (already added optimistically)
           if (newMsg.sender_id === user.id) {
             return;
           }
 
-          // Skip if already exists in messages
-          if (addedMessageIds.current.has(newMsg.id)) {
-            return;
-          }
-
-          // Skip if already in state
+          // Prevent duplicates using functional update
           setChatMessages(prev => {
             if (prev.some(m => m.id === newMsg.id)) {
               return prev;
             }
             return [...prev, newMsg];
           });
-
-          // Track added message
-          addedMessageIds.current.add(newMsg.id);
         }
       )
       .subscribe();
 
+    chatChannelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      if (chatChannelRef.current) {
+        supabase.removeChannel(chatChannelRef.current);
+        chatChannelRef.current = null;
+      }
     };
-  }, [chatPeer, user]);
+  }, [currentMatchId, user]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -267,40 +265,16 @@ export default function PeerMatching() {
     }
   };
 
-  const loadChat = async (matchId: string) => {
-    try {
-      const msgs = await getPeerChatMessages(matchId);
-
-      // Track all loaded message IDs to prevent duplicates
-      const loadedIds = new Set(msgs.map(m => m.id));
-      loadedIds.forEach(id => addedMessageIds.current.add(id));
-
-      setChatMessages(msgs);
-    } catch (err) {
-      console.error('Load chat failed:', err);
-    }
-  };
-
   const handleSendMessage = async () => {
     if (!user || !chatPeer || !chatInput.trim()) return;
 
-    // First try to find match in state
-    let match = activeMatches.find(m =>
-      m.from_user_id === user.id && m.to_user_id === chatPeer.user_id ||
-      m.to_user_id === user.id && m.from_user_id === chatPeer.user_id
-    );
-
-    // If not found in state, query database
-    if (!match) {
-      match = await getMatchByUserIds(user.id, chatPeer.user_id);
-    }
-
-    if (!match) {
+    // Use current match ID from state
+    const matchId = currentMatchId || (await getMatchByUserIds(user.id, chatPeer.user_id))?.id;
+    if (!matchId) {
       console.warn('No active match found with this peer');
       return;
     }
 
-    const currentMatchId = match.id;
     const currentContent = chatInput.trim();
 
     setSendingMsg(true);
@@ -308,23 +282,20 @@ export default function PeerMatching() {
 
     try {
       const msg = await sendPeerChatMessage({
-        match_id: currentMatchId,
+        match_id: matchId,
         sender_id: user.id,
         content: currentContent,
       });
 
-      // Track this message ID to prevent duplicates from subscription
-      addedMessageIds.current.add(msg.id);
-
-      // Only add to state if it doesn't already exist (prevent duplicates)
+      // Add optimistically with functional update to prevent duplicates
       setChatMessages(prev => {
-        const exists = prev.some(m => m.id === msg.id);
-        if (exists) return prev;
+        if (prev.some(m => m.id === msg.id)) {
+          return prev;
+        }
         return [...prev, msg];
       });
     } catch (err) {
       console.error('Send message failed:', err);
-      // Restore input on error
       setChatInput(currentContent);
     } finally {
       setSendingMsg(false);
