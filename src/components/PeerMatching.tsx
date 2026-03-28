@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../config/supabase';
 import {
   browsePeers,
   getOrCreatePeerProfile,
@@ -13,6 +14,7 @@ import {
   getPeerChatMessages,
   sendPeerChatMessage,
   setPeerOnline,
+  getMatchByUserIds,
   PeerProfile,
   PeerMatchRequest,
   PeerChatMessage,
@@ -64,6 +66,8 @@ export default function PeerMatching() {
   const [chatInput, setChatInput] = useState('');
   const [sendingMsg, setSendingMsg] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const isChatInitialized = useRef(false); // Track if chat is initialized to prevent duplicates
+  const addedMessageIds = useRef<Set<string>>(new Set()); // Track added message IDs
 
   // Setup form
   const [setupLoading, setSetupLoading] = useState(false);
@@ -79,12 +83,92 @@ export default function PeerMatching() {
     };
   }, [user]);
 
+  // Track current match ID for subscription
+  const currentMatchIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     // Only load chat when chatPeer changes to a non-null value (not on mount)
     if (!chatPeer) return;
-    setChatMessages([]); // clear old messages before loading new
-    loadChat(chatPeer.id);
+
+    // Reset tracking variables when switching peers
+    isChatInitialized.current = false;
+    addedMessageIds.current = new Set();
+    setChatMessages([]);
+    currentMatchIdRef.current = null;
+
+    // First find the match, then load messages
+    const loadChatForPeer = async () => {
+      if (!user) return;
+      try {
+        // Find the match between current user and chat peer
+        const match = await getMatchByUserIds(user.id, chatPeer.user_id);
+        if (match) {
+          currentMatchIdRef.current = match.id;
+          isChatInitialized.current = true;
+          loadChat(match.id);
+        }
+      } catch (err) {
+        console.error('Failed to find match for chat:', err);
+      }
+    };
+
+    loadChatForPeer();
+
+    // Cleanup function
+    return () => {
+      currentMatchIdRef.current = null;
+      isChatInitialized.current = false;
+    };
   }, [chatPeer]);
+
+  // Real-time subscription for new messages
+  useEffect(() => {
+    if (!chatPeer || !user) return;
+
+    const matchId = currentMatchIdRef.current;
+    if (!matchId) return;
+
+    const channel = supabase
+      .channel(`chat:${matchId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'peer_chat_messages',
+          filter: `match_id=eq.${matchId}`,
+        },
+        async (payload) => {
+          const newMsg = payload.new as PeerChatMessage;
+
+          // Skip if this is our own message (already added via handleSendMessage)
+          if (newMsg.sender_id === user.id) {
+            return;
+          }
+
+          // Skip if already exists in messages
+          if (addedMessageIds.current.has(newMsg.id)) {
+            return;
+          }
+
+          // Skip if already in state
+          setChatMessages(prev => {
+            if (prev.some(m => m.id === newMsg.id)) {
+              return prev;
+            }
+            return [...prev, newMsg];
+          });
+
+          // Track added message
+          addedMessageIds.current.add(newMsg.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [chatPeer, user]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -152,9 +236,14 @@ export default function PeerMatching() {
 
   const handleAccept = async (request: PeerMatchRequest) => {
     try {
-      const updated = await respondToMatchRequest(request.id, 'accepted');
+      await respondToMatchRequest(request.id, 'accepted');
+      // Remove from received requests
       setReceivedMatchRequests(prev => prev.filter(r => r.id !== request.id));
-      setActiveMatches(prev => [updated, ...prev]);
+      // Reload active matches from database to get full data
+      if (user) {
+        const matches = await getActiveMatches(user.id);
+        setActiveMatches(matches);
+      }
     } catch (err) {
       console.error('Accept failed:', err);
     }
@@ -181,6 +270,11 @@ export default function PeerMatching() {
   const loadChat = async (matchId: string) => {
     try {
       const msgs = await getPeerChatMessages(matchId);
+
+      // Track all loaded message IDs to prevent duplicates
+      const loadedIds = new Set(msgs.map(m => m.id));
+      loadedIds.forEach(id => addedMessageIds.current.add(id));
+
       setChatMessages(msgs);
     } catch (err) {
       console.error('Load chat failed:', err);
@@ -189,23 +283,49 @@ export default function PeerMatching() {
 
   const handleSendMessage = async () => {
     if (!user || !chatPeer || !chatInput.trim()) return;
-    const match = activeMatches.find(m =>
+
+    // First try to find match in state
+    let match = activeMatches.find(m =>
       m.from_user_id === user.id && m.to_user_id === chatPeer.user_id ||
       m.to_user_id === user.id && m.from_user_id === chatPeer.user_id
     );
-    if (!match) return;
+
+    // If not found in state, query database
+    if (!match) {
+      match = await getMatchByUserIds(user.id, chatPeer.user_id);
+    }
+
+    if (!match) {
+      console.warn('No active match found with this peer');
+      return;
+    }
+
+    const currentMatchId = match.id;
+    const currentContent = chatInput.trim();
 
     setSendingMsg(true);
+    setChatInput('');
+
     try {
       const msg = await sendPeerChatMessage({
-        match_id: match.id,
+        match_id: currentMatchId,
         sender_id: user.id,
-        content: chatInput.trim(),
+        content: currentContent,
       });
-      setChatMessages(prev => [...prev, msg]);
-      setChatInput('');
+
+      // Track this message ID to prevent duplicates from subscription
+      addedMessageIds.current.add(msg.id);
+
+      // Only add to state if it doesn't already exist (prevent duplicates)
+      setChatMessages(prev => {
+        const exists = prev.some(m => m.id === msg.id);
+        if (exists) return prev;
+        return [...prev, msg];
+      });
     } catch (err) {
       console.error('Send message failed:', err);
+      // Restore input on error
+      setChatInput(currentContent);
     } finally {
       setSendingMsg(false);
     }
@@ -415,7 +535,8 @@ export default function PeerMatching() {
                   (m.from_user_id === user.id && m.to_user_id === peer.user_id) ||
                   (m.to_user_id === user.id && m.from_user_id === peer.user_id)
                 );
-                const peerName = peer.profiles?.full_name || peer.profiles?.email?.split('@')[0] || peer.display_name || 'Ẩn danh';
+                // Priority: peer.display_name > peer.profiles?.full_name > peer.profiles?.email > 'Ẩn danh'
+                const peerName = peer.display_name || peer.profiles?.full_name || peer.profiles?.email?.split('@')[0] || 'Ẩn danh';
                 const initials = peerName.slice(0, 2).toUpperCase();
                 return (
                   <div key={peer.id} className="peer-card">
@@ -498,7 +619,8 @@ export default function PeerMatching() {
                   </h3>
                   {receivedRequests.map(req => {
                     const from = req.from_profile;
-                    const fromName = from?.full_name || from?.email?.split('@')[0] || 'Ẩn danh';
+                    // Priority: from_peer_profile.display_name > profiles.full_name > email
+                    const fromName = req.from_peer_profile?.display_name || from?.full_name || from?.email?.split('@')[0] || 'Ẩn danh';
                     return (
                       <div key={req.id} className="peer-request-card">
                         <div className="peer-avatar" style={{ width: 40, height: 40, fontSize: '1rem' }}>
@@ -530,7 +652,8 @@ export default function PeerMatching() {
                   </h3>
                   {sentRequests.map(req => {
                     const to = req.to_profile;
-                    const toName = to?.full_name || to?.email?.split('@')[0] || 'Ẩn danh';
+                    // Priority: to_peer_profile.display_name > profiles.full_name > email
+                    const toName = req.to_peer_profile?.display_name || to?.full_name || to?.email?.split('@')[0] || 'Ẩn danh';
                     return (
                       <div key={req.id} className="peer-request-card">
                         <div className="peer-avatar" style={{ width: 40, height: 40, fontSize: '1rem' }}>
@@ -573,7 +696,10 @@ export default function PeerMatching() {
             <div className="peer-grid">
               {activeMatches.map(match => {
                 const other = getOtherParty(match);
-                const otherName = other?.full_name || other?.email?.split('@')[0] || 'Ẩn danh';
+                // Get the other user's peer profile for display_name
+                const otherPeerProfile = match.from_user_id === user.id ? match.to_peer_profile : match.from_peer_profile;
+                // Priority: peer_profile.display_name > profiles.full_name > email
+                const otherName = otherPeerProfile?.display_name || other?.full_name || other?.email?.split('@')[0] || 'Ẩn danh';
                 const initials = otherName.slice(0, 2).toUpperCase();
                 return (
                   <div key={match.id} className="peer-card">
@@ -595,17 +721,18 @@ export default function PeerMatching() {
                         className="peer-card-btn chat"
                         onClick={() => {
                           const peerUserId = match.from_user_id === user.id ? match.to_user_id : match.from_user_id;
+                          // Use display_name from peer_profile
                           const peerProfile: PeerProfile = {
                             id: peerUserId,
                             user_id: peerUserId,
                             display_name: otherName,
-                            language: 'japanese',
-                            study_level: 'N5',
-                            study_goal: 'jlpt',
-                            available_days: [],
-                            available_hours: '',
-                            timezone: 'Asia/Ho_Chi_Minh',
-                            is_online: false,
+                            language: otherPeerProfile?.language || 'japanese',
+                            study_level: otherPeerProfile?.study_level || 'N5',
+                            study_goal: otherPeerProfile?.study_goal || 'jlpt',
+                            available_days: otherPeerProfile?.available_days || [],
+                            available_hours: otherPeerProfile?.available_hours || '',
+                            timezone: otherPeerProfile?.timezone || 'Asia/Ho_Chi_Minh',
+                            is_online: otherPeerProfile?.is_online || false,
                             created_at: '',
                             updated_at: '',
                             profiles: other ? { email: other.email || '', full_name: other.full_name, avatar_url: other.avatar_url } : undefined,
@@ -746,11 +873,13 @@ export default function PeerMatching() {
           <div className="peer-chat-window" onClick={e => e.stopPropagation()}>
             <div className="peer-chat-header">
               <div className="peer-chat-header-avatar">
-                {(chatPeer.profiles?.full_name || chatPeer.display_name || '?').slice(0, 2).toUpperCase()}
+                {/* Priority: display_name > profiles.full_name > '?' */}
+                {(chatPeer.display_name || chatPeer.profiles?.full_name || '?').slice(0, 2).toUpperCase()}
               </div>
               <div className="peer-chat-header-info">
                 <p className="peer-chat-header-name">
-                  {chatPeer.profiles?.full_name || chatPeer.display_name || 'Bạn học'}
+                  {/* Priority: display_name > profiles.full_name > 'Bạn học' */}
+                  {chatPeer.display_name || chatPeer.profiles?.full_name || 'Bạn học'}
                 </p>
                 <p className="peer-chat-header-lang">
                   {langLabel(chatPeer.language)} • {chatPeer.study_level}

@@ -36,7 +36,7 @@ export interface PeerMatchRequest {
   message?: string;
   created_at: string;
   updated_at: string;
-  // Joined
+  // Joined profiles (for full_name)
   from_profile?: {
     email: string;
     full_name?: string;
@@ -47,6 +47,9 @@ export interface PeerMatchRequest {
     full_name?: string;
     avatar_url?: string;
   };
+  // Joined peer_profiles (for display_name) - extended fields
+  from_peer_profile?: Partial<PeerProfile>;
+  to_peer_profile?: Partial<PeerProfile>;
 }
 
 export interface PeerChatMessage {
@@ -135,6 +138,14 @@ export const updatePeerProfile = async (userId: string, updates: Partial<Omit<Pe
 
   if (error) throw error;
 
+  // Sync display_name to profiles.full_name for consistency
+  if (updates.display_name) {
+    await supabase
+      .from('profiles')
+      .update({ full_name: updates.display_name })
+      .eq('id', userId);
+  }
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('email, full_name, avatar_url')
@@ -196,13 +207,24 @@ export const getSentMatchRequests = async (userId: string): Promise<PeerMatchReq
   if (!data || data.length === 0) return [];
 
   const otherIds = data.map(r => r.to_user_id);
+
+  // Load profiles (for full_name)
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, email, full_name, avatar_url')
     .in('id', otherIds);
 
+  // Load peer_profiles (for display_name)
+  const { data: peerProfiles } = await supabase
+    .from('peer_profiles')
+    .select('*')
+    .in('user_id', otherIds);
+
   const profileMap: Record<string, { email: string; full_name?: string; avatar_url?: string }> = {};
   profiles?.forEach(p => { profileMap[p.id] = p; });
+
+  const peerProfileMap: Record<string, PeerProfile> = {};
+  peerProfiles?.forEach(p => { peerProfileMap[p.user_id] = p as PeerProfile; });
 
   const { data: myProfile } = await supabase
     .from('profiles')
@@ -210,10 +232,18 @@ export const getSentMatchRequests = async (userId: string): Promise<PeerMatchReq
     .eq('id', userId)
     .maybeSingle();
 
+  const { data: myPeerProfile } = await supabase
+    .from('peer_profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
   return data.map(r => ({
     ...r,
-    from_profile: myProfile,
+    from_profile: { ...myProfile, ...myPeerProfile }?.profiles || myProfile,
     to_profile: profileMap[r.to_user_id],
+    from_peer_profile: myPeerProfile,
+    to_peer_profile: peerProfileMap[r.to_user_id],
   }));
 };
 
@@ -228,13 +258,24 @@ export const getReceivedMatchRequests = async (userId: string): Promise<PeerMatc
   if (!data || data.length === 0) return [];
 
   const otherIds = data.map(r => r.from_user_id);
+
+  // Load profiles (for full_name)
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, email, full_name, avatar_url')
     .in('id', otherIds);
 
+  // Load peer_profiles (for display_name)
+  const { data: peerProfiles } = await supabase
+    .from('peer_profiles')
+    .select('*')
+    .in('user_id', otherIds);
+
   const profileMap: Record<string, { email: string; full_name?: string; avatar_url?: string }> = {};
   profiles?.forEach(p => { profileMap[p.id] = p; });
+
+  const peerProfileMap: Record<string, PeerProfile> = {};
+  peerProfiles?.forEach(p => { peerProfileMap[p.user_id] = p as PeerProfile; });
 
   const { data: myProfile } = await supabase
     .from('profiles')
@@ -242,10 +283,18 @@ export const getReceivedMatchRequests = async (userId: string): Promise<PeerMatc
     .eq('id', userId)
     .maybeSingle();
 
+  const { data: myPeerProfile } = await supabase
+    .from('peer_profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
   return data.map(r => ({
     ...r,
     from_profile: profileMap[r.from_user_id],
-    to_profile: myProfile,
+    to_profile: { ...myProfile, ...myPeerProfile }?.profiles || myProfile,
+    from_peer_profile: peerProfileMap[r.from_user_id],
+    to_peer_profile: myPeerProfile,
   }));
 };
 
@@ -262,6 +311,28 @@ export const sendMatchRequest = async (request: {
     .maybeSingle();
 
   if (error) throw error;
+
+  // Load profiles for the returned request
+  if (data) {
+    const { data: myProfile } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .eq('id', request.from_user_id)
+      .maybeSingle();
+
+    const { data: otherProfile } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .eq('id', request.to_user_id)
+      .maybeSingle();
+
+    return {
+      ...data,
+      from_profile: myProfile || undefined,
+      to_profile: otherProfile || undefined,
+    };
+  }
+
   return data;
 };
 
@@ -278,6 +349,30 @@ export const respondToMatchRequest = async (
     .maybeSingle();
 
   if (error) throw error;
+
+  // Load profiles for the match
+  if (data) {
+    const otherId = data.from_user_id === data.to_user_id ? data.to_user_id : data.from_user_id;
+    const { data: otherProfile } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .eq('id', otherId)
+      .maybeSingle();
+
+    const { data: myProfile } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .eq('id', data.from_user_id)
+      .maybeSingle();
+
+    // Assign profiles based on who responded - for accepted matches
+    return {
+      ...data,
+      from_profile: myProfile || undefined,
+      to_profile: otherProfile || undefined,
+    };
+  }
+
   return data;
 };
 
@@ -305,13 +400,24 @@ export const getActiveMatches = async (userId: string): Promise<PeerMatchRequest
   if (!data || data.length === 0) return [];
 
   const otherIds = data.map(r => r.from_user_id === userId ? r.to_user_id : r.from_user_id);
+
+  // Load profiles (for full_name)
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, email, full_name, avatar_url')
     .in('id', otherIds);
 
+  // Load peer_profiles (for display_name)
+  const { data: peerProfiles } = await supabase
+    .from('peer_profiles')
+    .select('*')
+    .in('user_id', otherIds);
+
   const profileMap: Record<string, { email: string; full_name?: string; avatar_url?: string }> = {};
   profiles?.forEach(p => { profileMap[p.id] = p; });
+
+  const peerProfileMap: Record<string, PeerProfile> = {};
+  peerProfiles?.forEach(p => { peerProfileMap[p.user_id] = p as PeerProfile; });
 
   const { data: myProfile } = await supabase
     .from('profiles')
@@ -319,11 +425,26 @@ export const getActiveMatches = async (userId: string): Promise<PeerMatchRequest
     .eq('id', userId)
     .maybeSingle();
 
-  return data.map(r => ({
-    ...r,
-    from_profile: myProfile,
-    to_profile: profileMap[r.from_user_id === userId ? r.to_user_id : r.from_user_id],
-  }));
+  const { data: myPeerProfile } = await supabase
+    .from('peer_profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  return data.map(r => {
+    const otherId = r.from_user_id === userId ? r.to_user_id : r.from_user_id;
+    const otherPeerProfile = peerProfileMap[otherId];
+    const otherProfile = profileMap[otherId];
+
+    return {
+      ...r,
+      from_profile: r.from_user_id === userId ? { ...myProfile, ...myPeerProfile }?.profiles || myProfile : otherProfile,
+      to_profile: r.to_user_id === userId ? { ...myProfile, ...myPeerProfile }?.profiles || myProfile : otherProfile,
+      // Also include the peer profile info for display_name
+      from_peer_profile: r.from_user_id === userId ? myPeerProfile : otherPeerProfile,
+      to_peer_profile: r.to_user_id === userId ? myPeerProfile : otherPeerProfile,
+    } as PeerMatchRequest & { from_peer_profile?: PeerProfile; to_peer_profile?: PeerProfile };
+  });
 };
 
 // === PEER CHAT ===
@@ -386,4 +507,49 @@ export const setPeerOnline = async (userId: string, isOnline: boolean): Promise<
     .eq('user_id', userId);
 
   if (error) throw error;
+};
+
+// === GET MATCH BY USER IDs ===
+
+export const getMatchByUserIds = async (userId1: string, userId2: string): Promise<PeerMatchRequest | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('peer_match_requests')
+      .select('*')
+      .eq('status', 'accepted')
+      .or(`and(from_user_id.eq.${userId1},to_user_id.eq.${userId2}),and(from_user_id.eq.${userId2},to_user_id.eq.${userId1})`)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('getMatchByUserIds error:', error);
+      throw error;
+    }
+
+    if (!data) return null;
+
+    // Load profiles for the match
+    const otherId = data.from_user_id === userId1 ? data.to_user_id : data.from_user_id;
+
+    const { data: otherProfile } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .eq('id', otherId)
+      .maybeSingle();
+
+    const { data: myProfile } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .eq('id', userId1)
+      .maybeSingle();
+
+    return {
+      ...data,
+      from_profile: data.from_user_id === userId1 ? myProfile || undefined : otherProfile || undefined,
+      to_profile: data.to_user_id === userId1 ? myProfile || undefined : otherProfile || undefined,
+    };
+  } catch (err) {
+    console.error('getMatchByUserIds failed:', err);
+    return null;
+  }
 };

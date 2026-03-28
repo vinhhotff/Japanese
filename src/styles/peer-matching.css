@@ -186,22 +186,31 @@
   font-weight: 700;
   cursor: pointer;
   border: none;
-  transition: opacity 0.15s, transform 0.1s;
+  transition: all 0.2s;
 }
 .peer-card-btn:active { transform: scale(0.96); }
 
 .peer-card-btn.connect {
-  background: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
   color: white;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
 }
-.peer-card-btn.connect:hover { opacity: 0.85; }
+.peer-card-btn.connect:hover {
+  opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  transform: translateY(-1px);
+}
 
 .peer-card-btn.chat {
-  background: #f3e8ff;
-  color: #6d28d9;
-  border: 1.5px solid #c4b5fd;
+  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+  color: white;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
 }
-.peer-card-btn.chat:hover { background: #ede9fe; }
+.peer-card-btn.chat:hover {
+  opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  transform: translateY(-1px);
+}
 
 .peer-card-btn.sent {
   background: var(--bg-tertiary);
@@ -286,17 +295,22 @@
 }
 .peer-browse-btn {
   padding: 0.5rem 1.1rem;
-  background: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
   color: white;
   border: none;
   border-radius: 10px;
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
 }
-.peer-browse-btn:hover { opacity: 0.85; }
+.peer-browse-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
 
 /* ===== REQUEST CARDS ===== */
 .peer-request-card {
@@ -355,16 +369,21 @@
 }
 .peer-accept-btn {
   padding: 0.45rem 0.9rem;
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981, #34d399);
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 700;
   font-size: 0.825rem;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
 }
-.peer-accept-btn:hover { opacity: 0.85; }
+.peer-accept-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+}
 .peer-decline-btn {
   padding: 0.45rem 0.7rem;
   background: var(--bg-tertiary);
@@ -373,9 +392,13 @@
   border-radius: 8px;
   font-size: 0.825rem;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.2s;
 }
-.peer-decline-btn:hover { background: #fee2e2; color: #dc2626; }
+.peer-decline-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
 .peer-cancel-btn {
   padding: 0.45rem 0.9rem;
   background: var(--bg-tertiary);
@@ -384,8 +407,13 @@
   border-radius: 8px;
   font-size: 0.825rem;
   cursor: pointer;
+  transition: all 0.2s;
 }
-.peer-cancel-btn:hover { background: #fee2e2; color: #dc2626; }
+.peer-cancel-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
 
 /* ===== CHAT ===== */
 .peer-chat-overlay {
@@ -630,16 +658,21 @@
 }
 .peer-save-btn {
   padding: 0.6rem 1.5rem;
-  background: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
   color: white;
   border: none;
   border-radius: 10px;
   font-weight: 700;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
 }
-.peer-save-btn:hover { opacity: 0.85; }
+.peer-save-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
 .peer-skip-btn {
   padding: 0.6rem 1.25rem;
   background: var(--bg-tertiary);
@@ -647,22 +680,32 @@
   border: 1px solid var(--border-color);
   border-radius: 10px;
   font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
 }
-.peer-skip-btn:hover { background: var(--border-color); }
+.peer-skip-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
 
 /* ===== HEADER & EMPTY ===== */
-.peer-page-header { margin-bottom: 2rem; }
+.peer-page-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
 .peer-page-title {
   font-size: 1.75rem;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0 0 0.4rem 0;
+  text-align: center;
 }
 .peer-page-subtitle {
   font-size: 0.9rem;
   color: var(--text-secondary);
   margin: 0;
+  text-align: center;
 }
 .peer-empty-state {
   text-align: center;
