@@ -193,6 +193,31 @@ const Register = () => {
                         Về trang chủ
                     </Link>
                 </div>
+
+                {/* Support Section */}
+                <div className="register-support">
+                    <p className="support-title">Cần hỗ trợ đăng ký?</p>
+                    <div className="support-contacts">
+                        <a href="https://zalo.me/0909123456" target="_blank" rel="noopener noreferrer" className="support-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                            </svg>
+                            Zalo: 0909123456
+                        </a>
+                        <a href="https://m.me/japaneselearning" target="_blank" rel="noopener noreferrer" className="support-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                                <path d="M12 2C6.477 2 2 6.477 2 12c0 1.99.587 3.853 1.592 5.445L2 22l4.555-1.592A9.954 9.954 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm3.771 13.447l-2.594-.798a1.016 1.016 0 00-.761.006l-.96.438a.994.994 0 01-.771 0l-.96-.438a1.016 1.016 0 00-.761-.006l-2.594.798C6.024 15.772 5 13.997 5 12c0-3.866 3.134-7 7-7s7 3.134 7 7c0 1.997-1.024 3.772-2.229 5.447zM10 10c-.553 0-1-.447-1-1s.447-1 1-1 1 .447 1 1-.447 1-1 1zm4 0c-.553 0-1-.447-1-1s.447-1 1-1 1 .447 1 1-.447 1-1 1z"/>
+                            </svg>
+                            Facebook Messenger
+                        </a>
+                        <a href="mailto:support@japanese-learning.com" className="support-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+                                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Email hỗ trợ
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     );

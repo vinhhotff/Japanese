@@ -1766,12 +1766,63 @@
   text-align: center;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
 }
 
 .login-footer p {
   color: var(--text-secondary);
   margin-bottom: 0.75rem;
   font-size: 0.875rem;
+}
+
+/* Register Support Section */
+.register-support {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--bg-color), var(--card-bg));
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.support-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem 0;
+  text-align: center;
+}
+
+.support-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.support-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-color);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color);
+}
+
+.support-item:hover {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border-color: var(--primary-color);
+  transform: translateX(4px);
+}
+
+.support-item svg {
+  color: var(--primary-color);
+  flex-shrink: 0;
 }
 
 .back-link {
