@@ -259,6 +259,7 @@ export const createKanji = async (kanji: {
   onyomi: string[];
   kunyomi: string[];
   stroke_count?: number;
+  language?: 'japanese' | 'chinese';
   examples?: Array<{ word: string; reading: string; meaning: string }>;
 }) => {
   const { examples, ...kanjiData } = kanji;
@@ -340,6 +341,7 @@ export const createGrammar = async (grammar: {
   pattern: string;
   meaning: string;
   explanation?: string;
+  language?: 'japanese' | 'chinese';
   examples?: Array<{ japanese: string; romaji?: string; translation: string }>;
 }) => {
   const { examples, ...grammarData } = grammar;

@@ -92,6 +92,7 @@ const KanjiWritingPractice = ({ language }: KanjiWritingPracticeProps) => {
       const { data: allKanji, error: queryError } = await supabase
         .from('kanji')
         .select('*')
+        .eq('language', language)
         .in('lesson_id', lessonIds)
         .order('created_at', { ascending: true });
 

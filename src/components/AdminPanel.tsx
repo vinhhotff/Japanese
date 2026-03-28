@@ -226,16 +226,16 @@ const AdminPanel = () => {
         formData.lesson_id = selectedLesson.id;
         if (activeTab === 'vocabulary') {
           if (Array.isArray(formData)) {
-            for (const item of formData) await createVocabulary({ ...item, lesson_id: selectedLesson.id });
-          } else await createVocabulary(formData);
+            for (const item of formData) await createVocabulary({ ...item, lesson_id: selectedLesson.id, language: selectedLesson.language });
+          } else await createVocabulary({ ...formData, language: selectedLesson.language });
         } else if (activeTab === 'kanji') {
           if (Array.isArray(formData)) {
-            for (const item of formData) await createKanji({ ...item, lesson_id: selectedLesson.id });
-          } else await createKanji(formData);
+            for (const item of formData) await createKanji({ ...item, lesson_id: selectedLesson.id, language: selectedLesson.language });
+          } else await createKanji({ ...formData, language: selectedLesson.language });
         } else if (activeTab === 'grammar') {
           if (Array.isArray(formData)) {
-            for (const item of formData) await createGrammar({ ...item, lesson_id: selectedLesson.id });
-          } else await createGrammar(formData);
+            for (const item of formData) await createGrammar({ ...item, lesson_id: selectedLesson.id, language: selectedLesson.language });
+          } else await createGrammar({ ...formData, language: selectedLesson.language });
         } else if (activeTab === 'listening') await createListeningExercise(formData);
         else if (activeTab === 'games') await createSentenceGame(formData);
         else if (activeTab === 'roleplay') await createRoleplayScenario(formData);
