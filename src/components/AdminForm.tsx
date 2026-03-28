@@ -355,7 +355,7 @@ Ví dụ:
 Ví dụ:
 〜たいです=Muốn làm gì đó=Diễn tả mong muốn của người nói
 〜てください=Hãy làm gì đó=Dùng khi nhờ vả lịch sự`}</pre>
-                <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: var(--admin-amber-bg), borderRadius: '6px', fontSize: '0.875rem' }}>
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'var(--admin-amber-bg)', borderRadius: '6px', fontSize: '0.875rem' }}>
                   <strong>💡 Lưu ý:</strong> Nếu dùng JSON, bạn có thể copy từng field (pattern, meaning, explanation) và thêm examples vào form. Nếu dùng format text, chỉ có thể import pattern và meaning, cần thêm examples sau.
                 </div>
               </div>
@@ -400,7 +400,7 @@ Ví dụ:
 私 は 学生 です=Tôi là học sinh
 これは 本 です=Đây là quyển sách`}</pre>
               Gợi ý 2 (JSON chi tiết cho từng câu):
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: var(--admin-bg), padding: '0.75rem', borderRadius: '8px' }}>{`{
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--admin-bg)', padding: '0.75rem', borderRadius: '8px' }}>{`{
   "sentence": "私 は 学生 です",
   "translation": "Tôi là học sinh",
   "words": ["私", "は", "学生", "です"],
@@ -417,7 +417,7 @@ Ví dụ:
             <label>Hướng dẫn JSON cho AI (Roleplay)</label>
             <div className="format-hint" style={{ lineHeight: 1.6 }}>
               Gợi ý gửi cho AI:
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: var(--admin-bg), padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo 1 kịch bản hội thoại roleplay tiếng Nhật trình độ N5.
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--admin-bg)', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo 1 kịch bản hội thoại roleplay tiếng Nhật trình độ N5.
 - Trả về đúng JSON, không giải thích thêm.
 - Không dùng markdown, chỉ JSON thuần.
 - Giữ nguyên tên các key:
@@ -2361,7 +2361,7 @@ Hoặc với đọc âm:
                 <label>Ví dụ</label>
                 <div style={{ marginTop: '0.5rem' }}>
                   {(formData.examples || []).map((ex: any, idx: number) => (
-                    <div key={idx} style={{ marginBottom: '1rem', padding: '1rem', background: var(--admin-bg), borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
+                    <div key={idx} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--admin-bg)', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                         <strong>Ví dụ {idx + 1}</strong>
                         <button
