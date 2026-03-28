@@ -107,10 +107,8 @@ async function callDeepSeek(messages: Message[]): Promise<AIResponse> {
 
     if (!content) {
       return {
-        content: messages.some(m => m.content.includes('[ZH]'))
-          ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
-          : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
-        error: undefined,
+        content: '',
+        error: 'DeepSeek trả về nội dung trống',
       };
     }
 
@@ -180,10 +178,8 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
       console.error('Hugging Face API Error:', errorText);
 
       return {
-        content: messages.some(m => m.content.includes('[ZH]'))
-          ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
-          : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
-        error: undefined,
+        content: '',
+        error: `Hugging Face API lỗi: ${response.status}`,
       };
     }
 
@@ -197,20 +193,18 @@ async function callHuggingFace(messages: Message[]): Promise<AIResponse> {
     }
 
     if (!content) {
-      const isChinese = messages.some(m => m.content.includes('[ZH]'));
-      content = isChinese
-        ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
-        : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)';
+      return {
+        content: '',
+        error: 'Hugging Face trả về nội dung trống',
+      };
     }
 
     return { content };
   } catch (error: any) {
     console.error('Hugging Face Error:', error);
     return {
-      content: messages.some(m => m.content.includes('[ZH]'))
-        ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại không?)'
-        : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại không?)',
-      error: undefined
+      content: '',
+      error: error.message || 'Không thể kết nối Hugging Face',
     };
   }
 }
@@ -282,23 +276,13 @@ async function callQwen(messages: Message[]): Promise<AIResponse> {
     const content = data.output?.text || data.output?.choices?.[0]?.message?.content || '';
 
     if (!content) {
-      const isChinese = messages.some(m => m.content.includes('[ZH]'));
       const finishReason = data.output?.finish_reason;
-      let fallbackMessage = '';
-
-      if (isChinese) {
-        fallbackMessage = finishReason === 'content_filter'
-          ? '对不起，请用更简单的词语说话。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
-          : '你好！很高兴见到你。\n(Xin chào! Rất vui được gặp bạn.)';
-      } else {
-        fallbackMessage = finishReason === 'content_filter'
-          ? 'すみません、もう少し簡単な言葉で話してください。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
-          : 'こんにちは！どうぞよろしくお願いします。\n(Xin chào! Rất vui được gặp bạn.)';
-      }
-
       return {
-        content: fallbackMessage,
-        error: undefined,
+        content: '',
+        error:
+          finishReason === 'content_filter'
+            ? 'Qwen chặn nội dung (content filter). Hãy thử câu khác.'
+            : 'Qwen trả về nội dung trống',
       };
     }
 
@@ -398,23 +382,13 @@ async function callOpenRouter(messages: Message[], imageData?: string): Promise<
     const content = data.choices?.[0]?.message?.content || '';
 
     if (!content) {
-      const isChinese = messages.some(m => m.content.includes('[ZH]'));
       const finishReason = data.choices?.[0]?.finish_reason;
-      let fallbackMessage = '';
-
-      if (isChinese) {
-        fallbackMessage = finishReason === 'content_filter'
-          ? '对不起，请用更简单的词语说话。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
-          : '你好！很高兴见到你。\n(Xin chào! Rất vui được gặp bạn.)';
-      } else {
-        fallbackMessage = finishReason === 'content_filter'
-          ? 'すみません、もう少し簡単な言葉で話してください。\n(Xin lỗi, hãy nói bằng từ ngữ đơn giản hơn.)'
-          : 'こんにちは！どうぞよろしくお願いします。\n(Xin chào! Rất vui được gặp bạn.)';
-      }
-
       return {
-        content: fallbackMessage,
-        error: undefined,
+        content: '',
+        error:
+          finishReason === 'content_filter'
+            ? 'OpenRouter chặn nội dung (content filter).'
+            : 'OpenRouter trả về nội dung trống',
       };
     }
 
@@ -458,10 +432,8 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
 
       if (!content) {
         return {
-          content: messages.some(m => m.content.includes('[ZH]'))
-            ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
-            : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
-          error: undefined,
+          content: '',
+          error: 'Cloudflare Worker trả về nội dung trống',
         };
       }
 
@@ -541,10 +513,8 @@ async function callCloudflare(messages: Message[]): Promise<AIResponse> {
 
     if (!content) {
       return {
-        content: messages.some(m => m.content.includes('[ZH]'))
-          ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
-          : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)',
-        error: undefined,
+        content: '',
+        error: 'Cloudflare AI trả về nội dung trống',
       };
     }
 
@@ -571,22 +541,31 @@ async function callGemini(messages: Message[], imageData?: string): Promise<AIRe
 
   try {
     const systemMessage = messages.find(m => m.role === 'system');
-    const userMessage = messages[messages.length - 1];
+    const rest = messages.filter(m => m.role !== 'system');
 
-    const contents = [
-      {
-        role: 'user',
-        parts: [
-          ...(imageData ? [{
-            inline_data: {
-              mime_type: 'image/png',
-              data: imageData.split(',')[1] || imageData
-            }
-          }] : []),
-          { text: userMessage.content }
-        ]
+    const contents: Array<{ role: string; parts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> }> = [];
+    for (let i = 0; i < rest.length; i++) {
+      const m = rest[i];
+      const geminiRole = m.role === 'assistant' ? 'model' : 'user';
+
+      if (contents.length === 0 && geminiRole === 'model') {
+        contents.push({ role: 'user', parts: [{ text: '（会話開始）' }] });
       }
-    ];
+
+      const parts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> = [];
+      const isLastUser = i === rest.length - 1 && m.role === 'user';
+      if (imageData && isLastUser) {
+        const raw = imageData.includes(',') ? imageData.split(',')[1] : imageData;
+        parts.push({
+          inline_data: {
+            mime_type: 'image/png',
+            data: raw,
+          },
+        });
+      }
+      parts.push({ text: m.content });
+      contents.push({ role: geminiRole, parts });
+    }
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
@@ -628,18 +607,12 @@ async function callGemini(messages: Message[], imageData?: string): Promise<AIRe
 
     const data = await response.json();
 
-    // 🔍 DEBUG: Log Gemini response
-    console.log(' Gemini API Response:', JSON.stringify(data, null, 2));
-
-    // Extract content in a more robust way to handle different Gemini response shapes
     let content = '';
 
     try {
       const candidate = Array.isArray(data.candidates) && data.candidates.length > 0
         ? data.candidates[0]
         : null;
-
-      console.log('📝 Candidate:', candidate);
 
       if (candidate) {
         if (candidate.content?.parts && Array.isArray(candidate.content.parts)) {
@@ -663,30 +636,22 @@ async function callGemini(messages: Message[], imageData?: string): Promise<AIRe
       console.warn('Could not parse Gemini response content:', parseError);
     }
 
-    // Nếu vẫn không lấy được content, kiểm tra lý do và xử lý
     if (!content) {
       const blockReason =
         data.promptFeedback?.blockReason ||
         data.candidates?.[0]?.finishReason ||
         '';
 
-      // Nếu bị chặn do safety, đưa ra gợi ý cụ thể
       if (blockReason === 'SAFETY' || data.promptFeedback?.blockReason) {
         return {
-          content: messages.some(m => m.content.includes('[ZH]'))
-            ? '对不起。请再用更简单的词语说话。\n(Xin lỗi. Hãy thử nói lại bằng từ ngữ đơn giản hơn.)'
-            : '申し訳ございません。もう一度、簡単な言葉で話してください。\n(Xin lỗi. Hãy thử nói lại bằng từ ngữ đơn giản hơn.)',
-          error: undefined,
+          content: '',
+          error: 'Gemini chặn nội dung (an toàn). Hãy thử câu chữ khác.',
         };
       }
 
-      const fallbackMessage = messages.some(m => m.content.includes('[ZH]'))
-        ? '对不起，请再说一遍。\n(Xin lỗi, bạn có thể nói lại được không?)'
-        : 'すみません、もう一度お願いします。\n(Xin lỗi, bạn có thể nói lại được không?)';
-
       return {
-        content: fallbackMessage,
-        error: undefined,
+        content: '',
+        error: 'Gemini trả về nội dung trống hoặc không đọc được.',
       };
     }
 
@@ -747,45 +712,144 @@ Return JSON format ONLY:
   }
 }
 
+type AIProviderId =
+  | 'gemini'
+  | 'openrouter'
+  | 'openai'
+  | 'deepseek'
+  | 'cloudflare'
+  | 'qwen'
+  | 'huggingface';
+
+function providerHasCredentials(p: AIProviderId): boolean {
+  switch (p) {
+    case 'gemini': {
+      const k = import.meta.env.VITE_GEMINI_API_KEY;
+      return !!k && k !== 'YOUR_NEW_API_KEY_HERE';
+    }
+    case 'openrouter':
+      return !!import.meta.env.VITE_OPENROUTER_API_KEY;
+    case 'openai':
+      return !!import.meta.env.VITE_OPENAI_API_KEY;
+    case 'deepseek':
+      return !!import.meta.env.VITE_DEEPSEEK_API_KEY;
+    case 'cloudflare':
+      return !!(
+        import.meta.env.VITE_CLOUDFLARE_WORKER_URL ||
+        (import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID && import.meta.env.VITE_CLOUDFLARE_API_TOKEN)
+      );
+    case 'qwen':
+      return !!import.meta.env.VITE_QWEN_API_KEY;
+    case 'huggingface':
+      return !!import.meta.env.VITE_HUGGINGFACE_API_KEY;
+    default:
+      return false;
+  }
+}
+
+function normalizeProviderId(raw: string | undefined): AIProviderId {
+  const allowed: AIProviderId[] = [
+    'gemini',
+    'openrouter',
+    'openai',
+    'deepseek',
+    'cloudflare',
+    'qwen',
+    'huggingface',
+  ];
+  if (raw && allowed.includes(raw as AIProviderId)) return raw as AIProviderId;
+  return 'cloudflare';
+}
+
+function buildProviderChain(primary: AIProviderId): AIProviderId[] {
+  const preference: AIProviderId[] = [
+    'gemini',
+    'openrouter',
+    'openai',
+    'deepseek',
+    'cloudflare',
+    'qwen',
+    'huggingface',
+  ];
+  const withKeys = preference.filter(providerHasCredentials);
+  if (withKeys.length === 0) return [];
+
+  if (providerHasCredentials(primary)) {
+    return [primary, ...withKeys.filter((p) => p !== primary)];
+  }
+  return withKeys;
+}
+
+async function invokeProvider(
+  p: AIProviderId,
+  messages: Message[],
+  imageData?: string
+): Promise<AIResponse> {
+  switch (p) {
+    case 'gemini':
+      return callGemini(messages, imageData);
+    case 'openrouter':
+      return callOpenRouter(messages, imageData);
+    case 'openai':
+      return callOpenAI(messages);
+    case 'deepseek':
+      return callDeepSeek(messages);
+    case 'cloudflare':
+      return callCloudflare(messages);
+    case 'qwen':
+      return callQwen(messages);
+    case 'huggingface':
+      return callHuggingFace(messages);
+    default:
+      return { content: '', error: 'Unknown provider' };
+  }
+}
+
+/** Tin nhắn hiển thị khi không lấy được phản hồi AI thật (không dùng câu mẫu lặp lại). */
+export function buildRoleplayConnectionErrorContent(
+  language: 'japanese' | 'chinese' | undefined,
+  detail?: string
+): string {
+  const short = (detail || '').replace(/\s+/g, ' ').trim().slice(0, 280);
+  const hint = short ? short : 'Kiểm tra API key / mạng và thử lại.';
+  if (language === 'chinese') {
+    return `[ZH] （系统）暂时无法连接 AI，请稍后再试或检查设置。\n[VI] ${hint}\n[OP]\n1. 好的 (好的)\n2. 稍后再试 (Thử lại sau)\n3. 谢谢 (Cảm ơn)`;
+  }
+  return `[JP] （システム）AIに接続できません。設定とネットワークを確認して、もう一度お試しください。\n[VI] ${hint}\n[OP]\n1. はい (Vâng)\n2. また後で (Thử lại sau)\n3. ありがとうございます (Cảm ơn)`;
+}
+
 export async function getAIResponse(
   messages: Message[],
   language?: 'japanese' | 'chinese',
   provider?: 'openai' | 'gemini' | 'deepseek' | 'huggingface' | 'qwen' | 'openrouter' | 'cloudflare',
   imageData?: string
 ): Promise<AIResponse> {
-  const selectedProvider = provider || import.meta.env.VITE_AI_PROVIDER || 'cloudflare';
+  const envProvider = normalizeProviderId(import.meta.env.VITE_AI_PROVIDER);
+  const primary = provider ? normalizeProviderId(provider) : envProvider;
+  const chain = buildProviderChain(primary);
 
-  let response: AIResponse;
-
-  if (selectedProvider === 'gemini') {
-    response = await callGemini(messages, imageData);
-  } else if (selectedProvider === 'cloudflare') {
-    response = await callCloudflare(messages);
-    if (response.error) {
-      response = await callGemini(messages, imageData);
-    }
-  } else if (selectedProvider === 'openrouter') {
-    response = await callOpenRouter(messages, imageData);
-    if (response.error) {
-      response = await callGemini(messages, imageData);
-    }
-  } else if (selectedProvider === 'qwen') {
-    response = await callQwen(messages);
-    if (response.error) {
-      response = await callGemini(messages, imageData);
-    }
-  } else if (selectedProvider === 'deepseek') {
-    response = await callDeepSeek(messages);
-    if (response.error && (response.error.includes('Insufficient Balance') || response.error.includes('Balance'))) {
-      response = await callGemini(messages, imageData);
-    }
-  } else if (selectedProvider === 'huggingface') {
-    response = await callHuggingFace(messages);
-  } else {
-    response = await callOpenAI(messages);
+  if (chain.length === 0) {
+    return {
+      content: '',
+      error:
+        'Chưa cấu hình API key nào. Thêm VITE_GEMINI_API_KEY hoặc VITE_OPENROUTER_API_KEY (v.v.) vào .env.local',
+    };
   }
 
-  return response;
+  let lastError = '';
+  for (const p of chain) {
+    const r = await invokeProvider(p, messages, imageData);
+    if (!r.error && r.content?.trim()) {
+      return r;
+    }
+    lastError = r.error || 'Phản hồi trống';
+    console.warn(`[AI] Provider ${p} failed:`, lastError);
+  }
+
+  return {
+    content: '',
+    error: lastError || 'Tất cả provider AI đều không phản hồi',
+  };
 }
 
 // Helper function to create system prompt
@@ -918,47 +982,34 @@ export function formatAIResponse(content: string, language?: 'japanese' | 'chine
 
   // Check if response has proper format
   const hasMainTag = cleaned.includes(`[${tag}]`);
-  const hasVI = cleaned.includes('[VI]');
   const hasOP = cleaned.includes('[OP]');
 
-  // If completely wrong format or no format at all, return fallback
-  if (!hasMainTag && !hasVI && !hasOP) {
-    // AI didn't follow format at all - create proper response
+  // If completely wrong format, return fallback
+  if (!hasMainTag && !hasOP) {
     return isChinese
-      ? `[ZH] ${cleaned}\n[VI] (Đang cập nhật bản dịch)\n[OP]\n1. 好的 (Vâng)\n2. 谢谢 (Cảm ơn)\n3. 请继续 (Xin tiếp tục)`
-      : `[JP] ${cleaned}\n[VI] (Đang cập nhật bản dịch)\n[OP]\n1. はい (Vâng)\n2. ありがとうございます (Cảm ơn)\n3. 続けてください (Xin tiếp tục)`;
+      ? `[ZH] ${cleaned}\n[OP]\n1. 好的\n2. 谢谢\n3. 请继续`
+      : `[JP] ${cleaned}\n[OP]\n1. はい\n2. ありがとうございます\n3. 続けてください`;
   }
 
-  // Check if it's using wrong language tag
+  // Check if wrong language tag
   if (!hasMainTag) {
     const wrongTag = isChinese ? '[JP]' : '[ZH]';
     if (cleaned.includes(wrongTag)) {
-      // Wrong language detected - return fallback
       return isChinese
-        ? `[ZH] 对不起，请再说一遍。\n[VI] Xin lỗi, bạn có thể nói lại không?\n[OP]\n1. 好的 (Vâng)\n2. 没问题 (Không vấn đề gì)\n3. 请继续 (Xin hãy tiếp tục)`
-        : `[JP] すみません、もう一度お願いします。\n[VI] Xin lỗi, bạn có thể nói lại không?\n[OP]\n1. はい (Vâng)\n2. わかりました (Tôi hiểu rồi)\n3. 続けてください (Xin hãy tiếp tục)`;
+        ? `[ZH] 对不起，请再说一遍。\n[OP]\n1. 好的\n2. 没问题\n3. 请继续`
+        : `[JP] すみません、もう一度お願いします。\n[OP]\n1. はい\n2. わかりました\n3. 続けてください`;
     }
-    // Add missing main tag
     cleaned = `[${tag}] ${cleaned}`;
   }
 
-  // Add missing [VI] tag if needed - IMPORTANT: must have Vietnamese
-  if (!hasVI) {
-    // Try to insert after the main content and before [OP]
-    const opMatch = cleaned.match(/\[OP\]/);
-    if (opMatch && opMatch.index !== undefined) {
-      cleaned = cleaned.slice(0, opMatch.index) + '\n[VI] (Đang cập nhật bản dịch)\n' + cleaned.slice(opMatch.index);
-    } else {
-      // No [OP] found either, add both
-      cleaned += '\n[VI] (Đang cập nhật bản dịch)';
-    }
-  }
+  // Remove any [VI] sections the AI might still add (ignore them)
+  cleaned = cleaned.replace(/\[VI\][\s\S]*?(?=\[OP\]|\[FIX\]|$)/g, '').trim();
 
-  // Add missing [OP] section if needed
+  // Ensure [OP] section exists
   if (!hasOP) {
     const defaultOptions = isChinese
-      ? '\n[OP]\n1. 好的 (Vâng)\n2. 谢谢 (Cảm ơn)\n3. 请继续 (Xin tiếp tục)'
-      : '\n[OP]\n1. はい (Vâng)\n2. ありがとうございます (Cảm ơn)\n3. 続けてください (Xin tiếp tục)';
+      ? '\n[OP]\n1. 好的\n2. 谢谢\n3. 请继续'
+      : '\n[OP]\n1. はい\n2. ありがとうございます\n3. 続けてください';
     cleaned += defaultOptions;
   }
 
@@ -997,65 +1048,3 @@ export function createConversationSummary(
 ${keyPoints.slice(-3).join('\n')}`;
 }
 
-// Mock response for testing (when no API key is configured)
-export function getMockResponse(userInput: string, scenarioId: string, messages?: Message[]): string {
-  const responses: Record<string, string[]> = {
-    restaurant: [
-      'かしこまりました。お席にご案内いたします。\n(Vâng ạ. Tôi sẽ dẫn quý khách đến chỗ ngồi.)',
-      'お飲み物は何になさいますか？\n(Quý khách dùng đồ uống gì ạ?)',
-      'お決まりになりましたら、お呼びください。\n(Khi nào quyết định xong, xin gọi tôi ạ.)',
-    ],
-    restaurant_cn: [
-      '好的，请跟我来。\n(Vâng, xin hãy đi theo tôi.)',
-      '请问想喝点什么？\n(Cho hỏi bạn muốn uống gì?)',
-      '看好了请叫我。\n(Xem xong hãy gọi tôi nhé.)',
-    ],
-    hotel_cn: [
-      '您的房间在三楼305号。\n(Phòng của bạn ở phòng 305 tầng 3 ạ.)',
-      '早餐从七点到九点。\n(Bữa sáng từ 7 giờ đến 9 giờ ạ.)',
-      '十一点退房。\n(Trả phòng lúc 11 giờ ạ.)',
-    ],
-    shopping_cn: [
-      '这个怎么样？\n(Cái này thế nào ạ?)',
-      '试衣间在那边。\n(Phòng thử đồ ở đằng kia ạ.)',
-      '一共五千块。\n(Tổng cộng là 5000 tệ ạ.)',
-    ],
-    friend_cn: [
-      '原来是这样！很有趣呢！\n(Hóa ra là vậy! Thú vị thật đấy!)',
-      '下次一起去吧！\n(Lần sau cùng đi nhé!)',
-      '再联系哦！\n(Liên lạc lại nhé!)',
-    ],
-    shopping: [
-      'こちらはいかがでしょうか？\n(Cái này thì sao ạ?)',
-      '試着室はあちらです。\n(Phòng thử đồ ở đằng kia ạ.)',
-      'お会計は5000円になります。\n(Tổng cộng là 5000 yên ạ.)',
-    ],
-    hotel: [
-      'お部屋は3階の305号室です。\n(Phòng của quý khách là số 305 tầng 3 ạ.)',
-      '朝食は7時から9時までです。\n(Bữa sáng từ 7 giờ đến 9 giờ ạ.)',
-      'チェックアウトは11時です。\n(Check-out lúc 11 giờ ạ.)',
-    ],
-    friend: [
-      'そうなんだ！面白いね！\n(Thế à! Thú vị nhỉ!)',
-      '今度一緒に行こうよ！\n(Lần sau cùng đi nhé!)',
-      'また連絡するね！\n(Liên lạc lại sau nhé!)',
-    ],
-    interview: [
-      'あなたの強みは何ですか？\n(Điểm mạnh của bạn là gì?)',
-      'なぜ当社を選びましたか？\n(Tại sao bạn chọn công ty chúng tôi?)',
-      'ご質問はありますか？\n(Bạn có câu hỏi nào không?)',
-    ],
-    doctor: [
-      'いつからですか？\n(Từ khi nào vậy?)',
-      '熱はありますか？\n(Bạn có sốt không?)',
-      'お薬を出しておきますね。\n(Tôi sẽ kê đơn thuốc cho bạn nhé.)',
-    ],
-  };
-
-  const scenarioResponses = responses[scenarioId] || [
-    messages?.some(m => m.content.includes('[ZH]'))
-      ? '好的，我知道了。\n(Vâng, tôi hiểu rồi.)'
-      : 'はい、わかりました。\n(Vâng, tôi hiểu rồi.)',
-  ];
-  return scenarioResponses[Math.floor(Math.random() * scenarioResponses.length)];
-}

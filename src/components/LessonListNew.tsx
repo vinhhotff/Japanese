@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../config/supabase';
 import { getStudentClasses, joinClass } from '../services/classService';
-import { getLessons } from '../services/supabaseService.v2';
+import { getLessons, getCourses } from '../services/supabaseService.v2';
 import { getLessonCompletionPercentage, isLessonCompleted } from '../services/progressService';
 import type { Language } from '../services/supabaseService.v2';
 import FloatingCharacters from './FloatingCharacters';
@@ -20,6 +20,8 @@ interface LessonListNewProps {
 
 const LessonListNew = ({ language }: LessonListNewProps) => {
   const { level } = useParams<{ level: string }>();
+  const [searchParams] = useSearchParams();
+  const courseIdFromUrl = searchParams.get('courseId');
   const navigate = useNavigate();
   const { user, isAdmin, isTeacher } = useAuth();
   const [lessons, setLessons] = useState<any[]>([]);
@@ -29,6 +31,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [showTrialNotice, setShowTrialNotice] = useState(false);
   const [courseInfo, setCourseInfo] = useState<any>(null);
+  const [allCoursesAtLevel, setAllCoursesAtLevel] = useState<any[]>([]);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [enrollCode, setEnrollCode] = useState('');
@@ -39,7 +42,7 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
 
   useEffect(() => {
     checkAccessAndLoad();
-  }, [level, language, user]);
+  }, [level, language, user, courseIdFromUrl]);
 
   const checkAccessAndLoad = async () => {
     setCheckingAccess(true);
@@ -107,12 +110,37 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
       if (isSwitching) setSwitchingCourse(true);
       else setLoading(true);
 
-      // 1. Fetch Course ID first
-      const { getCourseByLevel } = await import('../services/supabaseService');
       const targetLevel = (level || '').toUpperCase();
-      const course = await getCourseByLevel(language, targetLevel);
 
+      // 1. Get all courses at this level
+      const coursesResult = await getCourses(language, 1, 100);
+      const coursesAtLevel = coursesResult.data.filter((c: any) => c.level === targetLevel);
+      setAllCoursesAtLevel(coursesAtLevel);
+
+      // 2. Determine which course to load
+      let course: any = null;
       let lessonsData: any[] = [];
+
+      if (courseIdFromUrl) {
+        // Use the specific course from URL
+        course = coursesAtLevel.find((c: any) => c.id === courseIdFromUrl);
+        if (!course) {
+          // If course not found, try to find it directly
+          const { getCourseByLevel } = await import('../services/supabaseService');
+          course = await getCourseByLevel(language, targetLevel);
+        }
+      }
+
+      if (!course && coursesAtLevel.length > 0) {
+        // Use the first course at this level
+        course = coursesAtLevel[0];
+      }
+
+      if (!course) {
+        // Fallback: try to get course by level
+        const { getCourseByLevel } = await import('../services/supabaseService');
+        course = await getCourseByLevel(language, targetLevel);
+      }
 
       if (course) {
         setCourseInfo(course);
@@ -420,10 +448,15 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
                 margin: 0,
                 color: 'white'
               }}>
-                {language === 'japanese'
+                {courseInfo?.title || (language === 'japanese'
                   ? `Khóa học tiếng Nhật ${level}`
-                  : `Khóa học tiếng Trung ${level}`}
+                  : `Khóa học tiếng Trung ${level}`)}
               </h1>
+              {courseInfo?.description && (
+                <p style={{ fontSize: '0.9rem', marginTop: '0.5rem', opacity: 0.9 }}>
+                  {courseInfo.description}
+                </p>
+              )}
             </div>
           </div>
 
@@ -480,6 +513,54 @@ const LessonListNew = ({ language }: LessonListNewProps) => {
           </div>
         </div>
       </div>
+
+      {/* Course Selector - Only show if there are multiple courses at this level */}
+      {allCoursesAtLevel.length > 1 && (
+        <div style={{
+          background: 'var(--card-bg)',
+          borderRadius: '16px',
+          padding: '1.5rem',
+          marginBottom: '2rem',
+          border: '2px solid var(--border-color)',
+          boxShadow: 'var(--shadow-md)'
+        }}>
+          <h3 style={{
+            fontSize: '1rem',
+            fontWeight: '700',
+            marginBottom: '1rem',
+            color: 'var(--text-primary)'
+          }}>
+            🔄 Chọn khóa học:
+          </h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+            {allCoursesAtLevel.map((course: any) => (
+              <button
+                key={course.id}
+                onClick={() => navigate(`/${language}/courses/${level}?courseId=${course.id}`)}
+                style={{
+                  padding: '0.75rem 1.25rem',
+                  borderRadius: '12px',
+                  border: course.id === courseInfo?.id
+                    ? '2px solid var(--primary-color)'
+                    : '2px solid var(--border-color)',
+                  background: course.id === courseInfo?.id
+                    ? 'var(--primary-color)'
+                    : 'var(--bg-secondary)',
+                  color: course.id === courseInfo?.id
+                    ? 'white'
+                    : 'var(--text-primary)',
+                  fontWeight: '600',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {course.title || `Khóa học ${course.id.slice(0, 8)}`}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Info Box */}
       <div style={{

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Vocabulary } from '../types';
 import '../styles/learning-sections-premium.css';
 
@@ -22,44 +22,44 @@ const Flashcard = ({ vocabulary, onComplete }: FlashcardProps) => {
     setShowAnswer(false);
   }, [currentIndex]);
 
-  const handleFlip = () => {
-    setIsFlipped(!isFlipped);
+  const handleFlip = useCallback(() => {
+    setIsFlipped(prev => !prev);
     if (!isFlipped) {
       setShowAnswer(true);
     }
-  };
+  }, [isFlipped]);
 
-  const handleMaster = () => {
+  const handleMaster = useCallback(() => {
     if (current) {
       setMastered(new Set([...mastered, current.id]));
       nextCard();
     }
-  };
+  }, [current, mastered]);
 
-  const handleReview = () => {
+  const handleReview = useCallback(() => {
     if (current) {
       setReview(new Set([...review, current.id]));
       nextCard();
     }
-  };
+  }, [current, review]);
 
-  const nextCard = () => {
+  const nextCard = useCallback(() => {
     if (currentIndex < vocabulary.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(prev => prev + 1);
     } else {
       if (onComplete) {
         onComplete(mastered.size, vocabulary.length);
       }
     }
-  };
+  }, [currentIndex, vocabulary.length, mastered.size, onComplete]);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setCurrentIndex(0);
     setMastered(new Set());
     setReview(new Set());
     setIsFlipped(false);
     setShowAnswer(false);
-  };
+  }, []);
 
   if (!current) {
     return (

@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
+import FloatingSupport from './FloatingSupport';
 
 interface LayoutProps {
   children: ReactNode;
@@ -30,6 +31,7 @@ const Layout = ({ children }: LayoutProps) => {
         {children}
       </main>
       <Footer />
+      <FloatingSupport />
     </div>
   );
 };

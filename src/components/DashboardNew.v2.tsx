@@ -713,7 +713,8 @@ const DashboardNew = () => {
                       }
                       return;
                     }
-                    navigate(`/${selectedLanguage}/courses/${group.level}`);
+                    // Navigate to courses list to see all courses at this level
+                    navigate(`/${selectedLanguage}/courses`);
                   }}
                 >
                   <div className="card-header">

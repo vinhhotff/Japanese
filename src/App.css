@@ -798,27 +798,54 @@
 
 .question-card {
   background: var(--card-bg);
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  border: 1px solid var(--border-color);
+  padding: 2rem;
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+  border: 1.5px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.question-card:hover {
+  border-color: var(--jp-primary, #b91c2c);
+  box-shadow: 0 8px 24px rgba(185, 28, 44, 0.1);
+}
+
+/* Question Card Body */
+.question-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Question Media Row */
+.question-media-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .question-media-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }
 
 .option-item {
   display: flex;
   align-items: center;
-  padding: 0.875rem;
+  padding: 1rem 1.25rem;
   margin: 0.5rem 0;
   background: var(--card-bg-hover);
   border: 2px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #1f2937;
-}
-
-[data-theme="dark"] .option-item {
-  color: #f9fafb;
+  transition: all 0.25s ease;
+  color: var(--text-primary);
 }
 
 .option-item:hover {
@@ -827,11 +854,16 @@
   transform: translateX(4px);
 }
 
+[data-theme="dark"] .option-item {
+  color: #f9fafb;
+}
+
 .option-item input[type="radio"] {
   margin-right: 0.75rem;
   cursor: pointer;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary-color);
 }
 
 .option-item.correct-answer {
@@ -1681,47 +1713,9 @@
   }
 }
 
-/* ===== LOGIN STYLES ===== */
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-secondary);
-  padding: 2rem;
-}
+/* ===== OLD LOGIN/REGISTER STYLES (unused — Register now uses premium design) ===== */
 
-.login-card {
-  background: var(--card-bg);
-  padding: 3rem;
-  border-radius: 20px;
-  box-shadow: var(--shadow-lg);
-  max-width: 450px;
-  width: 100%;
-  animation: scaleIn 0.5s ease;
-}
-
-.login-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.login-header h1 {
-  font-size: 1.875rem;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-  font-weight: 700;
-}
-
-.login-header p {
-  color: var(--text-secondary);
-  font-size: 0.9375rem;
-}
-
-.login-form {
-  margin-bottom: 1.5rem;
-}
-
+/* --- .form-group still used by AdminForm, PeerMatching, RoleplayAdminForm --- */
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -1762,69 +1756,125 @@
   opacity: 0.6;
 }
 
-.login-footer {
-  text-align: center;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
-  margin-top: 0.5rem;
-}
-
-.login-footer p {
-  color: var(--text-secondary);
-  margin-bottom: 0.75rem;
-  font-size: 0.875rem;
-}
-
-/* Register Support Section */
-.register-support {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, var(--bg-color), var(--card-bg));
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-}
-
-.support-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin: 0 0 0.75rem 0;
-  text-align: center;
-}
-
-.support-contacts {
+.floating-support {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 0.5rem;
+  pointer-events: none;
 }
 
-.support-item {
+.floating-support-toggle {
+  pointer-events: all;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: var(--bg-color);
-  border-radius: 8px;
-  text-decoration: none;
-  color: var(--text-primary);
+  padding: 0.7rem 1.1rem;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  border-radius: 50px;
   font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: floatBreathe 3s ease-in-out infinite;
+}
+
+.floating-support-toggle:hover {
+  transform: scale(1.06) translateY(-2px);
+  box-shadow: 0 8px 28px rgba(220, 38, 38, 0.5);
+}
+
+.floating-support-toggle.active {
+  animation: none;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   border: 1px solid var(--border-color);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 
-.support-item:hover {
-  background: var(--primary-light);
-  color: var(--primary-dark);
-  border-color: var(--primary-color);
-  transform: translateX(4px);
-}
-
-.support-item svg {
+.floating-support-toggle.active .floating-support-toggle-icon {
   color: var(--primary-color);
+}
+
+.floating-support-toggle-icon {
+  display: flex;
+  align-items: center;
+  color: white;
+}
+
+.floating-support-toggle-label {
+  font-size: 0.875rem;
+}
+
+@keyframes floatBreathe {
+  0%, 100% { box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4); }
+  50% { box-shadow: 0 4px 28px rgba(220, 38, 38, 0.6); }
+}
+
+.floating-support-bubbles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(12px) scale(0.95);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 0;
+  overflow: hidden;
+}
+
+.floating-support-bubbles.visible {
+  pointer-events: all;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  max-height: 300px;
+}
+
+.floating-support-bubble {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 50px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+  white-space: nowrap;
+}
+
+.floating-support-bubble:hover {
+  transform: scale(1.05) translateX(-4px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  color: white;
+}
+
+.floating-support-bubble-icon {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
 
+.floating-support-bubble-label {
+  font-size: 0.8rem;
+}
+
+.floating-support-bubble.zalo  { background: linear-gradient(135deg, #0068FF, #004FC4); }
+.floating-support-bubble.messenger { background: linear-gradient(135deg, #0084FF, #006ACC); }
+.floating-support-bubble.email { background: linear-gradient(135deg, #DC2626, #B91C1C); }
+
+/* ===== BACK-UP: old Register styles (kept for reference) ===== */
 .back-link {
   color: var(--primary-color);
   font-weight: 600;

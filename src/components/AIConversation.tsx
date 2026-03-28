@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { getAIResponse, createSystemPrompt, getMockResponse, formatAIResponse, createConversationSummary } from '../services/aiService';
+import { getAIResponse, createSystemPrompt, formatAIResponse, createConversationSummary, buildRoleplayConnectionErrorContent } from '../services/aiService';
 import AnimatedCharacter from './AnimatedCharacter';
 import '../styles/ai-roleplay-css.css';
 import '../App.css';
@@ -55,7 +55,7 @@ const AIConversation = () => {
       description: 'Luyện giao tiếp khi đi ăn nhà hàng',
       level: 'N5-N4',
       icon: '🍜',
-      systemPrompt: 'Bạn là nhân viên nhà hàng Nhật. QUAN TRỌNG:\n- Trả lời bằng tiếng Nhật N5-N4\n- Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý tiếng Nhật 1] (Dịch)\n2. [Gợi ý tiếng Nhật 2] (Dịch)\n3. [Gợi ý tiếng Nhật 3] (Dịch)\n\nVí dụ:\n[JP] いらっしゃいませ！何名様ですか？\n[VI] Xin chào! Quý khách đi mấy người ạ?\n[OP]\n1. ひとりです (Tôi đi một mình)\n2. 二人です (Tôi đi 2 người)\n3. 予約しています (Tôi đã đặt bàn)',
+      systemPrompt: 'Bạn là nhân viên nhà hàng Nhật. QUAN TRỌNG:\n- Trả lời bằng tiếng Nhật N5-N4\n- KHÔNG gửi bản dịch tiếng Việt\n- Format BẮT BUỘC (KHÔNG có [VI]):\n[JP] [Câu tiếng Nhật]\n[OP]\n1. [Gợi ý 1]\n2. [Gợi ý 2]\n3. [Gợi ý 3]\n\nVí dụ:\n[JP] いらっしゃいませ！何名様ですか？\n[OP]\n1. ひとりです\n2. 二人です\n3. 予約しています',
       animatedCharacter: 'waiter'
     },
     {
@@ -64,7 +64,7 @@ const AIConversation = () => {
       description: 'Hỏi giá, thử đồ, thanh toán',
       level: 'N5-N4',
       icon: '🛍️',
-      systemPrompt: 'Bạn là nhân viên cửa hàng. Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)',
+      systemPrompt: 'Bạn là nhân viên cửa hàng. QUAN TRỌNG:\n- Trả lời bằng tiếng Nhật N5-N4\n- KHÔNG gửi bản dịch tiếng Việt\n- Format BẮT BUỘC (KHÔNG có [VI]):\n[JP] [Câu tiếng Nhật]\n[OP]\n1. [Gợi ý 1]\n2. [Gợi ý 2]\n3. [Gợi ý 3]',
       animatedCharacter: 'shopkeeper'
     },
     {
@@ -73,7 +73,7 @@ const AIConversation = () => {
       description: 'Check-in, yêu cầu dịch vụ',
       level: 'N4-N3',
       icon: '🏨',
-      systemPrompt: 'Bạn là lễ tân khách sạn. Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)',
+      systemPrompt: 'Bạn là lễ tân khách sạn. QUAN TRỌNG:\n- Trả lời bằng tiếng Nhật N4-N3\n- KHÔNG gửi bản dịch tiếng Việt\n- Format BẮT BUỘC (KHÔNG có [VI]):\n[JP] [Câu tiếng Nhật]\n[OP]\n1. [Gợi ý 1]\n2. [Gợi ý 2]\n3. [Gợi ý 3]',
       animatedCharacter: 'waiter'
     },
     {
@@ -82,7 +82,7 @@ const AIConversation = () => {
       description: 'Trò chuyện thân mật với bạn',
       level: 'N5-N3',
       icon: '👥',
-      systemPrompt: 'Bạn là bạn thân người Nhật. Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)',
+      systemPrompt: 'Bạn là bạn thân người Nhật. QUAN TRỌNG:\n- Trả lời bằng tiếng Nhật N5-N3\n- KHÔNG gửi bản dịch tiếng Việt\n- Format BẮT BUỘC (KHÔNG có [VI]):\n[JP] [Câu tiếng Nhật]\n[OP]\n1. [Gợi ý 1]\n2. [Gợi ý 2]\n3. [Gợi ý 3]',
       animatedCharacter: 'friend'
     },
     {
@@ -91,7 +91,7 @@ const AIConversation = () => {
       description: 'Phỏng vấn xin việc',
       level: 'N3-N2',
       icon: '💼',
-      systemPrompt: 'Bạn là nhà tuyển dụng. Format BẮT BUỘC:\n[JP] [Câu tiếng Nhật]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)',
+      systemPrompt: 'Bạn là nhà tuyển dụng. QUAN TRỌNG:\n- Trả lời bằng tiếng Nhật N3-N2\n- KHÔNG gửi bản dịch tiếng Việt\n- Format BẮT BUỘC (KHÔNG có [VI]):\n[JP] [Câu tiếng Nhật]\n[OP]\n1. [Gợi ý 1]\n2. [Gợi ý 2]\n3. [Gợi ý 3]',
       animatedCharacter: 'shopkeeper'
     }
   ];
@@ -103,7 +103,7 @@ const AIConversation = () => {
       description: 'Gọi món và giao tiếp tại nhà hàng Trung Quốc',
       level: 'HSK1-2',
       icon: '🥟',
-      systemPrompt: 'Bạn là phục vụ bàn tại Trung Quốc. QUAN TRỌNG:\n- Trả lời bằng tiếng Trung HSK 1-2\n- Format BẮT BUỘC:\n[ZH] [Câu tiếng Trung]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý tiếng Trung 1] (Dịch)\n2. [Gợi ý tiếng Trung 2] (Dịch)\n3. [Gợi ý tiếng Trung 3] (Dịch)',
+      systemPrompt: 'Bạn là phục vụ bàn tại Trung Quốc. QUAN TRỌNG:\n- Trả lời bằng tiếng Trung HSK 1-2\n- KHÔNG gửi bản dịch tiếng Việt\n- Format BẮT BUỘC (KHÔNG có [VI]):\n[ZH] [Câu tiếng Trung]\n[OP]\n1. [Gợi ý 1]\n2. [Gợi ý 2]\n3. [Gợi ý 3]',
       animatedCharacter: 'waiter'
     },
     {
@@ -112,7 +112,7 @@ const AIConversation = () => {
       description: 'Hỏi giá và mặc cả tại chợ/cửa hàng',
       level: 'HSK2-3',
       icon: '💰',
-      systemPrompt: 'Bạn là người bán hàng Trung Quốc. Trả lời ngắn gọn. Format BẮT BUỘC:\n[ZH] [Câu tiếng Trung]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)',
+      systemPrompt: 'Bạn là người bán hàng Trung Quốc. Trả lời ngắn gọn. QUAN TRỌNG:\n- Trả lời bằng tiếng Trung HSK 2-3\n- KHÔNG gửi bản dịch tiếng Việt\n- Format BẮT BUỘC (KHÔNG có [VI]):\n[ZH] [Câu tiếng Trung]\n[OP]\n1. [Gợi ý 1]\n2. [Gợi ý 2]\n3. [Gợi ý 3]',
       animatedCharacter: 'shopkeeper'
     },
     {
@@ -121,7 +121,7 @@ const AIConversation = () => {
       description: 'Hỏi đường, đi taxi, tham quan',
       level: 'HSK2-3',
       icon: '🏮',
-      systemPrompt: 'Bạn là người dân địa phương nhiệt tình. Format BẮT BUỘC:\n[ZH] [Câu tiếng Trung]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)',
+      systemPrompt: 'Bạn là người dân địa phương nhiệt tình. QUAN TRỌNG:\n- Trả lời bằng tiếng Trung HSK 2-3\n- KHÔNG gửi bản dịch tiếng Việt\n- Format BẮT BUỘC (KHÔNG có [VI]):\n[ZH] [Câu tiếng Trung]\n[OP]\n1. [Gợi ý 1]\n2. [Gợi ý 2]\n3. [Gợi ý 3]',
       animatedCharacter: 'friend'
     },
     {
@@ -130,7 +130,7 @@ const AIConversation = () => {
       description: 'Luyện nói chuyện phiếm với bạn bè',
       level: 'HSK1-3',
       icon: '🧋',
-      systemPrompt: 'Bạn là bạn người Trung Quốc. Dùng ngôn ngữ tự nhiên. Format BẮT BUỘC:\n[ZH] [Câu tiếng Trung]\n[VI] [Dịch tiếng Việt]\n[OP]\n1. [Gợi ý 1] (Dịch)\n2. [Gợi ý 2] (Dịch)\n3. [Gợi ý 3] (Dịch)',
+      systemPrompt: 'Bạn là bạn người Trung Quốc. Dùng ngôn ngữ tự nhiên. QUAN TRỌNG:\n- Trả lời bằng tiếng Trung HSK 1-3\n- KHÔNG gửi bản dịch tiếng Việt\n- Format BẮT BUỘC (KHÔNG có [VI]):\n[ZH] [Câu tiếng Trung]\n[OP]\n1. [Gợi ý 1]\n2. [Gợi ý 2]\n3. [Gợi ý 3]',
       animatedCharacter: 'friend'
     }
   ];
@@ -219,16 +219,15 @@ const AIConversation = () => {
   const startConversation = (scenario: ConversationScenario) => {
     setSelectedScenario(scenario);
     const greetings: Record<string, string> = {
-      restaurant: '[JP] いらっしゃいませ！何名様ですか？\n[VI] Xin chào! Quý khách đi mấy người ạ?\n[OP]\n1. ひとりです (Tôi đi một mình)\n2. 二人です (Tôi đi 2 người)\n3. 予約しています (Tôi đã đặt bàn)',
-      shopping: '[JP] いらっしゃいませ！何かお探しですか？\n[VI] Xin chào! Quý khách đang tìm gì ạ?\n[OP]\n1. 見ているだけです (Tôi chỉ xem thôi)\n2. Tシャツを探しています (Tôi tìm áo phông)\n3. 試着してもいいですか (Tôi thử đồ được không)',
-      hotel: '[JP] いらっしゃいませ。チェックインでしょうか？\n[VI] Xin chào. Quý khách check-in phải không ạ?\n[OP]\n1. はい、チェックインお願いします (Vâng, cho tôi check-in)\n2. 予約しています (Tôi đã đặt phòng)\n3. 荷物を預かってもらえますか (Giữ hành lý giúp tôi được không)',
-      friend: '[JP] やあ！元気？\n[VI] Chào! Khỏe không?\n[OP]\n1. 元気だよ (Khỏe)\n2. まあまあかな (Bình thường)\n3. 忙しいよ (Bận lắm)',
-      interview: '[JP] こんにちは。自己紹介をお願いします。\n[VI] Xin chào. Hãy tự giới thiệu bản thân.\n[OP]\n1. はじめまして、〜と申します (Xin chào, tôi tên là...)\n2. よろしくお願いします (Rất mong được giúp đỡ)\n3. 経験について話します (Tôi sẽ nói về kinh nghiệm)',
-      // Chinese
-      restaurant_cn: '[ZH] 您好！请问几位？\n[VI] Xin chào! Quý khách đi mấy người ạ?\n[OP]\n1. 一个人 (Một người)\n2. 两位 (Hai người)\n3. 我有订位 (Tôi đã đặt bàn)',
-      shopping_cn: '[ZH] 您好！想买什么？\n[VI] Xin chào! Bạn muốn mua gì?\n[OP]\n1. 我先看看 (Tôi xem trước đã)\n2. 这个多少钱？ (Cái này bao nhiêu tiền?)\n3. 有大一点的吗？ (Có cái nào to hơn không?)',
-      travel_cn: '[ZH] 你好！要去哪里？\n[VI] Chào bạn! Bạn muốn đi đâu?\n[OP]\n1. 我要去故宫 (Tôi muốn đi Cố Cung)\n2. 这里怎么走？ (Chỗ này đi thế nào?)\n3. 多少钱？ (Bao nhiêu tiền?)',
-      friend_cn: '[ZH] 嗨！最近怎么样？\n[VI] Hi! Dạo này thế nào?\n[OP]\n1. 挺好的 (Rất tốt)\n2. 还可以 (Cũng bình thường)\n3. 挺忙的 (Khá là bận)'
+      restaurant: '[JP] いらっしゃいませ！何名様ですか？\n[OP]\n1. ひとりです\n2. 二人です\n3. 予約しています',
+      shopping: '[JP] いらっしゃいませ！何かお探しですか？\n[OP]\n1. 見ているだけです\n2. Tシャツを探しています\n3. 試着してもいいですか',
+      hotel: '[JP] いらっしゃいませ。チェックインでしょうか？\n[OP]\n1. はい、チェックインお願いします\n2. 予約しています\n3. 荷物を預かってもらえますか',
+      friend: '[JP] やあ！元気？\n[OP]\n1. 元気だよ\n2. まあまあかな\n3. 忙しいよ',
+      interview: '[JP] こんにちは。自己紹介をお願いします。\n[OP]\n1. はじめまして、〜と申します\n2. よろしくお願いします\n3. 経験について話します',
+      restaurant_cn: '[ZH] 您好！请问几位？\n[OP]\n1. 一个人\n2. 两位\n3. 我有订位',
+      shopping_cn: '[ZH] 您好！想买什么？\n[OP]\n1. 我先看看\n2. 这个多少钱？\n3. 有大一点的吗？',
+      travel_cn: '[ZH] 你好！要去哪里？\n[OP]\n1. 我要去故宫\n2. 这里怎么走？\n3. 多少钱？',
+      friend_cn: '[ZH] 嗨！最近怎么样？\n[OP]\n1. 挺好的\n2. 还可以\n3. 挺忙的'
     };
 
     setMessages([{
@@ -288,17 +287,19 @@ const AIConversation = () => {
 
         if (response.error) {
           console.error('AI Error:', response.error);
-          aiContent = getMockResponse(userInput, selectedScenario.id, conversationMessages);
+          aiContent = buildRoleplayConnectionErrorContent(
+            selectedLanguage || undefined,
+            response.error
+          );
         } else {
-          // Use formatAIResponse to validate and fix the response format
           aiContent = formatAIResponse(response.content, selectedLanguage || undefined);
         }
 
       } else {
-        // Fallback or Mock
-        aiContent = selectedLanguage === 'japanese'
-          ? '[JP] すみません、エラーが発生しました。\n[VI] Xin lỗi, đã có lỗi xảy ra.\n[OP]'
-          : '[ZH] 对不起，发生了错误。\n[VI] Xin lỗi, đã có lỗi xảy ra.\n[OP]';
+        aiContent = buildRoleplayConnectionErrorContent(
+          selectedLanguage || undefined,
+          'Chưa cấu hình API key (VITE_GEMINI_API_KEY hoặc provider khác) trong .env.local'
+        );
       }
 
       setMessages(prev => [...prev, {
@@ -323,17 +324,30 @@ const AIConversation = () => {
   };
 
   const parseMessageContent = (content: string) => {
-    const jpMatch = content.match(/\[(JP|ZH)\]([\s\S]*?)(?=\[VI\]|$)/);
-    const viMatch = content.match(/\[VI\]([\s\S]*?)(?=\[OP\]|\[FIX\]|$)/);
+    // [JP] or [ZH] — main content (everything before [OP])
+    const tagMatch = content.match(/\[(JP|ZH)\]([\s\S]*?)(?=\[OP\]|\[FIX\]|$)/);
     const opMatch = content.match(/\[OP\]([\s\S]*?)(?=\[FIX\]|$)/);
     const fixMatch = content.match(/\[FIX\]([\s\S]*)/);
+    const viMatch = content.match(/\[VI\]([\s\S]*?)(?=\[OP\]|\[FIX\]|$)/);
 
-    return {
-      jp: jpMatch ? jpMatch[2].trim() : content,
-      vi: viMatch ? viMatch[1].trim() : '',
-      op: opMatch ? opMatch[1].trim().split('\n').filter(l => l.trim()) : [],
-      fix: fixMatch ? fixMatch[1].trim() : ''
-    };
+    const mainText = tagMatch ? tagMatch[2].trim() : content;
+    const opLines = opMatch
+      ? opMatch[1].trim().split('\n').filter(l => l.trim())
+      : [];
+    const vi = viMatch ? viMatch[1].trim() : '';
+    const fix = fixMatch ? fixMatch[1].trim() : '';
+
+    // Extract translation from each option line: "1. ひとりです (Tôi đi một mình)"
+    const options = opLines.map(line => {
+      const cleanLine = line.replace(/^\d+\.\s*/, '').trim();
+      const transMatch = cleanLine.match(/(.+?)\s*\((.+)\)\s*$/);
+      if (transMatch) {
+        return { text: transMatch[1].trim(), vi: transMatch[2].trim() };
+      }
+      return { text: cleanLine, vi: '' };
+    });
+
+    return { mainText, options, vi, fix };
   };
 
   // Continue dialog
@@ -502,13 +516,15 @@ const AIConversation = () => {
           <div className="messages-list-css">
             {messages.map(message => {
               const isAI = message.role === 'assistant';
-              const { jp, vi, op, fix } = isAI ? parseMessageContent(message.content) : { jp: message.content, vi: '', op: [], fix: '' };
-              const isExpanded = suggestionStates[message.id];
+              const { mainText, options, vi, fix } = isAI
+                ? parseMessageContent(message.content)
+                : { mainText: message.content, options: [], vi: '', fix: '' };
+              const showHints = suggestionStates[message.id];
 
               return (
                 <div key={message.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isAI ? 'flex-start' : 'flex-end', marginBottom: '1rem' }}>
                   <div className={`message-css ${isAI ? 'ai' : 'user'}`}>
-                    <div style={{ whiteSpace: 'pre-line' }}>{jp}</div>
+                    <div style={{ whiteSpace: 'pre-line' }}>{mainText}</div>
                     {isAI && fix && (
                       <div style={{
                         marginTop: '0.75rem',
@@ -524,82 +540,73 @@ const AIConversation = () => {
                     )}
                   </div>
 
-                  {isAI && (
+                  {isAI && options.length > 0 && (
                     <div style={{ marginTop: '0.25rem', width: '100%', maxWidth: '90%' }}>
-                      {!isExpanded ? (
-                        <button
-                          onClick={() => toggleSuggestion(message.id)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--primary-color)',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.25rem',
-                            fontWeight: '600',
-                            padding: '0.25rem'
-                          }}
-                        >
-                          💡 Gợi ý & Dịch
-                        </button>
-                      ) : (
+                      {/* Nút gợi ý — luôn hiện, khi bấm thì hiện dịch + 3 đáp án */}
+                      <button
+                        onClick={() => toggleSuggestion(message.id)}
+                        style={{
+                          background: showHints ? 'var(--primary-color)' : 'none',
+                          border: '1.5px solid var(--primary-color)',
+                          color: showHints ? '#fff' : 'var(--primary-color)',
+                          cursor: 'pointer',
+                          fontSize: '0.85rem',
+                          fontWeight: '700',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        💡 {showHints ? 'Thu gọn' : 'Gợi ý & Dịch'}
+                      </button>
+
+                      {showHints && (
                         <div style={{
-                          marginTop: '0.5rem',
+                          marginTop: '0.75rem',
                           background: 'var(--bg-secondary)',
-                          borderRadius: '12px',
-                          padding: '1rem',
+                          borderRadius: '16px',
+                          padding: '1.25rem',
                           border: '1px solid var(--border-color)',
-                          animation: 'fadeIn 0.3s ease'
+                          animation: 'fadeIn 0.3s ease',
+                          width: '100%'
                         }}>
+                          {/* Bản dịch câu chính */}
                           {vi && (
                             <div style={{
-                              marginBottom: '0.75rem',
-                              paddingBottom: '0.5rem',
+                              marginBottom: '1rem',
+                              paddingBottom: '0.75rem',
                               borderBottom: '1px solid var(--border-color)',
                               color: 'var(--text-secondary)',
                               fontStyle: 'italic',
-                              fontSize: '0.9rem'
+                              fontSize: '0.95rem'
                             }}>
                               🇻🇳 {vi}
                             </div>
                           )}
-
-                          {op.length > 0 && (
-                            <div className="options-list-css" style={{ border: 'none', padding: 0 }}>
-                              <p style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>Gợi ý trả lời:</p>
-                              {op.slice(0, 3).map((opt, idx) => {
-                                const cleanOpt = opt.replace(/^\d+\.\s*/, '').split('(')[0].trim();
-                                return (
-                                  <button
-                                    key={idx}
-                                    className="option-css"
-                                    onClick={() => setInput(cleanOpt)}
-                                    style={{ padding: '0.5rem 0.75rem', fontSize: '0.9rem', marginBottom: '0.25rem' }}
-                                  >
-                                    {opt}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          <button
-                            onClick={() => toggleSuggestion(message.id)}
-                            style={{
-                              fontSize: '0.75rem',
-                              color: 'var(--text-secondary)',
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              marginTop: '0.5rem',
-                              width: '100%',
-                              textAlign: 'center'
-                            }}
-                          >
-                            Thu gọn 🔼
-                          </button>
+                          {/* 3 đáp án + dịch */}
+                          <div className="options-list-css" style={{ border: 'none', padding: 0 }}>
+                            {options.slice(0, 3).map((opt, idx) => (
+                              <button
+                                key={idx}
+                                className="option-css"
+                                onClick={() => {
+                                  setInput(opt.text);
+                                  toggleSuggestion(message.id);
+                                }}
+                                style={{ padding: '0.6rem 0.85rem', fontSize: '0.95rem', marginBottom: '0.4rem', textAlign: 'left', lineHeight: '1.4' }}
+                              >
+                                <div>{opt.text}</div>
+                                {opt.vi && (
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.15rem', fontStyle: 'italic' }}>
+                                    → {opt.vi}
+                                  </div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>

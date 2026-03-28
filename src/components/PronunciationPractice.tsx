@@ -10,6 +10,14 @@ interface PronunciationPracticeProps {
 const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
+  const [shuffledVocab, setShuffledVocab] = useState<Vocabulary[]>(vocabulary);
+
+  const shuffleVocab = () => {
+    const shuffled = [...vocabulary].sort(() => Math.random() - 0.5);
+    setShuffledVocab(shuffled);
+    setCurrentIndex(0);
+    resetState();
+  };
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [transcript, setTranscript] = useState('');
   const [score, setScore] = useState<number | null>(null);
@@ -17,7 +25,7 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recognitionRef = useRef<any>(null);
 
-  const current = vocabulary[currentIndex];
+  const current = shuffledVocab[currentIndex];
 
   useEffect(() => {
     // Initialize Speech Recognition
@@ -164,7 +172,7 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
   };
 
   const nextWord = () => {
-    if (currentIndex < vocabulary.length - 1) {
+    if (currentIndex < shuffledVocab.length - 1) {
       setCurrentIndex(currentIndex + 1);
       resetState();
     }
@@ -198,8 +206,18 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
     <div className="pronunciation-container">
       <div className="pronunciation-header">
         <h3>Luyện phát âm</h3>
-        <div className="progress-indicator">
-          {currentIndex + 1} / {vocabulary.length}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div className="progress-indicator">
+            {currentIndex + 1} / {shuffledVocab.length}
+          </div>
+          <button
+            className="btn btn-outline"
+            onClick={shuffleVocab}
+            title="Xáo trộn ngẫu nhiên"
+            style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+          >
+            🔀 Xáo trộn
+          </button>
         </div>
       </div>
 
@@ -290,7 +308,7 @@ const PronunciationPractice = ({ vocabulary }: PronunciationPracticeProps) => {
         <button 
           className="btn btn-outline" 
           onClick={nextWord}
-          disabled={currentIndex === vocabulary.length - 1}
+          disabled={currentIndex === shuffledVocab.length - 1}
         >
           Sau
           <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

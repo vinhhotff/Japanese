@@ -590,7 +590,7 @@ const AssignmentForm: React.FC = () => {
                                         className="question-card"
                                     >
                                         <div className="question-top-bar">
-                                            <div className="flex items-center gap-3">
+                                            <div className="question-type-row">
                                                 <button
                                                     type="button"
                                                     className={`type-btn ${q.question_type === 'multiple_choice' ? 'active' : ''}`}

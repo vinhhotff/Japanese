@@ -38,6 +38,19 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
 
   const [activeTab, setActiveTab] = useState<'exercises' | 'vocabulary'>('exercises');
 
+  const [shuffledSpeaking, setShuffledSpeaking] = useState<SpeakingExercise[]>(speaking);
+  const [shuffledVocab, setShuffledVocab] = useState<Vocabulary[]>(vocabulary);
+
+  const shuffleSpeaking = () => {
+    setShuffledSpeaking([...speaking].sort(() => Math.random() - 0.5));
+    setRecordingStates({});
+  };
+
+  const shuffleVocab = () => {
+    setShuffledVocab([...vocabulary].sort(() => Math.random() - 0.5));
+    setVocabRecordingStates({});
+  };
+
   const stopRecordingRefs = useRef<Record<string, () => void>>({});
 
   const handleStartRecording = (exerciseId: string, expectedText?: string) => {
@@ -334,15 +347,15 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
           onClick={() => setActiveTab('exercises')}
         >
           📝 Bài tập nói
-          {speaking.length > 0 && <span className="tab-badge">{speaking.length}</span>}
+          {shuffledSpeaking.length > 0 && <span className="tab-badge">{shuffledSpeaking.length}</span>}
         </button>
-        {vocabulary.length > 0 && (
+        {shuffledVocab.length > 0 && (
           <button
             className={`speaking-tab ${activeTab === 'vocabulary' ? 'active' : ''}`}
             onClick={() => setActiveTab('vocabulary')}
           >
             📖 Luyện từ vựng
-            <span className="tab-badge">{vocabulary.length}</span>
+            <span className="tab-badge">{shuffledVocab.length}</span>
           </button>
         )}
       </div>
@@ -350,8 +363,19 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
       <div className="section-content">
         {activeTab === 'exercises' && (
           <>
-            {speaking.length > 0 ? (
-              speaking.map((exercise) => {
+            {shuffledSpeaking.length > 0 ? (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                  <button
+                    className="btn btn-outline"
+                    onClick={shuffleSpeaking}
+                    style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                    title="Xáo trộn bài tập nói"
+                  >
+                    🔀 Xáo trộn bài tập
+                  </button>
+                </div>
+                {shuffledSpeaking.map((exercise) => {
                 const currentState = state(exercise.id);
                 return (
                   <div key={exercise.id} className="speaking-card">
@@ -504,7 +528,8 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
                     )}
                   </div>
                 );
-              })
+              })}
+              </>
             ) : (
               <div className="empty-state">
                 <p>Bài này chưa có bài tập nói</p>
@@ -513,14 +538,24 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
           </>
         )}
 
-        {activeTab === 'vocabulary' && vocabulary.length > 0 && (
+        {activeTab === 'vocabulary' && shuffledVocab.length > 0 && (
           <div className="vocab-speaking-list">
-            <div className="vocab-speaking-header">
-              <h3>Luyện phát âm từ vựng</h3>
-              <p>Nghe và lặp lại các từ vựng trong bài học</p>
+            <div className="vocab-speaking-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3>Luyện phát âm từ vựng</h3>
+                <p>Nghe và lặp lại các từ vựng trong bài học</p>
+              </div>
+              <button
+                className="btn btn-outline"
+                onClick={shuffleVocab}
+                style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                title="Xáo trộn từ vựng"
+              >
+                🔀 Xáo trộn
+              </button>
             </div>
             <div className="vocab-speaking-grid">
-              {vocabulary.map((vocab) => {
+              {shuffledVocab.map((vocab) => {
                 const currentVocabState = vocabState(vocab.id);
                 const displayText = vocab.kanji || vocab.word;
                 const expectedText = vocab.hiragana || vocab.word;
@@ -634,7 +669,7 @@ const SpeakingSection = ({ speaking, vocabulary = [] }: SpeakingSectionProps) =>
           </div>
         )}
 
-        {activeTab === 'vocabulary' && vocabulary.length === 0 && (
+        {activeTab === 'vocabulary' && shuffledVocab.length === 0 && (
           <div className="empty-state">
             <p>Bài này chưa có từ vựng để luyện nói</p>
           </div>

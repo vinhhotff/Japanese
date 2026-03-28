@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { Suspense, lazy, useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { ToastProvider } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import DashboardNew from './components/DashboardNew.v2';
@@ -104,13 +103,12 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <ToastProvider>
-            <Router>
-              <ScrollToTop />
-              <RootRedirect />
-              <Layout>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
+          <Router>
+            <ScrollToTop />
+            <RootRedirect />
+            <Layout>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
                     {/* Home */}
                     <Route path="/" element={<DashboardNew />} />
 
@@ -319,11 +317,10 @@ function App() {
                         <PeerMatching />
                       </ProtectedRoute>
                     } />
-                  </Routes>
-                </Suspense>
-              </Layout>
-            </Router>
-          </ToastProvider>
+                </Routes>
+              </Suspense>
+            </Layout>
+          </Router>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
