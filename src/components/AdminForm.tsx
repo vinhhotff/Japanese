@@ -235,7 +235,7 @@ const AdminForm = ({ type, item, courses, lessons, currentLanguage, currentCours
             {showVocabJSON && (
               <div className="format-hint" style={{ lineHeight: 1.6 }}>
                 Gợi ý có thể gửi cho AI:
-                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy tạo một danh sách từ vựng tiếng Nhật trình độ N5.
+                <pre className="format-hint-pre">{`Hãy tạo một danh sách từ vựng tiếng Nhật trình độ N5.
 - Trả về dạng text, mỗi dòng một từ.
 - Không giải thích thêm.
 - Format mỗi dòng:
@@ -268,7 +268,7 @@ Ví dụ:
             {showKanjiJSON && (
               <div className="format-hint" style={{ lineHeight: 1.6 }}>
                 Gợi ý:
-                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy liệt kê một số kanji trình độ N5 liên quan tới chủ đề tôi đưa.
+                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--admin-bg)', padding: '0.75rem', borderRadius: '8px', color: 'var(--admin-text)' }}>{`Hãy liệt kê một số kanji trình độ N5 liên quan tới chủ đề tôi đưa.
 - Trả về dạng text, mỗi dòng một kanji.
 - Không giải thích thêm.
 - Format mỗi dòng:
@@ -302,7 +302,7 @@ Ví dụ:
             {showGrammarJSON && (
               <div className="format-hint" style={{ lineHeight: 1.6 }}>
                 <strong>Gợi ý 1 (JSON đầy đủ - khuyến nghị):</strong>
-                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy tạo các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
+                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--admin-bg)', padding: '0.75rem', borderRadius: '8px', color: 'var(--admin-text)' }}>{`Hãy tạo các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
 - Trả về JSON array, không giải thích thêm.
 - Không dùng markdown, chỉ JSON thuần.
 - Giữ nguyên tên các key:
@@ -344,7 +344,7 @@ Ví dụ:
   }
 ]`}</pre>
                 <strong style={{ marginTop: '1rem', display: 'block' }}>Gợi ý 2 (Format text đơn giản - để import hàng loạt):</strong>
-                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy liệt kê các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
+                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--admin-bg)', padding: '0.75rem', borderRadius: '8px', color: 'var(--admin-text)' }}>{`Hãy liệt kê các mẫu ngữ pháp tiếng Nhật trình độ N5 cho chủ đề tôi đưa.
 - Trả về dạng text, mỗi dòng một mẫu.
 - Không giải thích thêm.
 - Format mỗi dòng:
@@ -355,7 +355,7 @@ Ví dụ:
 Ví dụ:
 〜たいです=Muốn làm gì đó=Diễn tả mong muốn của người nói
 〜てください=Hãy làm gì đó=Dùng khi nhờ vả lịch sự`}</pre>
-                <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fef3c7', borderRadius: '6px', fontSize: '0.875rem' }}>
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'var(--admin-amber-bg)', borderRadius: '6px', fontSize: '0.875rem' }}>
                   <strong>💡 Lưu ý:</strong> Nếu dùng JSON, bạn có thể copy từng field (pattern, meaning, explanation) và thêm examples vào form. Nếu dùng format text, chỉ có thể import pattern và meaning, cần thêm examples sau.
                 </div>
               </div>
@@ -368,7 +368,7 @@ Ví dụ:
             <label>Hướng dẫn JSON cho AI (Bài nghe + câu hỏi)</label>
             <div className="format-hint" style={{ lineHeight: 1.6 }}>
               Gợi ý:
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy tạo một bài nghe tiếng Nhật trình độ N5.
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--admin-bg)', padding: '0.75rem', borderRadius: '8px', color: 'var(--admin-text)' }}>{`Hãy tạo một bài nghe tiếng Nhật trình độ N5.
 - Trả về JSON, không giải thích thêm.
 - Không cần audio_url (tôi sẽ upload sau), chỉ cần transcript và câu hỏi.
 - Cấu trúc JSON:
@@ -393,14 +393,14 @@ Ví dụ:
             <label>Hướng dẫn JSON/format cho AI (Game sắp xếp câu)</label>
             <div className="format-hint" style={{ lineHeight: 1.6 }}>
               Gợi ý 1 (dạng text để import hàng loạt):
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-primary)' }}>{`Hãy tạo các câu ví dụ tiếng Nhật trình độ N5, đã được tách sẵn từng từ bằng khoảng trắng.
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--admin-bg)', padding: '0.75rem', borderRadius: '8px', color: 'var(--admin-text)' }}>{`Hãy tạo các câu ví dụ tiếng Nhật trình độ N5, đã được tách sẵn từng từ bằng khoảng trắng.
 - Trả về dạng text, mỗi dòng:
   câu_tiếng_Nhật_đã_tách=nghĩa_tiếng_Việt
 Ví dụ:
 私 は 学生 です=Tôi là học sinh
 これは 本 です=Đây là quyển sách`}</pre>
               Gợi ý 2 (JSON chi tiết cho từng câu):
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`{
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--admin-bg)', padding: '0.75rem', borderRadius: '8px' }}>{`{
   "sentence": "私 は 学生 です",
   "translation": "Tôi là học sinh",
   "words": ["私", "は", "学生", "です"],
@@ -417,7 +417,7 @@ Ví dụ:
             <label>Hướng dẫn JSON cho AI (Roleplay)</label>
             <div className="format-hint" style={{ lineHeight: 1.6 }}>
               Gợi ý gửi cho AI:
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo 1 kịch bản hội thoại roleplay tiếng Nhật trình độ N5.
+              <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem', background: 'var(--admin-bg)', padding: '0.75rem', borderRadius: '8px' }}>{`Hãy tạo 1 kịch bản hội thoại roleplay tiếng Nhật trình độ N5.
 - Trả về đúng JSON, không giải thích thêm.
 - Không dùng markdown, chỉ JSON thuần.
 - Giữ nguyên tên các key:
@@ -1073,7 +1073,7 @@ Ví dụ:
                     padding: '0.75rem 1rem',
                     borderRadius: '8px',
                     border: '1px solid var(--teacher-secondary, #00f2fe)',
-                    color: 'var(--text-primary)',
+                    color: 'var(--admin-text)',
                     fontWeight: 600
                   }}>
                     Bài {currentLesson.lesson_number}: {currentLesson.title}
@@ -1956,9 +1956,9 @@ Hoặc với đọc âm:
                 </label>
                 <div style={{ marginTop: '0.5rem' }}>
                   {(formData.examples || []).map((ex: any, idx: number) => (
-                    <div key={idx} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <div key={idx} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--admin-bg)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <strong style={{ color: 'var(--text-primary)' }}>Ví dụ {idx + 1}</strong>
+                        <strong style={{ color: 'var(--admin-text)' }}>Ví dụ {idx + 1}</strong>
                         <button
                           type="button"
                           className="btn btn-danger btn-sm"
@@ -2144,7 +2144,7 @@ Hoặc với đọc âm:
                   <pre>{`です=Là (cách nói lịch sự)
 ます=Động từ thể lịch sự
 ません=Phủ định thể lịch sự`}</pre>
-                  <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0f9ff', borderRadius: '6px', fontSize: '0.875rem' }}>
+                  <div className="format-note">
                     <strong>💡 Lưu ý:</strong> Để import đầy đủ cả examples, hãy dùng Format 1 (JSON). Format 2 chỉ import pattern, meaning và explanation.
                   </div>
                 </div>
@@ -2167,7 +2167,7 @@ Hoặc với đọc âm:
                       <div key={idx} className="preview-item grammar-preview-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
                         <div style={{ display: 'flex', gap: '1rem', width: '100%', alignItems: 'center' }}>
                           <span className="preview-pattern" style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--primary-color)' }}>{grammar.pattern}</span>
-                          <span className="preview-meaning" style={{ fontWeight: '600', fontSize: '0.95rem', color: 'var(--text-primary)' }}>{grammar.meaning}</span>
+                          <span className="preview-meaning" style={{ fontWeight: '600', fontSize: '0.95rem', color: 'var(--admin-text)' }}>{grammar.meaning}</span>
                         </div>
                         {grammar.explanation && (
                           <span className="preview-explanation" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>{grammar.explanation}</span>
@@ -2176,7 +2176,7 @@ Hoặc với đọc âm:
                           {grammar.examples && Array.isArray(grammar.examples) && grammar.examples.length > 0 ? (
                             <div style={{ padding: '0.75rem', background: 'var(--bg-color)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                <strong style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>Ví dụ ({grammar.examples.length}):</strong>
+                                <strong style={{ fontSize: '0.875rem', color: 'var(--admin-text)' }}>Ví dụ ({grammar.examples.length}):</strong>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -2229,7 +2229,7 @@ Hoặc với đọc âm:
                               </div>
                               {grammar.examples.slice(0, 2).map((ex: any, exIdx: number) => (
                                 <div key={exIdx} style={{ marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-                                  <div style={{ fontFamily: formData.language === 'chinese' ? '"Noto Sans SC", sans-serif' : '"Noto Sans JP", sans-serif', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                                  <div style={{ fontFamily: formData.language === 'chinese' ? '"Noto Sans SC", sans-serif' : '"Noto Sans JP", sans-serif', color: 'var(--admin-text)', marginBottom: '0.25rem' }}>
                                     {ex.japanese || ex.chinese || ''}
                                   </div>
                                   {ex.romaji || ex.pinyin ? (
@@ -2361,7 +2361,7 @@ Hoặc với đọc âm:
                 <label>Ví dụ</label>
                 <div style={{ marginTop: '0.5rem' }}>
                   {(formData.examples || []).map((ex: any, idx: number) => (
-                    <div key={idx} style={{ marginBottom: '1rem', padding: '1rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                    <div key={idx} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--admin-bg)', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                         <strong>Ví dụ {idx + 1}</strong>
                         <button

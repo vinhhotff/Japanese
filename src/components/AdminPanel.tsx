@@ -61,6 +61,7 @@ const AdminPanel = () => {
   const [assignTeacherEmail, setAssignTeacherEmail] = useState('');
   const [selectedRole, setSelectedRole] = useState<'teacher' | 'student' | 'admin'>('student');
   const [userActiveTab, setUserActiveTab] = useState<'list' | 'roles' | 'assignments'>('list');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'student' | 'teacher' | 'admin'>('all');
   const [assignCourseLang, setAssignCourseLang] = useState('japanese');
   const [assignCourseLevel, setAssignCourseLevel] = useState('N5');
   const [assignCourseId, setAssignCourseId] = useState('');
@@ -871,6 +872,15 @@ const AdminPanel = () => {
     );
 
     // userActiveTab === 'list'
+    const roleFilteredData = roleFilter === 'all'
+      ? filteredData
+      : filteredData.filter((u: any) => u.role === roleFilter);
+    const roleCurrentItems = roleFilteredData.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+    const roleTotalPages = Math.ceil(roleFilteredData.length / itemsPerPage);
+
     return (
       <div className="admin-user-card">
         <div className="admin-user-card-head">
@@ -878,10 +888,45 @@ const AdminPanel = () => {
             <span className="admin-user-card-title-icon">👥</span>
             Danh sách người dùng
           </div>
-          <span className="admin-table-head-count">{filteredData.length} thành viên</span>
+          <span className="admin-table-head-count">{roleFilteredData.length} thành viên</span>
         </div>
+
+        {/* Filter + Back bar */}
+        <div className="admin-user-filter-bar">
+          <button
+            className={`admin-filter-role-btn ${roleFilter === 'all' ? 'active' : ''}`}
+            onClick={() => { setRoleFilter('all'); setCurrentPage(1); }}
+          >
+            👥 Tất cả
+          </button>
+          <button
+            className={`admin-filter-role-btn ${roleFilter === 'student' ? 'active' : ''}`}
+            onClick={() => { setRoleFilter('student'); setCurrentPage(1); }}
+          >
+            🌟 Học viên
+          </button>
+          <button
+            className={`admin-filter-role-btn ${roleFilter === 'teacher' ? 'active' : ''}`}
+            onClick={() => { setRoleFilter('teacher'); setCurrentPage(1); }}
+          >
+            👨‍🏫 Giảng viên
+          </button>
+          <button
+            className={`admin-filter-role-btn ${roleFilter === 'admin' ? 'active' : ''}`}
+            onClick={() => { setRoleFilter('admin'); setCurrentPage(1); }}
+          >
+            ⚡ Admin
+          </button>
+          <button
+            className="admin-user-back-btn"
+            onClick={() => setViewMode('languages')}
+          >
+            ← Quay về
+          </button>
+        </div>
+
         <div style={{ padding: '0 1.5rem' }}>
-          {currentItems.length > 0 ? currentItems.map((userRole: any) => (
+          {roleCurrentItems.length > 0 ? roleCurrentItems.map((userRole: any) => (
             <div key={userRole.id || userRole.email} className="admin-user-row">
               <div className={`user-row-avatar ${userRole.role || 'student'}`}>
                 {userRole.email?.charAt(0).toUpperCase()}
@@ -936,14 +981,14 @@ const AdminPanel = () => {
             </div>
           )}
         </div>
-        {totalPages > 1 && (
+        {roleTotalPages > 1 && (
           <div className="admin-pagination">
             <span className="admin-pagination-info">
-              Hiển thị {indexOfFirstItem + 1}–{Math.min(indexOfLastItem, filteredData.length)} / {filteredData.length}
+              Hiển thị {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, roleFilteredData.length)} / {roleFilteredData.length}
             </span>
             <div className="admin-pagination-btns">
               <button className="admin-page-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>‹</button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+              {Array.from({ length: roleTotalPages }, (_, i) => i + 1).map(n => (
                 <button
                   key={n}
                   className={`admin-page-btn ${currentPage === n ? 'active' : ''}`}
@@ -952,7 +997,7 @@ const AdminPanel = () => {
                   {n}
                 </button>
               ))}
-              <button className="admin-page-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>›</button>
+              <button className="admin-page-btn" disabled={currentPage === roleTotalPages} onClick={() => setCurrentPage(p => p + 1)}>›</button>
             </div>
           </div>
         )}
