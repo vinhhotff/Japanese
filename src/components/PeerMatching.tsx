@@ -400,56 +400,75 @@ export default function PeerMatching() {
 
   return (
     <div className="peer-page">
-      {/* Header */}
-      <div className="peer-page-header">
-        <h1 className="peer-page-title">
-          <span style={{ marginRight: '0.5rem' }}>🤝</span>
-          Tìm bạn học cùng trình độ
-        </h1>
-        <p className="peer-page-subtitle">
-          Kết nối với những học viên cùng trình độ để học tập cùng nhau.
-        </p>
+      {/* Hero Section */}
+      <div className="peer-hero">
+        <div className="peer-hero-icon">🤝</div>
+        <h1>Tìm bạn học cùng trình độ</h1>
+        <p>Kết nối với những học viên cùng ngôn ngữ và trình độ để học tập hiệu quả hơn.</p>
+      </div>
+
+      {/* Stats Bar */}
+      <div className="peer-stats">
+        <div className="peer-stat-item">
+          <div className="peer-stat-number">{activeMatches.length}</div>
+          <div className="peer-stat-label">Bạn học đã kết nối</div>
+        </div>
+        <div className="peer-stat-item">
+          <div className="peer-stat-number">{receivedRequests.length}</div>
+          <div className="peer-stat-label">Lời mời chờ</div>
+        </div>
+        <div className="peer-stat-item">
+          <div className="peer-stat-number">{peers.length}</div>
+          <div className="peer-stat-label">Người tìm thấy</div>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="peer-tabs">
-        <button
-          className={`peer-tab${activeTab === 'browse' ? ' active' : ''}`}
-          onClick={() => { setActiveTab('browse'); handleBrowse(); }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          Tìm bạn học
-        </button>
-        <button
-          className={`peer-tab${activeTab === 'requests' ? ' active' : ''}`}
-          onClick={() => setActiveTab('requests')}
-        >
-          Lời mời
-          {receivedRequests.length > 0 && (
-            <span className="peer-tab-badge">{receivedRequests.length}</span>
-          )}
-        </button>
-        <button
-          className={`peer-tab${activeTab === 'matches' ? ' active' : ''}`}
-          onClick={() => setActiveTab('matches')}
-        >
-          Bạn học đã kết nối
-          {activeMatches.length > 0 && (
-            <span className="peer-tab-badge">{activeMatches.length}</span>
-          )}
-        </button>
-        <button
-          className={`peer-tab${activeTab === 'setup' ? ' active' : ''}`}
-          onClick={() => setActiveTab('setup')}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-            <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          Hồ sơ của tôi
-        </button>
+      <div className="peer-tabs-container">
+        <div className="peer-tabs">
+          <button
+            className={`peer-tab${activeTab === 'browse' ? ' active' : ''}`}
+            onClick={() => { setActiveTab('browse'); if (peers.length === 0) handleBrowse(); }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Tìm bạn
+          </button>
+          <button
+            className={`peer-tab${activeTab === 'requests' ? ' active' : ''}`}
+            onClick={() => setActiveTab('requests')}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+              <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            Lời mời
+            {receivedRequests.length > 0 && (
+              <span className="peer-tab-badge">{receivedRequests.length}</span>
+            )}
+          </button>
+          <button
+            className={`peer-tab${activeTab === 'matches' ? ' active' : ''}`}
+            onClick={() => setActiveTab('matches')}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+              <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Bạn học
+            {activeMatches.length > 0 && (
+              <span className="peer-tab-badge">{activeMatches.length}</span>
+            )}
+          </button>
+          <button
+            className={`peer-tab${activeTab === 'setup' ? ' active' : ''}`}
+            onClick={() => setActiveTab('setup')}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+              <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Hồ sơ
+          </button>
+        </div>
       </div>
 
       {/* ===== BROWSE TAB ===== */}
@@ -487,16 +506,16 @@ export default function PeerMatching() {
           </div>
 
           {loading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-              <div style={{ width: 40, height: 40, border: '4px solid var(--border-color)', borderTopColor: 'var(--primary-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            <div className="peer-loading">
+              <div className="peer-loading-spinner" />
             </div>
           ) : peers.length === 0 ? (
             <div className="peer-empty-state">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              <h3>Chưa có ai được tìm thấy</h3>
-              <p>Thử thay đổi bộ lọc hoặc quay lại sau.</p>
+              <h3>Không tìm thấy ai</h3>
+              <p>Thử thay đổi bộ lọc hoặc quay lại sau nhé.</p>
             </div>
           ) : (
             <div className="peer-grid">
@@ -576,7 +595,7 @@ export default function PeerMatching() {
           {receivedRequests.length === 0 && sentRequests.length === 0 ? (
             <div className="peer-empty-state">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
               <h3>Không có lời mời nào</h3>
               <p>Khi có người muốn kết nối, họ sẽ xuất hiện ở đây.</p>
@@ -585,16 +604,18 @@ export default function PeerMatching() {
             <>
               {receivedRequests.length > 0 && (
                 <>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1rem' }}>
-                    📥 Lời mời nhận được
+                  <h3 className="peer-section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22">
+                      <path d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                    </svg>
+                    Lời mời nhận được
                   </h3>
                   {receivedRequests.map(req => {
                     const from = req.from_profile;
-                    // Priority: from_peer_profile.display_name > profiles.full_name > email
                     const fromName = req.from_peer_profile?.display_name || from?.full_name || from?.email?.split('@')[0] || 'Ẩn danh';
                     return (
                       <div key={req.id} className="peer-request-card">
-                        <div className="peer-avatar" style={{ width: 40, height: 40, fontSize: '1rem' }}>
+                        <div className="peer-avatar">
                           {fromName.charAt(0).toUpperCase()}
                         </div>
                         <div className="peer-request-info">
@@ -604,10 +625,15 @@ export default function PeerMatching() {
                         </div>
                         <div className="peer-request-actions">
                           <button className="peer-accept-btn" onClick={() => handleAccept(req)}>
-                            ✅ Nhận
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                              <path d="M5 13l4 4L19 7" />
+                            </svg>
+                            Nhận
                           </button>
                           <button className="peer-decline-btn" onClick={() => handleDecline(req)}>
-                            ❌
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                              <path d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -618,27 +644,27 @@ export default function PeerMatching() {
 
               {sentRequests.length > 0 && (
                 <>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: '1.5rem 0 1rem' }}>
-                    📤 Lời mời đã gửi
+                  <h3 className="peer-section-title" style={{ marginTop: receivedRequests.length > 0 ? '1.5rem' : 0 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22">
+                      <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    Lời mời đã gửi
                   </h3>
                   {sentRequests.map(req => {
                     const to = req.to_profile;
-                    // Priority: to_peer_profile.display_name > profiles.full_name > email
                     const toName = req.to_peer_profile?.display_name || to?.full_name || to?.email?.split('@')[0] || 'Ẩn danh';
                     return (
                       <div key={req.id} className="peer-request-card">
-                        <div className="peer-avatar" style={{ width: 40, height: 40, fontSize: '1rem' }}>
+                        <div className="peer-avatar">
                           {toName.charAt(0).toUpperCase()}
                         </div>
                         <div className="peer-request-info">
                           <p className="peer-request-name">{toName}</p>
-                          <span className={`peer-status-badge ${req.status}`}>{req.status === 'pending' ? '⏳ Chờ trả lời' : req.status === 'accepted' ? '✅ Đã chấp nhận' : '❌ Đã từ chối'}</span>
+                          <p className="peer-request-time">⏳ Đang chờ trả lời</p>
                         </div>
-                        {req.status === 'pending' && (
-                          <button className="peer-cancel-btn" onClick={() => handleCancelRequest(req)}>
-                            Hủy
-                          </button>
-                        )}
+                        <button className="peer-cancel-btn" onClick={() => handleCancelRequest(req)}>
+                          Hủy
+                        </button>
                       </div>
                     );
                   })}
@@ -725,82 +751,86 @@ export default function PeerMatching() {
       {/* ===== SETUP TAB ===== */}
       {activeTab === 'setup' && (
         <div className="peer-setup-section">
-          <h2 className="peer-setup-title">👤 Tạo hồ sơ bạn học</h2>
-          <p className="peer-setup-subtitle">Hoàn thiện hồ sơ để người khác có thể tìm thấy bạn.</p>
-          <form className="peer-setup-form" onSubmit={handleSaveProfile}>
-            <div className="form-group">
-              <label className="form-label">Tên hiển thị *</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="VD: Minh Tanaka"
-                value={myProfile.display_name || ''}
-                onChange={e => setMyProfile({ ...myProfile, display_name: e.target.value })}
-                required
-              />
+          <div className="peer-setup-card">
+            <div className="peer-setup-header">
+              <div className="peer-setup-icon">👤</div>
+              <h2 className="peer-setup-title">Tạo hồ sơ bạn học</h2>
+              <p className="peer-setup-subtitle">Hoàn thiện hồ sơ để người khác có thể tìm thấy bạn.</p>
             </div>
-            <div className="form-group">
-              <label className="form-label">Ngôn ngữ học</label>
-              <select
-                className="form-select"
-                value={myProfile.language || 'japanese'}
-                onChange={e => setMyProfile({ ...myProfile, language: e.target.value as any })}
-              >
-                <option value="japanese">🇯🇵 Tiếng Nhật</option>
-                <option value="chinese">🇨🇳 Tiếng Trung</option>
-                <option value="both">Cả hai</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Trình độ</label>
-              <select
-                className="form-select"
-                value={myProfile.study_level || 'N5'}
-                onChange={e => setMyProfile({ ...myProfile, study_level: e.target.value as any })}
-              >
-                <optgroup label="JLPT">
-                  {['N5', 'N4', 'N3', 'N2', 'N1'].map(l => (
-                    <option key={l} value={l}>{l}</option>
+            <form className="peer-setup-form" onSubmit={handleSaveProfile}>
+              <div className="form-group">
+                <label className="form-label">Tên hiển thị *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="VD: Minh Tanaka"
+                  value={myProfile.display_name || ''}
+                  onChange={e => setMyProfile({ ...myProfile, display_name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Ngôn ngữ học</label>
+                <select
+                  className="form-select"
+                  value={myProfile.language || 'japanese'}
+                  onChange={e => setMyProfile({ ...myProfile, language: e.target.value as any })}
+                >
+                  <option value="japanese">🇯🇵 Tiếng Nhật</option>
+                  <option value="chinese">🇨🇳 Tiếng Trung</option>
+                  <option value="both">Cả hai</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Trình độ</label>
+                <select
+                  className="form-select"
+                  value={myProfile.study_level || 'N5'}
+                  onChange={e => setMyProfile({ ...myProfile, study_level: e.target.value as any })}
+                >
+                  <optgroup label="JLPT">
+                    {['N5', 'N4', 'N3', 'N2', 'N1'].map(l => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="HSK">
+                    {['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'].map(l => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Mục tiêu học tập</label>
+                <select
+                  className="form-select"
+                  value={myProfile.study_goal || 'jlpt'}
+                  onChange={e => setMyProfile({ ...myProfile, study_goal: e.target.value as any })}
+                >
+                  {STUDY_GOALS.map(g => (
+                    <option key={g.value} value={g.value}>{g.label}</option>
                   ))}
-                </optgroup>
-                <optgroup label="HSK">
-                  {['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'].map(l => (
-                    <option key={l} value={l}>{l}</option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Mục tiêu học tập</label>
-              <select
-                className="form-select"
-                value={myProfile.study_goal || 'jlpt'}
-                onChange={e => setMyProfile({ ...myProfile, study_goal: e.target.value as any })}
-              >
-                {STUDY_GOALS.map(g => (
-                  <option key={g.value} value={g.value}>{g.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Giới thiệu bản thân</label>
-              <textarea
-                className="form-textarea"
-                placeholder="VD: Mình đang học N4, muốn luyện giao tiếp..."
-                value={myProfile.bio || ''}
-                onChange={e => setMyProfile({ ...myProfile, bio: e.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Ngày rảnh học</label>
-              <div className="peer-setup-days">
-                {DAYS.map(d => (
-                  <button
-                    key={d.value}
-                    type="button"
-                    className={`peer-setup-day-btn${(myProfile.available_days || []).includes(d.value) ? ' active' : ''}`}
-                    onClick={() => toggleDay(d.value)}
-                  >
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Giới thiệu bản thân</label>
+                <textarea
+                  className="form-textarea"
+                  placeholder="VD: Mình đang học N4, muốn luyện giao tiếp..."
+                  value={myProfile.bio || ''}
+                  onChange={e => setMyProfile({ ...myProfile, bio: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Ngày rảnh học</label>
+                <div className="peer-setup-days">
+                  {DAYS.map(d => (
+                    <button
+                      key={d.value}
+                      type="button"
+                      className={`peer-setup-day-btn${(myProfile.available_days || []).includes(d.value) ? ' active' : ''}`}
+                      onClick={() => toggleDay(d.value)}
+                    >
                     {d.label}
                   </button>
                 ))}
@@ -835,6 +865,7 @@ export default function PeerMatching() {
               </button>
             </div>
           </form>
+          </div>
         </div>
       )}
 
