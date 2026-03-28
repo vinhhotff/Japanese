@@ -149,10 +149,11 @@ export const browsePeers = async (filters?: {
   level?: StudyLevel;
   goal?: StudyGoal;
 }): Promise<PeerProfile[]> => {
+  // Do not use .neq('user_id', '') — user_id is UUID; comparing to '' causes
+  // Postgres 22P02 "invalid input syntax for type uuid" on Supabase/PostgREST.
   let query = supabase
     .from('peer_profiles')
     .select('*')
-    .neq('user_id', '')
     .order('is_online', { ascending: false })
     .order('updated_at', { ascending: false });
 
