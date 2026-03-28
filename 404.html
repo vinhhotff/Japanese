@@ -14,8 +14,11 @@
       // If the user is NOT logged in and the route is protected, React Router
       // will redirect to /login. If the route is public (like /register),
       // it will show the Register page correctly.
+      //
+      // Use a relative path so it works whether the site is at root or a subdirectory
+      // (e.g. /Japanese/ on GitHub Pages).
       sessionStorage.redirect = window.location.href;
-      window.location.href = '/index.html';
+      window.location.href = 'index.html';
     </script>
   </head>
   <body>
