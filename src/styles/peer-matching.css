@@ -231,10 +231,15 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.25rem;
+  align-items: stretch;
 }
 
 /* ===== PEER CARD ===== */
 .peer-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 280px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 20px;
@@ -401,16 +406,37 @@
   gap: 0.3rem;
 }
 
+/* Goal + bio block (fills space so footers align across cards) */
+.peer-card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.peer-card-goal-row {
+  flex-shrink: 0;
+  margin-bottom: 0.75rem;
+}
+
 /* Bio */
 .peer-card-bio {
   font-size: 0.875rem;
   color: var(--text-secondary);
   line-height: 1.6;
-  margin: 0 0 1rem 0;
+  margin: 0;
+  flex: 1 1 auto;
+  min-height: calc(0.875rem * 1.6 * 2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.peer-card-bio--empty {
+  color: var(--text-muted);
+  font-style: italic;
+  -webkit-line-clamp: 2;
 }
 
 /* Footer */
@@ -432,9 +458,15 @@
   gap: 0.35rem;
   flex: 1;
   min-width: 0;
+  min-height: 1.25rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.peer-card-schedule.empty {
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .peer-card-schedule svg {

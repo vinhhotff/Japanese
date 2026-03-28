@@ -541,19 +541,22 @@ export default function PeerMatching() {
                           <span className={`peer-lang-chip ${peer.language}`}>
                             {peer.language === 'both' ? 'JP+CN' : peer.language === 'japanese' ? 'JP' : 'CN'}
                           </span>
-                          <span className="peer-level-chip">N{peer.study_level.replace('HSK', '')}</span>
+                          <span className="peer-level-chip">{peer.study_level}</span>
                           {peer.is_online && <span className="peer-online-chip">🟢 Online</span>}
                         </div>
                       </div>
                     </div>
 
-                    <div className="peer-card-goal-row">
-                      <span className="peer-goal-chip">🎯 {goalLabel(peer.study_goal)}</span>
+                    <div className="peer-card-body">
+                      <div className="peer-card-goal-row">
+                        <span className="peer-goal-chip">🎯 {goalLabel(peer.study_goal)}</span>
+                      </div>
+                      <p
+                        className={`peer-card-bio ${peer.bio?.trim() ? '' : 'peer-card-bio--empty'}`}
+                      >
+                        {peer.bio?.trim() ? peer.bio : 'Chưa có giới thiệu'}
+                      </p>
                     </div>
-
-                    {peer.bio && (
-                      <p className="peer-card-bio">{peer.bio}</p>
-                    )}
 
                     <div className="peer-card-footer">
                       {peer.available_hours ? (
