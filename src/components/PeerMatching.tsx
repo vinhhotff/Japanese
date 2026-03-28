@@ -80,9 +80,10 @@ export default function PeerMatching() {
   }, [user]);
 
   useEffect(() => {
-    if (chatPeer) {
-      loadChat(chatPeer.id);
-    }
+    // Only load chat when chatPeer changes to a non-null value (not on mount)
+    if (!chatPeer) return;
+    setChatMessages([]); // clear old messages before loading new
+    loadChat(chatPeer.id);
   }, [chatPeer]);
 
   useEffect(() => {
@@ -466,11 +467,6 @@ export default function PeerMatching() {
                           🤝 Kết nối
                         </button>
                       )}
-                      {matched && (
-                        <button className="peer-connect-btn requested" onClick={() => setChatPeer(peer)}>
-                          💬 Nhắn tin
-                        </button>
-                      )}
                     </div>
                   </div>
                 );
@@ -595,9 +591,10 @@ export default function PeerMatching() {
                         style={{ flex: 1 }}
                         onClick={() => {
                           // Find the peer profile from the match
+                          const peerUserId = match.from_user_id === user.id ? match.to_user_id : match.from_user_id;
                           const peerProfile: PeerProfile = {
-                            id: other?.email || '',
-                            user_id: other?.email || '',
+                            id: peerUserId,
+                            user_id: peerUserId,
                             display_name: otherName,
                             language: 'japanese',
                             study_level: 'N5',
@@ -608,6 +605,7 @@ export default function PeerMatching() {
                             is_online: false,
                             created_at: '',
                             updated_at: '',
+                            profiles: other || undefined,
                           };
                           setChatPeer(peerProfile);
                         }}
