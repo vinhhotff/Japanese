@@ -7,18 +7,13 @@
       // GitHub Pages SPA fallback: redirect all 404s to index.html
       // so that React Router can handle the routing.
       //
-      // This is the standard approach for single-page apps on GitHub Pages.
-      // The URL in the browser's address bar is preserved (e.g. /register),
-      // and React Router takes over from there.
+      // The key is using the ABSOLUTE path /Japanese/index.html so the redirect
+      // ALWAYS lands on the correct index.html, regardless of which route
+      // triggered the 404 (e.g. /Japanese/register → /Japanese/index.html).
       //
-      // If the user is NOT logged in and the route is protected, React Router
-      // will redirect to /login. If the route is public (like /register),
-      // it will show the Register page correctly.
-      //
-      // Use a relative path so it works whether the site is at root or a subdirectory
-      // (e.g. /Japanese/ on GitHub Pages).
+      // If the site is at root instead, update base to '' and path to '/index.html'.
       sessionStorage.redirect = window.location.href;
-      window.location.href = 'index.html';
+      window.location.href = '/Japanese/index.html';
     </script>
   </head>
   <body>
