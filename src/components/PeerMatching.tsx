@@ -416,54 +416,56 @@ export default function PeerMatching() {
                   (m.to_user_id === user.id && m.from_user_id === peer.user_id)
                 );
                 const peerName = peer.profiles?.full_name || peer.profiles?.email?.split('@')[0] || peer.display_name || 'Ẩn danh';
+                const initials = peerName.slice(0, 2).toUpperCase();
                 return (
                   <div key={peer.id} className="peer-card">
-                    <div className="peer-card-header">
-                      <div className="peer-avatar">
-                        {peerName.charAt(0).toUpperCase()}
-                        <span className={`peer-online-dot ${peer.is_online ? 'online' : 'offline'}`} />
+                    <div className="peer-card-top">
+                      <div className="peer-card-avatar-wrap">
+                        <div className="peer-card-avatar">{initials}</div>
+                        <span className={`peer-card-online ${peer.is_online ? 'online' : 'offline'}`} />
                       </div>
-                      <div className="peer-card-info">
-                        <p className="peer-card-name">{peerName}</p>
-                        <p className="peer-card-lang">
-                          <span className={`peer-lang-badge ${peer.language}`}>
+                      <div className="peer-card-identity">
+                        <span className="peer-card-name">{peerName}</span>
+                        <div className="peer-card-meta">
+                          <span className={`peer-lang-chip ${peer.language}`}>
                             {peer.language === 'both' ? 'JP+CN' : peer.language === 'japanese' ? 'JP' : 'CN'}
                           </span>
-                          {peer.study_level}
-                        </p>
+                          <span className="peer-level-chip">N{peer.study_level.replace('HSK', '')}</span>
+                          {peer.is_online && <span className="peer-online-chip">🟢 Online</span>}
+                        </div>
                       </div>
                     </div>
-                    <div className="peer-card-tags">
-                      <span className="peer-tag level">📊 {peer.study_level}</span>
-                      <span className="peer-tag goal">🎯 {goalLabel(peer.study_goal)}</span>
-                      {peer.is_online && <span className="peer-tag" style={{ background: '#d1fae5', color: '#065f46', borderColor: '#6ee7b7' }}>🟢 Trực tuyến</span>}
+
+                    <div className="peer-card-goal-row">
+                      <span className="peer-goal-chip">🎯 {goalLabel(peer.study_goal)}</span>
                     </div>
-                    {peer.bio && <p className="peer-card-bio">{peer.bio}</p>}
-                    {peer.available_hours && (
-                      <p className="peer-card-schedule">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-                          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {peer.available_hours}
-                      </p>
+
+                    {peer.bio && (
+                      <p className="peer-card-bio">{peer.bio}</p>
                     )}
-                    <div className="peer-card-actions">
+
+                    <div className="peer-card-footer">
+                      {peer.available_hours ? (
+                        <span className="peer-card-schedule">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {peer.available_hours}
+                        </span>
+                      ) : (
+                        <span className="peer-card-schedule empty">—</span>
+                      )}
+
                       {matched ? (
-                        <button className="peer-chat-btn" onClick={() => setChatPeer(peer)}>
+                        <button className="peer-card-btn chat" onClick={() => setChatPeer(peer)}>
                           💬 Nhắn tin
                         </button>
                       ) : sentReq ? (
-                        <button
-                          className="peer-connect-btn requested"
-                          disabled
-                        >
-                          ⏳ Đã gửi lời mời
+                        <button className="peer-card-btn sent" disabled>
+                          ⏳ Đã gửi
                         </button>
                       ) : (
-                        <button
-                          className="peer-connect-btn"
-                          onClick={() => handleSendRequest(peer)}
-                        >
+                        <button className="peer-card-btn connect" onClick={() => handleSendRequest(peer)}>
                           🤝 Kết nối
                         </button>
                       )}
@@ -572,23 +574,25 @@ export default function PeerMatching() {
               {activeMatches.map(match => {
                 const other = getOtherParty(match);
                 const otherName = other?.full_name || other?.email?.split('@')[0] || 'Ẩn danh';
+                const initials = otherName.slice(0, 2).toUpperCase();
                 return (
                   <div key={match.id} className="peer-card">
-                    <div className="peer-card-header">
-                      <div className="peer-avatar">
-                        {otherName.charAt(0).toUpperCase()}
+                    <div className="peer-card-top">
+                      <div className="peer-card-avatar-wrap">
+                        <div className="peer-card-avatar">{initials}</div>
+                        <span className="peer-card-online offline" />
                       </div>
-                      <div className="peer-card-info">
-                        <p className="peer-card-name">{otherName}</p>
-                        <p className="peer-card-lang">
-                          <span className="peer-status-badge accepted">✅ Bạn học</span>
-                        </p>
+                      <div className="peer-card-identity">
+                        <span className="peer-card-name">{otherName}</span>
+                        <div className="peer-card-meta">
+                          <span className="peer-connected-chip">✅ Đã kết nối</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="peer-card-actions" style={{ marginTop: '1rem' }}>
+                    <div className="peer-card-footer" style={{ marginTop: '1rem' }}>
+                      <span />
                       <button
-                        className="peer-chat-btn"
-                        style={{ flex: 1 }}
+                        className="peer-card-btn chat"
                         onClick={() => {
                           const peerUserId = match.from_user_id === user.id ? match.to_user_id : match.from_user_id;
                           const peerProfile: PeerProfile = {
@@ -609,7 +613,7 @@ export default function PeerMatching() {
                           setChatPeer(peerProfile);
                         }}
                       >
-                        💬 Nhắn tin ngay
+                        💬 Nhắn tin
                       </button>
                     </div>
                   </div>
@@ -741,8 +745,8 @@ export default function PeerMatching() {
         <div className="peer-chat-overlay" onClick={() => setChatPeer(null)}>
           <div className="peer-chat-window" onClick={e => e.stopPropagation()}>
             <div className="peer-chat-header">
-              <div className="peer-avatar" style={{ width: 40, height: 40, fontSize: '1rem' }}>
-                {chatPeer.profiles?.full_name?.charAt(0)?.toUpperCase() || chatPeer.display_name?.charAt(0)?.toUpperCase() || '?'}
+              <div className="peer-chat-header-avatar">
+                {(chatPeer.profiles?.full_name || chatPeer.display_name || '?').slice(0, 2).toUpperCase()}
               </div>
               <div className="peer-chat-header-info">
                 <p className="peer-chat-header-name">
